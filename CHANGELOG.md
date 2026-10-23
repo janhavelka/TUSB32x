@@ -70,6 +70,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Added
 
+- Completed prompt 4 transport and device procedures: exact role changes,
+  one-shot reset, original-part recovery, IRQ service, wait anchors, callback/byte
+  ceilings and independent failure/time vectors. Added explicit internal-register
+  qualification and retained-effect rules; unresolved silicon gates remain.
+
 - Completed prompt 3 register access, field encodings and independent positive/
   negative vectors. Distinguished partial TUSB320/I defaults from complete
   extended reset tables, protected internal bits from reserved read-only bits,

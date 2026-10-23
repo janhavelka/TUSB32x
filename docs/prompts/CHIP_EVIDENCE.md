@@ -162,6 +162,13 @@ whether a method named reset, ACK or set-mode was called.
 
 ## Procedures, failure evidence and interpretation — prompts 4, 13–16, 18–19
 
+The completed [device procedure guide](../device-behavior.md) owns fixed plans,
+wait anchors, callback/byte ceilings and independent failure/time vectors.
+Its ordinary45 gate requires known internal03=00 (a conservative policy on B,
+not an undocumented numeric default). Base recovery rejects a different pending
+reset/mode transition until reconciled, but permits an explicit new attempt at
+its own interrupted recovery. Keep these qualifications separate from TI facts.
+
 - Reads use one-byte explicit pointers. TI describes STOP after pointer selection;
   Linux and Rust combined transfers show another implementation choice, not a
   universal repeated-START requirement. Verify selected adapter framing; do not

@@ -4,7 +4,8 @@ Completed for prompt 3 on 2026-10-23. This is a specification for later code and
 tests, not an implemented driver. TUSB320LAI remains the primary target. Read the
 [variant matrix](variant-matrix.md) for identity acceptance, board prerequisites
 and unresolved gates, and [register vectors](register-vectors.md) for independent
-expected bytes. Procedures, wait anchors and completion proof belong to prompt 4.
+expected bytes. The [device guide](device-behavior.md) now specifies procedures,
+wait anchors and completion proof from prompt 4.
 
 ## Sources and notation
 
@@ -55,7 +56,7 @@ L/A/V 47/67; register45 is not an additional target address.
 The map permits reads within contiguous 00..0A, or a single present 45/A0.
 A private range read must have nonzero length, fit wholly inside one permitted
 range and not wrap. Thus 07+4 bytes is mapped; 08+4 crosses into an unmapped hole.
-This is a range allowlist, not proof of framing or atomicity; prompt 4 verifies
+This is a range allowlist, not proof of atomicity; the device guide specifies
 the bus procedure. Explicit raw public reads remain single-register operations.
 Every read selects its pointer; no inherited pointer or PCA9555 parking logic.
 
@@ -236,18 +237,22 @@ cannot add a preparatory read within their one-callback bound.
 5. Ordinary qualified 45 composition is `(actual45 & 03) | disableBit`. Preserve
    protected bits without exposing them. Base recovery's literal 04/00 sequence
    separately requires observed internal bits zero and qualified VDD readiness.
+   Prompt 4 selects a concrete ordinary-write gate too: known internal03=00.
+   L/A documents that default; B's zero prerequisite is conservative policy,
+   not a numeric default claim. Unknown/nonzero rejects CONFIGURATION_UNKNOWN
+   for a requested45 change, without blocking independent permitted fields.
 6. A raw requested byte must already obey the legal image and preservation
    rules; reject attempts to set RO/reserved bits, change protected bits, or
    bypass procedure gates. Do not silently mask an invalid request into success.
    With its one-callback bound, raw writing cannot first fetch missing controls.
 
-| Intent | Register contract | Work still required before an executable operation |
+| Intent | Register contract | Procedure contract for later implementation |
 | --- | --- | --- |
 | Change advertisement, duty or debounce | Exact field/table/byte composition; V08/V09 gates apply | Owner-known controls and apply publication/error rules; no hidden ACK/reset |
-| Change base mode | Only while unattached (B Table 7-7 p19) | Prompt 4 admission/observation race limits; current-only changes are distinct |
-| Change extended or V mode/termination | Separate disableTerm and mode fields; V return-to-DRP gate remains | Prompt 4 exact transition sequence, final disable state and waits; no raw shortcut |
-| Change45 / recover base dead battery | Internal bits protected; V register absent | Prompt 4 qualified termination/recovery procedures; no direct raw recovery |
-| Reset | Explicit command08, preserve permitted controls | Prompt 4 timing, self-clear and effect proof; never automatic replay |
+| Change base mode | Only while unattached (B Table 7-7 p19) | Device guide detached precheck and owner/fixture race prerequisite; current-only changes are distinct |
+| Change extended or V mode/termination | Separate disableTerm and mode fields; V return-to-DRP gate remains | Device guide transition sequence, final disable state and waits; no raw shortcut |
+| Change45 / recover base dead battery | Internal bits protected; V register absent | Device guide qualified termination/recovery procedures; no direct raw recovery |
+| Reset | Explicit command08, preserve permitted controls | Device guide timing, self-clear and effect proof; never automatic replay |
 | ACK / service | Explicit W1C with actual controls; V09 gate remains | Bounded observation/ACK/recheck and race/error rules in prompts 4/16 |
 
 Transport errors preserve output and original error evidence. An attempted write

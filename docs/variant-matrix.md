@@ -3,7 +3,8 @@
 Prompt 2 evidence review: 2026-10-23. TUSB320LAI is the primary acceptance target.
 This is a source-backed specification, not implemented or physically qualified
 support. Register encodings are now specified in the
-[register guide](register-map.md); complete procedures belong to prompt 4.
+[register guide](register-map.md); prompt 4 completed the
+[device procedures](device-behavior.md).
 All API and CLI names below are planned contracts.
 
 ## Evidence and current sources
@@ -172,8 +173,8 @@ specific 3.6 V I2C rail limit or VDD-referenced pad absolute maxima.
 | CC / VBUS debounce | CC default typical 133 ms B, 168 ms L/A/V; VBUS typical 2 ms, no maximum established by that row | Same switching tables |
 | Reset duration | 26/49/95 ms min/typ/max | Same switching tables; not proof of full attachment readiness |
 
-The owner-clock 1 ms margin is **library policy**, not another TI limit. Prompt 4
-must define wait anchors and effects; this matrix does not replace that work.
+The owner-clock 1 ms margin is **library policy**, not another TI limit. The
+device guide defines wait anchors, fixed procedures and retained effects.
 
 ## Unresolved gates and source conflicts
 

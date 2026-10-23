@@ -197,8 +197,9 @@ fail initialization with CHIP_ID_MISMATCH and cannot enable writes or KNOWN
 configuration. Keep its current product caveats and named gates visible; do not
 infer capabilities from a shared signature. Register definitions are in the
 completed [register guide](../register-map.md) and
-[independent vectors](../register-vectors.md); procedure details remain prompt 4
-work. Compare readable profile fields separately from write-permission masks:
+[independent vectors](../register-vectors.md); completed procedure details and
+transfer ceilings are in [device behavior](../device-behavior.md). Compare
+readable profile fields separately from write-permission masks:
 V08/V09 fields still participate in observation/equality while their writes are
 gated. Base reset defaults are partial masks, not invented complete zero bytes.
 
@@ -261,7 +262,7 @@ one for the other. Unsupported true/feature values fail before traffic; false
 does not authorize touching a register absent on that variant. Apply follows the
 verified safe mode sequence, then establishes the requested final disable state
 through separately reviewed steps; it must not accidentally enable a profile
-whose requested final state is disabled. Prompt 4 must establish these sequences.
+whose requested final state is disabled. The device guide establishes these sequences.
 322I advertisement/debounce/control requests require its independently closed
 capability evidence; shared member names do not establish support.
 CLI profile reset and an accepted variant change use this same candidate after
@@ -479,7 +480,12 @@ and raw write requires current validated identity, otherwise NOT_INITIALIZED.
 Apply also needs known actual controls and resolved transition evidence; ACK and
 reset may establish their required safe control image through their own reads.
 Recovery needs identity but may explicitly restart its unresolved historical
-sequence. Capability and local argument checks still precede admission.
+sequence. A different unresolved reset/mode transition must first be reconciled;
+recovery rejects CONFIGURATION_UNKNOWN before callbacks in that case. Ordinary
+45 changes require known actual internal bits03=00; this is a conservative
+qualification rule on base parts, not a numeric reset-default claim. Nonzero or
+unknown bits reject that change without blocking independent permitted fields.
+Capability and local argument checks still precede admission.
 
 Accepted initialize clears initialized and current identity usability before
 observing again. Preserve historical values and unresolved effects; failed
@@ -577,6 +583,15 @@ when the backend's phase guarantee says so; it cannot undo an earlier write.
 Read-only success has NONE. A successful reset command write alone does not
 establish reset completion. Read-only reconciliation does not rewrite the old
 operation's result or claim the old operation succeeded.
+
+ResetState::COMPLETED records the reset settling interval and observed
+postconditions, not proof that an ambiguously accepted command actually ran.
+Retain acceptance uncertainty separately. The device guide specifies one-pass
+read-only proof, including its conservative wait when no anchor was retained.
+Any successful observation of an asserted reset bit retains MAY_BE_PENDING and
+invalidates affected trust, including profile/reset-precheck/raw reads. A later
+clear bit cannot erase that pending interval. Raw delivery may return OK but
+cannot supply a fresh owner-time anchor or promote configuration trust.
 
 Apply admission replaces desired input but preserves proved actual configuration
 and port evidence until a possible mutating write. Cancellation or deadline before

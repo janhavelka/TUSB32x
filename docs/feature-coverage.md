@@ -1,6 +1,6 @@
 # Feature, source and verification coverage
 
-Prompt 2, 2026-10-23. This matrix defines the capability boundary; no driver,
+Prompts 2–4, 2026-10-23. This matrix defines the capability boundary; no driver,
 CLI, host suite or hardware qualification exists yet. **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
@@ -10,7 +10,7 @@ These are documentation labels, not new runtime health/status values.
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
 listed there; V names TUSB322I alone. Every test below is required future
-evidence, not an executed PASS. Actual prompt 2 checks are in
+evidence, not an executed PASS. Actual specification checks are in
 [validation](validation.md). Planned commands follow [CLI_CONTRACT](prompts/CLI_CONTRACT.md).
 
 Prompt 3 completed the [register contract](register-map.md) and
@@ -18,6 +18,12 @@ Prompt 3 completed the [register contract](register-map.md) and
 encodings, comparison/composition and negative cases. Rows below that name
 prompt 3 now have their register specification evidence; implementation and
 behavioral tests remain planned. No unresolved gate was closed by byte arithmetic.
+
+Prompt 4 completed the [device procedure guide](device-behavior.md). Every enabled
+plan now has exact source citations, prerequisites, wait anchors, retained effects,
+verification, callback/TX/RX ceilings and negative/failure vectors. These are
+specified operations, not executable API support. The source-to-operation mapping
+below supplements the feature rows without turning a future test into a PASS.
 
 | Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
@@ -45,9 +51,31 @@ behavioral tests remain planned. No unresolved gate was closed by byte arithmeti
 | Power, straps, pin levels, bus timing — Outside API | Each exact variant | TI fact/conflicts: detailed tables and STARTUP_EN/SUPPLY_SUMMARY/L_CC_RATING/ID_OFF_RATING/BASE_VALID_TIME in variant guide | Application adapter/BoardConfig; bus/capabilities reports assumptions only | Wiring/supply/enable traces, aggregate adapter timing and fixture identity; ACK is not electrical qualification; 4/23–27/30–31 |
 | USB policy, PD and board interchangeability — Outside API | Entire family | TI fact: N §3 p4; B §7.3.1.1 p11, L/A §7.2.1.1 p10 and V §6.3.2.1 p10 DFP exception; exact pin tables | No USB stack, charger/VBUS switch or mux control in core | Framework-free consumer builds; no PD/e-marker/ADC claims; board-specific orientation mapping and interoperability qualification; 19/27/30/35 |
 
-The completion path is deliberately incremental: prompt 3 closes per-register
-read/write permissions and encodings; prompt 4 closes silicon procedures and
-effect/timing evidence; prompts 5–6 fix the value/state contracts using those
+## Procedure-to-API, CLI and test coverage
+
+Source IDs and exact revisions above apply to these citations. P/T vector IDs
+refer to the device guide, with arithmetic verification recorded in validation.
+
+| Specified plan / variants | TI source and selected policy | Planned API / CLI | Future evidence |
+| --- | --- | --- | --- |
+| Explicit pointer/STOP transport; B/L/A/V | B §7.5 pp15–16; L/A §7.4 p15; V §6.5 pp15–16; one aggregate terminal callback | Callback adapters / bus, reg | P27–P28; lock across both phases, no retries/pending DMA; scope traces and aggregate SDK bounds in 9/23/25 |
+| I/P/F read-only proof; B/L/A/V | Exact identity/map tables above; scalar controls, fixed one-pass proof and incomplete-effect restrictions are policy | startInitialize, startReadProfile, startVerifyProfile, startReconcile / init, probe, profile read, verify, reconcile | P07/P20/P28, any reset discovery retains pending evidence, no second F; desired mismatch and recovery history retained;9/11–12/18 |
+| Ordinary settings/45; B/L/A, only permitted 0A changes on V | B Table 7-7 pp17–19; L/A Tables 8–11 pp17–20; V Table 6-10 pp19–20 | startApplyProfile / current, duty, debounce, preference, termination, rd-rp, apply | P04/P08/P11–P12/P29; known internal 03=00 before W45 (conservative B policy), preserve independent gates and actual controls;10/13/18 |
+| Base mode; B | B §§7.4.1–2 p14/Table 7-7 p19; owner excludes cable race | startApplyProfile / mode, apply | P09–P11; precheck before any write, no blanket attached-current ban;13/18/30 |
+| Extended role; L/A | L/A §7.3.2 p14; held-disabled final state policy from Table 10 p19 | startApplyProfile / mode, termination, apply | P01–P04; T01–T02/T05–T12; failure at every separate write, six-tick wait;13/18–19/31 |
+| DFP/UFP role; V | V §§6.3.2.1–2 pp10–11, Table 6-10 p20; no added 5 ms | startApplyProfile / mode, apply | P05–P08; no direct return-to-DRP or hidden reset; unchanged gated 08/09 permit independent 0A work;13/18 |
+| One-shot reset; B/L/A/V | B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | P17–P20; T04/T07–T12; 96 ticks, actual controls not defaults, V semantic-DRP consistency policy, no desired replay;14/18–19/31 |
+| Base recovery; B only | B §7.4.3 p14/Table 7-7 p19; identity, internal-zero/pre-read, final proof and other-transition gate are library policy | startRecoverDeadBattery / recover-dead-battery | P13–P16/P30; T03/T06–T12; 4 callbacks/6 TX/2 RX,31 ticks, no transient publication/hidden cleanup;14/18–19/31 |
+| Fixed port observation; B/L/A/V | Status tables above;09/08/09 and E0 coherence comparison are policy | startRefreshPort / read, sample, irq read | P24/P26/P28; no retry-until-stable, no fresh physical-current inference;15/18/30 |
+| ACK/service; B/L/A only | B Table 7-6 p16/Table 7-7 p18; L/A Table 9 p18; N §8 p9; bounded recheck policy | startAcknowledgeInterrupt, startServiceInterrupt / irq ack, irq service | P21–P26; 2 or 5 callbacks, raw observations survive later error, coalescing/reassertion, V09 writes gated;16/18/30 |
+
+All procedure implementations and behavioral/hardware tests remain planned.
+V_ADVERTISEMENT, V_FAULT_CLEAR, V_RETURN_DRP and the board/electrical/current
+gates remain open. Prompt 4 did not qualify adapters or close those gates.
+
+The completion path is deliberately incremental: prompt 3 closed per-register
+read/write permissions and encodings; prompt 4 closed enabled silicon procedures
+and effect/timing specification; prompts 5–6 fix the value/state contracts using those
 results. Later rows become implemented/tested only when their real suites and
 relevant physical checks run. Gated rows remain explicit without blocking
 independent, verified capabilities.

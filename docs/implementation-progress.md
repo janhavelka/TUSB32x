@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently review completed prompt 3; do not start prompt 4.
+Current authorization: execute prompt 4 only; do not start prompt 5.
 
 ## Prompt status
 
@@ -13,7 +13,7 @@ Current authorization: independently review completed prompt 3; do not start pro
 | [1: ecosystem-audit](prompts/1-ecosystem-audit.md) | COMPLETE |
 | [2: family-capabilities](prompts/2-family-capabilities.md) | COMPLETE |
 | [3: register-contracts](prompts/3-register-contracts.md) | COMPLETE |
-| [4: silicon-procedures](prompts/4-silicon-procedures.md) | NOT STARTED |
+| [4: silicon-procedures](prompts/4-silicon-procedures.md) | COMPLETE |
 | [5: value-api-contracts](prompts/5-value-api-contracts.md) | NOT STARTED |
 | [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | NOT STARTED |
 | [7: host-build](prompts/7-host-build.md) | NOT STARTED |
@@ -199,3 +199,41 @@ see the independent prompt 3 review in validation.md for evidence and limits.
 Behavioral/hardware tests remain future work. Prompt 4 remains NOT STARTED.
 Commit/sync evidence belongs in this review's handoff and the next progress
 update, avoiding a self-referencing commit edit.
+
+## Prompt 4 execution record
+
+Started from synchronized prompt 3 review commit
+`ff0d6a21b65579b7bc3b9b454b16a14b21b74257`. HEAD and same-name upstream matched
+after fetch, with zero ahead/behind and a clean tree. The execution branch and
+original base are unchanged. Scope is transport, silicon procedures, timing and
+failure/effect specification, without production code or physical qualification.
+
+Two gpt-6-astra/high agents independently reviewed exact TI procedures and
+time/effect/transfer arithmetic read-only. One gpt-6.1-sol/high agent owned only
+docs/audit/execution-4-peers.md and then reviewed the full guide read-only.
+The lead owns device-behavior.md, shared records, integration and Git. All three
+reviewed the actual procedure draft; confirmed gaps were resolved against sources.
+
+PCA9555, LDC1614, ADS1115 and LSM6DS3TR initially were clean at the revisions in
+the focused report. Final recheck found concurrent LDC/ADS documentation edits;
+their inspected source/test/build files and all four HEADs were unchanged.
+Those sibling changes were left untouched. Adopt explicit guarded transfers,
+external ownership, fresh wait anchors and retained effects. Reject pair wrapping, ADC framing, fixed or
+renewed per-phase timeouts, saturating owner time, automatic replay and claims
+that a mock establishes silicon or SDK bounds. This task fetched or edited no sibling.
+
+The guide specifies STOP-separated explicit-pointer reads; one aggregate terminal
+callback budget; scalar identity/control proof; role/reset/recovery/port/IRQ
+plans; independent byte/callback ceilings and 30 procedure/12 timing vectors.
+Ordinary45 qualification and recovery-versus-other-transition admission are
+explicit conservative policy. Reset success, settled-state evidence and retained
+recovery uncertainty are separate. All existing V and board/source gates remain.
+
+README, register/variant/coverage guides, baseline, chip evidence and decisions
+now reference the completed procedures. Verification outcomes and any remaining
+limits are recorded in validation.md. No C++ source exists for Doxygen yet;
+future source citations are specified. All 34 applicable transfer-bound triples,
+11,988 fractional-time checks, eight archive hashes, four public-source hashes,
+18 cited peer test registrations and 422 local links passed. All three reviewers
+found no remaining concrete issue in the completed guide. Prompt 5 is NOT STARTED. Commit/sync
+evidence belongs in the handoff and next progress update, avoiding a self-reference.

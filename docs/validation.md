@@ -240,3 +240,62 @@ Repeated verification:
 The review found no further in-scope defect or unnecessary implementation to
 remove. Driver/CLI behavior, firmware/package builds and hardware qualification
 remain NOT RUN. Remote CI was not dispatched or polled. Prompt 4 is NOT STARTED.
+
+## Prompt 4: transport, procedures and timing, 2026-10-23
+
+Scope: complete the device procedure specification, independently derived bounds
+and failure/time vectors. Started from synchronized prompt 3 review commit
+`ff0d6a21b65579b7bc3b9b454b16a14b21b74257` on the existing execution branch.
+Two strong reasoning reviewers checked silicon and time/effects separately; a
+coding reviewer re-audited peers and checked coverage. All reviewed the actual
+guide and affected contracts. The lead checked the findings against PDF pages,
+peer implementations, pinned helper bytes and the scoped diff.
+
+| Check | Result | Evidence and limits |
+| --- | --- | --- |
+| Exact TI sources | PASS | Visually inspected B pp7,11,12,14,15,18,19; L/A pp6,14,15,18,19; V pp6,7,9,10,11,15,19,20. Lead independently rendered B p14 and A pp6,14 and read the other relevant procedure/register text. No device measurements implied |
+| Current source check | PASS | Fresh B/L/A/V official downloads at 2026-10-23T15:34:18Z matched archived bytes. Current product lists still link F/D/D/D; inspected lists and targeted TI search found no applicable separate erratum, without claiming exhaustive absence |
+| Archive and pinned helpers | PASS | Eight PDF sizes/SHA-256 and archive coverage match provenance; archive/metadata unchanged. Four freshly fetched TI-hosted Linux/regmap files passed 12 size/SHA-256/Git-blob comparisons; lead repeated them and checked reset-mask arithmetic, error-losing cleanup and combined framing |
+| Procedure ceilings | PASS | Independent Python expanded ordered R/W primitives for all 13 table rows and34 applicable variant triples. Counts include pointers and exclude address phases; failures shorten plans. Four-callback recovery is 6 TX/2 RX, service 5 callbacks/6 TX/4 RX |
+| Timing arithmetic | PASS | 11,988 independent Fraction-based cases:999 fractional completion offsets ×4 fresh-sample delays ×3 intervals. Six/31/96 ticks never shorten 5/30/95 ms; omitted-margin counterexamples checked. Literal role/reset/ACK bytes and uint64 rollover checked separately |
+| Future vector inventory | PASS | P01–P30 and T01–T12 unique/consecutive;30 procedure/failure and12 time cases. Write-by-write failure/cancel/deadline/end matrix specified. These are specification checks, not 42 executed driver tests |
+| Focused peers | PASS with recorded concurrent docs changes | Initial four HEADs/branches clean;18 named test definitions and RUN_TEST registrations checked. Later LDC/ADS docs-only edits were left untouched; inspected source/test/build files and all four revisions unchanged. No sibling fetch/build |
+| Documentation and scope | PASS |76 Markdown files,422 local links/anchors;38 numbered prompts unchanged. UTF-8/LF/final newline, JSON and whitespace checks; no production code, generated PDF images or downloaded source cache added |
+
+The fresh official sources are [B](https://www.ti.com/lit/ds/symlink/tusb320.pdf),
+[L](https://www.ti.com/lit/ds/symlink/tusb320li.pdf),
+[A](https://www.ti.com/lit/ds/symlink/tusb320lai.pdf) and
+[V](https://www.ti.com/lit/ds/symlink/tusb322i.pdf). Original terms and archived
+source metadata were preserved. The four public helper records remain pinned
+to Linux commit 97becb13b81c314c1d17fcf2226aac9a32086f3d in the existing manifest.
+
+Review corrections made before completion:
+
+- Qualified ordinary 45 writes with known internal 03=00. The base prerequisite
+  is explicitly conservative policy, not an invented numeric default. Preserve
+  independent read/other-field work; reject attempts to repair protected bits.
+- Recovery rejects a different unresolved reset/mode transition, while an explicit
+  new request can restart its own uncertain recovery. No new callback is hidden
+  in its four-callback plan.
+- Defined reset settling evidence separately from command acceptance and desired
+  equality. Reset's own success cannot erase older recovery uncertainty. No-op
+  apply still performs full comparison; zero planned writes cannot imply success.
+- Any observed asserted reset bit retains pending evidence, including profile,
+  preparatory and raw reads. A later clear bit cannot bypass the 96-tick interval;
+  first discovery during F ends unknown without appending another proof pass.
+- Corrected the application-note date and base W1C citation; aligned the exact
+  completedTimeValid field name and shared write-identity prerequisites.
+
+Checks used ad hoc session Python, PyMuPDF rendering, primary-source browsing,
+read-only peer inspection and `git diff --check`. Bounds are reproducible from
+R(n)=(1 callback,1 TX,nRX), W=(1,2,0), I=R(8)+optionalR(1),
+P=three scalar reads+optional45, F=I+P. Add each procedure's stated writes once;
+waits add no transfers. Time checks use rational physical timestamps and compare
+earliest integer execution directly with real completion, independently of future
+production helpers. No reusable test framework was added for this source-free step.
+
+Unresolved V advertisement/fault/direct-DRP writes, startup polarity, attached-
+current freshness and base valid-time units remain explicit gates/prerequisites.
+Adapter aggregate bounds/framing traces, driver/CLI behavior, firmware/package
+builds and hardware qualification are NOT RUN. Remote CI was not dispatched or
+polled. Prompt 5 remains NOT STARTED.

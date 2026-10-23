@@ -26,7 +26,10 @@ register. See
 Prompt 3 adds the [register contract](docs/register-map.md) and
 [independent encoding vectors](docs/register-vectors.md). They specify exact
 access masks, field encodings, safe write images and partial base-part defaults.
-Operation procedures and driver implementation remain later work.
+Prompt 4 adds the [device procedure guide](docs/device-behavior.md): selected
+transport framing, exact role/reset/recovery/IRQ steps, timing anchors, transfer
+ceilings and failure vectors. Driver implementation and hardware qualification
+remain later work; unresolved TUSB322I writes and board prerequisites stay explicit.
 
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
 timing, electrical and failure-case findings from TI documents and public code,
