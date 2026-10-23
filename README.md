@@ -32,6 +32,11 @@ promptset execution on a new branch and keep it throughout that execution;
 commit and verify upstream sync after each prompt and
 at coherent, checked units during a prompt. The lead handles Git for shared work.
 
+The first implementation promptset uses focused local checks throughout. Remote
+CI execution and status checking are confined to prompt 34; other prompts and
+final-review fixes do not wait for another remote run. Existing merge/release
+requirements remain separate from completing this initial implementation.
+
 The supporting [audit](docs/audit/README.md) records source observations from
 this repository's parent directory, `Projects/`.
 `FieldCore-node` is the consumer inspected for the user's `fieldcore-noce`

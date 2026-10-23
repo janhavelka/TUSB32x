@@ -56,6 +56,13 @@ prompt. The lead handles Git, preserves unrelated work and verifies equal local/
 upstream commits and zero ahead/behind. No per-prompt branches or force-push.
 Routine commits/pushes are authorized. Report exact sync failures.
 
+Use focused local validation throughout this first promptset. Remote CI execution
+and run-status checking belong only to prompt 34; do not repeat them after other
+prompts, commits or substantive final-review fixes. This user-requested exception
+overrides the recurring parent CI requirement. Preserve existing hooks and
+required merge/release checks. Record the actual SHA tested at prompt 34 and keep
+later local validation distinct; no new remote run is required for final handoff.
+
 Resolve routine design choices from evidence. Continue useful independent work
 when a tool or fact is missing, but keep required checks BLOCKED/NOT RUN and do
 not mark incomplete dependent work COMPLETE. Hardware flashing and release
@@ -109,7 +116,7 @@ requirement to implement it early.
 | 31 | [Add recovery fixture suites](31-recovery-fixture-suites.md) | Reset, termination, recovery, fault and console checks |
 | 32 | [Prove clean package consumption](32-package-consumers.md) | Hardened extraction and isolated framework consumers |
 | 33 | [Complete validation guards](33-validation-guards.md) | Registered checks, Doxygen negatives and validator |
-| 34 | [Run the supported CI matrix](34-ci-matrix.md) | Pinned host/package/firmware jobs and exact-commit evidence |
+| 34 | [Complete the dedicated CI checkpoint](34-ci-matrix.md) | Pinned host/package/firmware jobs; the initial promptset's one remote checkpoint |
 | 35 | [Reconcile user documentation](35-user-documentation.md) | Guides, buildable snippets and feature coverage |
 | 36 | [Audit source and maintainer docs](36-source-maintainer-docs.md) | Visible documented APIs and accurate maintenance commands |
 | 37 | [Review silicon and owner behavior](37-final-core-review.md) | Independent core findings fixed with regressions |
@@ -151,6 +158,7 @@ contract choices in `docs/design-decisions.md`.
 
 Each handoff reports scoped behavior, evidence, limitations and Git state.
 Required unavailable checks stay visible; physical qualification remains separate.
+Unrequested remote CI outside prompt 34 does not block prompt completion.
 Record completed commit IDs in the next update without a self-referencing commit
 loop. A new session reads progress and decisions before continuing on the same
 execution branch. Promptset maintenance alone does not start implementation.

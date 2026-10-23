@@ -89,7 +89,7 @@ are often enough. Do not spawn a team merely because a slot is available.
 | 20–22 | Parser/output fixtures and help/alias checks | Command effects, single poll and result ownership |
 | 23–27 | Backend fixtures, target configs or generic consumer | Aggregate timeout, lifecycle and frontend parity |
 | 28–31 | Fake-serial failures, artifact and fixture review | Session identity, verdicts and cleanup rules |
-| 32–34 | Clean consumers, checker negatives or CI review | Complete supported matrix and exact evidence |
+| 32–34 | Clean consumers, checker negatives or CI review | Supported matrix; remote CI only at prompt 34 |
 | 35–36 | Links/snippets, API visibility and metadata consistency | Technical accuracy and maintainable docs |
 | 37 | Independent silicon and owner reviewers | Core finding triage and regression fixes |
 | 38 | Independent integration and distribution reviewers | Final matrix, qualification limits and handoff |

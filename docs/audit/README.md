@@ -138,6 +138,12 @@ documentation checks from major milestones requiring exact-commit remote CI.
 
 ## Use
 
+The user's later CI-frequency change confines remote execution and run-status
+checks to prompt 34 for the first implementation promptset. Other prompts,
+including final-review fixes, use local checks and continue to commit/sync.
+This supersedes the recurring parent-CI requirements described in the earlier
+guidance audit above; the current repository AGENTS.md records the exception.
+
 The [shared chip evidence](../prompts/CHIP_EVIDENCE.md) incorporates the later
 TI-first public-code research without treating it as silicon authority. It adds
 specific register/sequence/error counterexamples to the relevant prompts and

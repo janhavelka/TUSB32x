@@ -1,16 +1,19 @@
-# 34 — Run the supported CI and extracted firmware matrix
+# 34 — Complete the dedicated CI and extracted firmware checkpoint
 
-Deliver working CI for the proven support matrix and verify its exact final
-commit. This stage integrates registered checks and package consumers; it does
-not rewrite them or claim that workflow files alone establish support.
+Deliver working CI for the proven support matrix and verify this prompt's
+completed implementation. This is the only remote CI checkpoint in the initial
+promptset. Integrate registered checks and package consumers; do not rewrite them
+or claim that workflow files alone establish support. Later prompts use local
+validation without repeating this remote matrix merely because their commit changed.
 
 ## Starting evidence and audit
 
 Read [COMMON](COMMON.md), [AGENT_WORKFLOW](AGENT_WORKFLOW.md), verification rules
-in [ENGINEERING_RULES](ENGINEERING_RULES.md), repository AGENTS and parent CI
-policy. Prompts 23–27 supply adapter/example links, prompt 32 supplies clean
-archives/consumers and prompt 33 supplies registered guards/validator. Inspect
-their actual tested pins and remaining matrix gaps before selecting CI rows.
+in [ENGINEERING_RULES](ENGINEERING_RULES.md) and the initial-promptset exception
+in repository AGENTS. Prompts 23–27 supply adapter/example links, prompt 32
+supplies clean archives/consumers and prompt 33 supplies registered guards and
+validator. Inspect their actual tested pins and remaining gaps before selecting
+CI rows.
 
 Re-audit current TMP1x2 host/docs/Arduino/IDF CI, OPT4001 action-pin checks and
 LDC1614/INA3221 genuine native-IDF links/test registration. Record HEAD, dirty
@@ -53,15 +56,19 @@ pins. Check official SDK/tool/action sources for every selected or changed pin.
    control belongs in ordinary CI. Verify artifact paths exist on both success
    and failure where evidence is expected.
 
-## Verify the actual final commit
+## Verify this checkpoint's implementation
 
 Run focused local workflow/registration checks and affected builds before push.
 The lead commits and syncs the coherent implementation, then inspects terminal
 results for CI on that exact commit. Use an existing push-triggered run; dispatch
 only when needed. Check actual jobs, tested SHA and matrix rows, not a prior badge
-or an unrelated green run. Fix confirmed failures without disabling assertions,
-tests, warning checks or triggers; each substantive fix needs its own commit and
-appropriate exact-commit verification. Do not repeatedly dispatch unchanged suites.
+or an unrelated green run. Group local fixes and checks before remote execution.
+Fix confirmed failures without disabling assertions, tests, warning checks or
+triggers. Repeat affected jobs here only for a confirmed failure or changed
+workflow/tool/build inputs, with the resulting commit identified. Do not repeat
+unchanged suites after each intermediate commit or documentation-only correction.
+Retain the actual tested SHA when a later commit only records documentation or
+validation evidence; that reporting commit does not require another remote run.
 
 Missing remote/service/tool access is BLOCKED or NOT RUN for that check, not
 permission to invent a remote or claim success. Preserve local work, continue
@@ -83,5 +90,7 @@ PASS/FAIL/NOT RUN/BLOCKED outcomes. Keep firmware links, clean archive consumpti
 host tests and remote CI as distinct evidence. Record tested SHA/run links in the
 handoff and next progress update rather than creating a self-referencing commit
 hash loop. Commit/sync checked units on the same execution branch throughout.
-Finish with the final branch/commit, verified sync, exact-commit CI result and
-remaining hardware limitations; publication still needs its own authorization.
+Finish with this checkpoint's branch/commit, verified sync, tested CI SHA/result
+and remaining hardware limitations. Later changes do not retroactively extend
+that result to a new SHA or create another CI gate. Publication still needs its
+own authorization and required checks.

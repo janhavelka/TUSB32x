@@ -20,6 +20,14 @@ for material design choices. Record paths and adopted/rejected conventions in a
 short progress entry. Prompt 1 performs the broad inventory; later prompts verify
 relevant changes and reuse unchanged evidence. Keep siblings read-only.
 
+For this first implementation promptset, remote CI is confined to prompt 34.
+Other prompts use local checks: do not dispatch, poll or wait for remote runs,
+even after substantial fixes or commit/sync. This user-requested exception
+overrides recurring parent CI requirements; see
+[the repository CI policy](../../AGENTS.md#ci-and-local-verification).
+Peer workflow audits inspect checked-in definitions, not remote run status;
+reuse unchanged evidence and revisit definitions only when relevant inputs change.
+
 ## Read the relevant contracts
 
 All shared requirements remain binding. Read the sections needed for this unit
@@ -67,6 +75,8 @@ authors may not edit them. The lead inspects diffs and integration results.
 If context becomes short, checkpoint completed checked work and record the exact
 remaining items. Resume the same prompt before moving on; do not call it complete
 because a session ended. Required unavailable checks remain BLOCKED/NOT RUN.
+Outside prompt 34, omit unrequested remote CI from per-prompt checklists; it does
+not block completion.
 Hardware qualification is separately reported and cannot be inferred from mocks.
 
 ## Finish and sync every prompt

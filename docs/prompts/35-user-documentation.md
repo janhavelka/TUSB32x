@@ -1,7 +1,8 @@
 # 35 — Reconcile user guides and feature coverage
 
 Read [COMMON.md](COMMON.md). Prerequisites: prompts 1–34, including current
-implementation, examples, runners, package evidence and CI results. Documentation
+implementation, examples, runners, package evidence and prompt 34's recorded CI
+results. Do not request a fresh remote run for documentation. Documentation
 already accompanies those changes. This prompt closes user-guide gaps; prompt 36
 audits source documentation and maintainer instructions.
 

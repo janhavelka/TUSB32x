@@ -80,5 +80,6 @@ affects adapters/CLI, run those affected checks and flag prompt 38's review scop
 All discovered core defects that can be fixed locally are closed with evidence.
 Update feature coverage, validation and progress; retain real silicon/hardware
 gates. **Commit and sync** fixes on the existing execution branch and verify
-upstream equality. Apply exact-final-commit CI policy for substantive fixes.
+upstream equality. Validate substantive fixes locally; do not dispatch or wait
+for remote CI. Prompt 34 owns the initial promptset's remote checkpoint.
 Do not claim the entire promptset complete before prompt 38.

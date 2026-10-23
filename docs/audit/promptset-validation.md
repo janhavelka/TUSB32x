@@ -228,3 +228,27 @@ qualification were run or claimed. Public-source search/access limits and exact
 unresolved TI claims remain in the research reports. The final handoff records
 the resulting maintenance commit and verified synchronization without embedding
 a self-referencing commit hash here.
+
+## Initial promptset CI frequency — 2026-10-23
+
+At the user's request, remote CI execution and run-status checking are confined
+to prompt 34 during the first implementation promptset. Root AGENTS, COMMON,
+technical rules, master instructions and final reviews now state the same
+exception to the parent policy. Other prompts use local validation and omit
+unrequested remote runs from their completion gates. The prompt 34 run retains
+its actual tested SHA; later fixes cannot inherit its green result.
+
+The change preserves local test/build/documentation/package requirements,
+one-branch execution, per-prompt commit/sync, existing triggers/hooks and required
+merge/release checks. Prompt 34 still completes the supported CI matrix, batching
+work and repeating affected jobs only for failures or changed inputs. Source
+inspection of peer workflows does not require fetching remote run status.
+
+Validation: all 38 prompts remain indexed in order with their completion and
+delegation instructions; 60 Markdown files and 286 local links/anchors passed,
+along with UTF-8, fenced-block and diff-whitespace checks. Active guidance was
+searched for conflicting recurring
+exact-final-commit/parent-CI mandates and the final-review requirements corrected.
+No implementation, workflow execution, firmware build or remote CI was needed
+for this documentation change. Parent/sibling files and archived sources were
+unchanged. The final handoff records the maintenance commit and verified sync.

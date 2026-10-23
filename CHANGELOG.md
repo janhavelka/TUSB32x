@@ -7,6 +7,10 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Confined remote CI execution and status checking in the first implementation
+  promptset to prompt 34. Other prompts and final-review fixes use local checks;
+  commit/sync requirements remain, and older CI runs retain their actual SHA.
+
 - Require exact-source verification of inherited chip facts, explicit conflict
   handling and corrections across contracts, code, tests, Doxygen and guides.
 - Add targeted public-code failure cases and TI electrical/timing/variant facts

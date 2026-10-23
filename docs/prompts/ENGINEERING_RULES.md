@@ -238,6 +238,9 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
 - Maintain a feature-to-API-to-CLI-to-test-to-source matrix and `docs/validation.md`
   with PASS/FAIL/NOT RUN/BLOCKED per actual check. Hardware evidence identifies
   exact part, board, framework, firmware, wiring, fixture and date.
-- Follow parent CI policy for meaningful changes and exact-final-commit checks
-  when a remote exists. Never count prior green CI as verification of new edits.
-  A missing remote/hardware/tool is a limitation, not permission to falsify results.
+- Follow the user-requested initial-promptset CI exception in repository AGENTS:
+  remote execution/status checks belong to prompt 34 only. Other prompts,
+  including final reviews and substantive fixes, use appropriate local checks.
+  Unrequested remote CI does not block them. Preserve the tested SHA of any
+  earlier run; never count it as CI verification of later edits. Keep existing
+  hooks/protection and report unavailable required tools or hardware honestly.

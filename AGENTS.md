@@ -85,15 +85,28 @@ to each numbered implementation prompt and to completed maintenance work here.
 
 ## CI and local verification
 
-- Inspect current workflows and checks before implementation. Reuse their
-  commands, pinned tools, generated-file rules and test registration.
+- **Initial promptset exception requested by the user:** remote CI belongs to
+  prompt 34 only. Prompts 1–33 and 35–38 do not dispatch, poll, wait for or require
+  remote CI results, including after substantive fixes or a commit/sync. This
+  overrides the parent's recurring exact-final-commit CI requirement for this
+  first implementation promptset. A later explicit user request can change it.
+- Inspect relevant checked-in workflow definitions during the initial audit;
+  reuse their commands, pinned tools, generated-file rules and test registration.
+  Revisit definitions when affected by a change or during prompt 34. A prompt's
+  request to inspect peer CI means source review, not checking remote run status.
 - Run focused local checks for each meaningful change. Documentation-only work
-  needs applicable text/link/consistency checks, not firmware or remote CI after
-  every commit. Committing and syncing does not imply dispatching CI every time.
-- For major behavior/API, integration, build/toolchain/dependency/workflow or
-  release changes, follow the parent policy: verify existing CI on the **exact
-  final commit** through terminal results; dispatch when needed. Prior green CI
-  does not verify new edits. Do not repeatedly dispatch unchanged suites.
+  needs applicable text/link/consistency checks. Keep required local behavior,
+  documentation, package and firmware checks; repeat affected checks after fixes,
+  not the entire matrix after every small change.
+- Prompt 34 verifies its completed implementation through the supported remote
+  matrix. Repeat affected CI jobs there only for a confirmed failure or changed
+  workflow/tool/build inputs. Later prompts use local evidence and retain the
+  earlier run's actual SHA; never claim that run verifies a later final commit.
+- Existing automatic runs may still happen on push; observing them is not a
+  completion gate outside prompt 34. Preserve existing triggers, hooks and
+  required merge/release checks. This exception does not authorize bypassing
+  protection or publishing a release. After the initial promptset, the parent
+  CI policy applies unless the user gives different instructions.
 - Fix confirmed failures without weakening assertions, skipping required suites,
   suppressing documentation warnings or changing triggers to obtain green output.
   Respect existing hooks and required checks.

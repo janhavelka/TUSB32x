@@ -69,9 +69,11 @@ carried into a COMPLETE status.
 Run the required final matrix after fixes: registered host/CLI/Python/guard tests,
 Doxygen, clean package consumers and the supported Arduino/native-IDF builds.
 Reuse current evidence when source/tool inputs are unchanged and the requirement
-allows it; repeat affected checks after fixes. Follow parent CI policy and verify
-terminal results for the exact final substantive commit, not an older green run.
-Report unavailable tools/remote/physical fixtures accurately.
+allows it; repeat affected local checks after fixes. Do not dispatch, poll or wait
+for remote CI in this prompt. Report prompt 34's actual tested SHA/result
+separately from this final commit's local validation; the earlier run does not
+verify later changes. Unrequested remote CI is not a completion gate. Report
+unavailable required tools and physical fixtures accurately.
 
 ## Finish this promptset
 
