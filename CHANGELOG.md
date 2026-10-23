@@ -7,6 +7,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Changed
 
+- Independently audited prompt 5's actual headers, contracts and fixtures against
+  the original requirements and current peers. Repeated strict compilation,
+  linked Status tests, Doxygen and documentation checks; no code or API correction
+  was needed. Recorded the review evidence and remaining implementation scope.
+
 - Independently audited prompt 4 against TI sources, current peers and the
   committed diff. Made reset/ACK formulas explicit by variant, fixed the ACK
   table's unescaped bitwise-OR delimiter, and repeated procedure, timing,

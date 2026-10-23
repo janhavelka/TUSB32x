@@ -434,3 +434,51 @@ framework or package builds and physical hardware qualification. Those methods
 are not implemented in prompt 5. Remote CI was neither dispatched nor polled.
 Prompt 6 remains NOT STARTED. This stage's passed checks establish the portable
 value contract and planned signature syntax only.
+
+## Independent prompt 5 review, 2026-10-23
+
+The full original prompt and actual `d29cb36b3e0f5ed57dc5512964ce40e2b5326ae2`
+to `c5fcc983e36cd3c79005a420fc4db7b752c73346` diff were independently reviewed.
+Three fresh-context reviewers checked coverage/simplicity, contract correctness
+and edge cases, and executable verification/peer evidence. The lead inspected
+the code and contracts directly and repeated checks, rather than relying on
+the previous completion report. No confirmed defect or missing in-scope
+deliverable was found; no source/API/test correction was needed.
+
+Fresh checks passed:
+
+- All four delivered headers compiled independently with GCC 15.1.0, C++17,
+  Wall/Wextra/Wpedantic/Wconversion/Wsign-conversion and Werror.
+- The two-TU consumer compiled, linked and executed with NDEBUG. Its runtime
+  checks stay active: all 23 names/order, invalid error names, explicit bool,
+  constexpr Status, full int32 detail, callback shapes and fixed/default values.
+  The lead reran the commands recorded above with output under
+  `<TEMP>/tusb32x-p5-independent-lead/`; the expected PASS line was printed.
+- The planned API fixture passed syntax-only compilation. All 26 baseline
+  facade signatures match the guide and fixture; the ordered 23-code Err set
+  matches the baseline. No missing callable definition is published in include/.
+- Strict Doxygen 1.13.2 passed with the same warning settings recorded above;
+  XML showed exactly all 17 public structs. The lead's new output is under
+  `<TEMP>/tusb32x-p5-independent-lead/doxygen/`. Two reviewers independently
+  reproduced compilation, linkage and documentation results in separate TEMP paths.
+- All 80 Markdown files and 452 local links/anchors passed, as did JSON parsing,
+  UTF-8/LF/final-newline/whitespace and scoped diff checks. All 38 numbered prompts,
+  archived sources, production headers and test fixtures are unchanged by this review.
+
+The peer reviewer rechecked all five HEADs, branches, clean states and local
+upstream refs; all match execution-5-peers.md with local ahead/behind 0/0.
+Relevant declarations, implementation and test bodies, examples, runner records,
+AGENTS and registration were inspected again and support the report. Siblings
+were neither fetched nor modified; local refs do not prove server state.
+
+Reviewed boundaries include static-message lifetime, exact error origins,
+terminal callback ownership, raw versus interpreted validity, identity versus
+current initialization, operation-local IRQ versus historical diagnostics,
+independent recovery/mode/reset uncertainty and single-byte decoder field codes.
+No driver stub, duplicate decoder, framework dependency or speculative hierarchy
+was introduced. Compile-only signatures remain clearly separate from real behavior.
+
+Only audit/progress/changelog records changed. Detailed owner transitions,
+validators, decoder and device operations remain future work. Protocol behavior,
+framework/package builds and hardware checks are NOT RUN; remote CI was not
+dispatched or polled. Prompt 6 is NOT STARTED.

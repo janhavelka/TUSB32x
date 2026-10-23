@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: execute prompt 5 only; do not start prompt 6.
+Current authorization: independently review completed prompt 5; do not start prompt 6.
 
 ## Prompt status
 
@@ -309,3 +309,30 @@ test instructions were updated. Variant/register/procedure guides and archived
 TI evidence were reviewed and need no semantic changes. No firmware/package,
 driver behavior or hardware qualification is claimed. Commit/sync evidence is
 reported in the handoff and next progress update, avoiding self-reference.
+
+## Independent prompt 5 review
+
+Reviewed commit `c5fcc983e36cd3c79005a420fc4db7b752c73346` and its complete diff
+from `d29cb36b3e0f5ed57dc5512964ce40e2b5326ae2` after rereading original prompt 5
+in full. At review start, the same execution branch was clean and equal to its
+upstream after fetch, with zero ahead/behind. The recorded execution base is unchanged.
+
+Three fresh-context, read-only agents audited requirements/simplicity,
+correctness/edge cases, and tests/peer evidence in parallel. They used
+gpt-6.1-sol/high, gpt-6-astra/high and gpt-6.1-sol/high respectively. The lead
+checked the actual headers, baseline signatures, documentation and scoped diff,
+and independently repeated the required compilation, linked consumer and
+Doxygen checks. All five peer revisions and clean states still match the
+original prompt 5 audit; sources, tests and registration substantiate its claims.
+
+No confirmed bug, omitted prompt 5 requirement or unnecessary abstraction was
+found. Public code and API remain unchanged; this commit records the completed
+review only. All checks passed, including four standalone headers, the NDEBUG
+two-TU consumer, planned-signature syntax, Doxygen visibility of 17 structs and
+80 Markdown files with 452 local links. Validation records the exact scope and limits.
+
+Prompt 6 remains NOT STARTED. Detailed owner-state semantics, validators/build,
+decoder implementation and device operations stay in their assigned later
+prompts. No runtime protocol, framework/package or hardware qualification is
+claimed. The lead owns the review commit and synchronization; final evidence is
+reported in the handoff and next progress update without a self-reference.
