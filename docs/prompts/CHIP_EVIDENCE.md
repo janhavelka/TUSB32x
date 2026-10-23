@@ -206,6 +206,9 @@ whether a method named reset, ACK or set-mode was called.
 - Six-part 320 active-cable information does not establish integrated VCONN. 322
   autonomously supplies the unused CC line after source attachment with Ra and
   removes it on detach; there is no evidenced software VCONN-enable register.
+  SLLSEO5D §6.3.8 p13 requires a board-provided 5 V source at VDD after Attached.SRC;
+  §5.3 p4 lists VCONN 4.75–5.5 V with VDD at 5 V. The general 4.5–5.5 V device
+  operating range alone does not establish that VCONN condition.
   Do not copy Linux's inferred VCONN role into measured board-power claims.
 
 ## Timing and electrical facts — prompts 2, 4, 19, 23–26, 30–31
@@ -225,7 +228,7 @@ for exact pages and conditions. Preserve dimensions and min/typ/max labels.
 | Software reset | 26/49/95 ms min/typ/max; retain separate owner-clock policy margin |
 | Software clock policy | Existing `OWNER_CLOCK_MARGIN_MS=1`: 5/30/95 ms become 6/31/96 elapsed ticks, anchored to known completion/fresh owner time; not TI-specified 6/31/96 ms waits |
 | LAI/HAI supply | Exact operating table 2.7–5.0 V; local DFP 3 A advertisement needs >=3.5 V; remote 3 A detection as UFP does not impose that local minimum |
-| 322 supply/VCONN | 4.5–5.5 V; VCONN limit 225/300/375 mA min/typ/max; FET resistance 1.25 ohm maximum; bulk capacitance 10–200 uF |
+| 322 supply/VCONN | Device VDD 4.5–5.5 V; VCONN 4.75–5.5 V with VDD at 5 V, subject to the board prerequisite above; current limit 225/300/375 mA min/typ/max; FET resistance 1.25 ohm maximum; bulk capacitance 10–200 uF |
 | I2C pull-up rail and startup | 1.65–3.6 V; 3.3 V I2C footnote requires VDD >3.0 V; L/A ramp <=25 ms; retain exact startup-polarity conflict below |
 | VBUS sensing | Resistor min/typ/max 855/887/920 kohm versus common 900 kohm prose; system threshold 2.95/3.3/3.8 V with specified network; a 28 V system range is not the pad rating |
 | LAI/HAI Rd | Dead-battery 4.1/5.1/6.1 kohm; ordinary UFP/DRP 4.6/5.1/5.6 kohm, min/typ/max |
@@ -245,7 +248,7 @@ and required evidence. A public implementation does not close any of these gates
 | Claim | Required disposition |
 | --- | --- |
 | 322 advertisement RW figure/prose versus R table | Keep advertisement writes gated pending authoritative resolution |
-| 322 VCONN fault RCU without explicit clear mechanism | Do not infer W1C, read-clear or clearing by IRQ ACK; gate dependent consuming/clear behavior |
+| 322 VCONN fault RCU without explicit clear mechanism | Do not infer W1C, read-clear or clearing by IRQ ACK. V Table 6-9 pp18–19 shares fault bit3 with IRQ, duty and UFP-accessory controls: gate every 09 write until fault handling and safe composition are proved, including raw writes. Unchanged proved 09 controls do not block independently supported changes elsewhere |
 | 322 direct return to DRP | DRP00/11 and explicit reset-to-DRP are documented. Record evidence for a non-reset transition procedure separately from the documented DFP/UFP recipes; no hidden reset fallback |
 | L/A EN_N text says low for 50 ms; application note says high | Preserve board startup uncertainty; base Rev F already says high. Active-high EN has its own requirement |
 | Base timing table labels EN high for industrial part | Use exact active-low pin definition; do not invent an industrial enable-polarity variant |

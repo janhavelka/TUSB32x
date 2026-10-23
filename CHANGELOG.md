@@ -7,6 +7,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Independently reviewed prompt 2 against TI tables, pinned public sources and
+  current peers. Added the TUSB322I VCONN supply prerequisite and extended its
+  fault gate to all shared-register writes; completed missing visual table checks
+  and clarified the TMP1x2 ARA source reference.
+
 - Verified family capabilities against current TI sources and pinned public code.
   Corrected the TUSB322I VCONN resistance to a maximum, recorded LI/HI product
   recommendations and exact electrical conflicts, and selected strict revision

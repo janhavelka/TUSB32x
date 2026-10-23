@@ -34,7 +34,9 @@ rules are not imported: this execution's explicit prompt-34 policy governs.
   remove register-backed thermostat/SMBus capabilities.
 - `src/TMP1x2Configuration.cpp`: `validateConfig` checks model/address and rejects
   an unavailable physical ALERT input; `readAlertPin` also guards that capability.
-  `src/BusOperations.cpp` checks candidate addresses without proving model.
+  `src/BusOperations.cpp::decodeAlertCause` validates an SMBus Alert Response
+  Address (ARA) response against the caller-selected model; it does not discover
+  the model.
 - `test/variants/test_variants.cpp` exhausts all 128 seven-bit addresses for three
   models, checks invalid enum values, requires bus-silent rejection, and tests
   absent physical ALERT separately from permitted register controls. Adopt this

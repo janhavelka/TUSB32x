@@ -18,7 +18,9 @@ baseline. Prompt 2 adds the [variant matrix](docs/variant-matrix.md),
 [feature coverage](docs/feature-coverage.md) and verified source provenance.
 The matrix separates exact silicon facts, library policy and unresolved gates;
 TI's current LI/HI DFP/DRP caveat remains visible. Driver implementation has not
-started. See
+started. An independent prompt 2 review clarified the TUSB322I VCONN supply
+prerequisite and the unresolved write boundary for its shared fault/control
+register. See
 [execution progress](docs/implementation-progress.md) and [validation](docs/validation.md).
 
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,

@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: execute prompt 2 only; do not start prompt 3.
+Current authorization: independently audit completed prompt 2; do not start prompt 3.
 
 ## Prompt status
 
@@ -113,3 +113,29 @@ not inferred from the source review. Commit/sync evidence belongs in the handoff
 and the next progress update, avoiding a self-referencing commit edit.
 Source hashes, document links, metadata, preservation and focused peer-state
 checks passed. Review findings were resolved against the actual sources.
+
+## Independent prompt 2 review
+
+Reviewed completed commit `30bc8a88d47bb599c92db8a8ddd1faa234e464af` against the
+full original prompt and its diff from `9670c53b15b3e8c338479134e539ef5b4dd441d4`.
+At review start, HEAD and the same-name origin branch matched after fetch, with
+zero ahead/behind and a clean tree. The execution branch and original base remain
+unchanged. Three fresh-context, read-only agents reviewed coverage/contracts,
+silicon claims and source/peer provenance in parallel; the lead verified the
+findings against rendered TI pages, current peer code and the actual diff.
+
+Corrections add the board-owned 5 V VDD/VCONN condition and explicitly gate all
+322I register09 writes until safe fault handling is established. This includes
+ACK/service, duty, UFP-accessory and raw writes; unchanged proved controls still
+permit independently supported operations elsewhere. The peer report now names
+TMP1x2's ARA decoder precisely. Five previously text-only register-table pages
+were visually checked. The two contract reviewers found no remaining issue in
+the correction diff.
+
+Fresh official/public downloads, archive hashes and retained metadata, peer
+states, the peer archive guard, documentation links and whitespace checks passed;
+details are in the independent-review section of validation.md. No source bytes,
+numbered prompts or production code changed. Hardware and future behavior tests
+remain unexecuted; named silicon/board gates remain explicit. Prompt 3 is NOT
+STARTED. Commit/sync evidence belongs in this review's handoff and the next
+progress update, avoiding a self-referencing commit edit.
