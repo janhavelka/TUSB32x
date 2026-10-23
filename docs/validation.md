@@ -19,8 +19,9 @@ name and FieldCore's current branch/revision. No runtime behavior is implemented
 | Tool discovery | PASS | Python, host compiler, CMake/CTest, Ninja, Doxygen and managed PlatformIO versions queried; native IDF not located; availability is not build proof |
 | Scope preservation | PASS | Original preparation reports and vendor artifacts unchanged; no driver, SDK installation or sibling edits |
 
-Checks used Python pathlib/json/re and read-only git revision/status commands,
-plus the existing prompt artifact validation logic and git whitespace checking.
+Checks used ad hoc session Python commands (pathlib/json/re), read-only git
+revision/status commands and git whitespace checking. These are not a checked-in
+validator or an implemented TUSB32x test suite.
 They validate documentation and current source evidence, not the proposed driver.
 Tool resolution and exact versions are in [library comparison](library-comparison.md).
 
@@ -34,3 +35,28 @@ release-process reference instead.
 The lead commits this complete unit and verifies fetch/push/upstream equality.
 The handoff gives the resulting commit and sync result; the next progress update
 records that commit, avoiding a self-referencing hash edit.
+
+## Independent prompt 1 review, 2026-10-23
+
+Reviewed the original prompt, completed commit `18aba0b` and its diff from base
+`ca0cfe9`. Three parallel reviewers checked coverage, inventory and source claims;
+the lead checked their findings against the actual files. No driver work or later
+prompt was started. The inventory and selected engineering baseline remain valid.
+
+Corrected five evidence or wording issues:
+
+- TMP1x2's console drain defaults to 256 bytes; callers can supply a larger
+  budget. The planned TUSB32x work bound remains its own explicit requirement.
+- TMP1x2 end is bus-silent but remains bound; its separate unbind clears callback
+  associations. TUSB32x adopts bus silence, not that retained binding.
+- ADS1115 DriverConfig is declared in Config.h, not ADS1115.h.
+- LDC1614/INA228 supply strict Doxygen settings, not demonstrated missing-comment
+  negative fixtures. Those fixtures remain required TUSB32x work in prompt 33.
+- The documentation checks above were session commands, not a repository tool.
+
+Repeated local checks: 17 library revisions/manifests and the FieldCore consumer,
+all 47 directory classifications, 757 indexed paths, 68 Markdown files and 359
+local links/anchors passed. Prompt numbering, completion requirements, encoding,
+JSON parsing and whitespace checks passed. Historical preparation/vendor files
+were unchanged. Sibling repositories remained clean at their recorded revisions.
+No peer tests, driver tests, firmware builds, hardware checks or remote CI ran.

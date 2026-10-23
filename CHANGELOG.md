@@ -7,6 +7,10 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Independently reviewed execution prompt 1 and corrected peer console/lifetime
+  claims, an API source citation, Doxygen fixture expectations and validation
+  provenance. The chosen baseline and later prompt scopes remain unchanged.
+
 - Audited all 38 prompts and shared contracts for correctness and missing
   requirements. Corrected TUSB322I role sequences and base attached-mode limits;
   specified raw profile validity, target association, reinitialization, no-op
