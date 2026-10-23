@@ -1,114 +1,153 @@
 # TUSB32x implementation promptset
 
-Prepared 2026-10-23 after auditing the local I2C library ecosystem. This set is
-designed to produce a complete, general-purpose library, not a FieldCore-only
-wrapper or an Arduino-only driver. TUSB320LAI is the primary acceptance device.
+This set contains **38 complete prompts**, numbered **1 through 38** in execution
+order. It produces a general-purpose C++17 library for the verified TUSB320 family,
+starting with TUSB320LAI. The repository currently contains planning artifacts,
+not an implemented driver.
 
-## Execute
+The [scope audit](../audit/promptset-scope-review.md) explains the split from the
+original fifteen stages and maps their requirements to the new units. The split
+follows dependencies and independently testable outcomes, not equal text lengths.
 
-Give an agent repository access and the following master prompt. Alternatively,
-run one numbered prompt at a time; each imports [COMMON.md](COMMON.md) and must
-re-audit its current sibling references. The preceding implementation and reports
-stay in the same checkout. Do not restart or replace them between stages.
+## Execute one prompt
+
+Give the agent repository access and name the exact file from the table:
 
 ```text
-Implement the TUSB32x library by executing docs/prompts/00-audit.md through
-docs/prompts/14-final-audit.md in order. Read AGENTS.md, ../AGENTS.md, this index,
-and docs/prompts/COMMON.md first. Treat COMMON.md as requirements for every stage.
-For a new execution, create one new branch from the synchronized intended base
-before P00 and record its name/base commit in the progress file. Reuse a branch
-already created by the user for this run. When resuming, use the recorded branch.
-Read its ENGINEERING_BASELINE.md, CLI_CONTRACT.md, MAINTAINABILITY.md and
-AGENT_WORKFLOW.md companion contracts. They already select concrete defaults;
-verify them against current sources rather than redesigning names from scratch.
-
-Before each stage, inspect the current relevant sibling I2C libraries, including
-actual public headers, implementation, examples/CLI, tests, Python runners, CI
-and AGENTS.md. Record their revisions and the conventions adopted or rejected.
-Re-audit changed references even if an earlier stage or historic report covered
-them. Do not claim uniformity where peers differ. Do not change sibling projects.
-
-Use the TI source archive and official datasheets to verify every supported
-variant. Start with TUSB320LAI; implement the explicitly verified family matrix,
-not a speculative wildcard family. Never infer exact silicon from ACK alone.
-
-Finish each stage's implementation and meaningful checks, update its evidence
-and progress, commit and sync, then continue. Also commit and sync coherent,
-checked units during a prompt as they become ready. Routine design choices are
-yours to resolve using the audited evidence. Ask only for missing information
-that actually prevents dependent work; continue independent work. Hardware/tooling gaps must be reported
-as NOT RUN or BLOCKED, never PASS. Do not silently drop required family features,
-frameworks, tests, CLI parity, Python runners or packaging to finish sooner.
-
-Use agents where useful for independent audit, implementation in disjoint files,
-or final review. You may select their supported models and reasoning by task
-complexity using AGENT_WORKFLOW.md. The lead owns integration and reviews their
-evidence. Keep code direct, small and readable. Use simple engineering English.
-Write Doxygen in source and update affected README/CHANGELOG/guides as each
-behavior is implemented; documentation is part of every stage's completion gate.
-Keep the entire promptset on that execution branch, across prompts, sessions and
-subagents. The lead owns Git mutations, preserves unrelated changes and follows
-AGENTS.md: fetch/integrate safely, commit completed units, push to the configured
-upstream and verify synchronization. No further permission is needed for routine
-commits/pushes. Do not create a branch/worktree per prompt or rewrite shared history.
-Report actual sync failures. Release publication and hardware flashing require
-their own task authorization and target information.
-
-At completion provide the API and capability summary, changes, exact validation
-results, remaining hardware evidence and links to docs/validation.md and the final
-audit. A configured CI job, host mock, or SDK-header compile is not a linked
-firmware image or hardware validation.
+Execute docs/prompts/1-ecosystem-audit.md completely.
+Read AGENTS.md, ../AGENTS.md, docs/prompts/COMMON.md and the prompt first.
+Complete its scoped work, tests, source documentation and affected guides.
+Use subagents when useful under AGENT_WORKFLOW.md. Update progress, commit and
+sync before reporting completion. Do not start another prompt in this invocation.
 ```
 
-## Ordered stages
+For later invocations replace the filename with the next numbered prompt. Keep
+the same checkout and recorded execution branch. Resume an incomplete prompt
+before advancing. No prompt requires executing the old zero-based files.
 
-The detailed contracts are maintained once so stage prompts do not drift:
+## Execute the complete set
 
-| Contract | Concrete decisions |
-| --- | --- |
-| [Engineering baseline](ENGINEERING_BASELINE.md) | API names/signatures, Err codes, diagnostics/health, state tables, lifetimes and file layout |
-| [CLI and tooling contract](CLI_CONTRACT.md) | Commands/aliases, effects, output records, parser/runner and test conventions |
-| [Maintainability and documentation](MAINTAINABILITY.md) | Simple code and language, per-file Doxygen, doc updates and negative checker fixtures |
-| [Agent workflow](AGENT_WORKFLOW.md) | Model selection by complexity, bounded delegation, disjoint writes and independent review |
+```text
+Execute all 38 prompts listed in docs/prompts/README.md, in numerical order.
+Read AGENTS.md, ../AGENTS.md and docs/prompts/COMMON.md first.
+For a new execution create one new branch from the synchronized intended base
+before prompt 1, or use the branch the user created for this run. Record branch
+and base in docs/implementation-progress.md. Keep that branch throughout every
+prompt, agent and resumed session. When resuming, use the recorded branch and
+finish the first incomplete prompt.
 
-| Stage | Outcome |
-| --- | --- |
-| [00 — Audit](00-audit.md) | Current inventory, ownership/conventions matrix and reference choices |
-| [01 — TI specification](01-ti-specification.md) | Source archive, variant/register/timing/feature matrix |
-| [02 — API and contracts](02-api-contracts.md) | Portable public API and explicit state/ownership contracts |
-| [03 — Repository skeleton](03-repository.md) | Buildable host core, metadata, versioning and project guidance |
-| [04 — Protocol](04-protocol.md) | Exact transfers, register access, identity and safe bit handling |
-| [05 — Owner operations](05-owner-operations.md) | Lifecycle, configuration, reset, deadlines and cancellation |
-| [06 — Port, IRQ and health](06-port-health.md) | Typed observations, bounded interrupt service and passive health |
-| [07 — Conformance tests](07-conformance-tests.md) | Protocol/state/fault/portability regression matrix |
-| [08 — Shared CLI](08-shared-cli.md) | Full diagnostic interface and executable parser tests |
-| [09 — Arduino](09-arduino.md) | S2/S3 bring-up and bounded owner examples |
-| [10 — IDF and generic consumers](10-idf-consumers.md) | Native IDF, plain C++ and FieldCore-style owner examples |
-| [11 — Python and HIL](11-python-hil.md) | Evidence-checked serial runners and physical test runbook |
-| [12 — Packaging and CI](12-packaging-ci.md) | Reproducible package consumers and complete CI gates |
-| [13 — Documentation](13-documentation.md) | Complete integration/API/CLI/test/release documentation |
-| [14 — Final audit](14-final-audit.md) | Independent gap closure and honest qualification report |
+Each prompt is a complete work unit. Verify prerequisite outputs, re-audit the
+current relevant sibling I2C libraries, and read the shared contract sections
+needed for its scope. Preserve the concrete names, source facts and engineering
+decisions unless evidence requires a documented correction. Keep siblings read-only.
 
-Tests belong alongside each behavior change. Stage 07 adds cross-cutting
-conformance and hostile cases; it is not permission to defer earlier tests.
-Documentation similarly evolves with the code and is reconciled in stage 13.
-Every stage must identify changed public symbols, updated source documentation,
-affected general docs and meaningful checks before it is marked complete.
+Implement only working advertised behavior at each stage. Include meaningful
+tests, Doxygen/docstrings and affected README/CHANGELOG/guides with each change.
+No successful stubs, incomplete public APIs or testing/documentation debt passed
+to later prompts. Planned later features remain explicit future scope.
+
+Use supported subagents/models according to task complexity and AGENT_WORKFLOW.
+Assign disjoint files and keep shared contracts and integration under the lead.
+Use simple engineering English and direct maintainable code.
+
+After each prompt, review and check its complete output, update progress, commit
+and sync before continuing. Also commit and sync coherent checked units during a
+prompt. The lead handles Git, preserves unrelated work and verifies equal local/
+upstream commits and zero ahead/behind. No per-prompt branches or force-push.
+Routine commits/pushes are authorized. Report exact sync failures.
+
+Resolve routine design choices from evidence. Continue useful independent work
+when a tool or fact is missing, but keep required checks BLOCKED/NOT RUN and do
+not mark incomplete dependent work COMPLETE. Hardware flashing and release
+publication require their own authorization and target information.
+
+At the end report implemented family/API, examples/CLI/runners, actual validation,
+remaining hardware/variant limits, branch/commit/sync, and links to the final audit
+and validation records. Host mocks, build files and SDK header shims are not
+linked firmware or physical hardware qualification.
+```
+
+## Ordered prompts
+
+Read these in numerical order even if an editor sorts filenames lexically.
+A prompt lists its immediate evidence/dependencies; all preceding prompts are
+expected complete. Later references identify ownership of future work, not a
+requirement to implement it early.
+
+| # | Prompt | Finished output |
+| --- | --- | --- |
+| 1 | [Audit the library ecosystem](1-ecosystem-audit.md) | Current conventions, ownership and consumer evidence |
+| 2 | [Verify family capabilities](2-family-capabilities.md) | Source archive, identity, electrical and variant limits |
+| 3 | [Specify registers and encodings](3-register-contracts.md) | Exact access rules, masks and independent vectors |
+| 4 | [Specify silicon procedures](4-silicon-procedures.md) | Transport framing, timing and effect sequences |
+| 5 | [Define value and API contracts](5-value-api-contracts.md) | Documented types, Status and planned signatures |
+| 6 | [Define owner and state contracts](6-owner-state-contracts.md) | Admission, results, effects, time and snapshot rules |
+| 7 | [Build the portable host foundation](7-host-build.md) | Linked passive API, registered tests and consumer |
+| 8 | [Add metadata and version tooling](8-metadata-versioning.md) | Manifests, version generator, wrapper and basic Doxygen |
+| 9 | [Implement transport and identity](9-transport-identity.md) | Counted callback path and private identity access |
+| 10 | [Implement register codecs](10-register-codecs.md) | Pure decoding and mixed-register write composition |
+| 11 | [Implement the owner engine](11-owner-engine.md) | Lifecycle, tokens, timing and read-only initialization |
+| 12 | [Implement profile observation](12-profile-observation.md) | Read profile and read-only reconciliation |
+| 13 | [Implement profile application](13-profile-application.md) | Explicit apply and desired-profile verification |
+| 14 | [Implement reset and recovery](14-reset-recovery.md) | Reset and original TUSB320/I recovery procedures |
+| 15 | [Implement port snapshots](15-port-snapshots.md) | Complete observations, validity, invalidation and age |
+| 16 | [Implement interrupt service](16-interrupt-service.md) | Explicit ACK and bounded observe/ACK/recheck |
+| 17 | [Implement diagnostics and health](17-diagnostics-health.md) | Bounded raw access, evidence and passive projection |
+| 18 | [Close protocol regression gaps](18-protocol-conformance.md) | Fault, variant, access and effect conformance |
+| 19 | [Verify timing and portability](19-owner-portability.md) | Quantized time, fairness, no heap and public linking |
+| 20 | [Build the shared CLI foundation](20-cli-foundation.md) | Bounded parser/console and usable local commands |
+| 21 | [Add CLI operation control](21-cli-operation-control.md) | Managed operation routing, polling and retained results |
+| 22 | [Complete CLI command coverage](22-cli-command-coverage.md) | Remaining diagnostics, grammar/help parity and transcripts |
+| 23 | [Implement Arduino transport](23-arduino-transport.md) | Terminal callbacks and real S2/S3 adapter fixtures |
+| 24 | [Complete Arduino examples](24-arduino-examples.md) | CLI and owner-service images for S2/S3 |
+| 25 | [Implement native IDF transport](25-idf-transport.md) | Native callbacks and linked component fixture |
+| 26 | [Complete the native IDF example](26-idf-cli-example.md) | Shared CLI and resource lifecycle on S2/S3 |
+| 27 | [Prove generic owner integration](27-generic-owner-consumers.md) | Runnable ordinary C++ and two-device owner consumers |
+| 28 | [Implement the Python session](28-python-session.md) | Strict records, correlation, provenance and artifacts |
+| 29 | [Add observation runners](29-observation-runners.md) | Read-only checks, bounded soak and register dumps |
+| 30 | [Add port fixture suites](30-port-fixture-suites.md) | Orientation, accessory, role/current and IRQ checks |
+| 31 | [Add recovery fixture suites](31-recovery-fixture-suites.md) | Reset, termination, recovery, fault and console checks |
+| 32 | [Prove clean package consumption](32-package-consumers.md) | Hardened extraction and isolated framework consumers |
+| 33 | [Complete validation guards](33-validation-guards.md) | Registered checks, Doxygen negatives and validator |
+| 34 | [Run the supported CI matrix](34-ci-matrix.md) | Pinned host/package/firmware jobs and exact-commit evidence |
+| 35 | [Reconcile user documentation](35-user-documentation.md) | Guides, buildable snippets and feature coverage |
+| 36 | [Audit source and maintainer docs](36-source-maintainer-docs.md) | Visible documented APIs and accurate maintenance commands |
+| 37 | [Review silicon and owner behavior](37-final-core-review.md) | Independent core findings fixed with regressions |
+| 38 | [Finish integration review](38-final-integration-review.md) | Final validation, qualification limits and synced handoff |
+
+Tests and documentation belong with the behavior they describe. Prompts 18–19
+close cross-cutting test gaps; 35–36 reconcile maintained documentation; 37–38
+independently review and fix. None permits earlier unfinished work.
+
+## Shared contracts and reading scope
+
+[COMMON](COMMON.md) is the short per-prompt entry and completion contract.
+[ENGINEERING_RULES](ENGINEERING_RULES.md) retains the technical rules by topic.
+[ENGINEERING_BASELINE](ENGINEERING_BASELINE.md) owns exact API/state/time names;
+[CLI_CONTRACT](CLI_CONTRACT.md) owns grammar and records.
+[MAINTAINABILITY](MAINTAINABILITY.md) and [AGENT_WORKFLOW](AGENT_WORKFLOW.md)
+apply throughout. Read relevant sections and changed dependencies rather than
+reprinting or redesigning every contract for each prompt. No rule was waived by
+moving repeated technical prose out of COMMON.
+
+A prompt is scoped to one coherent deliverable with its own acceptance checks.
+It may take more than one session; word count cannot guarantee model capacity.
+If context is tight, commit checked work, record exact remaining items and resume
+that same prompt. Do not silently reduce scope or mark it finished.
 
 ## Progress and handoff
 
-At execution create `docs/implementation-progress.md` with a row for every stage:
-NOT STARTED, IN PROGRESS, COMPLETE, or BLOCKED; execution branch/base commit,
-current revision/dirty state;
-references re-audited; changes; commands and outcomes; completed commits and
-verified upstream sync (or its exact failure); remaining work. Record important API
-choices in `docs/design-decisions.md`. Do not mark a required validation COMPLETE
-when only its instructions or fixtures exist.
+At prompt 1 create `docs/implementation-progress.md` with a row for every prompt:
+NOT STARTED, IN PROGRESS, COMPLETE or BLOCKED; branch/base, current revision/dirty
+state, peer evidence, completed scope, checks/outcomes, documentation, completed
+commits, verified sync or exact failure, and remaining items. Keep material
+contract choices in `docs/design-decisions.md`.
 
-After each stage summarize the resulting behavior, evidence, commit/sync result
-and unresolved decisions. Do not call a local commit alone a completed sync.
-A new session keeps the same branch and reads those two files plus the common
-contract before continuing. Preserve hardware limitations through the final report.
+Each handoff reports scoped behavior, evidence, limitations and Git state.
+Required unavailable checks stay visible; physical qualification remains separate.
+Record completed commit IDs in the next update without a self-referencing commit
+loop. A new session reads progress and decisions before continuing on the same
+execution branch. Promptset maintenance alone does not start implementation.
 
 Supporting evidence: [audit index](../audit/README.md),
-[TI family audit](../audit/ti-family.md), and [reference archive](../reference/README.md).
+[TI family audit](../audit/ti-family.md), [reference archive](../reference/README.md).

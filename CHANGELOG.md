@@ -7,6 +7,10 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Split the original fifteen stages into 38 complete prompts numbered 1–38,
+  with dependency-aware scopes, tests/docs/delegation and per-prompt commit/sync.
+- Shortened the common entry instructions and separated technical rules by topic;
+  added explicit incremental API, prerequisite and incomplete-session boundaries.
 - Corrected chip/protocol, snapshot, reconciliation and CLI result/correlation
   instructions after an independent promptset audit; added explicit original
   TUSB320/I dead-battery recovery to the planned API.

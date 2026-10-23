@@ -6,8 +6,12 @@ planned library covers the verified I2C-capable TUSB320 variants through explici
 capabilities; the name is not a claim of compatibility with every TUSB32x product.
 
 Start with [the promptset](docs/prompts/README.md). It contains a master execution
-prompt, a common contract, and fifteen ordered implementation prompts. Every
+prompt, a short common contract, and 38 implementation prompts numbered 1–38. Every
 stage requires a fresh audit of relevant sibling I2C libraries before editing.
+
+Each prompt has a bounded scope, prerequisites, delegation guidance and its own
+tests, documentation and commit/sync gate. The [scope audit](docs/audit/promptset-scope-review.md)
+maps the original stages to the new sequence; implementation has not started.
 
 The prompts now include a [concrete engineering baseline](docs/prompts/ENGINEERING_BASELINE.md)
 for API names, errors, health states, lifetimes and folder responsibilities, plus

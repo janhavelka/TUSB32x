@@ -185,7 +185,7 @@ struct OperationTiming { uint64_t nowMs = 0; uint64_t deadlineMs = 0; };
 and nonzero `i2cTimeoutMs`. `Variant` names explicitly verified parts;
 `DeviceAddress` names verified strap/address choices. Validate their combination.
 The application selects the exact variant; identification does not guess it.
-`DeviceProfile` contains only P01-verified silicon settings, such as `portMode`,
+`DeviceProfile` contains only TI-verified silicon settings, such as `portMode`,
 `sourceCurrent`, `sourcePreference`, `drpDutyCycle` and variant-specific controls.
 Do not put desired initialization writes or health thresholds in DriverConfig.
 Do not let a default DeviceProfile silently advertise power on binding.
@@ -193,8 +193,8 @@ Do not let a default DeviceProfile silently advertise power on binding.
 ### Concrete settings and snapshot vocabulary
 
 These are chosen semantic names, not direct copies of sibling sensor enums.
-The register meanings come from the exact TI variants in P01 and
-`docs/audit/ti-family.md`; keep the P01 source revision/page/mask beside the
+The register meanings come from the exact TI variants from prompts 2–4 and
+`docs/audit/ti-family.md`; keep the verified source revision/page/mask beside the
 encoder table. Enum ordinal is not a register encoding unless explicitly stated.
 Do not cast an enum straight into a register to avoid writing the table.
 
@@ -206,7 +206,7 @@ Do not cast an enum straight into a register to avoid writing the table.
 | SourceCurrent | DEFAULT, MA_1500, MA_3000. CC advertisement categories, not measured/authorized board load. |
 | SourcePreference | NORMAL, TRY_SNK, TRY_SRC. Gate Try modes by variant. |
 | DrpDutyCycle | PERCENT_30, PERCENT_40, PERCENT_50, PERCENT_60. Semantic duty; encode by explicit table. |
-| CcDebounce | MS_116, MS_118, MS_133, MS_134, MS_151, MS_152, MS_168. Support each time only on variants whose P01 map provides it; invalid pair fails locally. |
+| CcDebounce | MS_116, MS_118, MS_133, MS_134, MS_151, MS_152, MS_168. Support each time only on variants whose register map from prompt 3 provides it; invalid pair fails locally. |
 | Attachment | UNKNOWN, DETACHED, LOCAL_SOURCE, LOCAL_SINK, ACCESSORY. UNKNOWN means undecoded/unavailable, not cable detached. |
 | PortRole | UNKNOWN, NOT_APPLICABLE, SOURCE, SINK. Snapshot has separate localRole and peerRole; do not derive a normal peer power role from an accessory encoding. |
 | Orientation | UNKNOWN, NOT_APPLICABLE, CC1, CC2. Detached has NOT_APPLICABLE; failed/unread field UNKNOWN. |
@@ -237,7 +237,7 @@ one for the other. Unsupported true/feature values fail before traffic; false
 does not authorize touching a register absent on that variant. Apply follows the
 verified safe mode sequence, then establishes the requested final disable state
 through separately reviewed steps; it must not accidentally enable a profile
-whose requested final state is disabled. P01 must establish these sequences.
+whose requested final state is disabled. Prompt 4 must establish these sequences.
 322I advertisement/debounce/control requests require its independently closed
 capability evidence; shared member names do not establish support.
 
@@ -318,12 +318,13 @@ that an earlier operation succeeded or that an unobserved sequence occurred.
 
 Decoded profile comparison is semantic where different register encodings mean
 the same mode, especially 322I DRP00/11. Preserve raw observed bits and compare
-using the exact P01 equivalence rule. Never call a valid reset DRP mode a mismatch
-solely because its bit pattern differs from the selected canonical encoder.
+using the exact equivalence rule from prompt 3. Never call a valid reset DRP mode
+a mismatch solely because its bit pattern differs from the canonical encoder.
 
-Use these public signature names. Fill the data structures from the P01 register
-matrix in P02 without renaming the chosen contract. Additional device features need a concrete TI requirement, not a
-second vocabulary for the same operation.
+Use these public signature names. Fill the data structures from prompt 3's
+register matrix during prompts 5–6 without renaming the chosen contract.
+Additional device features need a concrete TI requirement, not a second
+vocabulary for the same operation.
 
 ```cpp
 Status validateDriverConfig(const DriverConfig& config);
@@ -378,7 +379,7 @@ work/result return RESULT_NOT_AVAILABLE; a different represented token gives
 TOKEN_MISMATCH. Matching active take/snapshot returns RESULT_NOT_AVAILABLE.
 Matching terminal poll returns the retained terminal status without traffic;
 matching terminal cancel returns OK without changing the result. After take,
-the token no longer identifies represented work. Document these cases in P02.
+the token no longer identifies represented work. Document these cases in prompt 6.
 
 | Method group | Work and mutation contract |
 | --- | --- |
@@ -392,7 +393,7 @@ the token no longer identifies represented work. Document these cases in P02.
 | startAcknowledgeInterrupt | Explicit ACK-only write using a fresh safe image of actual control bits, never staged desired settings. No promise of full service/recheck. |
 | startServiceInterrupt | Observe/publish, explicit W1C ACK, bounded recheck. It is a write operation even if caller thinks of it as reading events. |
 | startReset | Explicit one-shot reset command and bounded observation. No automatic desired-profile reapply. A failed/uncertain reset is never resent by the operation. |
-| startRecoverDeadBattery | Explicit base TUSB320/TUSB320I post-VDD-return sequence from P01, using the same operation engine. Requires valid identity; the caller owns the VDD-return prerequisite and decision that recovery is needed. Other variants return UNSUPPORTED_FEATURE without traffic. No automatic initialization write or desired-profile replay. |
+| startRecoverDeadBattery | Explicit base TUSB320/TUSB320I post-VDD-return sequence from prompt 4, using the same operation engine. Requires valid identity; the caller owns the VDD-return prerequisite and decision that recovery is needed. Other variants return UNSUPPORTED_FEATURE without traffic. No automatic initialization write or desired-profile replay. |
 | poll | Only managed-operation path that invokes callbacks; explicitly named Sync diagnostics are separate. Zero budget invokes none; default at most one. Time-only transitions are bounded too. |
 | cancel | Local cancellation succeeds with OK; retained operation result has CANCELLED. No callback/rollback. Terminal result with matching token remains unchanged. |
 | resultSnapshot/takeResult | Copy terminal result without/with consumption. Successful delivery returns OK even if the result contains I2C_ERROR. Failure leaves `out` unchanged. |
@@ -428,6 +429,14 @@ Retain that unresolved sequence in the existing effect record, and expose its
 kind/uncertainty through diagnostics as well as the terminal result, including
 after result consumption. No admission restriction may depend on hidden recovery
 history. Current termination-control evidence and sequence completion are separate.
+
+The pure CLI `decode <address> <byte>` route needs one shared register decoder.
+Prompt 5 freezes a small namespace `decodeRegister` contract and fixed result
+using the existing variant/field vocabulary in the API guide; prompt 10 adds its
+working public declaration/definition and tests. It only interprets supplied
+bytes, preserves raw/unknown/reserved evidence, leaves output unchanged on error,
+and performs no I2C or instance mutation. Keep it with the register-table API;
+the CLI formats that result without private source includes or duplicate codecs.
 
 ## State, result and effect separation
 
@@ -528,7 +537,7 @@ outcome even if the next owner timestamp also shows an expired deadline. Deadlin
 expiry replaces a pending success with TIMEOUT; it must not erase an actual
 transport failure. Preserve time/effect evidence independently of that outcome.
 
-P04/P05 publish the exact maximum callback count and bytes per operation for
+Prompts 9–17 publish the exact maximum callback count and bytes per operation for
 each variant from the verified sequence. Keep all state-transition loops bounded
 by a small named limit. A complete logical write/read callback can contain a
 pointer-write STOP and a read transaction; callback count is not physical bus
@@ -627,5 +636,5 @@ Do not narrate obvious assignments or copy public comments onto every definition
 Update the relevant architecture/API/ownership/state/CLI/example guide with the
 same change. Record tests and actual results in `docs/validation.md` and decisions
 in `docs/design-decisions.md`. Run applicable documentation checks at the stage
-where declarations/behavior appear. Stage 13 reconciles complete documentation;
+where declarations/behavior appear. Prompts 35–36 reconcile complete documentation;
 it does not permit earlier stages to ship undocumented behavior.

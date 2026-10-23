@@ -33,7 +33,7 @@ to each numbered implementation prompt and to completed maintenance work here.
   Fetch the configured remote and compare histories. Fast-forward when safe;
   preserve local and concurrent work. A dirty worktree alone is not a blocker.
 - At the start of a **new promptset execution**, create and check out one new
-  branch from the synchronized intended base before P00 implementation work.
+  branch from the synchronized intended base before prompt 1 implementation work.
   Use a descriptive name such as `promptset/tusb32x-implementation-YYYYMMDD` and
   an unused suffix if needed. If the user already created a branch for this run,
   use it instead of creating a second one. Record its name and base commit in
@@ -58,7 +58,7 @@ to each numbered implementation prompt and to completed maintenance work here.
   checkpoint; do not create empty commits when a completed review changes nothing.
 - Write concise commit messages describing the resulting change in plain
   engineering language. Mention a prompt number when useful, but give the actual
-  change a name rather than only "P05 done" or "updates".
+  change a name rather than only "prompt done" or "updates".
 - **Sync means fetch, safely integrate upstream changes if needed, push this
   branch to its configured upstream, and verify synchronization.** A local commit
   or successful fetch alone is not a sync. If histories diverge, preserve both
@@ -248,7 +248,7 @@ Do not create empty files or successful hardware stubs to fill the tree.
   Doxygen, Python docstrings, affected README/CHANGELOG/guides and validation.
   Document units, ownership, lifetimes, preconditions, side effects, error meaning
   and work bounds. Explain subtle masks, wait anchors and state invariants near
-  the implementation. P13 reconciles documentation already maintained throughout.
+  the implementation. Prompts 35–36 reconcile documentation maintained throughout.
 - Follow [MAINTAINABILITY](docs/prompts/MAINTAINABILITY.md). Documentation checks
   must catch missing comments and hidden public APIs, not just produce no warnings.
 - `library.json` is version truth once introduced. Use the generator's

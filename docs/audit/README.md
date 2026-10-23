@@ -134,6 +134,10 @@ documentation checks from major milestones requiring exact-commit remote CI.
 
 ## Use
 
+The [length and complexity review](promptset-scope-review.md) splits the original
+fifteen stages into 38 complete prompts numbered 1–38. It records coverage,
+dependency corrections and the smaller completion boundaries.
+
 The subsequent [correctness and simplicity review](promptset-correctness-review.md)
 records confirmed prompt defects, resolved ambiguities, simpler implementation
 choices and verified TI facts that were retained. It supersedes conflicting

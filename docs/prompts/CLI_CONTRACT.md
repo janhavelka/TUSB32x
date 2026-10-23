@@ -1,8 +1,8 @@
 # Concrete CLI and runner contract
 
 This is an implementation specification, not a claim that these commands exist
-yet. P08 implements it; P09 and P10 compile the same processor; P11 tests and uses
-it; P12 packages and registers it. Read [COMMON.md](COMMON.md),
+yet. Prompts 20–22 implement it; 23–26 integrate the same processor; 28–31 test
+and use it; 32–34 package it and finish check registration. Read [COMMON.md](COMMON.md),
 [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) and
 [MAINTAINABILITY.md](MAINTAINABILITY.md). Keep the resulting `docs/CLI.md` beside
 the implementation. Changes to this contract require matching code, behavioral
@@ -59,7 +59,7 @@ change updates the contract. `[]` means optional, `|` means alternatives, and
 `<...>` means one token. Do not silently interpret `cfg` as a live read or `init`
 as permission to apply settings. No command runs automatically merely because
 the console opens. Preserve the agreed example startup behavior and document it
-in P09/P10; this contract does not add a new startup sequence.
+in prompts 23–26; this contract does not add a new startup sequence.
 
 | Topic | Canonical grammar and aliases | Meaning and routing |
 | --- | --- | --- |
@@ -71,10 +71,10 @@ in P09/P10; this contract does not add a new startup sequence.
 | port | `read`, alias `status`; `sample`, alias `snapshot`; `freshness` | Read starts `startRefreshPort`; sample/freshness print cached validity, observation sequence/time/age and provenance. Live read does not acknowledge the TUSB320 interrupt latch. |
 | profile | `cfg`, alias `settings`; `profile [show]`; `profile reset`; `profile discard`; `profile validate` | Cache/pure. Show CLI staged, core desired, observed and trusted applied fields separately. Reset stages the documented DeviceProfile candidate defaults for the variant; these are not a chip reset image. Discard copies core retained desired to staging; if none exists, reject CONFIGURATION_UNKNOWN without changing staging and direct the user to profile reset. Neither writes. Validation is not apply. |
 | profile | `profile read [timeout_ms]`; `apply [timeout_ms]`; `verify [timeout_ms]`, aliases `selfcheck`, `selftest`; `reconcile [timeout_ms]` | Profile read starts `startReadProfile`. Apply starts `startApplyProfile(staged,...)`; only accepted admission updates core desired. It is the explicit hardware mutation. Verify and its aliases compare reads with core retained desired and require that desired profile; they are not a general hardware test. Reconcile observes/computes trust without replaying writes. |
-| profile | `mode [port|dfp|ufp|drp]`; `current [default|1a5|3a0]`; `duty [30|40|50|60]`; `debounce [milliseconds]`; `preference [normal|try-sink|try-source]`; `ufpaccessory [on|off]`; `termination [on|off]`; `rd-rp [on|off]` | Getters show staging; setters only stage. `port` selects PORT-pin-determined MODE00 on verified TUSB320 variants; TUSB322I MODE00 means DRP, so port is unsupported there. Termination means the extended 0x0A DISABLE_TERM control. Rd-rp means the separate capability-gated 0x45 Rd/Rp control; neither substitutes for the other. On/off means enabled/disabled, with raw disable polarity shown separately. Advertisement is a CC category, not measured load or PD. Print exact variant debounce values from P01; unsupported controls/values reject before staging. |
+| profile | `mode [port|dfp|ufp|drp]`; `current [default|1a5|3a0]`; `duty [30|40|50|60]`; `debounce [milliseconds]`; `preference [normal|try-sink|try-source]`; `ufpaccessory [on|off]`; `termination [on|off]`; `rd-rp [on|off]` | Getters show staging; setters only stage. `port` selects PORT-pin-determined MODE00 on verified TUSB320 variants; TUSB322I MODE00 means DRP, so port is unsupported there. Termination means the extended 0x0A DISABLE_TERM control. Rd-rp means the separate capability-gated 0x45 Rd/Rp control; neither substitutes for the other. On/off means enabled/disabled, with raw disable polarity shown separately. Advertisement is a CC category, not measured load or PD. Print exact variant debounce values from prompt 3; unsupported controls/values reject before staging. |
 | interrupt | `irq`; `irq read`; `irq ack [timeout_ms]`; `irq service [timeout_ms]`; `intpin` | Bare irq is cached retained evidence; read inspects live without TUSB320 W1C acknowledgement. Ack is explicit write; service is bounded read/publish/ack/recheck with documented coalescing limits. Intpin calls an opt-in application input reader; no GPIO setup in common code. |
 | lifecycle | `reset [timeout_ms]`; `invalidate <external-reset|power-loss|target-change>` | Reset starts `startReset`, never automatic reapply. Invalidate passes an explicit CONFIGURATION_UNKNOWN reason to local invalidateDeviceState and preserves effect evidence. Explicit role/reset actions may affect autonomous VCONN on TUSB322I. |
-| lifecycle | `recover-dead-battery [timeout_ms]` | `startRecoverDeadBattery`, kind `RECOVER_DEAD_BATTERY`: explicit source-capable startup recovery for original TUSB320/TUSB320I only, using the P01/baseline sequence and prerequisites. Never an init side effect; unsupported variants reject before traffic. |
+| lifecycle | `recover-dead-battery [timeout_ms]` | `startRecoverDeadBattery`, kind `RECOVER_DEAD_BATTERY`: explicit source-capable startup recovery for original TUSB320/TUSB320I only, using the prompt 4/baseline sequence and prerequisites. Never an init side effect; unsupported variants reject before traffic. |
 | job | `job [status]`, alias `progress`; `job auto [0|1]`; `job step [0..255]` | Status/cache and local scheduler mode; explicit step selects this turn's single `poll(token,nowMs,budget)`, default budget 1. It replaces automatic stepping for that turn, including budget zero; never poll again afterward. |
 | job | `cancel [token]`, aliases `job cancel`, `stop` | Cancel/stop is local, preserves effects and produces a terminal result; cancellation does not imply rollback. Start operations through their named commands above. |
 | job | `result [token]`, alias `job result`; `result take <token>` | Non-consuming `resultSnapshot` versus exact-token `takeResult`. Untaken terminal result fences further jobs. No implicit discard when a new command arrives. |
@@ -82,7 +82,7 @@ in P09/P10; this contract does not add a new startup sequence.
 | registers | `wreg <address> <byte>`, alias `rawwrite` | Same writeRegisterSync diagnostic API. Enforce access/masks and trust invalidation. Reject changes requiring sequenced role/reset/termination procedures; direct users to typed operations. Mixed W1C/reset composition is deliberate, not generic RMW or unchecked arbitrary bus writes. |
 | diagnostics | `drv`, aliases `health`, `state`; `diag`; `xfer_stats`, alias `counters`; `xfer_reset`; `xfer_assert <attempts> [successes failures]` | Cached projection/trust/transport summaries. Diag has zero traffic. Idle-only xfer_reset calls clearTransportStats and never repairs trust, consumes a result or resets managed health evidence. Assertions reject saturated totals and report counter source. |
 
-P01/P02 must close the exact variant capability and control-value table before
+Prompts 2–6 must close the exact variant capability and control-value table before
 those rows are implemented. TUSB322I advertisement writes remain unavailable
 until the TI wording is resolved with evidence. Address discovery and bus scans
 are outside this CLI. Do not import general-call reset, sensor calibration or
@@ -102,6 +102,11 @@ repeated `confirm`, arm/confirm cycles or conversational permission gates to nor
 automated mutation suites require explicit fixture/suite selection. Board-power
 and bus-recovery actions need their own explicit application contract and are not
 implied by these commands.
+
+Pure register decoding uses the shared `decodeRegister` contract specified in
+prompt 5 and implemented/tested in prompt 10. Prompt 22 formats its fixed result.
+Do not duplicate silicon field conversion in the CLI, include private `src/`
+headers, or construct a fake transport merely to interpret a supplied byte.
 
 ## Staging, applied state and IRQ acknowledgement
 
@@ -287,5 +292,5 @@ Document every C++ CLI/console/helper public contract with Doxygen in the source
 including bounds, output callbacks, cached/live effects, lifetime and thread/owner
 requirements. Add Python module/function docstrings for grammar and evidence
 validation. Each stage updates README links, CHANGELOG, `docs/CLI.md`, command
-coverage and validation evidence; P13 reconciles them rather than writing them for
-the first time.
+coverage and validation evidence; prompts 35–36 reconcile them rather than
+writing them for the first time.

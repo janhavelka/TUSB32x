@@ -72,21 +72,27 @@ Use the runtime's concurrency limit. Do not recursively spawn work without a
 clear independent purpose. Keep dependent steps local and sequential. Waiting
 for a reviewer does not prevent the lead from doing unrelated work.
 
-## Useful split by stage
+## Useful delegation within the smaller prompts
 
-| Stages | Independent work worth delegating | Work retained by lead |
+The numbered prompt owns a complete unit; delegation helps finish that unit,
+not expand it into later prompts. One implementation owner and a focused reviewer
+are often enough. Do not spawn a team merely because a slot is available.
+
+| Prompts | Independent work worth delegating | Work retained by lead |
 | --- | --- | --- |
-| P00 | Library subsets; consumer contract audit; metadata/tool inventory | Convention choices and contradiction resolution |
-| P01 | Exact TI generation review; independent register/timing check | Family support boundary and unresolved facts |
-| P02-P03 | API review; build/version/Doxygen scaffolding after interface agreement | Canonical names, public shape and scope |
-| P04-P06 | Protocol/fault tests or independent effects/timing review | Shared state machine and trust/effect rules |
-| P07 | Host portability/fairness review; fault matrix gaps | Registration and regression quality |
-| P08 | Parser fixtures/help checks after grammar is fixed | Command semantics and shared implementation |
-| P09-P10 | Arduino and IDF adapters in separate files | Transport/time/console parity |
-| P11 | Host parser/serial fault cases; runner artifact review | Verdict, identity and cleanup rules |
-| P12 | Package consumer, CI registration or docs checker review | Full validation matrix and final state |
-| P13 | Documentation/link/terminology audit | Accuracy of capability and validation claims |
-| P14 | Separate protocol, ownership and tooling reviews | Findings triage, fixes and final report |
+| 1 | Library subsets, consumer and metadata inventory | Convention choices and contradictions |
+| 2–4 | Exact TI generation review, independent masks/timing | Family boundary, sequences and unresolved facts |
+| 5–6 | Public type/admission/time contract review | Canonical API and executable scope boundaries |
+| 7–8 | Host consumer or version-generator fixtures | Build registration and metadata truth |
+| 9–17 | Independent bytes, faults or effect/time review | One transport/engine and shared state semantics |
+| 18–19 | Conformance gaps, timing/fairness/portability checks | Coverage quality and registration |
+| 20–22 | Parser/output fixtures and help/alias checks | Command effects, single poll and result ownership |
+| 23–27 | Backend fixtures, target configs or generic consumer | Aggregate timeout, lifecycle and frontend parity |
+| 28–31 | Fake-serial failures, artifact and fixture review | Session identity, verdicts and cleanup rules |
+| 32–34 | Clean consumers, checker negatives or CI review | Complete supported matrix and exact evidence |
+| 35–36 | Links/snippets, API visibility and metadata consistency | Technical accuracy and maintainable docs |
+| 37 | Independent silicon and owner reviewers | Core finding triage and regression fixes |
+| 38 | Independent integration and distribution reviewers | Final matrix, qualification limits and handoff |
 
 Mechanical documentation work still needs engineering review when it describes
 behavior. Do not assign the writer of a subtle protocol change as its only reviewer.

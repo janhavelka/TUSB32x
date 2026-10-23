@@ -1,5 +1,8 @@
 # Promptset correctness and simplicity review
 
+This dated review uses the original zero-based stage labels. The current
+[scope review](promptset-scope-review.md) maps them to prompts 1–38.
+
 Date: 2026-10-23. Reviewed the prepared prompts after commit `ca1e687` against
 the archived TI sources, current sibling patterns and their own cross-stage
 contracts. This review corrects implementation instructions; it does not claim

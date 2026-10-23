@@ -130,7 +130,7 @@ semantics, timeouts, output files and side effects; Python does not need C++ tag
 
 At each stage inspect the following and update the affected files in the same
 change. Do not add meaningless edits to unaffected files; record which were
-reviewed and why no change was needed. Stage 13 checks consistency, not first-time
+reviewed and why no change was needed. Prompts 35–36 check consistency, not first-time
 documentation.
 
 Keep one authoritative explanation for each contract and link to it. Closely

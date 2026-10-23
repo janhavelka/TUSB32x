@@ -1,5 +1,8 @@
 # Preparation validation
 
+Earlier entries use the original zero-based prompt numbering. The current
+[scope review](promptset-scope-review.md) maps those stages to prompts 1–38.
+
 Date: **2026-10-23**. These results validate the audit/promptset artifacts only.
 There is no driver implementation in this checkout to compile or hardware-test.
 
@@ -159,3 +162,26 @@ behavior or physical timing. P04-P12 still require the real regression tests,
 adapter builds and evidence appropriate to implementation. Existing TI ambiguity
 gates remain explicit. No hardware session, firmware build or remote CI run was
 needed or claimed for this documentation audit.
+
+## Prompt scope and numbering review — 2026-10-23
+
+Reorganized the fifteen baseline stages into 38 complete prompts. The scope
+review maps every retired stage and records each new prompt's measured size.
+Three agents drafted disjoint groups and performed follow-up dependency reviews;
+the lead integrated their work and corrected the reported boundaries.
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Sequence and index | PASS | Exactly 38 unpadded filenames numbered 1–38; matching headings and index order; retired zero-based files removed |
+| Prompt size | PASS | 558–859 whitespace-separated words per prompt; 25,854 total; COMMON 671 words with technical rules retained separately |
+| Complete unit instructions | PASS | All 38 include shared instructions, audit, delegation, checks, documentation and same-branch commit/sync requirements |
+| Links and text | PASS | 56 Markdown files, 229 local links including anchors; balanced fences, valid UTF-8; new prompts LF/final newline |
+| Current references | PASS | No legacy Pxx labels in active prompts/root guidance; dated reports explicitly retain historical numbering |
+| Dependency review | COMPLETE | Incremental callable APIs, observation before apply/verify, counted transport, pure decoder, startup result ownership, package/validator order and one generator test file |
+| Coverage review | COMPLETE | All fifteen original stages mapped; per-feature tests/docs retained; nine HIL suite families preserved |
+| Git/source scope | PASS | git diff --check; archived TI references unchanged; no driver or sibling changes |
+
+These checks validate the planning documents. No implementation prompt was
+executed, and no driver tests, firmware builds, remote CI or hardware results are
+claimed. Prompt length does not guarantee one-session completion; an interrupted
+unit must resume with its exact remaining work before it can be marked COMPLETE.
