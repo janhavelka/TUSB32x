@@ -32,10 +32,18 @@ to each numbered implementation prompt and to completed maintenance work here.
 - Before editing, inspect status, staged changes, current branch and upstream.
   Fetch the configured remote and compare histories. Fast-forward when safe;
   preserve local and concurrent work. A dirty worktree alone is not a blocker.
-- Keep the **entire promptset on its existing branch**, including later sessions
-  and subagents. Record that branch in the implementation progress file. Do not
-  create, switch to or use a separate branch/worktree per prompt or agent unless
-  the user asks. Do not move work to main merely because a prompt has finished.
+- At the start of a **new promptset execution**, create and check out one new
+  branch from the synchronized intended base before P00 implementation work.
+  Use a descriptive name such as `promptset/tusb32x-implementation-YYYYMMDD` and
+  an unused suffix if needed. If the user already created a branch for this run,
+  use it instead of creating a second one. Record its name and base commit in
+  the progress file; establish its same-name upstream on the first push.
+- Keep that **same execution branch for the entire promptset**, including later
+  sessions and subagents. Resuming a recorded execution does not create a new
+  branch. Do not create a branch/worktree per prompt or agent, or move work to
+  main when a prompt finishes. A later, separate promptset execution gets its
+  own new branch. Editing or auditing prompts alone is maintenance, not the start
+  of their implementation execution.
 - Assume other agents or the user may be editing. Stage only files or hunks owned
   by this task, including reviewed subagent changes. Never stash, discard,
   overwrite or commit unrelated work. Inspect the staged diff before committing.

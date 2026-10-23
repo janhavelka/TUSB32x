@@ -3,6 +3,11 @@
 Read and apply [COMMON.md](COMMON.md) and root/parent AGENTS.md. This stage is
 research and decisions; do not copy a whole sibling repository as the driver.
 
+Before a new implementation execution, follow AGENTS.md to create one new
+execution branch and record its name/base commit. If resuming, verify and use the
+recorded branch. Keep it through P14; commit and sync after this prompt and each
+later prompt, including coherent completed units ready within a prompt.
+
 ## Start from the prepared decisions
 
 Read [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md),

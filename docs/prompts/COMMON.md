@@ -23,8 +23,10 @@ Verified TI facts and the user's instructions take precedence over both.
 ## Git completion rule for every prompt
 
 Follow [AGENTS.md](../../AGENTS.md#git-workflow-one-branch-for-the-whole-promptset).
-The user authorizes routine commits and pushes for this repository. Keep this
-entire promptset on its existing branch across stages, sessions and subagents.
+The user authorizes routine commits and pushes for this repository. Start each
+new promptset execution on one new branch as defined in AGENTS.md; record it and
+keep it across every stage, session and subagent. Resume that recorded branch
+when continuing an execution; do not create a new branch per prompt or session.
 After each completed prompt, commit the checked code/tests/docs and sync before
 reporting completion or starting the next prompt. Also commit and sync a coherent,
 checked unit during a prompt when it is ready; do not defer everything to P14.

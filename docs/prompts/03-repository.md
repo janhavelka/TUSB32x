@@ -89,4 +89,4 @@ put a README claim ahead of its implementation or silence Doxygen warnings.
 - No Python/Git/platform dependency is needed merely to compile delivered C++.
 - Record the actual tool versions and commands; defer firmware support claims
   until the corresponding examples link. Commit and sync completed units under
-  AGENTS.md and COMMON, keeping the promptset's existing branch.
+  AGENTS.md and COMMON, keeping the execution branch created at the start.

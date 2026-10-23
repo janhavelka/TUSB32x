@@ -59,7 +59,8 @@ The lead merges compatible edits and resolves contradictory recommendations by
 source and tests. Agent consensus is not evidence of silicon behavior.
 
 The lead alone stages, commits, integrates upstream and pushes shared changes.
-Keep the whole promptset on its existing branch across prompts and sessions;
+The lead creates one new branch when starting a new promptset execution, or
+resumes its recorded branch. Keep that branch across all prompts and sessions;
 subagents use the same checkout with disjoint write scopes, not separate
 per-agent branches/worktrees. Follow AGENTS.md: commit and sync each completed
 prompt and any coherent, checked unit ready during a prompt. Include code,

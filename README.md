@@ -17,8 +17,9 @@ engineering English and documentation with every change, including source Doxyge
 [Agent guidance](docs/prompts/AGENT_WORKFLOW.md) permits delegation and model
 selection according to task complexity and the active runtime's capabilities.
 
-[AGENTS.md](AGENTS.md) defines the engineering and Git workflow. Keep the entire
-promptset on one branch; commit and verify upstream sync after each prompt and
+[AGENTS.md](AGENTS.md) defines the engineering and Git workflow. Start each new
+promptset execution on a new branch and keep it throughout that execution;
+commit and verify upstream sync after each prompt and
 at coherent, checked units during a prompt. The lead handles Git for shared work.
 
 The supporting [audit](docs/audit/README.md) records source observations from

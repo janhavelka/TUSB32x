@@ -15,6 +15,9 @@ stay in the same checkout. Do not restart or replace them between stages.
 Implement the TUSB32x library by executing docs/prompts/00-audit.md through
 docs/prompts/14-final-audit.md in order. Read AGENTS.md, ../AGENTS.md, this index,
 and docs/prompts/COMMON.md first. Treat COMMON.md as requirements for every stage.
+For a new execution, create one new branch from the synchronized intended base
+before P00 and record its name/base commit in the progress file. Reuse a branch
+already created by the user for this run. When resuming, use the recorded branch.
 Read its ENGINEERING_BASELINE.md, CLI_CONTRACT.md, MAINTAINABILITY.md and
 AGENT_WORKFLOW.md companion contracts. They already select concrete defaults;
 verify them against current sources rather than redesigning names from scratch.
@@ -43,7 +46,7 @@ complexity using AGENT_WORKFLOW.md. The lead owns integration and reviews their
 evidence. Keep code direct, small and readable. Use simple engineering English.
 Write Doxygen in source and update affected README/CHANGELOG/guides as each
 behavior is implemented; documentation is part of every stage's completion gate.
-Keep the entire promptset on its existing branch, across prompts, sessions and
+Keep the entire promptset on that execution branch, across prompts, sessions and
 subagents. The lead owns Git mutations, preserves unrelated changes and follows
 AGENTS.md: fetch/integrate safely, commit completed units, push to the configured
 upstream and verify synchronization. No further permission is needed for routine
@@ -95,7 +98,8 @@ affected general docs and meaningful checks before it is marked complete.
 ## Progress and handoff
 
 At execution create `docs/implementation-progress.md` with a row for every stage:
-NOT STARTED, IN PROGRESS, COMPLETE, or BLOCKED; branch/revision/dirty state;
+NOT STARTED, IN PROGRESS, COMPLETE, or BLOCKED; execution branch/base commit,
+current revision/dirty state;
 references re-audited; changes; commands and outcomes; completed commits and
 verified upstream sync (or its exact failure); remaining work. Record important API
 choices in `docs/design-decisions.md`. Do not mark a required validation COMPLETE

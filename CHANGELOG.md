@@ -7,6 +7,8 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Clarified branch lifetime: create one new branch for each new promptset
+  execution, then retain it through all prompts, sessions and agents.
 - Expanded AGENTS.md using current sibling Git, CI, ownership and engineering
   rules, adapted to the future TUSB32x library and its concrete contracts.
 - Required commits and verified upstream synchronization after every prompt and
