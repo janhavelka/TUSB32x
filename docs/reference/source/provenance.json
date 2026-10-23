@@ -1,0 +1,65 @@
+[
+  {
+    "file": "TI-TUSB320LAI-HAI-SLLSEQ8D.pdf",
+    "url": "https://www.ti.com/lit/ds/symlink/tusb320lai.pdf",
+    "document": "SLLSEQ8D",
+    "revision_date": "May 2017",
+    "retrieved_utc": "2026-10-23T10:17:20.465775+00:00",
+    "sha256": "62f7b3f65338e25ebd6fd46ef04474ba806b06b1cc04bc0b3d7b8191b01ca87d",
+    "bytes": 1313743
+  },
+  {
+    "file": "TI-TUSB320LI-HI-SLLSEP2D.pdf",
+    "url": "https://www.ti.com/lit/ds/symlink/tusb320li.pdf",
+    "document": "SLLSEP2D",
+    "revision_date": "May 2017",
+    "retrieved_utc": "2026-10-23T10:17:20.984105+00:00",
+    "sha256": "6e570c562b3bc9ee0c822353f3abebfad692ab27bfd862ff1c07da57e8c0ff81",
+    "bytes": 1286861
+  },
+  {
+    "file": "TI-TUSB320-I-SLLSEN9F.pdf",
+    "url": "https://www.ti.com/lit/ds/symlink/tusb320.pdf",
+    "document": "SLLSEN9F",
+    "revision_date": "March 2022",
+    "retrieved_utc": "2026-10-23T10:17:21.076633+00:00",
+    "sha256": "1306e448c3f3b169f3b90854710033b9a1aede1d04ba35088f3d2e3ed260d2c4",
+    "bytes": 1601733
+  },
+  {
+    "file": "TI-TUSB321-SLLSEO6C.pdf",
+    "url": "https://www.ti.com/lit/ds/symlink/tusb321.pdf",
+    "document": "SLLSEO6C",
+    "revision_date": "August 2018",
+    "retrieved_utc": "2026-10-23T10:17:21.247432+00:00",
+    "sha256": "ef1cea96d1e85a985410e1316a6b52381cf50a482681dbb91da9a9920025305e",
+    "bytes": 846489
+  },
+  {
+    "file": "TI-TUSB32x-Application-Issues-SLAAE24.pdf",
+    "url": "https://www.ti.com/lit/an/slaae24/slaae24.pdf",
+    "document": "SLAAE24",
+    "revision_date": "May 2021",
+    "retrieved_utc": "2026-10-23T10:18:16.920138+00:00",
+    "sha256": "0c30a8fbe63f1e28069061b68813ad95e03e93ea3d8d3ab89620976577c8e43e",
+    "bytes": 674525
+  },
+  {
+    "file": "TI-CC-Selection-Guide-SDAA284.pdf",
+    "url": "https://www.ti.com/lit/pdf/sdaa284",
+    "document": "SDAA284",
+    "revision_date": "March 2026",
+    "retrieved_utc": "2026-10-23T10:18:17.216584+00:00",
+    "sha256": "6827e47802a63f01f0ff4863f9b97fa565399e782b064af55755318c3499a128",
+    "bytes": 777774
+  },
+  {
+    "file": "TI-TUSB322I-SLLSEO5D.pdf",
+    "url": "https://www.ti.com/lit/ds/symlink/tusb322i.pdf",
+    "document": "SLLSEO5D",
+    "revision_date": "March 2021",
+    "retrieved_utc": "2026-10-23T10:18:17.406248+00:00",
+    "sha256": "7cbd82a81e2b32f56caeca413a6be83372c91e401cae32a0cf85db0646dc9683",
+    "bytes": 1586968
+  }
+]

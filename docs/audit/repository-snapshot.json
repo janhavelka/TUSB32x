@@ -1,0 +1,454 @@
+{
+  "audit_date": "2026-10-23",
+  "captured_utc": "2026-10-23T10:31:08.550392+00:00",
+  "scope": "Local read-only source snapshot; no build/test/hardware/remote-sync claim",
+  "repositories": [
+    {
+      "directory": "TMP1x2",
+      "kind": "i2c-library",
+      "manifest_name": "TMP1x2",
+      "version": "1.0.0",
+      "commit": "bafc34067530eb340e55c42dae3fad4eb795b6e9",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "24Cxx",
+      "kind": "i2c-library",
+      "manifest_name": "EEPROM24Cxx",
+      "version": "1.0.0",
+      "commit": "936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "ADS1115",
+      "kind": "i2c-library",
+      "manifest_name": "ADS1115",
+      "version": "2.0.2",
+      "commit": "381236ebfed813cd7a9aca34520ce031d8a0ff6b",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "BME280",
+      "kind": "i2c-library",
+      "manifest_name": "BME280",
+      "version": "2.2.0",
+      "commit": "d538f2e203ee26d6ddbc86f86d2b0cf4c73a6e98",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "INA228",
+      "kind": "i2c-library",
+      "manifest_name": "INA228",
+      "version": "3.0.4",
+      "commit": "b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "INA3221",
+      "kind": "i2c-library",
+      "manifest_name": "INA3221",
+      "version": "3.2.0",
+      "commit": "e45622dbaa5bb0b3151d980f30a1b6ea1cdb1a1b",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "LDC1614",
+      "kind": "i2c-library",
+      "manifest_name": "LDC1614",
+      "version": "3.2.0",
+      "commit": "c0ab4c1712c4135b925354d70c4e6bed5cca62d8",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "LSM6DS3TR",
+      "kind": "i2c-library",
+      "manifest_name": "LSM6DS3TR",
+      "version": "2.1.0",
+      "commit": "513c5641d9b7dda63fddc27267ea62aa8d03ff93",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "MB85RC",
+      "kind": "i2c-library",
+      "manifest_name": "MB85RC",
+      "version": "4.2.0",
+      "commit": "1bf7c293549b1038b2d8f3b7a8d655fa74201e6e",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "MCP45HVX1",
+      "kind": "i2c-library",
+      "manifest_name": "MCP45HVX1",
+      "version": "2.0.0",
+      "commit": "d3eae4a01113d3badee1b6156571666bffe91ba2",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test",
+        "tests"
+      ]
+    },
+    {
+      "directory": "OPT4001",
+      "kind": "i2c-library",
+      "manifest_name": "OPT4001",
+      "version": "1.2.2",
+      "commit": "dab818e575fc25a0949d962bc0df600eb2ed5200",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "PCA9555",
+      "kind": "i2c-library",
+      "manifest_name": "PCA9555",
+      "version": "3.0.3",
+      "commit": "498178e4d9e4acb6fab7d8b816ad5021efe8806a",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "RV3032-C7",
+      "kind": "i2c-library",
+      "manifest_name": "RV3032-C7",
+      "version": "3.1.0",
+      "commit": "aabd8d9204e75072403fefb60cf8d2679a7f56de",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Jan Havelka",
+          "email": "jan@havelka.dev",
+          "url": "https://github.com/janhavelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "SCD41",
+      "kind": "i2c-library",
+      "manifest_name": "SCD41",
+      "version": "1.3.2",
+      "commit": "c0bf1bba282d12b4aa3196d9f861915fe9b22551",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "SHT3x-main",
+      "kind": "i2c-library",
+      "manifest_name": "SHT3x",
+      "version": "1.9.0",
+      "commit": "f65f15573e3c9b1ef04cce72ad08f307d021e563",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "SSD1315",
+      "kind": "i2c-library",
+      "manifest_name": "SSD1315",
+      "version": "4.0.3",
+      "commit": "62561b163c6005900797c097fa92d5bf723c83b4",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Jan Havelka",
+          "email": "jan@havelka.dev",
+          "url": "https://github.com/janhavelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "TCA9548A",
+      "kind": "i2c-library",
+      "manifest_name": "TCA9548A",
+      "version": "1.1.0",
+      "commit": "ce425e1984ac269e7934dd811a06ec08b91e307c",
+      "branch": "main",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "test_directories": [
+        "test"
+      ]
+    },
+    {
+      "directory": "FieldCore-node",
+      "kind": "consumer",
+      "manifest_name": "FieldCore-node",
+      "version": "1.3.0",
+      "commit": "7185a6eaaa98570130451dc68ce385483f4633f4",
+      "branch": "rodtester",
+      "dirty": false,
+      "authors": [
+        {
+          "name": "FieldCore"
+        }
+      ],
+      "license": "UNLICENSED",
+      "test_directories": [
+        "test"
+      ]
+    }
+  ]
+}
