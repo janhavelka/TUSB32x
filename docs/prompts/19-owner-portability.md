@@ -22,6 +22,12 @@ models, bounded scopes and lead-only Git.
 
 ## Prove bounded time and scheduling
 
+Review [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s timing provenance. Keep TI minima/maxima,
+nominal debounce and the software clock margin distinct. Public 95 ms sleeps,
+1 ms retry policies, 25 ms reset spacing and 700 ms board debounce establish no
+new core timing rule. Reject unbounded retry loops even if each backend call
+has a timeout. Register-read freshness cannot prove physical current resampling.
+
 Use an external fake clock whose physical sub-ms time can advance inside a
 callback independently of supplied integer timestamps. Extend existing cases
 where needed rather than duplicate the whole suite.

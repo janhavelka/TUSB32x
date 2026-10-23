@@ -59,6 +59,15 @@ failure tests. Sensor scratch-window or unconditional restore policies do not fi
 
 ## Test the complete plans
 
+Apply [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s physical-evidence rules: record actual
+supply/straps and distinguish LAI local 3 A advertisement's >=3.5 V condition
+from remote-current detection. Use 4.5-5.5 V supply for 322 fixtures. Its VCONN
+limit is 225/300/375 mA min/typ/max, not a 300 mA guarantee; retain required VBUS_DET.
+Vary peer advertisement while attached and compare reads with physical evidence.
+Base SLLSEN9F section 7.3.1.2, p11 requires periodic explicit software reset to
+update detected current; a read alone cannot prove that update. Never hide resets
+in readonly/soak plans or generalize this policy to later variants.
+
 Extend runner tests using fake serial/clock and scripted fixture observations.
 For each suite cover successful evidence, absent fixture, unsupported capability,
 invalidated port data, missing expected identity, setup rejection before writes,

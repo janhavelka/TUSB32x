@@ -76,6 +76,13 @@ equivalent instead of adding a duplicate solely for the suggested name:
 
 ## Verify and finish this prompt
 
+Include [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s public-code regression cases in the
+existing suites: reset mask/value error, reserved Try.SRC, reversed/partial IDs,
+base-versus-extended debug, current-field separation, ACK control preservation,
+lost primary errors and incomplete observations. Re-derive expected bytes from
+TI and independent arithmetic, never copied encoder/fake output. Correct any
+inherited error in contracts, implementation, vectors and documentation together.
+
 Run changed focused tests while fixing gaps, then the registered full host suite
 once after fixes. Do not weaken checks, expose private state unnecessarily or
 claim text searches prove behavior. Classify evidence as host software only.

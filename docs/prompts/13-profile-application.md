@@ -60,6 +60,13 @@ reasoning reviewer for waits, ambiguous writes and mismatch recovery. Follow
 
 ## Verify and finish this prompt
 
+Recheck [CHIP_EVIDENCE](CHIP_EVIDENCE.md): the TI-hosted cleanup can replace a
+failed mode write with success; reject that behavior and retain the first error.
+For extended 320 actual `0A=C2` changing to DFP, require `C3 -> E3 -> E2` with the
+5 ms hardware wait before re-enable. The similar 322 public-code example proves
+field loss only; it does not authorize this sequence for 322. Separate the first
+disable and mode writes even when initially unattached.
+
 Extend `tusb32x_operations` with exact variant sequences, all profile validation,
 nonzero preserved fields, requested-disabled final states and base attached
 rejection. Test both no-application and applied-then-error outcomes at every write;

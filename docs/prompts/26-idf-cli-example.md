@@ -48,6 +48,15 @@ identity generation. Follow AGENT_WORKFLOW, disjoint ownership and lead-only Git
 
 ## Verify and document
 
+Recheck [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s board prerequisites against actual
+wiring. LAI/HAI operates at 2.7-5.0 V; 322I at 4.5-5.5 V. Local 3 A source
+advertisement requires LAI VDD >=3.5 V; remote 3 A detection does not. Record
+ADDR straps, exact enable polarity, 320 PORT versus 322 DIR and resistor-coupled
+VBUS_DET. A 28 V system-rail limit is not the pad rating. Do not copy a 320
+DFP-only sensing omission into 322. Explain autonomous 322 VCONN and its
+min/typ/max limits without presenting typical current as a guaranteed capability
+or software-controlled output.
+
 Establish and run real IDF set-target/build commands for esp32s2 and esp32s3
 using separate build directories and isolated target configuration. For example,
 use `idf.py -C examples/esp_idf/basic -B <build-dir> set-target esp32s2`

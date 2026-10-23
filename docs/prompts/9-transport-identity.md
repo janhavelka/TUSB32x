@@ -55,6 +55,12 @@ disjoint file ownership and current runtime models. The lead integrates and owns
 
 ## Verify and finish this prompt
 
+Re-open [CHIP_EVIDENCE](CHIP_EVIDENCE.md) and its cited source bytes. Test seven-bit
+`60/61/47/67` independently from wire address pairs `C0/C1`, `C2/C3`, `8E/8F`,
+`CE/CF`; recovery's `45` is a register, not a target address. Keep public code's
+unexplained revision `06` outside automatic acceptance. Derive the fake from TI;
+the inspected Renode model lacks faithful pointer, multi-byte and W1C semantics.
+
 Create/register `tusb32x_protocol` with fixed-size scripted expectations. Reject
 unexpected address, kind, bytes, length, timeout or extra call. Test legal and
 forbidden variant/register pairs, exact framing, pointer supplied every time,

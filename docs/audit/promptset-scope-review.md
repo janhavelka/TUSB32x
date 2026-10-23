@@ -4,6 +4,12 @@ Date: 2026-10-23. Baseline: `6eced5c`, the corrected fifteen-stage promptset.
 This maintenance review reorganizes instructions; it does not execute them or
 claim that a driver, firmware image or hardware result exists.
 
+Later chip-evidence enrichment retains these 38 completion boundaries. The size
+measurements below describe the original split; current measurements are in
+[the validation record](promptset-validation.md). Detailed research lives in
+[CHIP_EVIDENCE](../prompts/CHIP_EVIDENCE.md) and audit reports, with targeted
+additions to applicable prompts rather than a new implementation stage.
+
 ## Findings and changes
 
 The original prompts ranged from 768 to 2,062 whitespace-separated words.

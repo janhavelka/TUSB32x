@@ -35,6 +35,12 @@ printed pages, not zero-based PDF indexes.
 
 ## Complete the capability matrix
 
+Read [CHIP_EVIDENCE](CHIP_EVIDENCE.md) and its TI-hosted/community audits. Verify
+the pinned source bytes, actual helpers and licenses; official TI hosting does
+not make the Linux driver TI-authored silicon guidance. Classify claims as TI
+facts, code observations, library policy, hardware results or unresolved. Correct
+inherited prompt errors with exact evidence instead of inventing missing data.
+
 Keep the six named TUSB320 variants explicit; TUSB320LAI is the primary acceptance
 device. A small internal descriptor may be shared only where behavior agrees.
 
@@ -59,6 +65,13 @@ Record VDD, I2C pull-up voltage, non-failsafe pins, VBUS_DET resistor/input limi
 dead-battery Rd and enable behavior per variant. LAI/HAI 3 A advertisement needs
 at least 3.5 V; 322I uses 4.5–5.5 V. Recheck exact limits rather than inheriting
 them by family name. The core owns none of these pins or external power policy.
+
+The 3.5 V condition concerns local DFP advertisement, not UFP detection of a
+remote 3 A source. Exact L/A operating tables give 5.0 V maximum despite the
+application note's 5.5 V summary. Separate VBUS system voltage from VBUS_DET pad
+rating and CC signaling microamps from VBUS load amps. Public code's revision
+`0x06` is an unresolved clue, not permission to expand LAI support. Carry these
+source conflicts and the detailed electrical table into the variant guide.
 
 Identify the EN_N 50 ms startup-polarity conflict between exact pin text and
 SLAAE24 §4.1. Record a board prerequisite or gate the dependent claim where

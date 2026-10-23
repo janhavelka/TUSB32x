@@ -60,6 +60,13 @@ anchors, literal writes and retained sequence evidence. Follow
 
 ## Verify and finish this prompt
 
+Recheck [CHIP_EVIDENCE](CHIP_EVIDENCE.md) and actual reset helper semantics.
+The outgoing command must set `08`; mask `08` with literal `1` does not. A
+95 ms sleep cannot compensate for the wrong write. TUSB322I returns to DRP on
+software reset (SLLSEO5D §6.3.2 p9); test that operating effect without assuming
+an exact 0A reset image. Recovery's pre-read/internal-zero check is library
+policy beyond TI's recipe, and `45` remains a pointer at the configured address.
+
 Extend `tusb32x_operations` with exact reset composition/one-attempt behavior,
 no desired replay, variant readiness/retention and recovery's full read/04/wait/
 00/read sequence. Reject unsupported variants, missing identity and initial

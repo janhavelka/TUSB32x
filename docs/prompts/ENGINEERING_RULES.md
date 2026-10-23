@@ -147,6 +147,16 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
 
 ## Family and silicon correctness
 
+- Apply [CHIP_EVIDENCE](CHIP_EVIDENCE.md) as a dated evidence ledger. Reopen its
+  exact source/variant claims when implementing them; prefer verified TI facts
+  over copied driver behavior. Check official errata and source revisions, helper
+  bit-mask semantics, units and physical test context. Do not invent facts to
+  complete a feature. A hardware result qualifies its tested configuration only.
+- Corrections are required when evidence contradicts the prepared instructions:
+  update the claim/decision, masks or sequences, independent expected vectors,
+  implementation, Doxygen, CLI/runner meaning and affected guides together.
+  Preserve unresolved conflicts and gate only dependent operations. Never edit
+  a golden expectation merely because the implementation produced another byte.
 - Primary device TUSB320LAI; explicit verified tiers include LAI/HAI, LI/HI and
   original TUSB320/TUSB320I. Keep separate enable polarity, addresses, revision
   evidence, controls, debounce encodings and timing capabilities. Unsupported

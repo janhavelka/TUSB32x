@@ -13,6 +13,12 @@ Each prompt has a bounded scope, prerequisites, delegation guidance and its own
 tests, documentation and commit/sync gate. The [scope audit](docs/audit/promptset-scope-review.md)
 maps the original stages to the new sequence; implementation has not started.
 
+[Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
+timing, electrical and failure-case findings from TI documents and public code,
+starting with TI's GitHub organization. The [source manifest](docs/reference/public-implementations.json)
+pins 13 files from six repositories. The coder must verify each adopted claim
+against actual sources, correct inherited mistakes and retain unresolved gates.
+
 The prompts now include a [concrete engineering baseline](docs/prompts/ENGINEERING_BASELINE.md)
 for API names, errors, health states, lifetimes and folder responsibilities, plus
 a [CLI contract](docs/prompts/CLI_CONTRACT.md) with command and runner conventions.

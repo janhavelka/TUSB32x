@@ -202,6 +202,15 @@ Do not create empty files or successful hardware stubs to fill the tree.
 
 ## TUSB32x silicon rules
 
+- Treat [CHIP_EVIDENCE](docs/prompts/CHIP_EVIDENCE.md), public implementations and
+  these prompts as claims to verify, not silicon authority. Before implementing
+  a register, timing or sequence, confront it with the exact current TI datasheet,
+  errata and cited source bytes. Inspect helper semantics and variant context.
+  Never invent missing facts or change expected tests to match copied code.
+- Record conflicts and correct all affected prompts/contracts, constants, tests,
+  Doxygen and guides when evidence changes. Keep unsupported facts gated; do not
+  silently choose the convenient source. Hardware observations require an exact
+  part/board/firmware/fixture/trace and do not establish family-wide behavior.
 - Verify exact variants against the archived official TI sources before changing
   register maps, masks, identity checks, access semantics or timing. Keep source
   revisions/pages and unresolved wording visible in the specification.

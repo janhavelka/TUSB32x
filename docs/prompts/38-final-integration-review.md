@@ -50,6 +50,16 @@ The lead integrates, validates and owns Git on the same execution branch.
 
 ## Final verification and evidence
 
+Re-open [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s sources for every claimed board or
+adapter behavior. Check actual seven-bit addresses, explicit pointer framing and
+aggregate terminal timeouts; repeated-START code elsewhere is not qualification.
+Challenge supply/strap/VBUS_DET guidance, especially the separate 322 requirements,
+local 3 A advertisement versus remote detection, and typical versus maximum
+CC/VCONN values. A current register read is not proof of updated physical
+detection; base explicit-reset requirements must not become hidden runner policy.
+Fix copied errors in examples, tests and guides together. Keep code review,
+linked firmware and exact-board traces separate in the final support matrix.
+
 Extend `docs/final-audit.md` using the existing finding format and record reviewed
 revision/dirty state, reviewers, fixes, exact evidence and remaining limits.
 Reconcile the progress ledger, source/API/CLI/test coverage and validation report.

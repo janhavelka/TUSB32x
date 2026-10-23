@@ -55,6 +55,14 @@ disjoint scopes, current runtime models and lead-only Git.
 
 ## Verify and finish this prompt
 
+Review [CHIP_EVIDENCE](CHIP_EVIDENCE.md) against the TI IRQ descriptions and pinned
+error paths. Fail any required read or truncate a burst; no fabricated complete
+observation or successful service may follow. For sequential 09-then-08 sampling,
+include success at 09 and failure at 08. Test actual controls `06 -> ACK 16`,
+not public code's fixed `11`. Extended RU-change wording
+and base/322 CSR wording require explicit fake-device assumptions. Do not import
+ignored ACK errors, raw status echoes or an invented fault-clear mechanism.
+
 Extend `tusb32x_port` with ACK `0xB5 -> 0x15` despite staged `0x02`, base
 `0xB4 -> 0x14`, actual 50% versus desired 30%, and unknown applied evidence.
 Test live RO changes and pending IRQ preservation in every unrelated setter.

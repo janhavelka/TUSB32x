@@ -44,6 +44,7 @@ Specify the original TUSB320/I dead-battery exit in SLLSEN9F §7.4.3 p14:
    Successful read-only identity validation is a library prerequisite.
 2. Explicit `startRecoverDeadBattery(timing, token)` reads 0x45 and requires
    TI-internal bits 1:0 to be zero; otherwise CONFIGURATION_UNKNOWN without write.
+   This precheck is a conservative library policy, not an extra TI-prescribed step.
 3. Write literal 0x04, wait at least 30 ms after completion, write literal 0x00,
    then verify `(reg45 & 0x07) == 0`. This respects Table 7-7 p19's internal-bit
    restriction. Bound it at four callbacks, six TX bytes and two RX bytes,
@@ -57,6 +58,16 @@ Specify the original TUSB320/I dead-battery exit in SLLSEN9F §7.4.3 p14:
    do not specify it.
 
 ## Timing, reset and interrupt evidence
+
+Use [CHIP_EVIDENCE](CHIP_EVIDENCE.md) and its exact TI page tables. Record
+50/75/100 ms DRP min/typ/max, 2 ms typical VBUS debounce, bus electrical timings
+and the base 0.9 ns versus later 0.9 us conflict. Typical debounce and board
+700 ms GPIO delays are not operation deadlines. Base §7.3.1.2 p11 recommends
+explicit reset to refresh detected current; a plain read does not do that.
+Keep that application policy outside refresh/init/IRQ. TUSB322I §6.3.2 p9 says
+reset returns to DRP; test this effect without inventing all-register defaults.
+Public implementations' sleeps/retries and error cleanup are observations to
+audit, not silicon requirements. Correct contradictions across affected contracts.
 
 Verify LAI/HAI's 400 kHz maximum, enable-to-I2C availability maximum 100 ms and
 reset min/typ/max 26/49/95 ms in §6.6–6.7. Verify each other variant independently.

@@ -25,7 +25,7 @@ Do not treat one family-wide mask or a generic read-modify-write as sufficient.
 | Register | Shared six-part facts | Base 320/I | Extended LI/HI/LAI/HAI |
 | --- | --- | --- | --- |
 | 0x00..0x07 | Read-only signature | Same 320 signature | Same 320 signature |
-| 0x08 | Advertisement RW 0xC0; live status 0x3F; documented fields reset zero | Accessory code 7 reserved | Debug codes 6/7 identify local DFP/UFP |
+| 0x08 | Advertisement RW 0xC0; status 0x3F; documented fields reset zero | Accessory code 6 generic debug, 7 reserved | Debug codes 6/7 identify local DFP/UFP |
 | 0x09 | Attachment 0xC0; direction 0x20; IRQ W1C 0x10; duty 0x06 | Persistent RW 0x06; bit 0 reserved | Persistent RW 0x07; bit 0 disables UFP accessory support |
 | 0x0A | Debounce 0xC0; mode 0x30; reset command 0x08 | Persistent RW 0xF0; bits 2:0 reserved | Persistent RW 0xF7; preference 0x06; disableTerm 0x01 |
 | 0x45 | disableRdRp 0x04; bits 1:0 TI-internal RW, preserve; bits 7:3 reserved RO | Same named control | Distinct from 0x0A termination/state-machine control |
@@ -56,6 +56,16 @@ current is not unconditional 500/900 mA permission, measured load or USB PD.
 Requested mode, actual attachment and peer/local role remain distinct.
 
 ## Resolve dangerous access ambiguities
+
+Recheck [CHIP_EVIDENCE](CHIP_EVIDENCE.md) against TI and pinned implementations.
+Include independent vectors: `08=90` separates 3 A advertisement from 1.5 A
+detection; `08=20` is charge-through detection, not ordinary default. Try.SRC is
+shifted `06`, while community `04` is reserved. Base accessory `0C` is generic
+debug and `0E` reserved; extended `0E` is local UFP debug. A reset sets bit `08`
+in the composed `0A` byte while preserving permitted actual controls:
+the TI-hosted call's mask `08`, value `1` cannot set bit 3. Inspect helper
+arithmetic, not method names. Correct affected inherited tables and expected
+vectors explicitly; do not copy a driver's mistakes into the test oracle.
 
 Specify separate masks for actual persistent settings, status, W1C and reset.
 An unrelated settings write emits zero for IRQ/reset commands. IRQ ACK preserves

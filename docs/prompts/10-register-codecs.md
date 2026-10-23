@@ -58,6 +58,13 @@ the lead owns production composition and shared declarations. Follow
 
 ## Verify and finish this prompt
 
+Use [CHIP_EVIDENCE](CHIP_EVIDENCE.md) for public-code counterexamples, rechecking
+TI tables first: `08=90` separates advertisement/detection; `08=20` is distinct
+charge-through current; Try.SRC emits `06`, never reserved `04`. Base `0C` means
+`Accessory::DEBUG`, while base `0E` is reserved. Assert actual reset output bit
+`08`, not the TI-hosted driver's ineffective mask-08/value-1 call. Add ACK
+`06 -> 16` with unrelated fields preserved; fixed `11` changes controls.
+
 Extend `tusb32x_protocol` using expected values independently derived from TI:
 
 - Extended `0x09=0xB5`, desired `0x02`: ACK is `[0x09,0x15]`; explicit settings

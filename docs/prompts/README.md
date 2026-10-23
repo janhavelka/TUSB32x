@@ -125,6 +125,12 @@ independently review and fix. None permits earlier unfinished work.
 [ENGINEERING_RULES](ENGINEERING_RULES.md) retains the technical rules by topic.
 [ENGINEERING_BASELINE](ENGINEERING_BASELINE.md) owns exact API/state/time names;
 [CLI_CONTRACT](CLI_CONTRACT.md) owns grammar and records.
+[CHIP_EVIDENCE](CHIP_EVIDENCE.md) carries the dated TI/public-code facts, exact
+vectors, timing/electrical conditions and unresolved claims. Prompts 2–4 establish
+the verified specification; relevant implementation and review prompts apply its
+counterexamples. Re-open exact datasheets and pinned files, inspect helper
+semantics, and correct inherited claims when evidence disagrees. Never treat this
+promptset, a TI-hosted driver or a passing emulator as silicon authority.
 [MAINTAINABILITY](MAINTAINABILITY.md) and [AGENT_WORKFLOW](AGENT_WORKFLOW.md)
 apply throughout. Read relevant sections and changed dependencies rather than
 reprinting or redesigning every contract for each prompt. No rule was waived by

@@ -185,3 +185,46 @@ These checks validate the planning documents. No implementation prompt was
 executed, and no driver tests, firmware builds, remote CI or hardware results are
 claimed. Prompt length does not guarantee one-session completion; an interrupted
 unit must resume with its exact remaining work before it can be marked COMPLETE.
+
+## Public implementation and chip-evidence enrichment — 2026-10-23
+
+This documentation maintenance started from synchronized `main` at `8bea3f5`.
+Three agents researched TI-hosted code, community implementations and independent
+TI silicon evidence. The lead inspected source/helper behavior, integrated the
+reports, rechecked disputed TI passages and reviewed the targeted prompt changes.
+The source manifest pins 13 files from six repositories; supplemental source and
+license links are recorded in the reports without claiming every link is a
+separately hashed artifact. Downloaded implementation bytes remain outside Git.
+
+The shared evidence reference separates TI facts, implementation observations,
+library policies, hardware observations and unresolved conflicts. It requires
+the coder to verify actual sources and correct inherited prompts, vectors,
+implementation, tests and documentation. Twenty numbered prompts received
+focused additions; all 38 retain their original completion boundaries and shared
+requirements. No driver implementation was started.
+
+Independent review corrections included source attribution for identity literals,
+the existing `DetectedCurrent::DEFAULT` name, base explicit-reset current refresh,
+322I reset-to-DRP, a 320-only VBUS_DET omission exception and keeping the public
+322 role-write sequence a conditional field-preservation example rather than a
+TI-prescribed procedure. Final integration review also removed an implied reset
+whole-byte literal and a Linux-specific observation-order requirement. Source-level
+defects remain distinct from observed
+hardware failures. Existing 322 advertisement/fault-clear gates remain open.
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Public-source provenance | PASS | All 13 downloaded byte counts, SHA-256 hashes and Git blob SHA-1 values match the manifest; full commit/permalink/owner/license metadata checked |
+| TI source archive | PASS | All seven unchanged PDF byte counts and SHA-256 hashes match provenance; 195 pages parse |
+| Concrete source review | COMPLETE | TI-hosted reset helper arithmetic, cleanup/error paths, IRQ effects, community encodings and exact TI variant/timing/electrical tables inspected |
+| Independent byte arithmetic | PASS | 12 cases: four seven-bit/wire address pairs, current separation, charge-through distinction, Try.SRC encoding, three ACK images, reset mask/value and preserved role writes |
+| Sequence and scope | PASS | 38 unpadded numbered prompts, matching headings/index and audit/delegation/checks/docs/commit/sync requirements; 558–939 words each, 27,447 total; COMMON 777 words |
+| Links and text | PASS | 60 Markdown files, 285 local links including anchors, UTF-8 and balanced fences; numbered prompts use LF/final newline; no retired active prompt identifiers |
+| Diff and boundaries | PASS | git diff --check; only prompt/audit/guidance/provenance documentation changed; no archived vendor-byte, sibling or driver changes |
+
+The arithmetic checks verify examples, not an implementation or real timing.
+No driver tests, firmware builds, remote CI, device access or physical electrical
+qualification were run or claimed. Public-source search/access limits and exact
+unresolved TI claims remain in the research reports. The final handoff records
+the resulting maintenance commit and verified synchronization without embedding
+a self-referencing commit hash here.

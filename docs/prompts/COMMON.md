@@ -29,6 +29,7 @@ than copying every long contract into each task or repeatedly redesigning it.
 | Reference | Read for |
 | --- | --- |
 | [ENGINEERING_RULES](ENGINEERING_RULES.md) | Ownership, portability, silicon, health, examples and distribution rules by topic |
+| [CHIP_EVIDENCE](CHIP_EVIDENCE.md) | Pinned public sources, verified chip facts, conflicts and concrete regression seeds |
 | [ENGINEERING_BASELINE](ENGINEERING_BASELINE.md) | Exact API/type/error names, register-facing values, state/effect/time contracts and layout |
 | [CLI_CONTRACT](CLI_CONTRACT.md) | Command grammar, bounded console work, records, correlation and result ownership |
 | [MAINTAINABILITY](MAINTAINABILITY.md) | Direct code, simple engineering language, source Doxygen and maintained guides |
@@ -38,6 +39,15 @@ Prepared choices are defaults backed by the audit. Change them only for a concre
 source, test or consumer reason, then update dependent contracts and evidence.
 Verified TI facts and user instructions take precedence. Do not copy unrelated
 sensor features, introduce framework dependencies or guess unresolved silicon facts.
+
+For chip-dependent work, audit the relevant CHIP_EVIDENCE claims against the
+actual pinned source and exact TI datasheet/errata. Check masks, shifts, units,
+min/typ/max, access effects and variant applicability. Read helper implementations;
+a TI-hosted repository, popular library or passing emulator can still be wrong.
+Do not invent a value, silently repair a datasheet typo, or use copied code as its
+own test oracle. Record conflicts, gate the affected feature, and correct all
+dependent code/tests/docs when hard evidence resolves them. Hardware claims need
+identified parts, wiring, firmware and measured traces; host tests prove logic.
 
 ## Keep each unit complete
 

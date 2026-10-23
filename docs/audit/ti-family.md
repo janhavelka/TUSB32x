@@ -133,4 +133,14 @@ These are engineering recommendations derived from the evidence, not TI-specifie
 
 ## Evidence required before implementation completion
 
+Additional source audit, 2026-10-23: [TI-hosted implementations](ti-public-implementations.md),
+[community implementations](community-public-implementations.md) and
+[additional TI evidence](additional-ti-evidence.md) expand the facts and conflicts.
+Notable details include base detected-current refresh requiring the explicit
+reset policy described by TI, 322I reset returning operation to DRP, exact supply
+limits versus summary tables, the base timing-unit conflict and concrete public
+code errors. [CHIP_EVIDENCE](../prompts/CHIP_EVIDENCE.md) routes these findings into
+the prompts. They remain claims to verify against the exact part and sources;
+no additional build or physical qualification is implied.
+
 Produce a source-to-requirement-to-test matrix, with exact document revision/page/table and explicit unresolved items. Keep host test results, adapter compile checks, and physical hardware results separate. Record which variant and revision were physically tested. No release claim may convert an untested variant or unresolved datasheet conflict into verified support.

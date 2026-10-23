@@ -49,6 +49,14 @@ and Git ownership. Subagents are optional; they do not change the branch.
 
 ## Verify and document
 
+Re-open [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s address, framing and timing sources.
+Wire takes seven-bit addresses: LAI `0x47/0x67`, base `0x60/0x61`; `0x8E/0x8F`
+are LAI low-address wire bytes, not API addresses. Test explicit pointer selection
+and documented STOP/repeated-START behavior; copied Linux framing is not a
+universal requirement. Maximum SCL is 400 kHz. Record board pull-up/supply and
+enable-readiness prerequisites. Prove terminal completion and one aggregate
+deadline even if a pointer phase succeeds and the read fails; no unbounded retry.
+
 Test success, rejected arguments, short write/read, NACK versus generic failure,
 timeout after pointer selection, lock contention and remaining-time clipping.
 Use backend fakes where they can observe these behaviors; compile the actual

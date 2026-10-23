@@ -48,6 +48,15 @@ integration and Git.
 
 ## Verify and document
 
+Audit [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s actual pointer/framing and address
+sources against the chosen SDK: LAI `0x47/0x67` are seven-bit device addresses;
+wire bytes and register `0x45` are different values. Explicitly select the
+register pointer. A combined SDK call does not establish universal
+repeated-START support; preserve required serialization if STOP-separated phases
+are used. Test emitted frames and one finite terminal timeout across both phases.
+Record 400 kHz maximum and application-established supply, pull-up and enable
+readiness; SDK success cannot prove these physical conditions.
+
 Run real configure/compile/link for esp32s2 and esp32s3 with isolated build
 directories and target-specific configuration. Use the pinned supported SDK
 selected from evidence; record exact commands and artifacts. SDK-header shims

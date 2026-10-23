@@ -58,6 +58,16 @@ under AGENT_WORKFLOW. Do not generate boilerplate from symbol names.
 
 ## Verify and document
 
+Re-open the actual pinned implementations and exact TI pages listed in
+[CHIP_EVIDENCE](CHIP_EVIDENCE.md); inherited prompts are review inputs, not proof.
+Correct stale constants, timing units and support claims with their tests and
+guides. Explain base explicit-reset current refresh versus a fresh register read,
+322 reset-to-DRP, distinct supply ranges and VBUS_DET requirements, and local
+advertisement versus remote-current detection. Preserve min/typ/max labels for
+CC/VCONN signaling and limits; do not imply measured VBUS delivery. Keep source
+inspection, host simulation and exact-board physical results visibly separate.
+Do not document unresolved public-code revision `0x06` as accepted silicon.
+
 Build important snippets against real headers; label intentional pseudocode.
 Include bind → accepted start → bounded poll → takeResult → inspect outcome/effect.
 Do not use `if (!startStatus)` as rejection of IN_PROGRESS or return pointers to

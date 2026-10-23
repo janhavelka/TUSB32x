@@ -59,6 +59,15 @@ port-open line toggles and do not copy unrelated sensor bus pins.
 
 ## Verify and document
 
+Use [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s exact board constraints in the READMEs:
+LAI/HAI VDD is 2.7-5.0 V; 322I is 4.5-5.5 V. The LAI 3.5 V minimum concerns
+local 3 A source advertisement, not detecting remote 3 A as a sink. Distinguish
+sampled PORT on 320 from DIR on 322, and low-enable from HI/HAI active-high
+variants. Never extend a qualified 320 DFP-only VBUS_DET omission to 322. Its
+autonomous VCONN needs the specified supply/fixture; the core does not switch it.
+Document seven-bit addresses and actual pull-up/strap wiring, not copied board
+defaults.
+
 Build all four images and run shared CLI/console tests. Check finite console
 work, result ownership, actual library/framework/target/build/Git/dirty records,
 missing optional pins and cleanup ordering. Firmware output reports runtime

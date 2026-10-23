@@ -56,6 +56,15 @@ fault injection. Verify relevant TI requirements against the archived sources.
 
 ## Prove failures and evidence retention
 
+Use [CHIP_EVIDENCE](CHIP_EVIDENCE.md) to distinguish reset effects: 322 EN_N
+high-to-low or software reset restores DRP (SLLSEO5D section 6.3.2, p9), without
+proving every register returned to power-on defaults. Test explicit role evidence
+and no automatic replay. Base current refresh requires explicit reset under
+SLLSEN9F section 7.3.1.2, p11; never turn a fresh read into proof of fresh CC
+detection or insert an automatic refresh reset. Preserve exact supply/VBUS_DET
+requirements, including 322 sensing, and separate 225/300/375 mA VCONN min/typ/max
+from a guaranteed current. No physical claim follows from the fake.
+
 Extend fake-serial/clock tests for every plan and every guard's rejection path:
 fixture/identity absence, expected disconnection, changed target, fresh boot,
 capture caps, timeout before/after writes, late success, interrupted cleanup,

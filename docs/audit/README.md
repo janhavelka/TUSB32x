@@ -28,8 +28,12 @@ TUSB32x was initially an empty folder without Git metadata.
 | [Primary libraries](primary-libraries.md) | TMP1x2, 24Cxx, INA228, INA3221, ADS1115 and OPT4001; source-line evidence and conflicts |
 | [Consumer and tooling](consumer-and-tooling.md) | Eleven other I2C libraries, FieldCore contracts, CLI/runners/tests/package/CI conventions |
 | [TI family research](ti-family.md) | Official register/variant/timing evidence, limits and unresolved wording |
+| [TI-hosted implementations](ti-public-implementations.md) | Pinned Linux code, helper semantics, ownership, concrete defects and board/transport limits |
+| [Community implementations](community-public-implementations.md) | Go/Rust drivers, emulator and WIP patch; encodings, unsafe patterns and license evidence |
+| [Additional TI evidence](additional-ti-evidence.md) | Exact electrical/timing conditions, reset/current behavior and source conflicts |
 | [Reference archive](../reference/README.md) | Seven official PDFs with retrieval metadata and SHA-256 checksums |
-| [Promptset](../prompts/README.md) | Master execution instruction, common contract and fifteen implementation stages |
+| [Public source manifest](../reference/public-implementations.json) | Thirteen pinned files from six repositories with source-byte checksums and attribution |
+| [Promptset](../prompts/README.md) | Master execution instruction, shared chip evidence and 38 complete numbered prompts |
 | [Preparation validation](promptset-validation.md) | Checks of the promptset and reference artifacts, distinct from library validation |
 
 ## Audited libraries
@@ -133,6 +137,12 @@ health counting were not copied. Parent CI policy still distinguishes routine
 documentation checks from major milestones requiring exact-commit remote CI.
 
 ## Use
+
+The [shared chip evidence](../prompts/CHIP_EVIDENCE.md) incorporates the later
+TI-first public-code research without treating it as silicon authority. It adds
+specific register/sequence/error counterexamples to the relevant prompts and
+requires the coder to recheck and correct inherited claims. Source inspection,
+host simulation and physical qualification remain separate evidence.
 
 The [length and complexity review](promptset-scope-review.md) splits the original
 fifteen stages into 38 complete prompts numbered 1–38. It records coverage,

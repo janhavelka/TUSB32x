@@ -7,6 +7,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Require exact-source verification of inherited chip facts, explicit conflict
+  handling and corrections across contracts, code, tests, Doxygen and guides.
+- Add targeted public-code failure cases and TI electrical/timing/variant facts
+  to the relevant numbered prompts while retaining the 38-task structure.
+
 - Split the original fifteen stages into 38 complete prompts numbered 1–38,
   with dependency-aware scopes, tests/docs/delegation and per-prompt commit/sync.
 - Shortened the common entry instructions and separated technical rules by topic;
@@ -31,6 +36,13 @@ Entries below describe those artifacts, not released driver functionality.
   documentation at the end.
 
 ### Added
+
+- Shared chip-evidence reference and TI-first public implementation audits,
+  including reset-mask, reserved Try.SRC, error-preservation and IRQ examples.
+- Provenance for 13 pinned public source files from six repositories, including
+  ownership/license evidence, commit/blob IDs, byte counts and SHA-256 hashes.
+- Additional TI evidence for addresses, identity, register access, supplies,
+  physical timing, current refresh, 322 reset-to-DRP and unresolved source claims.
 
 - Engineering baseline for Status, owner methods, transport/health evidence,
   configuration trust, results/effects and public naming conventions.

@@ -54,6 +54,16 @@ Reviewers must reproduce findings or cite exact contradictory code/source.
 
 ## Evidence and validation
 
+Re-open [CHIP_EVIDENCE](CHIP_EVIDENCE.md)'s pinned code and TI tables, tracing
+helpers rather than trusting names. Independently check reset byte `0x08`,
+Try.SRC `0x06` versus reserved `0x04`, preserved ACK controls and primary errors
+surviving later failures. Check 322 reset-to-DRP explicitly; do not infer a full
+power-on register image. Base periodic-reset current refresh must remain explicit
+application work, with no hidden reset in reads. Confirm unexplained revision
+`0x06`, 322 write/fault ambiguities and attached-current freshness remain correctly
+gated. Correct inherited mistakes, including prompt/test expectations, and label
+code findings separately from physical observations.
+
 Start the core section of `docs/final-audit.md` with reviewed revision/dirty
 state, reviewers and `severity | file/symbol | reproduction/evidence | fix |
 regression | remaining limit` for findings. Missing physical fixtures are explicit

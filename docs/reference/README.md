@@ -1,4 +1,4 @@
-# TI source archive
+# Reference sources
 
 Official reference documents retrieved on **2026-10-23** for TUSB32x library
 planning. These files are research evidence, not library source or proof of
@@ -25,3 +25,24 @@ and conflicts. Exact device pin/electrical/register tables take precedence over
 general portfolio tables; retain and explain conflicting wording. Recheck official
 documentation/errata during implementation instead of assuming this snapshot is
 permanently current.
+
+## Public implementation provenance
+
+[public-implementations.json](public-implementations.json) pins 13 source files
+from six repositories: eight TI Linux driver/helper/binding/board files and five
+community driver/emulator/patch files. Each entry records repository owner, file
+attribution and license evidence, full commit/path/permalink, Git blob SHA,
+completed retrieval UTC, byte size and independently calculated SHA-256.
+
+Actual source files were inspected through the GitHub connector, then raw bytes
+were downloaded outside the repository and checked against the recorded blob
+IDs. The manifest archives metadata only; it does not vendor, execute, relicense
+or physically qualify these implementations. Supplemental source and license
+links remain in the audit reports; they are not all entries in this manifest.
+
+Read the [TI-hosted source audit](../audit/ti-public-implementations.md),
+[community audit](../audit/community-public-implementations.md) and
+[additional TI evidence](../audit/additional-ti-evidence.md) for observations,
+confirmed code defects, document conflicts and search limitations. The
+[shared chip evidence](../prompts/CHIP_EVIDENCE.md) makes these findings usable
+by the numbered prompts while requiring exact-source verification and correction.

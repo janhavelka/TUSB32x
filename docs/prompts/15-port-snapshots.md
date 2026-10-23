@@ -59,6 +59,13 @@ may inspect mixed-time coherence and invalidation read-only. Follow
 
 ## Verify and finish this prompt
 
+Use [CHIP_EVIDENCE](CHIP_EVIDENCE.md) to reject Linux's guessed detached roles and
+unqualified orientation/VCONN projections. Base SLLSEN9F §7.3.1.2 p11 recommends
+explicit reset to update detected current; refresh reads must never reset the
+chip. Preserve the separate extended-current uncertainty. Model CC and VBUS
+independently: CC alone cannot establish Attached.SNK. Raw active-cable evidence
+is not usable current or proof of powered VCONN.
+
 Register `tusb32x_port`. Cover every supported status encoding and reserved value,
 local versus peer roles, not-applicable versus unknown, raw preservation and field
 validity. Independently expected values must not reuse production decoding.
