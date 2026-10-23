@@ -123,7 +123,7 @@ values from an unrelated device library.
 | `I2C_ERROR` | Generic terminal callback failure, including a callback returning illegal IN_PROGRESS. |
 | `I2C_NACK_ADDR` | Backend positively reports address NACK. Do not infer it from a generic error. |
 | `I2C_NACK_DATA` | Backend positively reports data NACK. Earlier bytes can already have effects. |
-| `I2C_TIMEOUT` | One terminal callback exceeded its adapter timeout. |
+| `I2C_TIMEOUT` | A terminal callback timed out or cannot complete within its finite available timeout. It counts as a callback attempt, not proof that bus traffic occurred. |
 | `I2C_BUS` | Backend positively reports a bus fault. Recovery remains external. |
 | `I2C_BUSY` | Backend reports inability to acquire/use the bus within its bounded contract. It is an attempted callback, unlike local BUSY. |
 
@@ -161,6 +161,11 @@ evaluation. Do not put its only definition in a .cpp file.
 `detail` preserves full backend evidence when relevant; document each non-backend
 use. Provide one canonical `errorName`, with UNKNOWN for invalid enum input.
 Do not add redundant `toString`, `getError`, integer-return or bool-return APIs.
+Transport callbacks may return only OK or the I2C_* errors above. Normalize every
+other code, including IN_PROGRESS, owner TIMEOUT/BUSY/CANCELLED and invalid enum
+values, to I2C_ERROR with the original int32 detail and a static explanatory
+message. A callback cannot create an owner cancellation or deadline outcome.
+Keep uncertain write acceptance conservative when a callback violates this rule.
 The implementation adds complete Doxygen to every declaration, member and enum
 value; these compact sketches do not replace source documentation.
 
@@ -189,6 +194,13 @@ The application selects the exact variant; identification does not guess it.
 `sourceCurrent`, `sourcePreference`, `drpDutyCycle` and variant-specific controls.
 Do not put desired initialization writes or health thresholds in DriverConfig.
 Do not let a default DeviceProfile silently advertise power on binding.
+
+One application owner controls configuration of each physical target. Two driver
+instances may share a serialized bus when they address distinct physical targets;
+bus locking alone does not keep a cached control image valid if another instance,
+master or external agent changes the same chip. Coordinate such changes with
+invalidation and new observation before using cached write inputs. The core does
+not detect an unannounced replacement, power cycle or external register write.
 
 ### Concrete settings and snapshot vocabulary
 
@@ -240,6 +252,15 @@ through separately reviewed steps; it must not accidentally enable a profile
 whose requested final state is disabled. Prompt 4 must establish these sequences.
 322I advertisement/debounce/control requests require its independently closed
 capability evidence; shared member names do not establish support.
+CLI profile reset and an accepted variant change use this same candidate after
+semantic validation; unsupported neutral fields follow the capability rules.
+Pure validateProfile checks value/variant semantics. At apply admission, compare
+the complete candidate with valid known actual settings: a capability-gated
+write rejects only when that field would change. In particular, unchanged proved
+TUSB322I sourceCurrent does not block other supported changes; a requested change
+returns UNSUPPORTED_FEATURE. Missing/invalid actual evidence cannot be treated as
+unchanged: require observation/reconciliation before admitting apply. Admission
+remains bus-silent and never substitutes a default for unknown hardware state.
 
 The initial PortSnapshot aggregate uses these exact public fields:
 
@@ -289,6 +310,21 @@ of hardware sampling. An age derived from it conservatively includes acquisition
 time; sequential registers still have different sampling times. Do not replace
 it with a later post-callback poll/publication timestamp and imply younger data.
 
+Use one fixed read plan: 0x09, 0x08, then 0x09, with no transport retry or restart
+until stable. Publish the second 0x09 as rawStatus09. Compare the bookends under
+0xE0 (attachment and direction): equality gives BOOKENDS_MATCH; a difference
+gives CHANGED_DURING_READ. Neither proves atomicity or detects every intervening
+change. With changed bookends, preserve complete raw evidence but clear
+DETECTED_CURRENT, ACCESSORY and ACTIVE_CABLE validity; set typed current/accessory
+to UNKNOWN and leave the activeCable value unusable. Independently decoded final
+0x09 fields and 0x08 advertisement may remain valid. This complete raw publication
+may clear invalidated; consumers must still check every requested field's validity
+and coherence, not treat raw completeness as a coherent electrical state.
+`sequence` saturates at UINT64_MAX, starts at zero for no publication, and advances
+only on publication. It is not a unique identity at saturation; operation tokens
+correlate results. Initially expose TUSB322I fault only as rawStatus09 bit 3 plus
+its capability/access description; do not invent a typed fault-ACK API.
+
 The flag values in that listed order are `1U << 0` through `1U << 8`.
 STATUS_08_VALID is `1U << 0`; STATUS_09_VALID is `1U << 1` in rawValidMask.
 
@@ -304,6 +340,27 @@ replacement; increment verifiedGeneration on each complete verified commit.
 Use saturating uint32 values, with zero reserved for no record; at saturation the
 value is a diagnostic counter, not a unique identity. Snapshots/results copy the
 relevant generation; OperationToken remains the correlation identity.
+
+Also retain `rawConfig08`, `rawConfig09`, `rawConfig0A`, `rawConfig45` (uint8_t,
+initially zero), `rawConfigValidMask` (uint8_t, initially zero), and
+`observedValidFields` (uint16_t, initially zero) in ConfigurationSnapshot.
+CONFIG_08_VALID, CONFIG_09_VALID, CONFIG_0A_VALID and CONFIG_45_VALID use bits 0–3.
+Define `enum class ProfileField : uint16_t` flags PORT_MODE, SOURCE_CURRENT,
+SOURCE_PREFERENCE, DRP_DUTY_CYCLE, CC_DEBOUNCE, DISABLE_UFP_ACCESSORY, DISABLE_TERM
+and DISABLE_RD_RP in bits 0–7. The capability table supplies the applicable field
+mask. An absent
+field has no validity bit, uses a documented neutral placeholder and causes no
+read/write to an absent register. A complete raw read containing a reserved
+encoding preserves its bytes but clears the affected decoded validity bit;
+hasObservedProfile is true only when every applicable field decoded successfully.
+Failed/partial acquisitions leave the previous complete observation unchanged.
+Full trust additionally needs the complete identity/effect proof. This is one
+fixed observation, not a writable register mirror or generic register container.
+A complete profile observation that contradicts verified persistent fields or
+contains an applicable reserved encoding invalidates that previous current trust
+and affected port usability; keep verifiedProfile as historical evidence.
+startReadProfile cannot promote the new image to KNOWN merely because all
+transport calls succeeded.
 
 KNOWN means the actual persistent configuration and required effect evidence are
 established; it does not mean the actual profile equals the desired profile.
@@ -403,6 +460,24 @@ the token no longer identifies represented work. Document these cases in prompt 
 | invalidateDeviceState | Bus-silent notification of external reset/power loss/change. Cancel active work, retain result/effects, invalidate identity/config/port freshness. Normalize an OK reason to CONFIGURATION_UNKNOWN. |
 | forgetDeviceEvidence | Explicit local evidence loss, only while unbound, inactive and with no retained result. Never presented as cleanup or hardware recovery. Does not reset tokens or transport totals. |
 
+Read-only initialize, read-profile, refresh and reconciliation remain available
+with a valid binding even when initialization/trust is missing. Verify also needs
+retained desired input, otherwise CONFIGURATION_UNKNOWN. Every mutating operation
+and raw write requires current validated identity, otherwise NOT_INITIALIZED.
+Apply also needs known actual controls and resolved transition evidence; ACK and
+reset may establish their required safe control image through their own reads.
+Recovery needs identity but may explicitly restart its unresolved historical
+sequence. Capability and local argument checks still precede admission.
+
+Accepted initialize clears initialized and current identity usability before
+observing again. Preserve historical values and unresolved effects; failed
+reinitialization cannot leave initialized true because an earlier attempt succeeded.
+A complete identity contradiction also invalidates current identity/configuration/port usability.
+Successful initialize or reconciliation can establish initialization through the
+same complete identity/initial-register observation helper. Promotion to KNOWN
+uses the full configuration/effect proof; neither operation erases pending reset
+or recovery history simply because readable registers now look ordinary.
+
 `end` is the sole public unbinding method; do not add a second unbind alias.
 CLI setters may edit their own candidate DeviceProfile without calling the core.
 Only explicit apply starts device changes. ACK composition uses actual observed
@@ -437,6 +512,10 @@ working public declaration/definition and tests. It only interprets supplied
 bytes, preserves raw/unknown/reserved evidence, leaves output unchanged on error,
 and performs no I2C or instance mutation. Keep it with the register-table API;
 the CLI formats that result without private source includes or duplicate codecs.
+A single supplied register byte permits field-code decoding only: 0x08 alone
+cannot establish attachment, current applicability or a usable accessory/cable
+state. The complete port decoder adds that context from the paired observation;
+do not invent a detached default or claim standalone register decode is a snapshot.
 
 ## State, result and effect separation
 
@@ -487,6 +566,17 @@ Read-only success has NONE. A successful reset command write alone does not
 establish reset completion. Read-only reconciliation does not rewrite the old
 operation's result or claim the old operation succeeded.
 
+Apply admission replaces desired input but preserves proved actual configuration
+and port evidence until a possible mutating write. Cancellation or deadline before
+that boundary preserves the old actual image even though it differs from desired.
+At the first possible write, enter APPLYING and invalidate affected current trust;
+interrupted writes leave UNKNOWN. Apply only differences, after validating the
+complete plan. An unchanged profile still receives complete verification but no
+settings/termination/reset write and has HardwareEffect::NONE. Base attached-mode
+rejection applies only to an actual MODE_SELECT change, not an independently
+allowed current-only change. Extended mode sequencing likewise runs only when mode
+changes. Preserve requested disabled final states without an unnecessary enable.
+
 `OperationResult` contains `token`, `kind`, `state`, `status`, `hardwareEffect`,
 `transfers`, `startedUptimeMs`, `completedUptimeMs`, `completedTimeValid`, and
 copied relevant identity/configuration/port/IRQ evidence with explicit validity.
@@ -523,6 +613,17 @@ Owners extending a 32-bit hardware counter do so correctly in their adapter;
 simply casting a wrapping timestamp is insufficient. Never renew the deadline
 inside poll. Validate invalid time input without traffic or evidence loss.
 
+Admission checks unsigned `deadlineMs - nowMs` in (0, 2^63). During active work,
+compare each supplied poll time with the last accepted owner timestamp: unsigned
+delta below 2^63 is valid, including zero and natural rollover; delta at least
+2^63 is backward/ambiguous and returns INVALID_PARAM without state change or
+traffic. Equal ticks do not advance elapsed waits. Fresh means sampled after the
+preceding callback, not necessarily a different integer value; the owner must
+meet this requirement because the Status-only API cannot detect a reused sample.
+The clock domain remains the same across binding and operations; no unannounced
+clock reset. The owner must poll often enough that elapsed comparisons remain
+within the half range. Terminal-result inspection does not reinterpret its time.
+
 The Status-only callback cannot prove completion time. Therefore after any
 callback, stop that owner turn unless authoritative fresh completion time is
 available through a separately justified contract. On the next fresh poll,
@@ -536,6 +637,10 @@ A callback failure keeps its original typed error/detail as the primary terminal
 outcome even if the next owner timestamp also shows an expired deadline. Deadline
 expiry replaces a pending success with TIMEOUT; it must not erase an actual
 transport failure. Preserve time/effect evidence independently of that outcome.
+Cancel, end, external invalidation and raw Sync callbacks have no fresh owner-time
+argument: mark completion/failure time invalid where it cannot be established.
+Never label the last poll's timestamp as their completion time. Preserve the
+actual status/effects immediately; time uncertainty is not permission to lose them.
 
 Prompts 9–17 publish the exact maximum callback count and bytes per operation for
 each variant from the verified sequence. Keep all state-transition loops bounded
@@ -543,7 +648,13 @@ by a small named limit. A complete logical write/read callback can contain a
 pointer-write STOP and a read transaction; callback count is not physical bus
 transaction count. The callback timeout is `min(i2cTimeoutMs, remainingMs)` with
 safe narrowing and no zero-timeout attempt; it covers lock acquisition and every
-phase once. Failed callbacks consume one. No retries inside core or adapter.
+phase once. Failed callbacks consume one. The core and application adapter add
+no retries or recovery. Verify the pinned backend's real wall-clock bound,
+including locks, tick conversion, internal waits and error cleanup. A timeout
+argument alone proves none of these. Existing SDK retry/reset/cleanup behavior
+must be disclosed as an application-selected backend property; if it cannot meet
+the terminal aggregate bound, reject that backend contract or report the check
+blocked. Do not claim a driver callback guarantees behavior absent from its SDK.
 
 | Object/data | Owner and lifetime |
 | --- | --- |
@@ -557,11 +668,19 @@ phase once. Failed callbacks consume one. No retries inside core or adapter.
 
 Binding validates completely before commit. Active operation returns BUSY;
 retained result returns RESULT_PENDING. Same-target rebinding preserves unresolved
-effects. Define target association as the retained variant/address/context tuple;
-the owner must notify physical replacement or context reuse. A different tuple
-cannot silently discard unresolved effects: end, consume the result, and invoke
-explicit forgetDeviceEvidence before changing target. This is a local evidence
-contract, not hardware identity proof. No operation can act on the old bus after end.
+effects. Define target association as the retained variant/address/context and
+both callback-function pointers; changing callbacks with a null context can still
+change buses. The owner must notify physical replacement or context reuse.
+A different association cannot silently discard unresolved effects: end, consume
+the result, and invoke explicit forgetDeviceEvidence before changing target.
+This is a local evidence contract, not hardware identity proof. No operation can
+act on the old bus after end.
+A new target cannot inherit current identity, configuration or port usability from
+the old one. Successful binding to a different association starts empty target
+records, including desired/observed/verified profiles and raw validity; it retains
+instance tokens and transport totals. Explicit forgetting clears those target
+records and effects as its documented local evidence-loss action. Preserve
+instance diagnostic history separately from usable target evidence.
 
 ## Neutral transport diagnostics and optional health projection
 
@@ -604,8 +723,8 @@ Do not put health thresholds in silicon tables. A user may ignore this helper.
 | Input/event | Evidence update | Projection |
 | --- | --- | --- |
 | Constructed, end, or bound without completed initialization | initialized false | UNINIT regardless of old failure totals |
-| Failed initialization | Failed callback recorded; initialized stays false | UNINIT; diagnostics still show error |
-| Successful read-only initialization | initialized true; last managed success sets streak zero | READY |
+| Failed initialization/reinitialization | Record actual callbacks only; initialized remains false, including after identity mismatch with successful transport | UNINIT; diagnostics show the actual failure |
+| Successful complete initialization observation, including reconciliation's shared path | initialized true; last managed success sets streak zero | READY |
 | Managed callback succeeds after initialization | Increment success; streak becomes zero | READY, including after OFFLINE |
 | Managed callback fails, initialized true, streak below threshold | Increment failure and saturating streak | DEGRADED |
 | Managed callback fails and streak reaches threshold | Increment failure and saturating streak | OFFLINE |

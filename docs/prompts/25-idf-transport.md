@@ -12,6 +12,12 @@ examples and their AGENTS. Check official documentation for the selected pinned
 IDF API. Read ENGINEERING_RULES transport ownership and the baseline callbacks/
 clock contract. Record version, source paths and reasons for departures.
 
+Concrete audit seed: [IDF v5.5.1 i2c_master.c](https://github.com/espressif/esp-idf/blob/v5.5.1/components/esp_driver_i2c/i2c_master.c)
+reuses timeout_ms after bus-lock acquisition and across command waits, and can
+reset/clear its controller/bus internally. It reads the address from the device
+handle and selects async behavior from device/bus configuration. Recheck the
+chosen SDK; this source is evidence to inspect, not an imposed support pin.
+
 Use a coding agent for the isolated component consumer or backend fixtures;
 use strong review for deadline rounding and uncertain effects. Freeze callback
 interfaces first, assign disjoint files and follow AGENT_WORKFLOW. The lead owns
@@ -21,18 +27,27 @@ integration and Git.
 
 1. Place native sources under the platform-specific examples path in the baseline.
    Use the selected SDK's native master-I2C API. The application creates and owns
-   bus/device handles; the adapter borrows them. Do not create/delete buses during
-   bind/end, change a consumer's speed or expose SDK types in public core headers.
+   bus/device handles; the adapter borrows them. Record each handle's configured
+   seven-bit address and reject callback/address mismatch before backend work.
+   Application-owned target changes happen while ended/idle, not inside core bind
+   or callbacks. No bus creation/deletion, speed changes or public SDK types.
 2. Implement terminal synchronous callbacks with explicit pointer framing and
-   serialization across all phases. Pending DMA/asynchronous work must not outlive
-   borrowed buffers. The core never imports Arduino, Wire, Serial or FreeRTOS.
-3. Use one finite aggregate timeout for lock acquisition, pointer selection and
-   data phase. Convert the owner millisecond budget into backend units once per
-   remaining phase without resetting it. Check nearly expired budgets before a
-   coarser timeout API; zero must not become an infinite SDK wait.
+   serialization across all phases. Require synchronous device configuration with
+   no asynchronous event registration; the same SDK call can otherwise return
+   before completion. No pending work outlives buffers. Core remains framework-free.
+3. Audit pinned SDK locks, repeated timeout waits, granularity and controller/bus
+   cleanup. Serialize all bus users; one SDK call's timeout is not automatically
+   aggregate. Prove a finite bound including lock, all phases and cleanup; reject
+   unsupported configurations or budgets too small to fit before starting.
+   Remaining phases do not get fresh full budgets; zero cannot mean infinite.
+   Post-return lateness checks do not bound prior blocking. Add no custom driver.
 4. Map esp_err_t conservatively into Status, preserving full numerical detail.
-   Distinguish operation TIMEOUT from callback I2C_TIMEOUT. Do not invent NACK
-   phases, partial byte counts or proof of no write from coarse SDK errors.
+   Callbacks return only OK/I2C_*; rejected context/address/async configuration
+   uses I2C_ERROR and insufficient budget uses I2C_TIMEOUT, never owner TIMEOUT.
+   Validate setup before bind where possible. Do not invent NACK
+   phases, partial byte counts or proof of no write from coarse SDK errors. Add no
+   adapter retry/recovery; document SDK-internal cleanup as an application choice,
+   not a promise that hardware/controller state is untouched on failure.
 5. Convert native monotonic time to the baseline 64-bit millisecond domain at the
    owner boundary. Document rounding/resolution, fresh callback completion handling
    and the one-tick scheduling margin. Keep observable backend counters separate
@@ -62,7 +77,8 @@ directories and target-specific configuration. Use the pinned supported SDK
 selected from evidence; record exact commands and artifacts. SDK-header shims
 may help unit tests but do not prove a linked firmware image.
 
-Exercise argument rejection, backend error mapping, finite lock wait, success
+Exercise argument/address-handle rejection, async-configuration denial, error mapping,
+finite lock wait, success
 and failure between pointer/read phases, near-expired/coarse timeout behavior,
 borrowed context lifetime and cleanup order. Backend fakes must report their
 limits; they cannot prove physical transaction timing. Keep core/CLI host tests

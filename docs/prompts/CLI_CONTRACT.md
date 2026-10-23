@@ -63,17 +63,18 @@ in prompts 23–26; this contract does not add a new startup sequence.
 
 | Topic | Canonical grammar and aliases | Meaning and routing |
 | --- | --- | --- |
-| common | `help [topic|command]`, alias `?`; `version`, alias `ver` | Cache only; topics: common, connection, port, profile, interrupt, job, registers, diagnostics, all. Include firmware/library/framework/target identity. |
+| common | `help [topic|command]`, alias `?`; `version`, alias `ver` | Cache only; topics: common, connection, port, profile, interrupt, lifecycle, job, registers, diagnostics, all. Include firmware/library/framework/target identity. |
 | common | `color [on|off|0|1]`; `verbose [0|1]`; `hilmark <nonce>` | Local only. Verbose controls progress chatter; never hide errors or terminal records. Nonce is 1..32 ASCII letters/digits/underscore/hyphen; `none` is reserved. |
 | connection | `bus`, `console`, `capabilities` | Cache only; configured variant/address, strap assumptions, adapter framing, finite timeouts, pins, build identity and counters. Capability output distinguishes configured and observed identity. |
-| connection | `variant [name]`, alias `model`; `addr [address]`; `bind`; `end`, alias `unbind` | Queries cache only; target edits require ended, idle instance with no retained result and pass full validation before replacing anything. Bind/end are bus-silent. End is no hardware reset. |
+| connection | `variant [name [address]]`, alias `model`; `addr [address]`; `bind`; `end`, alias `unbind` | Queries cache only; target edits require ended, idle instance with no retained result and pass full validation before replacing anything. Optional explicit address makes a cross-family pair change atomic; omitting it preserves the current address and rejects an invalid pair without guessing another. They never silently forget unresolved target evidence. An accepted variant change stages that variant's documented candidate defaults and reports the local change; address-only changes preserve staging. Bind/end are bus-silent. A native adapter's borrowed device handle must match the selected address; application-owned handle changes are explicit and happen while ended/idle, never inside core bind or a callback. End is no hardware reset. |
 | connection | `init [timeout_ms]`, aliases `initialize`, `probe` | `startInitialize`: read-only identification and observation of the selected target; never reset/apply, scan addresses or infer exact variant from identity bytes. |
 | port | `read`, alias `status`; `sample`, alias `snapshot`; `freshness` | Read starts `startRefreshPort`; sample/freshness print cached validity, observation sequence/time/age and provenance. Live read does not acknowledge the TUSB320 interrupt latch. |
-| profile | `cfg`, alias `settings`; `profile [show]`; `profile reset`; `profile discard`; `profile validate` | Cache/pure. Show CLI staged, core desired, observed and trusted applied fields separately. Reset stages the documented DeviceProfile candidate defaults for the variant; these are not a chip reset image. Discard copies core retained desired to staging; if none exists, reject CONFIGURATION_UNKNOWN without changing staging and direct the user to profile reset. Neither writes. Validation is not apply. |
+| profile | `cfg`, alias `settings`; `profile [show]`; `profile reset`; `profile discard`; `profile validate` | Cache/pure. Show CLI staged, core desired, observed and trusted applied fields separately, retaining rawConfigValidMask and observedValidFields. Missing fields are not verified defaults. Reset stages the documented DeviceProfile candidate defaults for the variant; these are not a chip reset image. Discard copies core retained desired to staging; if none exists, reject CONFIGURATION_UNKNOWN without changing staging and direct the user to profile reset. Neither writes. Validation is not apply. |
 | profile | `profile read [timeout_ms]`; `apply [timeout_ms]`; `verify [timeout_ms]`, aliases `selfcheck`, `selftest`; `reconcile [timeout_ms]` | Profile read starts `startReadProfile`. Apply starts `startApplyProfile(staged,...)`; only accepted admission updates core desired. It is the explicit hardware mutation. Verify and its aliases compare reads with core retained desired and require that desired profile; they are not a general hardware test. Reconcile observes/computes trust without replaying writes. |
 | profile | `mode [port|dfp|ufp|drp]`; `current [default|1a5|3a0]`; `duty [30|40|50|60]`; `debounce [milliseconds]`; `preference [normal|try-sink|try-source]`; `ufpaccessory [on|off]`; `termination [on|off]`; `rd-rp [on|off]` | Getters show staging; setters only stage. `port` selects PORT-pin-determined MODE00 on verified TUSB320 variants; TUSB322I MODE00 means DRP, so port is unsupported there. Termination means the extended 0x0A DISABLE_TERM control. Rd-rp means the separate capability-gated 0x45 Rd/Rp control; neither substitutes for the other. On/off means enabled/disabled, with raw disable polarity shown separately. Advertisement is a CC category, not measured load or PD. Print exact variant debounce values from prompt 3; unsupported controls/values reject before staging. |
 | interrupt | `irq`; `irq read`; `irq ack [timeout_ms]`; `irq service [timeout_ms]`; `intpin` | Bare irq is cached retained evidence; read inspects live without TUSB320 W1C acknowledgement. Ack is explicit write; service is bounded read/publish/ack/recheck with documented coalescing limits. Intpin calls an opt-in application input reader; no GPIO setup in common code. |
 | lifecycle | `reset [timeout_ms]`; `invalidate <external-reset|power-loss|target-change>` | Reset starts `startReset`, never automatic reapply. Invalidate passes an explicit CONFIGURATION_UNKNOWN reason to local invalidateDeviceState and preserves effect evidence. Explicit role/reset actions may affect autonomous VCONN on TUSB322I. |
+| lifecycle | `forget-evidence` | Calls `forgetDeviceEvidence` only while unbound, inactive and without a retained result. Explicit local evidence loss, not hardware cleanup or recovery. It does not reset tokens or transport totals. Never invoke it implicitly from target edits, bind or runner setup. |
 | lifecycle | `recover-dead-battery [timeout_ms]` | `startRecoverDeadBattery`, kind `RECOVER_DEAD_BATTERY`: explicit source-capable startup recovery for original TUSB320/TUSB320I only, using the prompt 4/baseline sequence and prerequisites. Never an init side effect; unsupported variants reject before traffic. |
 | job | `job [status]`, alias `progress`; `job auto [0|1]`; `job step [0..255]` | Status/cache and local scheduler mode; explicit step selects this turn's single `poll(token,nowMs,budget)`, default budget 1. It replaces automatic stepping for that turn, including budget zero; never poll again afterward. |
 | job | `cancel [token]`, aliases `job cancel`, `stop` | Cancel/stop is local, preserves effects and produces a terminal result; cancellation does not imply rollback. Start operations through their named commands above. |
@@ -83,14 +84,24 @@ in prompts 23–26; this contract does not add a new startup sequence.
 | diagnostics | `drv`, aliases `health`, `state`; `diag`; `xfer_stats`, alias `counters`; `xfer_reset`; `xfer_assert <attempts> [successes failures]` | Cached projection/trust/transport summaries. Diag has zero traffic. Idle-only xfer_reset calls clearTransportStats and never repairs trust, consumes a result or resets managed health evidence. Assertions reject saturated totals and report counter source. |
 
 Prompts 2–6 must close the exact variant capability and control-value table before
-those rows are implemented. TUSB322I advertisement writes remain unavailable
-until the TI wording is resolved with evidence. Address discovery and bus scans
+those rows are implemented. Staging validates applicable fields and documented
+values; write permission is a separate apply check against proved actual state.
+Thus TUSB322I may stage a valid current category, including its observed category
+so other supported changes can proceed; changing that advertisement still rejects
+at apply while its access wording is unresolved. Missing or reserved actual
+evidence cannot be assumed equal. Address discovery and bus scans
 are outside this CLI. Do not import general-call reset, sensor calibration or
 USB PD rows.
 
 Repeated watch/stress sampling, register dumps and fixture suites belong to the
 host runner. It issues bounded sequences of the ordinary commands above, consumes
 each matching terminal result explicitly, and records run statistics on the host.
+Before a plan, require no active or retained operation owned by someone else;
+report that prerequisite instead of cancelling or taking another owner's result.
+Capture local staging, automatic stepping and output settings before changing
+them, and restore those local values after the plan when the session is still
+valid. Local restoration never applies a hardware profile. A lost session records
+unrestored state rather than replaying commands against an unverified session.
 For dumps it selects a finite variant-allowlisted register list and documents
 read effects. Firmware has no bulk diagnostic scheduler, second run ID, aggregate
 result slot or hidden child-result consumption. This keeps every device feature
@@ -105,6 +116,8 @@ implied by these commands.
 
 Pure register decoding uses the shared `decodeRegister` contract specified in
 prompt 5 and implemented/tested in prompt 10. Prompt 22 formats its fixed result.
+Single-byte decoding describes field encodings; it cannot establish cross-register
+attachment, current/accessory applicability or a complete configuration snapshot.
 Do not duplicate silicon field conversion in the CLI, include private `src/`
 headers, or construct a fake transport merely to interpret a supplied byte.
 
@@ -287,6 +300,12 @@ and failed take-response reservation, manual step with auto enabled without a
 second poll, staged-versus-applied IRQ
 ACK, unsupported variants and cancellation with uncertain effects. Static guards
 supplement these tests; a matching command string is not proof of behavior.
+Test explicit evidence forgetting versus denied/implicit target changes, borrowed
+handle/address mismatch, foreign-result protection and local runner restoration.
+Test atomic LAI/0x47 to base/0x60 and reverse changes, candidate staging reset only
+on variant change (including old extended 118 ms/base 133 ms selections),
+incompatible address omission, retained-evidence gates and
+complete state preservation when any validation fails.
 
 Document every C++ CLI/console/helper public contract with Doxygen in the source,
 including bounds, output callbacks, cached/live effects, lifetime and thread/owner

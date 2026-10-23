@@ -25,6 +25,8 @@ Git according to AGENT_WORKFLOW.
    helpers need concise explanations of non-obvious invariants, not boilerplate.
 2. Check callback comments state terminal completion, borrowed buffers, aggregate
    timeout including lock and all phases, serialized access and no reentry.
+   SDK granularity, internal waits/cleanup and supported synchronous configuration
+   are explicit; a timeout argument alone is not proof of the aggregate bound.
    Match zero-I2C, staged/apply, raw diagnostic, cancellation/end and output-on-
    failure claims against actual behavior tests.
 3. Confirm nearby W1C/reset masks and role/recovery timing cite exact TI evidence.

@@ -46,7 +46,13 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
 - Application callbacks perform synchronous **terminal** transfers, enforce a
   finite timeout including lock acquisition, serialize the physical bus and
   guarantee return before borrowed buffers expire. No retained pointer, pending
-  DMA, callback reentry, hidden retries, bus initialization or bus reset.
+  DMA, callback reentry, adapter-added retries, bus initialization or recovery.
+  Audit pinned SDK locks, repeated waits, timeout granularity and internal cleanup;
+  the timeout argument alone is no proof. Any SDK controller/bus cleanup must be
+  documented and accepted by the application. Reject backend configurations or
+  budgets that cannot meet the aggregate terminal contract; a late-return check
+  cannot bound earlier blocking. Native device handles must stay synchronous and
+  match the callback address; all users must share the chosen serialization.
 - Follow the sibling write and combined write/read callback shapes with address,
   buffers/lengths, `timeoutMs` and `void* user`. A register read always explicitly
   sets its pointer. Specify whether the callback uses STOP-separated phases or
@@ -60,9 +66,15 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
 - Do not invent NACK phase, partial counts or proof of no write from a generic
   framework error. Preserve unknown/possibly-applied outcomes. A write that
   returned an error may have changed the device.
+  Only OK and documented I2C_* statuses are legal callback returns; normalize all
+  other codes to I2C_ERROR with preserved backend detail and conservative effects.
 - Application chooses exact variant/address, bus speed, clock, IRQ/power pins,
   locking, scheduling, policy, recovery and teardown. No process-wide singleton.
   Two independent driver instances must be usable on one externally serialized bus.
+  Use one configuration owner for each physical target; a lock alone cannot protect
+  cached control images from another writer between operations. Coordinate external
+  changes through invalidation. Binding identity includes the callback pair, not
+  only the context pointer, variant and address.
 - Core instance access is serialized by its owner. Do not hold a bus lock across
   poll intervals. No I2C or logging in GPIO ISR; ISR signals an owner only.
 
@@ -134,6 +146,10 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
 - Communication health, configuration trust, data validity/freshness, USB port
   attachment, interrupt pending/acknowledged state, and operation outcome are
   independent. Preserve raw evidence if a valid transfer returns an unknown encoding.
+  Raw profile observation needs explicit register/field validity; a DeviceProfile
+  alone cannot represent reserved or absent fields. Single-register decoding must
+  not infer attachment context from bytes it was not given. Use the fixed port
+  read plan and validity rules from ENGINEERING_BASELINE, without coherence retries.
 - Model DFP/UFP relative to the **local port**; make peer-vs-local roles explicit.
   Distinguish requested role from actual attachment. Invalid/not-applicable
   orientation/current must not become a plausible default.

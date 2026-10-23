@@ -120,6 +120,11 @@ Place a TI document/revision/section/table reference next to register constants
 and unusual sequences. Link to the detailed register guide rather than copying
 large vendor passages into source.
 
+Documentation guards follow this distinction: require complete public contracts
+and useful source/file comments, without demanding boilerplate Doxygen for every
+trivial private helper. Exercise non-obvious helper documentation in review and
+the relevant fixtures rather than publishing private symbols as public API.
+
 Test files use a short file comment describing the contract under test and named
 cases showing setup/action/expectation. Explain unusual fake behavior. Do not add
 public test-only hooks or `#define private public` just to inspect implementation.

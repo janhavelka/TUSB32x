@@ -52,12 +52,17 @@ where needed rather than duplicate the whole suite.
 5. Exercise uint64 rollover/maximum, half-range interval limits, backward/stale
    inputs under the documented policy, stalled time and safe narrowing. Test
    saturating generations/counters without relying on arithmetic equalities once
-   saturation occurs. No renewed deadline, hidden retry or busy wait.
+   saturation occurs. Use bounded internal arithmetic fixtures, no public seed
+   API or billions of calls. Equal fresh ticks are valid; reused pre-callback time
+   is not fresh. Cancel/end/invalidate cannot invent a completion timestamp.
+   No renewed deadline, hidden retry or busy wait.
 6. A small fixed-capacity external scheduler alternates two instances on one
    serialized fake bus. One waits, fails or repeatedly observes IRQ while the
    other still progresses. Fill owner queue/result capacity, reject backpressure
    without loss and retain correlated results. No FieldCore/RTOS/framework/GPIO
    dependency or shared token/effect state; this fixture is not a new core scheduler.
+   Use distinct physical targets with one configuration owner each. Test changed
+   callbacks with null context and target-evidence invalidation across rebind.
 
 ## Prove public consumption and executable checks
 

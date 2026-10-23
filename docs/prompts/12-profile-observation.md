@@ -28,12 +28,18 @@ writes, current runtime models and no subagent Git changes.
    or configuration trust is missing, under the baseline prerequisites.
 2. `startReadProfile` stages complete persistent observations and publishes only
    valid evidence. It neither replaces desired settings nor promotes trust by
-   itself. Keep raw observed bits, decoded values and availability distinct.
+   itself. Populate the baseline rawConfig bytes/mask and observedValidFields.
+   Absent controls have no valid flag/read; reserved encodings retain raw bytes
+   but cannot become valid default settings or a complete observed profile.
    Failed/partial reads preserve prior complete evidence with honest validity.
+   A complete contradiction of verified settings invalidates that old current
+   trust without promoting the new observation or replacing desired settings.
 3. `startReconcile` reads identity plus every applicable persistent control and
    termination/reset fact needed for the proof. One successful unrelated read
    cannot repair an uncertain configuration. Shared helpers must make the proof
-   explicit instead of introducing a generic verification framework.
+   explicit instead of introducing a generic verification framework. Reuse the
+   complete identity/initial-register helper to establish initialization after
+   external invalidation without requiring an extra init/replay operation.
 4. `KNOWN` means proved actual persistent configuration and required effect
    evidence; it does not mean actual equals desired. Complete proof publishes
    the actual verified image/generation. When a retained desired image exists,
@@ -55,8 +61,9 @@ writes, current runtime models and no subagent Git changes.
    old result or certify old success. Configuration readback cannot clear port
    invalidation: only a complete fresh port observation will do that later.
 8. Preserve capability gates and identity policy. Unknown variant/unsupported
-   access rejects before traffic; ambiguous TUSB322I controls cannot become
-   trusted merely because bytes were readable.
+   access rejects before traffic. Documented readable TUSB322I values may become
+   known through full proof even where write permission remains unresolved;
+   readable values never grant write/clear permission.
 
 ## Verify and finish this prompt
 

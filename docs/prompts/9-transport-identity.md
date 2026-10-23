@@ -37,13 +37,16 @@ disjoint file ownership and current runtime models. The lead integrates and owns
    and full native `detail` on failure; do not invent a NACK phase.
 4. Document STOP-separated pointer/read framing versus repeated START from TI
    evidence. Serialization and one aggregate timeout include lock acquisition and
-   all phases. One callback may include two physical transactions. No retries,
-   delayed DMA, retained buffer, bus recovery or platform dependency is permitted.
+   all phases. One callback may include two physical transactions. Core/adapters
+   add no retry/recovery; pinned SDK internal waits/cleanup need a proved aggregate
+   bound and explicit application acceptance. No delayed DMA, retained buffer or
+   platform dependency belongs in core. A timeout parameter alone proves no bound.
 5. Install accounting at this single invocation boundary now: every actual
    callback increments saturating all-source attempt and success/failure totals
    once. Classify managed versus raw traffic explicitly; collect the baseline
-   managed evidence here for later diagnostic views. Normalize callback
-   `IN_PROGRESS` to `I2C_ERROR`, retaining detail. Local rejection is not a transfer.
+   managed evidence here for later diagnostic views. Accept callback OK/I2C_* only;
+   normalize all other/invalid codes to I2C_ERROR, retaining full detail.
+   Local rejection is not a transfer.
    Preserve last-failure evidence after success; never invent completion time.
 6. Compare the eight ascending identity bytes `30 32 33 42 53 55 54 00`, not a
    host-endian word or reversed string. A matching signature does not identify
@@ -67,7 +70,8 @@ forbidden variant/register pairs, exact framing, pointer supplied every time,
 range boundaries, wrong/reversed/partial identity and unknown revision policy.
 Inject no-effect errors and writes applied before an error; preserve the same
 backend failure when phase evidence is unavailable. Test unchanged output,
-illegal callback progress, saturating counters and independent instances.
+illegal callback progress/owner errors/invalid enum values, saturating counters
+and independent instances. A callback TIMEOUT must not become owner TIMED_OUT.
 
 Expected identity bytes and access cases come from cited TI tables, not production
 helpers. Keep tests of future operation scheduling for their owning prompts;

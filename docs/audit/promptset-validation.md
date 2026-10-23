@@ -205,9 +205,10 @@ requirements. No driver implementation was started.
 
 Independent review corrections included source attribution for identity literals,
 the existing `DetectedCurrent::DEFAULT` name, base explicit-reset current refresh,
-322I reset-to-DRP, a 320-only VBUS_DET omission exception and keeping the public
-322 role-write sequence a conditional field-preservation example rather than a
-TI-prescribed procedure. Final integration review also removed an implied reset
+322I reset-to-DRP and a 320-only VBUS_DET omission exception. This earlier review
+incorrectly treated the 322 role-write sequence as only a conditional example:
+the later [completeness review](promptset-completeness-review.md) corrects that
+claim using TI's explicit DFP/UFP procedures. Final integration review also removed an implied reset
 whole-byte literal and a Linux-specific observation-order requirement. Source-level
 defects remain distinct from observed
 hardware failures. Existing 322 advertisement/fault-clear gates remain open.
@@ -252,3 +253,36 @@ exact-final-commit/parent-CI mandates and the final-review requirements correcte
 No implementation, workflow execution, firmware build or remote CI was needed
 for this documentation change. Parent/sibling files and archived sources were
 unchanged. The final handoff records the maintenance commit and verified sync.
+
+## Correctness and completeness audit — 2026-10-23
+
+This maintenance started from clean, synchronized main at `8dfc8e2`. Three
+independent agents reviewed silicon/source evidence, API/owner contracts, and
+CLI/adapters/tooling. Their edit scopes were disjoint. The lead checked their
+diffs, integrated shared rules and requested a final cross-review. The
+[findings report](promptset-completeness-review.md) records the confirmed errors,
+missing contracts, exact sources, fixes and required implementation acceptance
+cases. Earlier contradictory 322 sequence wording was corrected explicitly.
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Prompt sequence and completion contracts | PASS | 38 prompts numbered 1–38; headings/index agree; each retains COMMON, renewed audit, delegation, checks, documentation, commit/sync and branch requirements |
+| Length and scope | PASS | 579–990 words per numbered prompt; 29,046 total; COMMON 858 words. Existing completion boundaries retained; no new generic subsystem or implementation added |
+| Markdown and local references | PASS | 61 Markdown files; 296 local links/anchors; UTF-8, balanced fences, no replacement/NUL text or retired active prompt identifiers |
+| Edited text and diff | PASS | UTF-8 without BOM, LF/final newline and no trailing whitespace in edited Markdown; git -c core.autocrlf=false diff --check |
+| Archived source integrity | PASS | All 13 pinned public files from six repositories retain matching sizes, SHA-256 and Git blob IDs; all seven TI PDF sizes/hashes match, with 195 pages parsing |
+| Independent example arithmetic | PASS | Earlier 12 address/field/ACK/reset cases plus 17 role-write, coherence-mask and unsigned time/deadline boundary cases; 29 total |
+| Cross-contract review | COMPLETE | Read/write capability separation, target identity, raw validity, initialization, pre-write cancellation, no-op apply, fixed port/IRQ bounds, callback errors, CLI transitions and runner ownership agree |
+| Platform/tooling review | COMPLETE | Actual SDK lock/wait/cleanup behavior, synchronous IDF handles/address, per-target SDKCONFIG, renamed components, Windows archive names and local-only validation accounted for |
+| Scope boundaries | PASS | Only this repository's guidance/prompts/audit docs changed; archived vendor bytes, source manifest, sibling repositories and driver implementation untouched |
+
+The arithmetic checks validate prompt examples, not a driver or physical timing.
+SDK source review does not prove a future adapter meets its promised deadline;
+the relevant implementation prompts require that proof for their selected pins.
+Remaining TI uncertainties stay explicit and gate only dependent operations.
+
+No implementation tests, firmware build, device access, physical qualification
+or remote CI was run. This is documentation maintenance, so the existing main
+branch is retained; no implementation execution branch or progress file was
+created. The final handoff records the completed maintenance commit and verified
+upstream synchronization without a self-referencing commit-hash update.

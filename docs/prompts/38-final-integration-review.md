@@ -31,15 +31,20 @@ The lead integrates, validates and owns Git on the same execution branch.
 3. Verify Arduino/native-IDF frontend parity, borrowed resources, one owner poll
    path, finite timeouts and cleanup. USB stalls/reconnects cannot block owner
    progress or permit stale success. Nearly expired/coarse timeout handling
-   remains correct in the real selected SDKs.
+   remains correct in the selected SDKs, including internal locks/waits/cleanup.
+   Check synchronous configuration and device-handle/address agreement; rejection
+   must precede backend work. A late-return check alone proves no blocking bound.
 4. Check host versus flashed-firmware identity, DTR/RTS session changes, suite
    completeness, bounded logs/soak memory, unknown/incomplete verdicts and exit
    codes. Cleanup cannot blindly restore against changed identity, session,
-   attachment or uncertain state. Missing fixtures stay NOT RUN.
+   attachment or uncertain state. Local staging/auto settings are restored only
+   in the verified session, and foreign results are never consumed. Missing
+   fixtures stay NOT RUN.
 5. Inspect hardened archive extraction, clean CMake/PIO/IDF consumers, manifests,
    generated versions and package links. Ordinary core consumers require no
    sibling, Git, Python or Arduino. An extracted firmware build may prove both
    package and firmware requirements when its evidence explicitly covers both.
+   Exercise Windows path aliases and target-isolated SDKCONFIG paths.
 6. Check registered suites actually run, Release assertions remain active,
    documentation guards detect hidden APIs and missing comments, and generated
    workflow files are not reported as executed CI. Verify every claimed

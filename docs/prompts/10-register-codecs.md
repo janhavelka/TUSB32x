@@ -26,6 +26,9 @@ the lead owns production composition and shared declarations. Follow
    unknown/reserved validity, unchanged output on error, and no I2C/state mutation.
    CLI formatting will use it in prompt 22; do not require a private source include
    or duplicate field conversion. Test and link the public decoder now.
+   Single-byte decoding reports raw field meanings; only complete port decoding
+   can establish attachment-dependent applicability. Preserve profile raw/field
+   validity through reserved codes and absent variant controls.
    No chip inheritance,
    generated register language, registry or generic unsafe byte RMW abstraction.
 2. Cover every specified mode, source advertisement, current detection,
@@ -53,7 +56,8 @@ the lead owns production composition and shared declarations. Follow
    requires explicit observation/reconciliation or failure, never desired replay.
 7. Keep TUSB322I separate: its mode 00 means DRP; semantic comparison may accept
    equivalent DRP encodings according to the specification. No `0x45`; IRQ
-   `0x10` and VCONN fault `0x08` acknowledgement are independent. Unresolved
+   `0x10` and raw VCONN fault `0x08` are independent. Initial fault evidence stays
+   raw with capability/access context; no typed fault-ACK API. Unresolved
    advertisement access or fault-clear wording remains visibly gated.
 
 ## Verify and finish this prompt

@@ -22,7 +22,9 @@ consumer dependencies from a stricter peer build.
 2. Implement `validateDriverConfig` and `validateProfile` against the frozen
    variant/type rules. Check required callbacks, explicit variant/address pair,
    nonzero timeout, legal enums and capability combinations. Reject unsupported
-   valid settings distinctly from invalid configuration as documented. These
+   valid settings distinctly from invalid configuration. Separate value semantics
+   from apply's later changed-field write capability checks; unchanged proved
+   322I advertisement must not disable all other supported writes. These
    functions perform no callback, allocation or device mutation.
 3. Publish these callable declarations with their real definitions and Doxygen.
    Preserve the already implemented Status/passive types. Other facade methods

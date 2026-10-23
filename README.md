@@ -39,6 +39,8 @@ requirements remain separate from completing this initial implementation.
 
 The supporting [audit](docs/audit/README.md) records source observations from
 this repository's parent directory, `Projects/`.
+The latest [correctness and completeness review](docs/audit/promptset-completeness-review.md)
+records fixes to chip procedures, evidence handling, adapters, CLI and tooling.
 `FieldCore-node` is the consumer inspected for the user's `fieldcore-noce`
 reference. Its architecture informs integration requirements; it will not be a
 library dependency.

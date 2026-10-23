@@ -9,6 +9,10 @@ The [scope audit](../audit/promptset-scope-review.md) explains the split from th
 original fifteen stages and maps their requirements to the new units. The split
 follows dependencies and independently testable outcomes, not equal text lengths.
 
+The later [correctness and completeness review](../audit/promptset-completeness-review.md)
+records corrected chip sequences, owner/evidence rules, adapter limits and tooling
+gaps. Its fixes are incorporated into the prompts and shared contracts below.
+
 ## Execute one prompt
 
 Give the agent repository access and name the exact file from the table:

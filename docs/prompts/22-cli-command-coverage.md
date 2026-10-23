@@ -38,8 +38,9 @@ Do not redesign the parser or operation engine to close simple dispatch gaps.
 4. Invalidate requires an explicit supported reason and preserves historical
    effect evidence. Intpin uses only the injected opt-in application reader;
    common code never sets up GPIO. End is bus-silent and not a hardware reset.
-   No address scan/reselection, VBUS policy, bus recovery or unrelated sensor
-   command belongs here.
+   Test explicit forget-evidence from prompt 20 and reject it while bound, active
+   or retaining a result. Target edits never call it implicitly. No address scan,
+   hidden target reselection, VBUS policy, bus recovery or sensor command belongs here.
 5. Finish the fixed command inventory and `tools/tusb32x_cli_contract.py` rows:
    canonical names/aliases, topic/syntax, execution/effect class, prerequisites,
    capabilities, record keys, callback/byte bounds, fixture and behavioral test.

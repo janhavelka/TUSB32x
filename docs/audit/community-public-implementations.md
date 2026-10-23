@@ -59,7 +59,7 @@ byte, a register address, or an already shifted field value.
 | C3 | TUSB322I 7-bit address `0x47`; register pointer is one byte; write frame is register then data | The application-specific address is not the entire address capability set. The public transport remains explicit and application-owned. |
 | C5 | TUSB322 ID is ascending `32 32 33 42 53 55 54 00` | A base-family `30` in register zero is not a valid TUSB322 identity. C5 checks the reversed sequence one byte at a time; C3 reads eight bytes but has no expected-signature literal. |
 | C3 | `0x09:3` decoded as VCONN fault; duty `[2:1]`; accessory disable `[0]` | Fault presence is corroborated; this code does not settle TI's ambiguous clear semantics. |
-| C3 | TUSB322 mode codes `0/1/2` for DRP/UFP/DFP; disable-term, write mode, enable-term | Unlike TUSB320, code zero is DRP, not PORT-pin selection. No 5 ms delay is encoded in this driver; only the TUSB322 datasheet may establish its timing requirements. |
+| C3 | TUSB322 mode codes `0/1/2` for DRP/UFP/DFP; disable-term, write mode, enable-term | Unlike TUSB320, code zero is DRP, not PORT-pin selection. TI SLLSEO5D §6.3.2.1–2 pp10–11 explicitly prescribes this sequence for DFP/UFP without a specified 5 ms delay. Qualify direct return to DRP separately. |
 
 The TI documents used to resolve these fields are [SLLSEQ8D Tables 7-12](https://www.ti.com/lit/ds/symlink/tusb320lai.pdf),
 [SLLSEN9F Table 7-7](https://www.ti.com/lit/ds/symlink/tusb320.pdf), and
@@ -120,11 +120,12 @@ transport abstraction.
 
 `set_mode()` writes whole `0x0A` bytes: `0x01`, then disabled new mode, then
 enabled new mode. Those writes also zero unrelated debounce/preference bits.
-For an observed `0x0A=0xC2` and a switch to DFP, preservation would require
-`0xC3 -> 0xE3 -> 0xE2` under the selected TUSB322 procedure, assuming those
-controls are permitted and verified. This is conditional byte-preservation
-arithmetic, not evidence that TI prescribes that three-step sequence for 322I.
-Use the exact 322 procedure before enabling an operation. The source instead writes
+For an observed `0x0A=0xC2` and a switch to DFP, preserving the documented
+debounce/preference controls gives `0xC3 -> 0xE3 -> 0xE2`.
+Correction, 2026-10-23: the earlier audit called this merely conditional
+arithmetic. SLLSEO5D §6.3.2.1–2 pp10–11 explicitly prescribes the three separate
+disable/mode/enable writes for DFP/UFP. Unlike the extended 320 procedure, it
+specifies no added 5 ms wait. The source instead writes
 `0x01 -> 0x21 -> 0x20`. A generic implementation must preserve valid current
 controls and keep partial effects when any write fails.
 
@@ -196,9 +197,10 @@ of observed failures on physical Linux systems.
    mark reset complete, and a later read must not erase uncertain effects.
 8. Fail each role-change write in turn. Preserve the first transport failure,
    partial state, termination uncertainty and immutable operation deadline.
-9. Check preservation of non-target `0x0A` fields. The conditional TUSB322
-   `0xC3/0xE3/0xE2` example identifies field loss, not a verified 322 procedure;
-   the same bytes are normative for the extended-320 sequence with its wait.
+9. Check preservation of non-target `0x0A` fields: `0xC3/0xE3/0xE2` follows
+   the documented 322 DFP sequence. Extended 320 uses the same bytes with its
+   separate required wait; the 322 source does not add that wait. DRP encodings
+   and reset-to-DRP do not by themselves specify a direct non-reset return path.
 10. Bound every callback and the entire operation; do not copy infinite retries,
     busy waits or immediate post-reset access from public implementations.
 11. Derive device mock semantics from TI, and test protocol frames independently

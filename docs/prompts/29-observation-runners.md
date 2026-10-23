@@ -29,7 +29,10 @@ and choices. Inspect actual TUSB CLI behavior rather than assuming the docs matc
    staging/validation without apply, retained-result query/take and typed evidence.
    Verify/selfcheck aliases require existing retained desired state; either check
    that precondition or test its rejection. Never apply merely to make a readonly
-   plan pass. No initialization reset, IRQ clear or profile replay.
+   plan pass. No initialization reset, IRQ clear or profile replay. Before work,
+   reject another owner's active/retained operation. Capture staging, job auto and
+   output settings actually changed; restore these local values afterward without
+   hardware apply. Lost sessions retain unrestored-state evidence, not replay.
 3. Implement soak with documented duration/count/interval options and an explicit
    finite whole-run deadline; validate checked arithmetic. Counts are 1..100000 and intervals
    1..3600000 ms with documented finite overall limits. Repeated detached state is
@@ -41,7 +44,8 @@ and choices. Inspect actual TUSB CLI behavior rather than assuming the docs matc
    Keep bulk counts/statistics/dumps on the host; add no firmware bulk scheduler,
    child-result scheme or second run token. Do not invent unsupported chip reads.
 5. Each operation must reach its matching terminal evidence and have its result
-   explicitly taken before the next begins. Stop on unexplained failure. A result
+   explicitly taken before the next begins. Cancel/take only this run's admitted
+   tokens. Stop on unexplained failure. A result
    query is not another completion. Preserve unexpected writes/effects and output
    loss as failed/incomplete evidence, never scrub the transcript into success.
 6. Exact cache/rejection callback-delta tests use an idle core or job auto 0.
@@ -58,7 +62,8 @@ and choices. Inspect actual TUSB CLI behavior rather than assuming the docs matc
 
 Extend `tools/test_tusb32x_hil_runner.py` for argument/pre-open rejection, plan
 selection, finite arithmetic, dry-run, retained results, callback budgets and
-observation invalidation. Use fake serial/clock for failures, with no real sleeps.
+observation invalidation, foreign-result denial and local-state restoration after
+success/failure. Use fake serial/clock for failures, with no real sleeps.
 Test every new guard's negative path and all exit classifications.
 
 Extend `tools/test_cli_transcript.py` to run the full readonly plan against one

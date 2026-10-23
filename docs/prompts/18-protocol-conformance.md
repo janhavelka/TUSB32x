@@ -46,8 +46,11 @@ Check existing coverage and add the missing cases:
 - Base attached-precheck rejection and documented race; extended disable/mode/
   wait/enable sequence, requested disabled final states, both termination
   controls independently effective and bounded explicit reset/recovery.
+  Restrict mode sequencing/prechecks to actual mode changes; cover attached base
+  current-only updates, verified no-op apply and retained pre-write actual evidence.
 - TUSB322I separate signature, DRP00 semantics, no `0x45`, independent IRQ/fault
-  evidence and unresolved advertisement/fault gates. No inferred family support.
+  evidence, documented DFP/UFP sequence without an invented wait, and unresolved
+  advertisement-change/fault-clear/direct-DRP gates. No inferred family support.
 
 ## Required cross-operation regressions
 
@@ -63,6 +66,8 @@ equivalent instead of adding a duplicate solely for the suggested name:
 3. `failed_status_read_preserves_observation`: old fields/time survive failed or
    partial refresh; invalidation preserves history. Complete pre-ACK publication
    survives later ACK/recheck error with its original acquisition boundary.
+   Fixed 09/08/09 changed bookends retain raw bytes with cross-register validity
+   cleared, never restart until stable or invent usable current/accessory fields.
 4. `irq_reassertion_remains_visible`: each read/ACK/recheck race and stuck latch,
    bounded service, no false lossless count and no implicit ACK from status read.
 5. `reconcile_partial_profile_allows_explicit_apply`: establish KNOWN actual

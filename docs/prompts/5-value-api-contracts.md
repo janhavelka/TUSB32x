@@ -40,7 +40,9 @@ peers for material conventions without reopening settled decisions needlessly.
    objects do not trigger initialization writes or authorize advertised power.
 6. Define the complete operation/result/snapshot/diagnostic value inventory from
    the baseline, with raw versus interpreted evidence, independent validity and
-   fixed storage. Retain explicit local/peer role and not-applicable states.
+   fixed storage. Include ConfigurationSnapshot's rawConfig bytes, raw-valid
+   mask and ProfileField validity so absent/reserved controls cannot become
+   valid default settings. Retain explicit local/peer role and not-applicable states.
    Prompt 6 freezes publication and lifetime rules before implementation.
 
 ## Plan methods without publishing missing implementations
@@ -58,6 +60,8 @@ raw/unknown/reserved validity and output-on-error behavior in the API guide.
 Prompt 10 implements and publishes it; prompt 22 formats its result. It accepts
 supplied bytes and performs no I2C or state mutation. Do not require private
 source headers, duplicate silicon decoding or a simulated driver to decode a byte.
+One-byte decode reports field codes only; attachment-dependent current/accessory
+applicability requires the complete port observation, not a guessed 0x09 value.
 
 Unimplemented callable methods stay in design documents or an explicitly named
 compile-only contract fixture, outside delivered public headers. Do not expose

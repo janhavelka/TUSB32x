@@ -39,13 +39,15 @@ for token/effect retention and stale-time decisions. Follow
    I2C. `invalidateDeviceState` records external uncertainty and retains effects;
    normalize an OK reason as specified. `forgetDeviceEvidence` requires unbound,
    inactive, no-result state and does not reset tokens/counters. Retain the one
-   variant/address/context effect association across same-target rebind; changing
+   variant/address/context/both-callbacks association across same-target rebind; changing
    an unresolved target requires explicit forgetting, not a registry or cleanup.
+   New targets never inherit current old-target identity/configuration/port data.
 5. `startInitialize` reads identity and required initial persistent configuration
    only. It never applies defaults, resets, ACKs or changes role. Publish complete
-   identity/config evidence with explicit validity and initialized state according
-   to the contract. No desired profile is adopted. Use the existing wrapper for
-   every callback and mark production traffic managed.
+   identity/config evidence with explicit validity. Accepted reinitialization
+   clears current identity/initialized usability; failure cannot retain old READY.
+   Complete identity contradiction invalidates current target evidence. No desired
+   profile is adopted or interrupted effect erased. Use the existing managed wrapper.
 6. Use small named private phases and coarse public progress labels. `poll` alone
    performs managed I2C. Zero budget means zero callbacks; failures consume one;
    default one means at most one. Bound local transitions too. No spin, retry,
@@ -66,8 +68,10 @@ for token/effect retention and stale-time decisions. Follow
 
 Register `tusb32x_operations`. Test atomic rebind, invalid/BUSY/result backpressure,
 unchanged outputs, repeat snapshot, exact take once, every token precedence,
-exhaustion through a bounded fixture, end/invalidate at every initialization
-phase and retained result after unbinding. Assert initialization contains no write.
+exhaustion through a bounded internal arithmetic fixture, end/invalidate at every
+initialization phase and retained result after unbinding. Test failed reinit after
+success and callback changes with null context. No initialization writes or public
+test-only seed API; test boundary arithmetic directly and normal public paths.
 
 Cover budgets 0/1/larger, failed-attempt counting, deadline before/at/after a
 callback, late success versus original backend failure, absent fresh time,

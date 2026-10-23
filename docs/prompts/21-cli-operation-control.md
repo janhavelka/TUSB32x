@@ -48,7 +48,9 @@ declarations and tests. Sibling init/profile semantics are not this core's rules
 6. Route IRQ acknowledgement separately from bounded service. ACK preserves
    actual observed/trusted 0x09 controls even when staging or desired differ.
    Unrelated writes use W1C=0. Keep unresolved TUSB322I fault-clear/advertisement
-   writes unavailable. Original TUSB320/I recovery uses startRecoverDeadBattery
+   writes unavailable; unchanged proved advertisement must not block other allowed
+   profile changes. Missing/reserved actual evidence is not equality. Original
+   TUSB320/I recovery uses startRecoverDeadBattery
    and its stable-VDD/source-startup prerequisites; later variants reject before
    traffic. Do not hide recovery inside initialization or copy its register writes.
 7. Output backpressure must not block polling, deadlines, cancellation or end.

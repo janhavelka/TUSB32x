@@ -76,6 +76,15 @@ TUSB322I uses 0x47/0x67, active-low enable, ID ascending `32 32 33 42 53 55 54 0
 
 Enable/soft reset defaults to DRP. Sections 6.3.2.1-2 prescribe disable-term/set-mode/enable-term, without the TUSB320LI/LAI 5ms step. Timing gives 100ms I2C availability maximum and 95ms reset maximum. VCONN is autonomous upon qualifying source attachment. [SLLSEO5D, sections 5.7, 6.3.2, 6.3.8](https://www.ti.com/lit/ds/symlink/tusb322i.pdf)
 
+Correction audit, 2026-10-23: the three-write recipe is explicit for DFP/UFP on
+pp10–11: clean bytes `01 -> 21 -> 20` / `01 -> 11 -> 10`. Non-target controls
+must be preserved (`C2` to DFP gives `C3 -> E3 -> E2`). The community audit's
+earlier conditional description understated this source. Direct return to DRP
+needs a separately reviewed procedure: DRP00/11 and reset-to-DRP are documented,
+but no separate non-reset return recipe is listed. Never substitute a hidden reset
+inside apply. Advertisement/fault-clear conflicts remain independent of the
+documented DFP/UFP sequence.
+
 Recommendation: make the extension audit mandatory, then implement supported operations with variant-specific behavior if the evidence closes. Otherwise explicitly list its unresolved operations and keep them unavailable. The observed differences justify a capability branch, not a different framework or duplicated driver. Do not call the whole device incompatible merely because some evidence needs clarification.
 
 ## Conflicts and unresolved points
@@ -112,6 +121,9 @@ These are engineering recommendations derived from the evidence, not TI-specifie
 
 - Use a fake monotonic clock and scripted transport. Verify no reads before readiness, reset completion/timeout, the required mode-switch pause, clock wraparound, cancellation, and no holding a shared bus lock across a timed wait.
 - Base-mode change while attached must fail without writing. Extended-mode change must exercise each step and each injected failure. A partial write sequence must surface uncertain configuration/state instead of pretending the requested role became active.
+- Apply that attached-state restriction only to an actual MODE_SELECT change.
+  Base §7.3.2 p12 permits advertisement changes after attachment. An unchanged
+  mode does not require a role cycle merely to apply another allowed setting.
 - Base dead-battery recovery tests require identity first, exact `0x45` reads/writes, rejection of nonzero internal bits and other variants, the 30 ms hardware wait plus clock margin, no publication of transient status, and failures/cancellation after each write. Readback of zero alone is not evidence that the timed procedure ran.
 - A setter changes requested configuration; it does not prove the actual attachment role. Model configured role, observed local role, orientation validity, current advertisement, detected-current validity, and transport health separately.
 - A failed observation read cannot create a synthetic detach, zero-current result, or healthy status. A complete successful observation read may publish its snapshot; a later ACK or recheck failure retains that observation with its timestamp and reports the service failure independently. Partial reads never publish, and older observations retain their freshness metadata. The transient flags during base dead-battery recovery are not ordinary publishable observations.
@@ -124,6 +136,8 @@ These are engineering recommendations derived from the evidence, not TI-specifie
 
 - Keep bus ownership, locks, power rails, GPIO enable control, interrupt setup, VBUS switching, USB controller role setup, charge limits, and recovery policy outside the portable device core.
 - Default-current status is a category; do not turn it into an unconditional 500mA or 900mA permission. Board/application policy decides usable current. High-current advertisement also needs the documented supply condition and real source capability.
+- Orientation CC1/CC2 names the chip inputs. Connector/mux orientation needs the
+  exact board wiring mapping; the core must not silently remap swapped CC wires.
 - No automatic bus recovery, power cycle, aggressive reset-on-read-error, source enable, charger reconfiguration, or PD policy inside the library. Attach/detach is normal device state, not transport health failure.
 - A mode reconfiguration is not a USB PD role-swap implementation. This controller family must not be advertised as PD negotiation, e-marker discovery, a VBUS ADC, or a VCONN power controller for the six TUSB320 variants.
 - Provide examples for polling, interrupt-to-worker service, nonblocking reset/mode change, and an externally owned shared bus. The portable core must compile with no Arduino/ESP-IDF/RTOS headers. Hardware examples must disclose straps, supply/enable assumptions, selected exact variant, and what they actually validated.

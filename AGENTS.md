@@ -175,8 +175,20 @@ Do not create empty files or successful hardware stubs to fill the tree.
 - Callbacks return a terminal Status, respect one aggregate timeout including
   lock acquisition and all phases, never retain buffers, and never re-enter the
   instance. Do not leak framework errors or infer a NACK phase from generic errors.
+  Accept only OK or documented I2C_* callback statuses; normalize owner/validation
+  codes and invalid enum values to I2C_ERROR while preserving backend detail.
+- A timeout parameter alone does not prove a bounded adapter. Audit the selected
+  SDK's locks, repeated waits, clock granularity and internal cleanup. Require
+  synchronous handles and serialization covering every bus user; reject unsupported
+  configurations or budgets before backend work. Measuring lateness after return
+  cannot bound preceding blocking. No core/adapter-added retries or bus recovery;
+  documented SDK-internal controller/bus cleanup is an explicit application choice.
 - Owner access is serialized; public APIs are not ISR-safe. An ISR signals the
   owner, which performs library work later. No I2C, logging or blocking in an ISR.
+- Assign one configuration owner per physical target. Sharing a serialized bus
+  between different devices is supported; another writer to the same device must
+  coordinate and invalidate cached evidence. Target association includes callbacks
+  as well as variant/address/context; a shared null context is not bus identity.
 - `bind`, validation, `start*`, cancellation, cached access, result delivery,
   invalidation and `end` are bus-silent. Only `poll` advances managed I2C work.
   Explicit `readRegisterSync`/`writeRegisterSync` diagnostics have their own
@@ -212,6 +224,9 @@ Do not create empty files or successful hardware stubs to fill the tree.
 - Port attachment, local/peer role, current indication, validity/freshness,
   configuration trust, IRQ evidence and operation outcome remain separate facts.
   Unknown or unavailable fields must not become plausible default observations.
+  Single-register decoding reports field codes; paired observations establish
+  applicability. Preserve raw profile bytes/validity, and invalidate dependent
+  port fields when the fixed coherence read detects a change; never retry until stable.
 
 ## TUSB32x silicon rules
 
@@ -237,6 +252,10 @@ Do not create empty files or successful hardware stubs to fill the tree.
 - Keep 0A disableTerm and 45 disableRdRp distinct. Apply the verified per-variant
   role-change sequence and required wait. Do not label termination enabled while
   another applicable disable control remains effective or evidence is unresolved.
+- Change only requested fields that differ from proved actual settings. A no-op
+  apply verifies without writes. Base attached-mode rejection applies to an actual
+  mode change, not an independently permitted current-only update. Admission or
+  pre-write cancellation alone does not erase otherwise valid actual evidence.
 - Initialization is read-only; applying a profile and resetting are explicit
   operations. No automatic reset, role change, IRQ clear or desired-profile replay.
 - Base TUSB320/I post-dead-battery recovery is the explicit

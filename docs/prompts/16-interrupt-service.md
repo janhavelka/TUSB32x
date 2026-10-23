@@ -30,8 +30,9 @@ disjoint scopes, current runtime models and lead-only Git.
    Desired duty 30% while actual duty is 50% must preserve 50%. Never use desired
    staging, replay live RO bits, or apply a profile opportunistically. If a safe
    image cannot be established, fail explicitly rather than guess.
-3. Full service observes and publishes a complete snapshot, explicitly ACKs,
-   then performs the documented bounded recheck. Each callback remains one owner
+3. Full service uses prompt 15's fixed 0x09/0x08/0x09 observation and validity rules,
+   explicitly ACKs, then reads 0x09 once to recheck. At most five callbacks: three
+   observation reads, one ACK and one recheck; ACK-only needs two. Each is one owner
    step. Preserve a successful pre-ACK observation if ACK or recheck later fails;
    retain its sequence/time and report service error and ACK uncertainty separately.
    Incomplete later reads cannot replace complete data.
@@ -48,10 +49,10 @@ disjoint scopes, current runtime models and lead-only Git.
    has its own timestamp/provenance. Core owns no GPIO/ISR; later examples signal
    an owner from an ISR without I2C, blocking or logging. No event dispatcher,
    dynamic queue or callback framework is needed.
-7. For evidence-supported TUSB322I operations, distinguish VCONN fault evidence
-   and acknowledgement from IRQ `0x10`; clearing one cannot silently clear the
-   other. Preserve unresolved fault-clear wording as a feature gate and document
-   read-side effects only when established by the exact source.
+7. For evidence-supported TUSB322I operations, expose fault as raw 0x09 bit 3 with
+   capability/access context, separately from IRQ 0x10. Provide no typed fault-ACK
+   API while clear behavior is unresolved. Gate affected writes and document read
+   effects only when established; never silently treat the fault as another W1C bit.
 
 ## Verify and finish this prompt
 
@@ -72,7 +73,8 @@ after the last recheck. Cover stuck IRQ, coalescing and no-pin polling with fini
 work bounds. Fail ACK both before and after simulated latch clearing. Verify
 the complete pre-ACK snapshot survives later failures and the original service
 error stays visible. Test budgets 0/1/larger, error/cancel/deadline after every
-phase, retained effects/result and independent IRQ versus supported fault ACK.
+phase, retained effects/result and IRQ versus raw fault evidence. Recheck is
+sampled latch evidence only; it does not replace the complete port snapshot.
 
 Run focused port/owner/protocol regressions. Update source and public Doxygen,
 interrupt/API/architecture guides, exact callback/byte ceilings, feature matrix,

@@ -38,7 +38,9 @@ file scopes, runtime-supported models and lead-only Git.
    subset, excluding raw Sync. Keep source counters single and names honest.
    The later CLI `probe` alias calls initialize and thus remains managed traffic.
    Preserve original last failed Status/detail/time validity after later success;
-   no fabricated timestamp or physical byte/transaction count.
+   no fabricated timestamp or physical byte/transaction count. Raw Sync has no
+   fresh owner-time argument: mark an unknown failure time invalid rather than
+   reuse an older managed callback's timestamp.
 5. Expose binding/initialization, trust, last terminal status and retained effect
    evidence, including unresolved reset/recovery kind after result consumption.
    Diagnostic reads do not repair configuration trust or certify a historical
@@ -61,8 +63,9 @@ file scopes, runtime-supported models and lead-only Git.
 Register `tusb32x_diagnostics`. Test raw read/write limits, invalid map/variant,
 active/result backpressure, unchanged read output, unsafe-sequence rejection,
 possible failed write and safe-image absence. Count every callback once; verify
-raw all-source inclusion and managed exclusion, illegal callback IN_PROGRESS
-normalization, local versus callback BUSY, saturation and retained failure detail.
+raw all-source inclusion and managed exclusion, normalization of every callback
+code outside OK/I2C_*, local versus callback BUSY, saturation and retained failure
+detail. Exercise bounded arithmetic helpers at limits without public test seeds.
 
 Test the complete projection table at thresholds 1/default/maximum, invalid
 policy unchanged output, failed initialization, managed success after OFFLINE,

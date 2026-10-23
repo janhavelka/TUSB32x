@@ -27,16 +27,29 @@ copy framework APIs from sibling common directories or their startup mutations.
    adapter counters and firmware identity. Host compilation needs no Arduino or
    IDF headers. No generic command framework or new core scheduler.
 2. Implement common help/version/color/verbose/hilmark; cached bus/console/
-   capabilities; variant/address queries and validated target edits; bind/end;
+   capabilities; variant/address queries and validated target edits; bind/end and
+   explicit forget-evidence;
    cached sample/freshness, cfg/profile show/reset/discard/validate; and the
    profile control getters/setters in the contract. Include their specified
    aliases. Target edits require an ended, idle instance with no retained result.
-   All these commands are bus-silent. No startup command runs automatically.
+   These commands are bus-silent. Forgetting requires unbound/inactive/no result;
+   target edits and bind never implicitly discard evidence. Include lifecycle
+   help. No startup command runs automatically.
+   `variant <name> [address]` validates an explicit pair atomically, allowing
+   LAI/0x47 to base/0x60 without an invalid intermediate target. Omitted address
+   preserves the current one; never guess. Accepted variant changes replace only
+   CLI staging with the documented common candidate, validated for the new variant,
+   and report the change. Address-only edits preserve staging. Failed validation
+   changes nothing.
 3. Keep CLI staging separate from core retained desired, observed and applied
-   settings. Reset stages variant candidate defaults, not a silicon reset image.
+   settings. Reset stages the validated candidate defaults, not a silicon reset image.
    Discard without retained desired rejects CONFIGURATION_UNKNOWN. Validate all
    values and capabilities before changing any field or generation. Staging does
-   not apply, acknowledge an IRQ or change core desired state.
+   not apply, acknowledge an IRQ or change core desired state. Profile output
+   preserves rawConfigValidMask and observedValidFields; absent/unknown fields
+   cannot appear as verified defaults.
+   A valid observable field may be staged even when its write permission is gated;
+   apply separately rejects changes to that field using proved actual state.
 4. Implement strict whole-command parsing before effects: exact arity, full
    integer conversion, bounds, exact enums/booleans and no unsigned signs or junk
    suffixes. Enforce the contract's 192-byte line, 12 tokens, 32-byte token
@@ -65,6 +78,8 @@ Add minimal `tools/test_cli_transcript.py` and register `cli_transcript` now wit
 
 Test every implemented canonical/alias/topic route; zero callback deltas; full
 state preservation on invalid input; staging/desired separation; poisoned input,
+cross-family target changes and evidence gates; staging reset when an old 118 ms
+extended or 133 ms base selection is incompatible with the new variant;
 fragmentation and boundaries; short/zero output writes, queue loss and fairness;
 maximum-width records including newline/NUL; nonce/ID validation and exhaustion.
 Exercise one persistent C++ process from Python. Static command strings are not

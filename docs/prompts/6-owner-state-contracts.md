@@ -54,10 +54,12 @@ states into a cross-product enum.
 
 Binding validates before replacement. end cancels locally, unbinds, retains
 result/effects and prevents later use of the borrowed bus. Retain the one
-variant/address/context association; same-target rebinding preserves uncertainty.
+variant/address/context/both-callbacks association; same-target rebinding preserves uncertainty.
 Changing target with unresolved evidence requires explicit local forgetting
 while unbound/inactive/result-free. Context reuse is not physical identity proof.
 Result consumption does not erase interrupted recovery history from diagnostics.
+Changed targets cannot inherit usable old identity/configuration/port evidence.
+Use one configuration owner per physical target, even on a serialized shared bus.
 
 Use owner uint64 milliseconds and immutable OperationTiming with intervals below
 2^63, tested unsigned comparisons, invalid/backward/stalled-time behavior and
@@ -66,7 +68,9 @@ callback; zero budget none; failed callbacks consume budget. Status-only callbac
 require stopping the turn and using a fresh next poll for time-sensitive
 completion/wait anchors. Larger budget is a ceiling, not permission to reuse
 stale time. Keep the 1 ms hardware margin separate from owner deadlines.
-Preserve actual transport failure over a later owner-timeout observation.
+Preserve actual transport failure over a later owner-timeout observation. Define
+equal-tick, backward/half-range and unknown completion-time cases exactly as the
+baseline; cancel/end/invalidate cannot invent fresh time from the last poll.
 
 Specify aggregate callback timeout including lock/all phases, buffer lifetime,
 no pending DMA/retries/reentry and bounded CPU transitions. Callback attempts
@@ -75,8 +79,9 @@ implementation must verify actual paths against them, not invent lower limits.
 
 ## Snapshot and health contract
 
-Stage a complete port observation before publication; a failed second read keeps
-old data/time. A successful burst is not hardware atomicity. `invalidated` starts
+Use fixed 0x09/0x08/0x09 sampling with final 0x09 and the baseline's 0xE0 comparison;
+changed bookends clear cross-register field validity, with no retry until stable.
+Failed reads preserve old data/time. `invalidated` starts
 true, clears only on fresh complete publication and becomes true on end, external
 invalidation or a possible port-affecting write. Historical fields remain.
 Use the owner timestamp before the first required read as the conservative
@@ -87,6 +92,9 @@ recheck failure; retain pending/ACK uncertainty separately, without an event bus
 Keep desired, observed and verified generations/publication points distinct;
 compare persistent writable semantics only, including 322I DRP equivalence.
 An unrelated successful read cannot repair configuration trust.
+Apply admission changes desired input only; pre-write cancellation preserves proved
+actual state. Reinitialization clears current identity/initialized usability and
+cannot erase interrupted effects. Follow the baseline's shared reconciliation proof.
 
 Specify saturating all-callback TransportStats plus explicitly filtered
 managedTransport. Raw Sync calls affect source totals but not managed health;

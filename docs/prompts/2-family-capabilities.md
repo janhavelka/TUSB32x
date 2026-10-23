@@ -61,6 +61,8 @@ features.
 
 Document floating ADDR selecting GPIO operation, exact strap levels/sampling,
 PORT selecting startup role on the six 320 parts, and 322I having no PORT pin.
+Record pin mapping: 320 pin 3 is PORT and pin 4 VBUS_DET; 322I pin 3 is
+VBUS_DET and pin 4 DIR. Shared packaging does not imply board interchangeability.
 Record VDD, I2C pull-up voltage, non-failsafe pins, VBUS_DET resistor/input limits,
 dead-battery Rd and enable behavior per variant. LAI/HAI 3 A advertisement needs
 at least 3.5 V; 322I uses 4.5–5.5 V. Recheck exact limits rather than inheriting

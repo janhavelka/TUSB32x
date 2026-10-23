@@ -23,13 +23,16 @@ reasoning reviewer for waits, ambiguous writes and mismatch recovery. Follow
 
 1. Validate the whole candidate and variant before traffic or replacing desired
    evidence. Accepted apply copies the candidate and advances desired generation;
-   admission returns `IN_PROGRESS`. Cancellation/failure retains that desired
-   input but cannot leave an old applied image claimed current.
+   admission returns `IN_PROGRESS`. Pre-write cancellation/expiry retains desired
+   input and the still-proved old actual/port evidence. Invalidate before a possible
+   mutating write. Apply differences only; a verified no-op writes nothing and has
+   HardwareEffect::NONE. Unknown actual fields require observation/reconciliation.
 2. Use proved actual controls for composition; no staged settings sneak into ACK
-   or another operation. Base TUSB320/I mode changes require an observed unattached
-   precheck. Reject an attached port before writes and document that attachment
-   can race the check: software cannot enforce an atomic electrical condition.
-3. LI/HI/LAI/HAI mode changes follow disable termination, write mode, required
+   or another operation. Base MODE_SELECT changes require an unattached precheck
+   before any writes. An unchanged mode with an allowed current-only change need
+   not reject attachment. Document the attachment race; software cannot enforce
+   an atomic electrical condition.
+3. Only actual LI/HI/LAI/HAI mode changes require disable termination, write mode,
    5 ms wait, then enable using the reviewed sequence. Clean `0x0A` DRP bytes are
    `0x01,0x31,0x30`; preserve actual non-mode fields. `0x45` is not a replacement
    for these steps. Establish the requested final disableTerm/disableRdRp state
@@ -40,9 +43,11 @@ reasoning reviewer for waits, ambiguous writes and mismatch recovery. Follow
    fresh owner timestamp 110 is available, earliest 116. Keep this software
    margin separate from the TI value and immutable deadline. No stale-time
    shortcut, sleeping or lock across polls.
-5. TUSB322I uses only its own closed sequence/capabilities; the TUSB320 wait is
-   not automatically its datasheet fact. Reject unresolved advertisement writes
-   locally, preserve IRQ/VCONN fault independence and document autonomous effects.
+5. TUSB322I DFP/UFP uses disableTerm, set mode, then enable per SLLSEO5D
+   §6.3.2.1–2 pp10–11, preserving fields; it specifies no 5 ms wait. Gate an
+   unresolved direct return-to-DRP procedure; never hide a reset. Reject actual
+   advertisement changes locally while allowing unchanged proved values. Preserve
+   raw fault/IRQ independence and document autonomous VCONN effects.
 6. Before any possible port-affecting write, invalidate configuration trust and
    port usability while retaining historical data. Set possible HardwareEffect
    before invocation, refine only from positive evidence, and preserve the first
@@ -64,12 +69,13 @@ Recheck [CHIP_EVIDENCE](CHIP_EVIDENCE.md): the TI-hosted cleanup can replace a
 failed mode write with success; reject that behavior and retain the first error.
 For extended 320 actual `0A=C2` changing to DFP, require `C3 -> E3 -> E2` with the
 5 ms hardware wait before re-enable. The similar 322 public-code example proves
-field loss only; it does not authorize this sequence for 322. Separate the first
-disable and mode writes even when initially unattached.
+field loss, not timing; use its own TI sequence. Separate disable and mode writes
+even when initially unattached.
 
 Extend `tusb32x_operations` with exact variant sequences, all profile validation,
-nonzero preserved fields, requested-disabled final states and base attached
-rejection. Test both no-application and applied-then-error outcomes at every write;
+nonzero preserved fields, requested-disabled final states, no-op apply and attached
+base current-only success versus mode-change rejection. Test pre-write cancellation
+and both no-application/applied-then-error outcomes at every write;
 cancel/deadline at disable, mode, wait, enable, readback and final-time boundaries.
 
 Use a sub-ms external fake clock with floor timestamps. Writes completing at

@@ -32,7 +32,9 @@ when changing package/build pins. Sibling clean-build success proves nothing her
    of Python can break firmware identity. Core consumers still need no generator.
 3. Add tools/check_package.py and tools/test_check_package.py. Reject archive
    traversal, absolute/drive/backslash paths, duplicate names, links and special
-   files; bound member count and individual/total bytes. Extract into a new
+   files; also reject case-insensitive collisions, colon/alternate-stream segments,
+   Windows device names and trailing-dot/space aliases. Validate portable names
+   before extraction; bound member count and individual/total bytes. Extract into a new
    verified temporary root, rename the library directory and validate exact
    required/forbidden members. No move/delete outside that root. Missing shared
    example files must fail; extraction must not follow archive-created links.
@@ -45,7 +47,8 @@ when changing package/build pins. Sibling clean-build success proves nothing her
    export/find_package only if implemented and tested after moving the install
    prefix. Do not add installation infrastructure merely to increase scope.
 6. Build extracted-package Arduino and genuine native-IDF consumers for S2/S3
-   with the working configurations established by prompts 23–26. Link real images
+   with the working configurations established by prompts 23–26 and separate build/
+   SDKCONFIG paths. Link real images
    from the extracted shared sources without sibling/source-checkout paths. Check
    native app_main/APIs and absence of Arduino linkage. Record archive hash,
    extracted paths, tool versions and actual commands. Header compilation alone
@@ -57,7 +60,7 @@ when changing package/build pins. Sibling clean-build success proves nothing her
 
 ## Focused acceptance
 
-Test malformed archive paths, links, duplicates, oversized members/counts, missing
+Test malformed/Windows-aliased paths, links, case collisions, oversized members/counts, missing
 members and forbidden content before accepting a valid real archive. Assert safe
 failure leaves files outside the extraction root untouched. Test tests-OFF clean
 configuration does not discover Python/Doxygen/test dependencies. Register package

@@ -24,7 +24,8 @@ not behavior proof.
 1. Add tools/validate.py and tools/test_validate.py. Provide --checks with explicit
    native, contracts, doxygen, python and package selections, plus names needed
    for the declared firmware matrix. Document the actual accepted names. All means
-   all declared non-HIL release checks; narrower selection labels its narrower
+   all declared local non-HIL release checks; no selection dispatches, polls or
+   waits for remote CI. Prompt 34 owns that checkpoint. Narrower selection labels its narrower
    scope. HIL/flashing/publishing never runs implicitly. Missing required tools
    produce INCOMPLETE and nonzero; focused success is not full validation.
 2. Reuse registered CTest checks and existing guard commands. Map ownership of each

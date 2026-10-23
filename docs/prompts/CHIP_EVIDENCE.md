@@ -87,7 +87,9 @@ Floating ADDR selects GPIO operation. Low-enable variants are base 320/I, LI,
 LAI and 322I; HI/HAI use active-high enable. The industrial `I` suffix does not
 change base polarity. PORT is a sampled startup/reset selection on 320 parts,
 including software reset; a later GPIO transition is not a continuous role
-command. 322I has DIR instead of PORT. TUSB321/321A are outside this I2C driver.
+command. The 320 pin tables assign pin 3 to PORT and pin 4 to VBUS_DET; 322I
+assigns pin 3 to VBUS_DET and pin 4 to DIR. It has no PORT pin and is not a
+pin-for-pin substitution. TUSB321/321A are outside this I2C driver.
 
 Public code's alternate LAI revision `06` has no supporting TI provenance in this
 audit. Retain unexpected raw revisions for diagnosis and apply the specified
@@ -118,6 +120,12 @@ Startup `08=00`, `09=20`, `0A=00` requires exact variant confirmation; soft rese
 is not proof of a complete power-on register image. Direction's reset bit cannot
 be published as a connected CC2 orientation. Reserved fields retain raw evidence
 without fabricated semantic values. Base debug maps to `Accessory::DEBUG`.
+Orientation names the chip's CC1/CC2 inputs. The application maps those to its
+connector and mux wiring; swapped routing changes that mapping. Core decoding
+must not infer board orientation or silently exchange the input names.
+For the initial 322 extension, retain fault bit 09[3] in valid raw observations.
+The no-argument IRQ ACK does not request fault clearing. Do not add or simulate a
+fault-clear action before its exact transaction and independent API are specified.
 
 Use these independently checked examples alongside exhaustive field cases:
 
@@ -131,7 +139,7 @@ Use these independently checked examples alongside exhaustive field cases:
 | Base actual `09=B4`; explicit ACK | Write `14`; base bit 0 is not an accessory setting |
 | Extended actual controls `09=06`; ACK | Write `16`, not fixed `11` that changes duty/accessory controls |
 | Reset request | Actual output must set `08`; `value=1` with `mask=08` yields `1 & 8 = 0`, which does not request reset |
-| Extended 320 role change from actual `0A=C2` to DFP | Preserve other valid controls: `C3 -> E3 -> E2`, with the required wait before re-enable. The similar 322 public-code example only demonstrates field loss; it does not establish an approved 322 procedure |
+| Role change from actual `0A=C2` to DFP | Preserve other valid controls: `C3 -> E3 -> E2`. Extended 320 requires the 5 ms wait before re-enable; 322I's own DFP procedure specifies the same three writes without an added wait |
 
 The TI-hosted driver contains that reset mask/value error. The Betrusted driver
 contains the Try.SRC error. These are source-level findings, not measured failures
@@ -144,11 +152,21 @@ whether a method named reset, ACK or set-mode was called.
   Linux and Rust combined transfers show another implementation choice, not a
   universal repeated-START requirement. Verify selected adapter framing; do not
   assume implicit pointer persistence, wrapping or readable register holes.
-- Base mode writes require unattached state. A status read cannot prevent a cable
+- Base MODE_SELECT changes require unattached state; the restriction is not a
+  blanket ban on other settings while attached. B §7.3.2 p12 allows current
+  advertisement changes after attachment. A status read cannot prevent a cable
   race. LI/HI/LAI/HAI require separate disable-term, mode write while disabled,
   at least 5 ms after that write completes, then re-enable. The sequence applies
   attached or unattached. A first combined disable-and-change write is insufficient.
-  Do not import that 5 ms step into 322 without its own evidence.
+  Do not run a mode-change sequence merely to apply an unchanged mode.
+- 322I V §6.3.2.1–2 pp10–11 explicitly prescribes disable-term, mode selection,
+  enable-term for DFP/UFP: clean bytes `01 -> 21 -> 20` / `01 -> 11 -> 10`.
+  Preserve non-target controls; the source adds no 5 ms wait. This corrects the
+  earlier community audit's description of that sequence as merely conditional.
+  V §6.3.2.3 p11 and Table 6-10 p20 establish DRP operation/codes, while §6.3.2
+  p9 establishes reset-to-DRP. They do not list a separate direct return-to-DRP
+  procedure. Qualify that transition independently; do not silently reset during
+  profile apply or import a neighboring chip's sequence as a TI fact.
 - Base dead-battery Rp recovery is explicit: configured device, register `45`,
   byte `04`, at least 30 ms, byte `00`, with TI's transient-status restriction.
   The library's identity prerequisite, pre-read/internal-bit-zero check and final
@@ -221,6 +239,7 @@ and required evidence. A public implementation does not close any of these gates
 | --- | --- |
 | 322 advertisement RW figure/prose versus R table | Keep advertisement writes gated pending authoritative resolution |
 | 322 VCONN fault RCU without explicit clear mechanism | Do not infer W1C, read-clear or clearing by IRQ ACK; gate dependent consuming/clear behavior |
+| 322 direct return to DRP | DRP00/11 and explicit reset-to-DRP are documented. Record evidence for a non-reset transition procedure separately from the documented DFP/UFP recipes; no hidden reset fallback |
 | L/A EN_N text says low for 50 ms; application note says high | Preserve board startup uncertainty; base Rev F already says high. Active-high EN has its own requirement |
 | Base timing table labels EN high for industrial part | Use exact active-low pin definition; do not invent an industrial enable-polarity variant |
 | L/A 5.0 V maximum versus note's 5.5 V summary | Use exact recommended-operating limit for guidance; never use absolute maximum as operating permission |

@@ -26,7 +26,9 @@ runs checks and owns Git under AGENT_WORKFLOW.
    physical chip. Label it in source and README. Do not leak fake devices or
    simulation shortcuts into production core.
 3. Add or extend the generic owner fixture to interleave two independent driver
-   instances on one externally serialized bus. Verify observable per-turn
+   instances on one externally serialized bus, with one configuration owner per
+   physical target. Bus serialization alone cannot protect caches from another
+   writer to the same chip. Verify observable per-turn
    budgets, fairness, stale-token rejection, retained-result backpressure,
    cancellation, uncertain effects and caller-selected recovery.
 4. Demonstrate an external reset/power-loss notification through explicit local
@@ -50,6 +52,11 @@ runs checks and owns Git under AGENT_WORKFLOW.
 
 Reference FieldCore paths as evidence, not lib_deps or include paths. Keep copied
 facts and product health policy outside the chip driver.
+FieldCore's transport can report completion time/effects richer than Status-only
+callbacks. Do not imply those survive the bridge: the ordinary TUSB32x API still
+needs a fresh next owner timestamp and conservative acceptance evidence. Validate
+the backend's aggregate bound, including SDK internal waits/cleanup; disclose such
+backend behavior instead of claiming the core can remove it.
 
 ## Verify and document
 

@@ -35,6 +35,7 @@ TUSB32x was initially an empty folder without Git metadata.
 | [Public source manifest](../reference/public-implementations.json) | Thirteen pinned files from six repositories with source-byte checksums and attribution |
 | [Promptset](../prompts/README.md) | Master execution instruction, shared chip evidence and 38 complete numbered prompts |
 | [Preparation validation](promptset-validation.md) | Checks of the promptset and reference artifacts, distinct from library validation |
+| [Correctness and completeness review](promptset-completeness-review.md) | Later silicon corrections, missing state/transport/CLI contracts and acceptance cases |
 
 ## Audited libraries
 
@@ -158,6 +159,12 @@ The subsequent [correctness and simplicity review](promptset-correctness-review.
 records confirmed prompt defects, resolved ambiguities, simpler implementation
 choices and verified TI facts that were retained. It supersedes conflicting
 earlier planning observations without claiming implementation or hardware results.
+
+The later [correctness and completeness review](promptset-completeness-review.md)
+rechecks those contracts against TI and SDK implementation evidence. It corrects
+the earlier TUSB322I mode-sequence description and fills state, timeout, CLI,
+runner and package gaps. Its findings supersede conflicting earlier audit text;
+the current numbered prompts include the fixes.
 
 Open the [master prompt](../prompts/README.md) and execute the ordered stages.
 The common contract carries the selected defaults, while each stage names the

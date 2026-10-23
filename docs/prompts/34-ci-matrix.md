@@ -43,7 +43,7 @@ pins. Check official SDK/tool/action sources for every selected or changed pin.
    managed PlatformIO Core; pinned isolated Linux CI is a separate environment.
 5. Build one identified archive and provide it to firmware jobs where practical.
    Link extracted-package Arduino and genuine native-IDF images on S2/S3 for
-   every supported row, with isolated build directories per target/version.
+   every supported row, with isolated build and SDKCONFIG paths per target/version.
    Preserve archive identity and extracted paths. Confirm app_main/native APIs
    and no Arduino component in IDF. SDK-header compilation is not image proof.
 6. Let those extracted-package links satisfy firmware and distribution gates for

@@ -33,25 +33,29 @@ may inspect mixed-time coherence and invalidation read-only. Follow
    load, establishes PD or grants board power permission. Default current does
    not unconditionally mean 500 mA. Preserve unresolved TI wording about current
    tracking after attachment as a documented limit.
-4. Stage required reads in an internal candidate. Publish only complete port
+4. Stage fixed 0x09/0x08/0x09 reads in a candidate; publish the final 0x09.
+   No transport retry or restart until stable. Publish only complete raw port
    observations; a failed later read leaves the previous snapshot intact, with
    its historical time/sequence and validity. Partial raw evidence may exist
    separately only with explicit validity. A successful read is not IRQ ACK.
 5. Populate the baseline raw bytes/register mask, per-field validity, sequence,
    acquisition time/time validity, configuration generation/trust and coherence.
-   Owner-serialized publication is atomic in software; sequential/burst reads
-   do not prove atomic hardware capture. Matching bookends prove only what was
-   observed; use a finite documented recheck bound, never spin until stable.
+   Compare 0x09 bookends under 0xE0. Matching gives BOOKENDS_MATCH, never atomic
+   capture. CHANGED_DURING_READ preserves raw bytes but clears DETECTED_CURRENT,
+   ACCESSORY and ACTIVE_CABLE validity; current/accessory become UNKNOWN.
+   Independently decoded final 0x09 fields and 0x08 advertisement may remain valid.
 6. Use owner time before the observation's first required read as its acquisition
    boundary. Do not replace it with a later publication/fresh-poll timestamp and
    make old data look new. Describe it as a conservative acquisition boundary,
    not a precise hardware sampling instant. Sequence counts publications, not
-   electrical edges; use the contract's saturation/overflow behavior.
+   electrical edges; start at zero and saturate at UINT64_MAX. Saturated sequence
+   is not unique; tokens correlate operations.
 7. `invalidated` starts true, clears only on complete fresh publication, and
    becomes true on end/external invalidation or before a possible port-affecting
    write. Preserve historical fields/time/provenance when invalidated changes.
    Configuration readback cannot clear it. Even uninvalidated data can be old;
-   its age remains an application decision.
+   its age remains an application decision. Raw completeness does not make all
+   fields usable: consumers check per-field validity and coherence.
 8. Detached orientation/current can be valid `NOT_APPLICABLE` interpretations;
    valid decoding is not usability. Keep attachment, current applicability,
    configuration trust, transport health and operation outcome independent.
@@ -70,13 +74,15 @@ Register `tusb32x_port`. Cover every supported status encoding and reserved valu
 local versus peer roles, not-applicable versus unknown, raw preservation and field
 validity. Independently expected values must not reuse production decoding.
 
-Test failed second read, changed bookends, bounded retries, old snapshot retention,
+Test failure at each of the three reads, changed bookends without retries, invalid
+cross-register fields, independently valid final 0x09 fields, old snapshot retention,
 no fake detach, and delayed publication retaining the original acquisition time.
 Check sequence/configuration provenance, complete-only publication and all
 invalidation sources using public operations from earlier prompts. Configuration
 verification alone must not refresh port data. Exercise budgets 0/1/larger,
 cancel/error/deadline at each read and no writes during refresh/cached access.
-Confirm reset/recovery transients do not publish port snapshots.
+Confirm reset/recovery transients do not publish port snapshots. TUSB322I fault
+stays raw 0x09 bit 3 with capability/access context; no unverified typed fault ACK.
 
 Update public/member/source Doxygen, API/architecture/variant guides, feature
 matrix, README/CHANGELOG, progress and validation with actual test commands and

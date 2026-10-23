@@ -30,7 +30,9 @@ only TI evidence establishes this chip's sequence, framing or wait.
 
 ## Role changes and base recovery
 
-Base TUSB320/I changes mode only while unattached. A preceding status read cannot
+Base TUSB320/I changes MODE_SELECT only while unattached; this is not a blanket
+ban on attached writes. Advertisement may change after attachment (§7.3.2 p12).
+A preceding status read cannot
 prevent attachment racing the write: document the external owner/fixture
 prerequisite and limitation. Extended LI/HI/LAI/HAI requires disable termination,
 write desired mode while disabled, wait at least 5 ms after that write completes,
@@ -91,12 +93,13 @@ observe/publish/ACK/bounded-recheck and reassertion/coalescing limits. There is 
 proved atomic multi-byte capture, lossless edge queue or IRQ inter-clear 5 ms
 delay. A complete observation survives a later ACK/recheck failure.
 
-For 322I, do not import the 320 extended 5 ms step without evidence. Preserve its
-separate fault-clear gate from prompt 3 and document autonomous VCONN effects
-of explicit mode/reset/termination changes. Resolve or retain precise soft-reset
-effects, pointer prose contradictions, current official errata, EN_N startup
-polarity and dynamic attached-current contradictions with SDAA284. Gate only
-dependent claims; state board prerequisites where appropriate.
+322I §6.3.2.1–2 pp10–11 prescribes separate disable-term, DFP/UFP mode and
+enable-term writes: clean bytes `01→21→20` / `01→11→10`, preserving other fields.
+It specifies no added 5 ms wait. DRP encodings/reset-to-DRP are documented;
+qualify a direct non-reset return procedure separately, without hidden reset.
+Retain separate advertisement/fault gates and autonomous VCONN effects. Resolve
+or retain reset effects, pointer wording, errata, startup polarity and attached-
+current conflicts; gate only dependent claims and state board prerequisites.
 
 ## Deliver, review and commit
 

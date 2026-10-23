@@ -39,7 +39,9 @@ Do not copy an EEPROM scratch policy or growing in-memory transcript journal.
    take, preserving the difference between delivery OK and failed payload.
 4. Require increasing new-input ACK/MARK request IDs while accepting an older
    admitted request's JOB/RESULT/END after a newer query response. Preserve origin
-   request/token mapping. Handle nonce=none, command=invalid and exhaustion without
+   request/token mapping. Own only tokens admitted by this run; foreign active or
+   retained work is a blocked prerequisite, never implicitly cancelled/taken.
+   Handle nonce=none, command=invalid and exhaustion without
    reuse. Reboot, reconnect, identity change, framing/output loss or regressed
    input IDs invalidate the session; re-establish evidence before further work.
 5. Use one monotonic deadline across writes, fragments, markers and completion.
@@ -56,6 +58,8 @@ Do not copy an EEPROM scratch policy or growing in-memory transcript journal.
    replace report.json and summary.md using same-directory temporary files.
    Checkpoint before mutations and on exception/interruption.
 8. Represent primary outcome, cleanup outcome and residual uncertainty separately.
+   Track changed local staging/scheduler/output settings separately from device
+   effects. Restore them only in the verified session, without hardware apply.
    Failed work plus good cleanup stays failed; missing required proof prevents
    PASS. Use per-check PASS/FAIL/NOT RUN/BLOCKED and exit conventions 0 complete
    PASS, 1 test/protocol failure, 2 invocation/missing-tool/incomplete, 130 saved

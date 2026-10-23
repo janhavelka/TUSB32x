@@ -54,6 +54,8 @@ Reserved values preserve raw evidence and invalidate affected interpretations.
 Detached orientation/current can validly decode to NOT_APPLICABLE. Default
 current is not unconditional 500/900 mA permission, measured load or USB PD.
 Requested mode, actual attachment and peer/local role remain distinct.
+CC1/CC2 name the chip inputs. Connector orientation requires the board's wiring
+mapping; swapped CC wiring must not be silently remapped in the core.
 
 ## Resolve dangerous access ambiguities
 
@@ -81,6 +83,8 @@ and DRP11 for readback comparison. Resolve 08[7:6] Table 6-8 R versus figure RW
 and programmable prose before enabling advertisement writes. VCONN fault 09[3]
 is RCU; its consuming/clear meaning is independent of IRQ W1C. Keep the precise
 unresolved operations unavailable and retain them in the coverage matrix.
+Initially retain fault evidence in raw 09 with validity; IRQ ACK is not a fault
+ACK. Do not invent a separate clear API before its transaction is established.
 
 ## Deliver, review and commit
 

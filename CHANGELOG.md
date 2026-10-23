@@ -7,6 +7,16 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Audited all 38 prompts and shared contracts for correctness and missing
+  requirements. Corrected TUSB322I role sequences and base attached-mode limits;
+  specified raw profile validity, target association, reinitialization, no-op
+  apply, time boundaries, callback error normalization and fixed port sampling.
+- Added explicit CLI evidence forgetting and atomic variant/address selection,
+  runner ownership/local-state restoration, SDK timeout and synchronous-handle
+  checks, isolated IDF configuration/component discovery and Windows-safe archives.
+- Kept the 38 bounded prompt scopes, local validation policy, source documentation
+  and per-prompt commit/sync requirements; added a source-backed findings report.
+
 - Confined remote CI execution and status checking in the first implementation
   promptset to prompt 34. Other prompts and final-review fixes use local checks;
   commit/sync requirements remain, and older CI runs retain their actual SHA.
