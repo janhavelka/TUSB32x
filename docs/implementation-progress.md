@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: execute prompt 3 only; do not start prompt 4.
+Current authorization: independently review completed prompt 3; do not start prompt 4.
 
 ## Prompt status
 
@@ -177,3 +177,25 @@ is no C++ source requiring Doxygen in this prompt; the guide specifies the
 citations/comments due with future CommandTable/codecs. Prompt 4 is NOT STARTED.
 Commit/sync evidence belongs in the handoff and next progress update, avoiding
 a self-referencing commit edit.
+
+## Independent prompt 3 review
+
+Reviewed completed commit `a7cf07055ff46bde2cf460d4cee3e2066b30c77c` against the
+full original prompt and its diff from `cd591d4b56b83bda4f3f641bf5ee1c86f5d8a08c`.
+At review start, HEAD matched the same-name origin branch after fetch, with zero
+ahead/behind and a clean tree. The execution branch and original base are unchanged.
+Three fresh-context, read-only agents reviewed coverage/simplicity, silicon
+semantics and verification/peer evidence in parallel. The lead checked their
+findings against the actual contracts, peer code and scoped diff.
+
+No register-mask, encoding or silicon-gate defect was found. Two narrow
+corrections distinguish admission rejection from rejection after a counted read
+in vector N18, and identify the PCA9555 runner's retained classifier evidence
+accurately. No production code or new procedure contract was introduced.
+
+The fresh review repeated source-table inspection, archive/public-source hashes,
+mask/vector arithmetic, peer/test-registration checks and documentation checks;
+see the independent prompt 3 review in validation.md for evidence and limits.
+Behavioral/hardware tests remain future work. Prompt 4 remains NOT STARTED.
+Commit/sync evidence belongs in this review's handoff and the next progress
+update, avoiding a self-referencing commit edit.

@@ -94,10 +94,12 @@ in prompt 3; actual callback transcripts and operation effects are future tests.
 
 ## Required rejection and failure vectors
 
-All local access/capability rejections below produce no callback and no write,
-preserve output arguments and do not increment transport totals. These are
-future test requirements. Method-specific status precedence remains the baseline
-and prompt6 contract; this table adds no alternate error vocabulary.
+Admission-time argument/access/capability rejections produce no callback or write,
+preserve output arguments and do not increment transport totals. Validation during
+polling may reject after a required read; that callback still counts even when
+no write follows, as in N18. N24/N25 instead exercise actual callback failures.
+These are future test requirements. Method-specific status precedence remains
+the baseline and prompt6 contract; this table adds no alternate error vocabulary.
 
 | ID | Request or condition | Required rejection/evidence |
 | --- | --- | --- |
@@ -118,7 +120,7 @@ and prompt6 contract; this table adds no alternate error vocabulary.
 | N15 | V non-reset request changing actual mode to DRP | V_RETURN_DRP gate; no hidden reset fallback |
 | N16 | A required persistent field is unknown/invalid | Apply/raw write rejects until required evidence exists; managed ACK/reset may read their safe image during polling, but cannot write an unproved image or use staged/default bits |
 | N17 | Raw write sets RO/reserved bits or changes45 protected03 | Reject the requested image; do not silently mask or normalize it |
-| N18 | Base recovery observes45 protected bits nonzero | CONFIGURATION_UNKNOWN before writes, per existing conservative recovery policy |
+| N18 | Base recovery observes 45 protected bits nonzero | After the required pre-read, CONFIGURATION_UNKNOWN with zero writes; count the completed read callback |
 | N19 | Raw mode/reset/termination/recovery write needing a multi-step procedure | Reject shortcut; one callback cannot carry the required operation proof |
 | N20 | Ordinary settings operation while observed reset remains unresolved | Composition can omit08, but operation must not declare reset complete or replay it |
 | N21 | Linux reset update: actualC2 orCA, mask08,value01 | Helper emitsC2 in both cases; negative oracle: bit3 is never asserted |

@@ -202,3 +202,41 @@ Checks used ad hoc Python and read-only source/Git inspection, including
 package consumption and hardware qualification were NOT RUN: those
 implementations belong to later prompts. Remote CI was not dispatched or polled.
 Prompt 4 remains NOT STARTED.
+
+## Independent prompt 3 review, 2026-10-23
+
+Reviewed `a7cf07055ff46bde2cf460d4cee3e2066b30c77c` and its actual diff from
+`cd591d4b56b83bda4f3f641bf5ee1c86f5d8a08c`, after rereading the full original
+prompt. Three fresh-context reviewers independently checked requirements/scope,
+TI register semantics and verification/peer evidence. The lead checked findings
+against actual contracts and source code. No production code exists to execute
+in this documentation stage.
+
+| Finding | Correction and source |
+| --- | --- |
+| Rejection accounting could be misread | Clarified the vector introduction and N18: admission rejection is bus-silent, but base recovery first reads 45 and counts that callback before rejecting nonzero internal bits with CONFIGURATION_UNKNOWN and zero writes. This follows the existing baseline recovery rule and prompt 4 prerequisite, without changing the procedure. |
+| Inaccurate peer retention wording | PCA9555 tools/run_i2c_hil.py::extract_evidence retains at most ten classifier evidence lines; its report explicitly says raw CLI output is not retained. Corrected the peer report's claim of bounded transcripts. |
+
+Repeated verification:
+
+- The silicon reviewer visually inspected the archived B pp16–19, L/A pp16–20
+  and V pp17–20. Register/default/access/encoding claims and unresolved V gates
+  agree with those tables; no silicon or encoding correction was identified.
+- All eight archived PDF byte counts/SHA-256 match provenance, with no changed
+  archive bytes or metadata. All 13 cached pinned public files passed size,
+  SHA-256 and Git-blob checks; reset-mask, IRQ and reserved Try.SRC helper behavior
+  was inspected. This review did not repeat historical official download checks.
+- Eight disjoint, complete mask partitions and all 21 C compositions passed
+  independent arithmetic. D01–D36 and N01–N25 were checked against source and
+  baseline contracts; all 82 vector IDs remain unique and consecutive. These are
+  specification checks, not executed driver behavior tests.
+- PCA9555, LDC1614 and ADS1115 remain clean at their recorded revisions. Relevant
+  declarations, implementations, examples, runner meanings and all 18 cited test
+  definitions/registrations were checked without sibling fetches or builds.
+- Local Markdown links/anchors, prompt numbering, JSON, UTF-8/LF/final-newline
+  and whitespace checks were repeated after the corrections. The existing 38
+  numbered prompts and source artifacts are unchanged.
+
+The review found no further in-scope defect or unnecessary implementation to
+remove. Driver/CLI behavior, firmware/package builds and hardware qualification
+remain NOT RUN. Remote CI was not dispatched or polled. Prompt 4 is NOT STARTED.

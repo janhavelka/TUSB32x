@@ -7,6 +7,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Independently reviewed prompt 3 against TI tables, source code and literal
+  vectors. Clarified counted reads before recovery rejection and corrected the
+  PCA9555 runner's evidence-retention description. Register encodings and silicon
+  capability gates are unchanged.
+
 - Independently reviewed prompt 2 against TI tables, pinned public sources and
   current peers. Added the TUSB322I VCONN supply prerequisite and extended its
   fault gate to all shared-register writes; completed missing visual table checks
