@@ -1,0 +1,2980 @@
+{
+  "audit_date": "2026-10-23",
+  "scope": "Read-only local source inventory; no sibling fetch/build/test/hardware or remote synchronization claim.",
+  "repositories": [
+    {
+      "directory": "TMP1x2",
+      "manifest_name": "TMP1x2",
+      "version": "1.0.0",
+      "commit": "bafc34067530eb340e55c42dae3fad4eb795b6e9",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "BusOperations",
+        "TMP1x2",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:11: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "CMakeLists.txt:17: target_compile_features(TMP1x2 PUBLIC cxx_std_17)",
+        "CMakeLists.txt:34: target_compile_features(tmp1x2_console_tests PRIVATE cxx_std_17)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:19: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:20: -std=gnu++17",
+        "platformio.ini:77: -std=gnu++17",
+        "platformio.ini:102: -std=c++17"
+      ],
+      "frameworks": null,
+      "platforms": null,
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/TMP1x2/BusOperations.h",
+        "include/TMP1x2/CommandTable.h",
+        "include/TMP1x2/Config.h",
+        "include/TMP1x2/Status.h",
+        "include/TMP1x2/TMP1x2.h",
+        "include/TMP1x2/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/ConsoleBuffer.h",
+        "examples/common/Tmp1x2Cli.cpp",
+        "examples/common/Tmp1x2Cli.h",
+        "examples/common/Tmp1x2CliDiagnostics.cpp",
+        "examples/common/Tmp1x2CliOutput.cpp",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/generate_identity.py",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/main.cpp",
+        "examples/esp_idf/basic/platformio.ini"
+      ],
+      "tests": [
+        "test/bus/test_bus.cpp",
+        "test/cli/test_cli.cpp",
+        "test/console/test_console.cpp",
+        "test/core_no_arduino/compile_main.cpp",
+        "test/helpers/test_helpers.cpp",
+        "test/jobs/test_jobs.cpp",
+        "test/test_core.cpp",
+        "test/test_custom_runner.py",
+        "test/variants/test_variants.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_contracts.py",
+        "tools/check_doxygen.py",
+        "tools/check_package.py",
+        "tools/hil_tmp1x2_runner.py",
+        "tools/test_check_doxygen.py",
+        "tools/test_hil_tmp1x2_runner.py",
+        "tools/test_idf_component_contract.py",
+        "tools/test_version_sync.py"
+      ],
+      "primary_namespace": "TMP1x2",
+      "source_files": [
+        "src/BusOperations.cpp",
+        "src/TMP1x2.cpp",
+        "src/TMP1x2Configuration.cpp",
+        "src/TMP1x2Measurement.cpp",
+        "src/TMP1x2Operations.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native",
+        "native_core_no_arduino"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": true,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/**",
+          "src/**",
+          "examples/**",
+          "library.json",
+          "idf_component.yml",
+          "CMakeLists.txt",
+          "LICENSE",
+          "README.md",
+          "CHANGELOG.md",
+          "docs/*.md",
+          "docs/reference/README.md"
+        ],
+        "exclude": [
+          "examples/**/build*/**",
+          "examples/**/.pio/**",
+          "examples/**/sdkconfig",
+          "examples/**/sdkconfig.old",
+          "examples/**/sdkconfig.esp32*",
+          "examples/**/dependencies.lock",
+          "examples/**/managed_components/**",
+          "examples/**/*.log"
+        ]
+      },
+      "generated_version_path": "include/TMP1x2/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: arduino_platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: native_platform = platformio/native@1.2.1",
+        "platformio.ini:10: platform = ${dependency_pins.arduino_platform}",
+        "platformio.ini:11: framework = arduino",
+        "platformio.ini:68: platform = ${dependency_pins.native_platform}",
+        "platformio.ini:69: framework =",
+        "platformio.ini:70: test_framework = custom",
+        "platformio.ini:94: platform = ${dependency_pins.native_platform}",
+        "platformio.ini:95: framework ="
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/TMP1x2/TMP1x2.h",
+        "src/TMP1x2.cpp"
+      ]
+    },
+    {
+      "directory": "24Cxx",
+      "manifest_name": "EEPROM24Cxx",
+      "version": "1.0.0",
+      "commit": "936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "EEPROM24Cxx",
+        "cmd",
+        "memory"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:3: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "CMakeLists.txt:9: target_compile_features(EEPROM24Cxx PUBLIC cxx_std_17)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:14: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:20: -std=gnu++17",
+        "platformio.ini:77: -std=gnu++17",
+        "platformio.ini:101: -std=c++17"
+      ],
+      "frameworks": null,
+      "platforms": null,
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/EEPROM24Cxx/BlockingMemory.h",
+        "include/EEPROM24Cxx/CommandTable.h",
+        "include/EEPROM24Cxx/Config.h",
+        "include/EEPROM24Cxx/EEPROM24Cxx.h",
+        "include/EEPROM24Cxx/MemoryHelpers.h",
+        "include/EEPROM24Cxx/Status.h",
+        "include/EEPROM24Cxx/Types.h",
+        "include/EEPROM24Cxx/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BusRecovery.h",
+        "examples/common/ConsoleOutput.h",
+        "examples/common/Eeprom24CxxCli.cpp",
+        "examples/common/Eeprom24CxxCli.h",
+        "examples/common/Esp32BusRecovery.h",
+        "examples/common/Esp32WriteProtect.h",
+        "examples/common/IdfTransportHelpers.h",
+        "examples/common/TransportDiagnostics.h",
+        "examples/common/WireTransportHelpers.h",
+        "examples/common/WriteProtect.h",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/main.cpp",
+        "examples/esp_idf/basic/platformio.ini"
+      ],
+      "tests": [
+        "test/cli_host/main.cpp",
+        "test/core_no_arduino/compile_main.cpp",
+        "test/test_cli/test_cli.cpp",
+        "test/test_console/test_console.cpp",
+        "test/test_core/test_core.cpp",
+        "test/test_custom_runner.py",
+        "test/test_detection/test_detection.cpp",
+        "test/test_diagnostics/test_diagnostics.cpp",
+        "test/test_helpers/test_helpers.cpp",
+        "test/test_transport/test_transport.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_contracts.py",
+        "tools/check_package_contents.py",
+        "tools/check_reference_archive.py",
+        "tools/hil_artifacts.py",
+        "tools/hil_guards.py",
+        "tools/hil_identity.py",
+        "tools/hil_runner.py",
+        "tools/test_cli_transcript.py",
+        "tools/test_hil_artifacts.py",
+        "tools/test_hil_guards.py",
+        "tools/test_hil_identity.py",
+        "tools/test_hil_runner.py",
+        "tools/test_hil_transfer.py"
+      ],
+      "primary_namespace": "EEPROM24Cxx",
+      "source_files": [
+        "src/BlockingMemory.cpp",
+        "src/EEPROM24Cxx.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native",
+        "native_core_no_arduino"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": true,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/**",
+          "src/**",
+          "examples/**",
+          "library.json",
+          "idf_component.yml",
+          "CMakeLists.txt",
+          "LICENSE",
+          "README.md",
+          "CHANGELOG.md",
+          "docs/*.md",
+          "docs/reference/README.md"
+        ],
+        "exclude": [
+          "examples/**/build*/**",
+          "examples/**/.pio/**",
+          "examples/**/sdkconfig",
+          "examples/**/sdkconfig.old",
+          "examples/**/sdkconfig.esp32*",
+          "examples/**/dependencies.lock",
+          "examples/**/managed_components/**"
+        ]
+      },
+      "generated_version_path": "include/EEPROM24Cxx/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: arduino_platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: native_platform = platformio/native@1.2.1",
+        "platformio.ini:10: platform = ${dependency_pins.arduino_platform}",
+        "platformio.ini:11: framework = arduino",
+        "platformio.ini:68: platform = ${dependency_pins.native_platform}",
+        "platformio.ini:69: framework =",
+        "platformio.ini:70: test_framework = custom",
+        "platformio.ini:93: platform = ${dependency_pins.native_platform}",
+        "platformio.ini:94: framework ="
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/EEPROM24Cxx/EEPROM24Cxx.h",
+        "src/EEPROM24Cxx.cpp"
+      ]
+    },
+    {
+      "directory": "INA228",
+      "manifest_name": "INA228",
+      "version": "3.0.4",
+      "commit": "b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "INA228",
+        "cmd"
+      ],
+      "language_evidence": [
+        ".github/workflows/ci.yml:212: g++ -std=c++17 -Wall -Wextra -Werror=return-type \\",
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:7: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:23: -std=gnu++11",
+        "platformio.ini:26: -std=gnu++17",
+        "platformio.ini:95: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/INA228/CommandTable.h",
+        "include/INA228/Config.h",
+        "include/INA228/INA228.h",
+        "include/INA228/Status.h",
+        "include/INA228/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliStyle.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/Ina228IdfI2cTransport.cpp",
+        "examples/esp_idf/basic/main/Ina228IdfI2cTransport.h",
+        "examples/esp_idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_owner_contract.py",
+        "tools/run_i2c_hil.py",
+        "tools/test_cli_regressions.py",
+        "tools/test_run_i2c_hil_parser.py"
+      ],
+      "primary_namespace": "INA228",
+      "source_files": [
+        "src/INA228.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "exclude": [
+          ".github",
+          ".pio",
+          ".vscode",
+          "docs/doxygen",
+          "docs/reference/vendor",
+          "docs/validation/hardware",
+          "scripts",
+          "test",
+          "tools",
+          "*.orig",
+          ".clang-format",
+          ".editorconfig",
+          ".gitattributes",
+          ".gitignore",
+          "AGENTS.md",
+          "CODEOWNERS",
+          "CONTRIBUTING.md",
+          "Doxyfile",
+          "platformio.ini"
+        ]
+      },
+      "generated_version_path": "include/INA228/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:9: platform = ${dependency_pins.platform}",
+        "platformio.ini:10: framework = arduino",
+        "platformio.ini:86: platform = native",
+        "platformio.ini:87: framework =",
+        "platformio.ini:88: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/INA228/INA228.h",
+        "src/INA228.cpp"
+      ]
+    },
+    {
+      "directory": "INA3221",
+      "manifest_name": "INA3221",
+      "version": "3.2.0",
+      "commit": "e45622dbaa5bb0b3151d980f30a1b6ea1cdb1a1b",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "INA3221",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/esp_idf/basic/components/INA3221/CMakeLists.txt:8: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:7: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:87: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/components/INA3221/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/INA3221/CommandTable.h",
+        "include/INA3221/Config.h",
+        "include/INA3221/INA3221.h",
+        "include/INA3221/Status.h",
+        "include/INA3221/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliStyle.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/components/INA3221/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/Ina3221IdfI2cTransport.cpp",
+        "examples/esp_idf/basic/main/Ina3221IdfI2cTransport.h",
+        "examples/esp_idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp",
+        "test/test_owner_operations.cpp"
+      ],
+      "tools": [
+        "scripts/configure_pio_upload.py",
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_metadata_consistency.py",
+        "tools/check_strict_compile.py",
+        "tools/hil_cli_runner.py"
+      ],
+      "primary_namespace": "INA3221",
+      "source_files": [
+        "src/INA3221.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {},
+      "generated_version_path": "include/INA3221/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:79: platform = platformio/native@1.2.1",
+        "platformio.ini:80: framework =",
+        "platformio.ini:81: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/INA3221/INA3221.h",
+        "src/INA3221.cpp"
+      ]
+    },
+    {
+      "directory": "ADS1115",
+      "manifest_name": "ADS1115",
+      "version": "2.0.2",
+      "commit": "381236ebfed813cd7a9aca34520ce031d8a0ff6b",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "ADS1115",
+        "cmd"
+      ],
+      "language_evidence": [
+        ".github/workflows/ci.yml:151: g++ -std=c++11 -Wall -Wextra -Wpedantic -Werror \\",
+        "CMakeLists.txt:8: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_11)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:7: target_compile_features(${COMPONENT_LIB} PRIVATE cxx_std_17)",
+        "platformio.ini:18: -std=c++17",
+        "platformio.ini:87: -std=c++11"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/ADS1115/ADS1115.h",
+        "include/ADS1115/CommandTable.h",
+        "include/ADS1115/Config.h",
+        "include/ADS1115/Status.h",
+        "include/ADS1115/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/02_owner_safe_poll/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/CliStyle.h",
+        "examples/common/HealthView.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/Ads1115IdfI2cTransport.cpp",
+        "examples/esp_idf/basic/main/Ads1115IdfI2cTransport.h",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/run_i2c_hil.py"
+      ],
+      "primary_namespace": "ADS1115",
+      "source_files": [
+        "src/ADS1115.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "owner_safe_s3",
+        "owner_safe_s2",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "CHANGELOG.md",
+          "CMakeLists.txt",
+          "LICENSE",
+          "README.md",
+          "examples/*",
+          "idf_component.yml",
+          "include/*",
+          "library.json",
+          "src/*"
+        ]
+      },
+      "generated_version_path": "include/ADS1115/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:79: platform = platformio/native@1.2.1",
+        "platformio.ini:80: framework =",
+        "platformio.ini:81: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/ADS1115/ADS1115.h",
+        "src/ADS1115.cpp"
+      ]
+    },
+    {
+      "directory": "OPT4001",
+      "manifest_name": "OPT4001",
+      "version": "1.2.2",
+      "commit": "dab818e575fc25a0949d962bc0df600eb2ed5200",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "OPT4001",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:9: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:20: -std=gnu++17",
+        "platformio.ini:76: -std=gnu++17",
+        "platformio.ini:96: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/OPT4001/CommandTable.h",
+        "include/OPT4001/Config.h",
+        "include/OPT4001/OPT4001.h",
+        "include/OPT4001/Status.h",
+        "include/OPT4001/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/BusDiag.h",
+        "examples/common/CliLineBuffer.h",
+        "examples/common/CliShell.h",
+        "examples/common/CliStyle.h",
+        "examples/common/CliText.h",
+        "examples/common/HealthDiag.h",
+        "examples/common/HealthView.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/Opt4001IdfI2cTransport.cpp",
+        "examples/esp_idf/basic/main/Opt4001IdfI2cTransport.h",
+        "examples/esp_idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/core_no_arduino/compile_main.cpp",
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_ci_action_pins.py",
+        "tools/check_clean_consumer_package.py",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_version_header_contract.py",
+        "tools/hil_opt4001_runner.py",
+        "tools/test_cli_integer_parsers.py",
+        "tools/test_cli_workflows.py",
+        "tools/test_hil_opt4001_runner_parser.py",
+        "tools/test_idf_example_contract.py"
+      ],
+      "primary_namespace": "OPT4001",
+      "source_files": [
+        "src/OPT4001.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native",
+        "native_core_no_arduino"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "exclude": [
+          ".github",
+          ".pio",
+          ".vscode",
+          ".idea",
+          "docs/doxygen",
+          "docs/reference/*.pdf",
+          "hil_logs",
+          "test",
+          "tools",
+          "*.tar.gz"
+        ]
+      },
+      "generated_version_path": "include/OPT4001/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: arduino_platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: native_platform = platformio/native@1.2.1",
+        "platformio.ini:10: platform = ${dependency_pins.arduino_platform}",
+        "platformio.ini:11: framework = arduino",
+        "platformio.ini:67: platform = ${dependency_pins.native_platform}",
+        "platformio.ini:68: framework =",
+        "platformio.ini:69: test_framework = unity",
+        "platformio.ini:88: platform = ${dependency_pins.native_platform}",
+        "platformio.ini:89: framework ="
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/OPT4001/OPT4001.h",
+        "src/OPT4001.cpp"
+      ]
+    },
+    {
+      "directory": "LDC1614",
+      "manifest_name": "LDC1614",
+      "version": "3.2.0",
+      "commit": "c0ab4c1712c4135b925354d70c4e6bed5cca62d8",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "LDC1614",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:20: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/esp_idf/basic/main/CMakeLists.txt:10: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:85: -std=c++17"
+      ],
+      "frameworks": "*",
+      "platforms": "*",
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/LDC1614/CommandTable.h",
+        "include/LDC1614/Config.h",
+        "include/LDC1614/LDC1614.h",
+        "include/LDC1614/Status.h",
+        "include/LDC1614/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/CliStyle.h",
+        "examples/common/Ldc1614Cli.cpp",
+        "examples/common/Ldc1614Cli.h",
+        "examples/esp32/I2cMasterTransport.cpp",
+        "examples/esp32/I2cMasterTransport.h",
+        "examples/esp_idf/basic/CMakeLists.txt",
+        "examples/esp_idf/basic/main/CMakeLists.txt",
+        "examples/esp_idf/basic/main/Ldc1614IdfCli.cpp",
+        "examples/esp_idf/basic/main/Ldc1614IdfCli.h",
+        "examples/esp_idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp",
+        "test/test_cli.cpp"
+      ],
+      "tools": [
+        "scripts/configure_esptool_upload.py",
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_clean_consumer_compile.py",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_readiness_claims.py",
+        "tools/check_repository_hygiene.py",
+        "tools/ldc1614_cli_contract.py",
+        "tools/ldc1614_hil_runner.py",
+        "tools/test_ldc1614_hil_runner.py"
+      ],
+      "primary_namespace": "LDC1614",
+      "source_files": [
+        "src/LDC1614.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/esp_idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/**",
+          "src/**",
+          "examples/**",
+          "scripts/generate_version.py",
+          "CMakeLists.txt",
+          "CONTRIBUTING.md",
+          "Doxyfile",
+          "docs/README.md",
+          "docs/HARDWARE_INTEGRATION.md",
+          "docs/HIL_VALIDATION.md",
+          "docs/I2C_INTEGRATION.md",
+          "docs/IDF_PORT.md",
+          "docs/VALIDATION_STATUS.md",
+          "docs/reference/LDC1614_datasheet.pdf",
+          "idf_component.yml",
+          "library.json",
+          "README.md",
+          "CHANGELOG.md",
+          "LICENSE"
+        ],
+        "exclude": [
+          "*.tar.gz",
+          "*.tgz",
+          "*.zip"
+        ]
+      },
+      "generated_version_path": "include/LDC1614/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:9: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:10: framework = arduino",
+        "platformio.ini:76: platform = native",
+        "platformio.ini:77: framework =",
+        "platformio.ini:78: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/LDC1614/LDC1614.h",
+        "src/LDC1614.cpp"
+      ]
+    },
+    {
+      "directory": "BME280",
+      "manifest_name": "BME280",
+      "version": "2.2.0",
+      "commit": "d538f2e203ee26d6ddbc86f86d2b0cf4c73a6e98",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "BME280",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/idf/basic/main/CMakeLists.txt:17: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:11: -std=c++17",
+        "platformio.ini:76: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "hil_logs",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/BME280/BME280.h",
+        "include/BME280/CommandTable.h",
+        "include/BME280/Config.h",
+        "include/BME280/Status.h",
+        "include/BME280/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliStyle.h",
+        "examples/common/HealthView.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "examples/idf/basic/main/IdfI2cTransport.cpp",
+        "examples/idf/basic/main/IdfI2cTransport.h",
+        "examples/idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_hil_contract.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_package_contents.py",
+        "tools/check_release_metadata.py",
+        "tools/run_i2c_hil.py",
+        "tools/test_check_package_contents.py",
+        "tools/test_checker_contracts.py",
+        "tools/test_run_i2c_hil_parser.py"
+      ],
+      "primary_namespace": "BME280",
+      "source_files": [
+        "src/BME280.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native",
+        "native_sanitized"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "CMakeLists.txt",
+          "CHANGELOG.md",
+          "LICENSE",
+          "README.md",
+          "idf_component.yml",
+          "library.json",
+          "include/*",
+          "src/*",
+          "examples/*",
+          "docs/README.md",
+          "docs/IDF_PORT.md",
+          "docs/PRODUCTION_SHARED_BUS_GUIDE.md",
+          "docs/HARDWARE_VALIDATION.md",
+          "docs/BME280_Register_Reference.md",
+          "docs/BME280_datasheet.pdf"
+        ]
+      },
+      "generated_version_path": "include/BME280/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:67: platform = native@1.2.1",
+        "platformio.ini:68: framework =",
+        "platformio.ini:70: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/BME280/BME280.h",
+        "src/BME280.cpp"
+      ]
+    },
+    {
+      "directory": "SHT3x-main",
+      "manifest_name": "SHT3x",
+      "version": "1.9.0",
+      "commit": "f65f15573e3c9b1ef04cce72ad08f307d021e563",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "SHT3x",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/idf/basic/main/CMakeLists.txt:7: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:20: -std=c++17",
+        "platformio.ini:82: -std=c++17"
+      ],
+      "frameworks": null,
+      "platforms": null,
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/SHT3x/CommandTable.h",
+        "include/SHT3x/Config.h",
+        "include/SHT3x/SHT3x.h",
+        "include/SHT3x/Status.h",
+        "include/SHT3x/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Sht3xCli.cpp",
+        "examples/common/Sht3xCli.h",
+        "examples/common/TransferStats.h",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "examples/idf/basic/main/IdfI2cTransport.cpp",
+        "examples/idf/basic/main/IdfI2cTransport.h",
+        "examples/idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_docs_contract.py",
+        "tools/check_hil_contract.py",
+        "tools/check_idf_example_contract.py",
+        "tools/run_sht3x_hil.py",
+        "tools/sht3x_cli_contract.py",
+        "tools/test_cli_health_rate.py",
+        "tools/test_run_sht3x_hil_parser.py"
+      ],
+      "primary_namespace": "SHT3x",
+      "source_files": [
+        "src/SHT3x.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/**",
+          "src/**",
+          "examples/**",
+          "README.md",
+          "CHANGELOG.md",
+          "LICENSE",
+          "library.json",
+          "idf_component.yml",
+          "CMakeLists.txt",
+          "docs/README.md",
+          "docs/hardware.md",
+          "docs/esp-idf.md",
+          "docs/integration.md",
+          "docs/reference/README.md",
+          "docs/reference/sht3x-chip-notes.md",
+          "tools/run_sht3x_hil.py",
+          "tools/sht3x_cli_contract.py"
+        ],
+        "exclude": [
+          "examples/idf/basic/build/**",
+          "examples/idf/basic/sdkconfig",
+          "examples/idf/basic/sdkconfig.old",
+          "examples/idf/basic/dependencies.lock",
+          "examples/idf/basic/managed_components/**",
+          "examples/idf/basic/compile_commands.json"
+        ]
+      },
+      "generated_version_path": "include/SHT3x/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:74: platform = native",
+        "platformio.ini:75: framework =",
+        "platformio.ini:76: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/SHT3x/SHT3x.h",
+        "src/SHT3x.cpp"
+      ]
+    },
+    {
+      "directory": "LSM6DS3TR",
+      "manifest_name": "LSM6DS3TR",
+      "version": "2.1.0",
+      "commit": "513c5641d9b7dda63fddc27267ea62aa8d03ff93",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "LSM6DS3TR",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/idf/basic/main/CMakeLists.txt:10: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:23: -std=c++17",
+        "platformio.ini:96: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        ".vscode",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/LSM6DS3TR/CommandTable.h",
+        "include/LSM6DS3TR/Config.h",
+        "include/LSM6DS3TR/LSM6DS3TR.h",
+        "include/LSM6DS3TR/Status.h",
+        "include/LSM6DS3TR/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/02_owner_soak/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/ProfileCli.h",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "examples/idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp",
+        "test/test_compile_contracts.cpp",
+        "test/test_profile_cli.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/build_docs.py",
+        "tools/check_chip_docs_coverage.py",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_package_contract.py",
+        "tools/run_hil.py",
+        "tools/run_owner_soak.py",
+        "tools/test_check_idf_example_contract.py",
+        "tools/test_run_hil.py"
+      ],
+      "primary_namespace": "LSM6DS3TR",
+      "source_files": [
+        "src/LSM6DS3TR.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s3hil",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "library.json",
+          "README.md",
+          "CHANGELOG.md",
+          "LICENSE",
+          "SECURITY.md",
+          "docs/DOCUMENTATION.md",
+          "docs/chip-reference/**",
+          "docs/IDF_PORT.md",
+          "CMakeLists.txt",
+          "idf_component.yml",
+          "include/**",
+          "src/**",
+          "examples/01_basic_bringup_cli/**",
+          "examples/common/**",
+          "examples/idf/basic/**"
+        ]
+      },
+      "generated_version_path": "include/LSM6DS3TR/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:88: platform = native",
+        "platformio.ini:89: framework =",
+        "platformio.ini:90: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/LSM6DS3TR/LSM6DS3TR.h",
+        "src/LSM6DS3TR.cpp"
+      ]
+    },
+    {
+      "directory": "MB85RC",
+      "manifest_name": "MB85RC",
+      "version": "4.2.0",
+      "commit": "1bf7c293549b1038b2d8f3b7a8d655fa74201e6e",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "MB85RC",
+        "cmd"
+      ],
+      "language_evidence": [
+        "platformio.ini:80: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        ".vscode",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/MB85RC/CommandTable.h",
+        "include/MB85RC/Config.h",
+        "include/MB85RC/MB85RC.h",
+        "include/MB85RC/Status.h",
+        "include/MB85RC/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliShell.h",
+        "examples/common/CliStyle.h",
+        "examples/common/DiagnosticCore.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/IdfI2cTransport.h",
+        "examples/common/Log.h",
+        "examples/common/TypedMemory.h",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "examples/espidf_basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp",
+        "test/test_public_contracts.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/_contract_data.py",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_metadata_consistency.py",
+        "tools/check_package_contents.py",
+        "tools/hil_runner.py",
+        "tools/test_hil_health_snapshot.py",
+        "tools/test_hil_runner.py"
+      ],
+      "primary_namespace": "MB85RC",
+      "source_files": [
+        "src/MB85RC.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s3dev_legacy_54",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/espidf_basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/MB85RC/*.h",
+          "src/*.cpp",
+          "examples/01_basic_bringup_cli/main.cpp",
+          "examples/common/*.h",
+          "examples/espidf_basic/CMakeLists.txt",
+          "examples/espidf_basic/main/CMakeLists.txt",
+          "examples/espidf_basic/main/main.cpp",
+          "CMakeLists.txt",
+          "idf_component.yml",
+          "README.md",
+          "CHANGELOG.md",
+          "CONTRIBUTING.md",
+          "SECURITY.md",
+          "LICENSE",
+          "docs/DEVICE_REFERENCE.md",
+          "docs/IDF_PORT.md",
+          "docs/RELEASE_CHECKLIST.md"
+        ]
+      },
+      "generated_version_path": "include/MB85RC/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: legacy_platform = https://github.com/pioarduino/platform-espressif32/releases/download/54.03.20/platform-espressif32.zip",
+        "platformio.ini:10: platform = ${dependency_pins.platform}",
+        "platformio.ini:11: framework = arduino",
+        "platformio.ini:50: platform = ${dependency_pins.legacy_platform}",
+        "platformio.ini:71: platform = native",
+        "platformio.ini:72: framework =",
+        "platformio.ini:73: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/MB85RC/MB85RC.h",
+        "src/MB85RC.cpp"
+      ]
+    },
+    {
+      "directory": "MCP45HVX1",
+      "manifest_name": "MCP45HVX1",
+      "version": "2.0.0",
+      "commit": "d3eae4a01113d3badee1b6156571666bffe91ba2",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "MCP45HVX1",
+        "cmd"
+      ],
+      "language_evidence": [
+        ".github/workflows/ci.yml:103: g++ -std=c++17 -Wall -Wextra -Werror=return-type -I. -Iinclude -Iexamples -Itest/stubs tests/test_arduino_cli.cpp src/MCP45HVX1.cpp -o \"$RUNNER_TEMP/arduino-cli-test\"",
+        "platformio.ini:20: -std=c++17",
+        "platformio.ini:80: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        ".vscode",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tests",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/MCP45HVX1/CommandTable.h",
+        "include/MCP45HVX1/Config.h",
+        "include/MCP45HVX1/MCP45HVX1.h",
+        "include/MCP45HVX1/Status.h",
+        "include/MCP45HVX1/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliShell.h",
+        "examples/common/CliStyle.h",
+        "examples/common/HealthView.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "examples/espidf_basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp",
+        "tests/test_arduino_cli.cpp",
+        "tests/test_idf_console.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_generated_artifacts.py",
+        "tools/check_idf_example_contract.py",
+        "tools/contract_common.py",
+        "tools/run_hil_mcp45hvx1.py",
+        "tools/test_contract_tools.py",
+        "tools/test_run_hil_mcp45hvx1_parser.py",
+        "tools/validate.py"
+      ],
+      "primary_namespace": "MCP45HVX1",
+      "source_files": [
+        "src/MCP45HVX1.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/espidf_basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/**",
+          "src/**",
+          "examples/**",
+          "scripts/generate_version.py",
+          "CMakeLists.txt",
+          "idf_component.yml",
+          "library.json",
+          "platformio.ini",
+          "README.md",
+          "CHANGELOG.md",
+          "LICENSE",
+          "SECURITY.md",
+          "CONTRIBUTING.md",
+          "docs/*.md"
+        ],
+        "exclude": [
+          ".github/**",
+          ".pio/**",
+          "test/**",
+          "tests/**",
+          "tools/**",
+          "docs/**/*.pdf",
+          "*.tar.gz",
+          "*.tgz",
+          "*.zip"
+        ]
+      },
+      "generated_version_path": "include/MCP45HVX1/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:70: platform = native",
+        "platformio.ini:71: framework =",
+        "platformio.ini:72: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/MCP45HVX1/MCP45HVX1.h",
+        "src/MCP45HVX1.cpp"
+      ]
+    },
+    {
+      "directory": "PCA9555",
+      "manifest_name": "PCA9555",
+      "version": "3.0.3",
+      "commit": "498178e4d9e4acb6fab7d8b816ad5021efe8806a",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "PCA9555",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:23: -std=c++17",
+        "platformio.ini:92: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        ".vscode",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/PCA9555/CommandTable.h",
+        "include/PCA9555/Config.h",
+        "include/PCA9555/PCA9555.h",
+        "include/PCA9555/Status.h",
+        "include/PCA9555/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliShell.h",
+        "examples/common/CliStyle.h",
+        "examples/common/HealthDiag.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "examples/espidf_basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp",
+        "test/test_public_contracts.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_hil_contract.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_package.py",
+        "tools/run_i2c_hil.py",
+        "tools/test_run_i2c_hil_parser.py"
+      ],
+      "primary_namespace": "PCA9555",
+      "source_files": [
+        "src/PCA9555.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/espidf_basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "include/**",
+          "src/**",
+          "examples/**",
+          "docs/README.md",
+          "docs/chip_notes.md",
+          "docs/datasheet_extraction.md",
+          "docs/espidf.md",
+          "docs/hardware_validation.md",
+          "docs/register_reference.md",
+          "CHANGELOG.md",
+          "CMakeLists.txt",
+          "CONTRIBUTING.md",
+          "Doxyfile",
+          "idf_component.yml",
+          "SECURITY.md"
+        ]
+      },
+      "generated_version_path": "include/PCA9555/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:9: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:10: framework = arduino",
+        "platformio.ini:83: platform = native",
+        "platformio.ini:84: framework =",
+        "platformio.ini:85: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/PCA9555/PCA9555.h",
+        "src/PCA9555.cpp"
+      ]
+    },
+    {
+      "directory": "RV3032-C7",
+      "manifest_name": "RV3032-C7",
+      "version": "3.1.0",
+      "commit": "aabd8d9204e75072403fefb60cf8d2679a7f56de",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Jan Havelka",
+          "email": "jan@havelka.dev",
+          "url": "https://github.com/janhavelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "RV3032",
+        "cmd"
+      ],
+      "language_evidence": [
+        "platformio.ini:23: -std=c++17",
+        "platformio.ini:102: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "Doxyfile",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/RV3032/CommandTable.h",
+        "include/RV3032/Config.h",
+        "include/RV3032/RV3032.h",
+        "include/RV3032/Status.h",
+        "include/RV3032/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/CliShell.h",
+        "examples/common/CliStyle.h",
+        "examples/common/CommandHandler.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h"
+      ],
+      "tests": [
+        "test/test_hil/main.cpp",
+        "test/test_hil_persistence/main.cpp",
+        "test/test_native/test_datetime.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_abi.py",
+        "tools/check_package.py",
+        "tools/check_portability.py",
+        "tools/hil_cli_runner.py",
+        "tools/test_check_contracts.py",
+        "tools/test_hil_cli_runner.py",
+        "tools/test_hil_health_snapshot.py"
+      ],
+      "primary_namespace": "RV3032",
+      "source_files": [
+        "src/RV3032.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s3hil",
+        "esp32s3hil_persistence",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": false,
+        "native_idf_examples": [],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "exclude": [
+          ".github/**",
+          ".pio/**",
+          ".venv/**",
+          ".vscode/**",
+          "dist/**",
+          "AGENTS.md",
+          "docs/CODE_AUDIT*.md",
+          "docs/doxygen/**",
+          "docs/extracted-md/**",
+          "docs/prompts/**",
+          "docs/reports/**",
+          "idf_component.yml",
+          "idf_component.yml.orig",
+          "tmp/**",
+          "docs/reference-pdfs/**",
+          "docs/**/*.pdf",
+          "test/**",
+          "*.tar.gz",
+          "*.tgz",
+          "*.zip"
+        ]
+      },
+      "generated_version_path": "include/RV3032/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:9: platform = ${dependency_pins.platform}",
+        "platformio.ini:10: framework = arduino",
+        "platformio.ini:95: platform = native",
+        "platformio.ini:96: framework =",
+        "platformio.ini:98: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/RV3032/RV3032.h",
+        "src/RV3032.cpp"
+      ]
+    },
+    {
+      "directory": "SCD41",
+      "manifest_name": "SCD41",
+      "version": "1.3.2",
+      "commit": "c0bf1bba282d12b4aa3196d9f861915fe9b22551",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "SCD41",
+        "cmd"
+      ],
+      "language_evidence": [
+        "CMakeLists.txt:6: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/idf/basic/components/SCD41/CMakeLists.txt:10: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "examples/idf/basic/main/CMakeLists.txt:7: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "platformio.ini:28: -std=gnu++17",
+        "platformio.ini:97: -std=c++17"
+      ],
+      "frameworks": "*",
+      "platforms": "*",
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/components/SCD41/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/SCD41/CommandTable.h",
+        "include/SCD41/Config.h",
+        "include/SCD41/SCD41.h",
+        "include/SCD41/Status.h",
+        "include/SCD41/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliShell.h",
+        "examples/common/CliStyle.h",
+        "examples/common/CommandHandler.h",
+        "examples/common/DiagnosticWorkflow.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Log.h",
+        "examples/idf/basic/CMakeLists.txt",
+        "examples/idf/basic/components/SCD41/CMakeLists.txt",
+        "examples/idf/basic/main/CMakeLists.txt",
+        "examples/idf/basic/main/IdfI2cTransport.cpp",
+        "examples/idf/basic/main/IdfI2cTransport.h",
+        "examples/idf/basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_clean_consumer_compile.py",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_package_contents.py",
+        "tools/check_repository_hygiene.py",
+        "tools/check_target_package_consumer.py",
+        "tools/scd41_hil_runner.py",
+        "tools/test_audit_guards.py",
+        "tools/test_scd41_hil_runner.py"
+      ],
+      "primary_namespace": "SCD41",
+      "source_files": [
+        "src/SCD41.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native",
+        "native_ubsan"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/idf/basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "library.json",
+          "README.md",
+          "ASSUMPTIONS.md",
+          "LICENSE",
+          "CHANGELOG.md",
+          "docs/README.md",
+          "docs/reference/scd41-protocol.md",
+          "docs/reference/vendor/SCD41_datasheet.pdf",
+          "docs/porting/esp-idf.md",
+          "docs/integration/external-i2c-owner.md",
+          "docs/validation/hardware-hil.md",
+          "docs/validation/feature-coverage.md",
+          "CMakeLists.txt",
+          "idf_component.yml",
+          "include",
+          "src",
+          "examples"
+        ]
+      },
+      "generated_version_path": "include/SCD41/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:8: platform = https://github.com/pioarduino/platform-espressif32/releases/download/53.03.13/platform-espressif32.zip",
+        "platformio.ini:11: platform = ${dependency_pins.platform}",
+        "platformio.ini:12: framework = arduino",
+        "platformio.ini:88: platform = native@1.2.1",
+        "platformio.ini:89: framework =",
+        "platformio.ini:90: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/SCD41/SCD41.h",
+        "src/SCD41.cpp"
+      ]
+    },
+    {
+      "directory": "SSD1315",
+      "manifest_name": "SSD1315",
+      "version": "4.0.3",
+      "commit": "62561b163c6005900797c097fa92d5bf723c83b4",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Jan Havelka",
+          "email": "jan@havelka.dev",
+          "url": "https://github.com/janhavelka",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "SSD1315",
+        "cmd"
+      ],
+      "language_evidence": [
+        "platformio.ini:85: -std=c++17"
+      ],
+      "frameworks": [
+        "arduino",
+        "espidf"
+      ],
+      "platforms": [
+        "espressif32"
+      ],
+      "layout": [
+        ".github",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".clang-format",
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/components/SSD1315/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py"
+      ],
+      "headers": [
+        "include/SSD1315.h",
+        "include/ssd1315/CommandTable.h",
+        "include/ssd1315/Config.h",
+        "include/ssd1315/SSD1315.h",
+        "include/ssd1315/Status.h",
+        "include/ssd1315/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/BuildConfig.h",
+        "examples/common/CliStyle.h",
+        "examples/common/CommandHandler.h",
+        "examples/common/HealthDiag.h",
+        "examples/common/I2cScanner.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/IdfI2cTransport.cpp",
+        "examples/common/IdfI2cTransport.h",
+        "examples/common/Log.h",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/components/SSD1315/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "examples/espidf_basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/native/test_basic.cpp",
+        "test/native/test_i2c_transport.cpp",
+        "test/test_basic.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_core_timing_guard.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_package_contents.py",
+        "tools/run_ssd1315_hil.py",
+        "tools/test_hil_runner_parser.py",
+        "tools/test_package_contents.py"
+      ],
+      "primary_namespace": "SSD1315",
+      "source_files": [
+        "src/SSD1315.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "compat_pioarduino_54_s3",
+        "esp32s2dev",
+        "native"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": false,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/espidf_basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "library.json",
+          "README.md",
+          "CHANGELOG.md",
+          "CONTRIBUTING.md",
+          "LICENSE",
+          "SECURITY.md",
+          "Doxyfile",
+          "platformio.ini",
+          "CMakeLists.txt",
+          "idf_component.yml",
+          "include/**",
+          "src/**",
+          "examples/01_basic_bringup_cli/**",
+          "examples/common/**",
+          "examples/espidf_basic/**",
+          "scripts/*.py",
+          "scripts/*.cmd",
+          "tools/*.py",
+          "docs/*.md",
+          "docs/extracted-md/*.md"
+        ]
+      },
+      "generated_version_path": "include/SSD1315/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: previous_platform = https://github.com/pioarduino/platform-espressif32/releases/download/54.03.20/platform-espressif32.zip",
+        "platformio.ini:10: platform = ${dependency_pins.platform}",
+        "platformio.ini:11: framework = arduino",
+        "platformio.ini:52: platform = ${dependency_pins.previous_platform}",
+        "platformio.ini:76: platform = native",
+        "platformio.ini:77: framework =",
+        "platformio.ini:78: test_framework = unity"
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/SSD1315/SSD1315.h",
+        "src/SSD1315.cpp"
+      ]
+    },
+    {
+      "directory": "TCA9548A",
+      "manifest_name": "TCA9548A",
+      "version": "1.1.0",
+      "commit": "ce425e1984ac269e7934dd811a06ec08b91e307c",
+      "branch": "main",
+      "dirty": false,
+      "status": "",
+      "authors": [
+        {
+          "name": "Thymos Solution s.r.o",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz"
+        },
+        {
+          "name": "Jan Havelka",
+          "email": "info@thymos.cz",
+          "url": "https://www.thymos.cz",
+          "maintainer": true
+        }
+      ],
+      "license": "MIT",
+      "namespaces": [
+        "TCA9548A",
+        "cmd"
+      ],
+      "language_evidence": [
+        ".github/workflows/ci.yml:79: c++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion \\",
+        "CMakeLists.txt:10: target_compile_features(${COMPONENT_LIB} PUBLIC cxx_std_17)",
+        "CMakeLists.txt:17: target_compile_features(TCA9548A PUBLIC cxx_std_17)",
+        "platformio.ini:80: -std=c++17",
+        "platformio.ini:135: -std=c++17",
+        "test/core_no_arduino/CMakeLists.txt:5: set(CMAKE_CXX_STANDARD 11)"
+      ],
+      "frameworks": "*",
+      "platforms": "*",
+      "layout": [
+        ".github",
+        ".vscode",
+        "docs",
+        "examples",
+        "include",
+        "scripts",
+        "src",
+        "test",
+        "tools"
+      ],
+      "review_paths": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "CMakeLists.txt",
+        "Doxyfile",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "idf_component.yml",
+        "library.json",
+        "platformio.ini",
+        "scripts/generate_version.py",
+        "test/core_no_arduino/CMakeLists.txt"
+      ],
+      "headers": [
+        "include/TCA9548A/CommandTable.h",
+        "include/TCA9548A/Config.h",
+        "include/TCA9548A/Status.h",
+        "include/TCA9548A/TCA9548A.h",
+        "include/TCA9548A/Version.h"
+      ],
+      "examples": [
+        "examples/01_basic_bringup_cli/main.cpp",
+        "examples/common/BoardConfig.h",
+        "examples/common/CliArguments.h",
+        "examples/common/CliLineBuffer.h",
+        "examples/common/ConsoleOutput.h",
+        "examples/common/I2cTransport.h",
+        "examples/common/Tca9548aCli.cpp",
+        "examples/common/Tca9548aCli.h",
+        "examples/espidf_basic/CMakeLists.txt",
+        "examples/espidf_basic/main/CMakeLists.txt",
+        "examples/espidf_basic/main/main.cpp"
+      ],
+      "tests": [
+        "test/core_no_arduino/CMakeLists.txt",
+        "test/core_no_arduino/compile_main.cpp",
+        "test/test_cli_commands/test_cli_commands.cpp",
+        "test/test_cli_line_buffer/test_cli_line_buffer.cpp",
+        "test/test_console_output/test_console_output.cpp",
+        "test/test_driver/test_driver.cpp",
+        "test/test_wire_transport/test_wire_transport.cpp"
+      ],
+      "tools": [
+        "scripts/generate_version.py",
+        "scripts/pio.cmd",
+        "tools/check_cli_contract.py",
+        "tools/check_idf_example_contract.py",
+        "tools/check_package.py",
+        "tools/check_repository_hygiene.py",
+        "tools/tca9548a_hil.py",
+        "tools/test_hil_artifacts.py",
+        "tools/test_tca9548a_hil.py"
+      ],
+      "primary_namespace": "TCA9548A",
+      "source_files": [
+        "src/TCA9548A.cpp"
+      ],
+      "platformio_environments": [
+        "esp32s3dev",
+        "esp32s2dev",
+        "native",
+        "native_cli",
+        "native_console",
+        "native_cli_commands",
+        "native_transport",
+        "native_core_no_arduino"
+      ],
+      "build_definitions": {
+        "standalone_root_cmake": true,
+        "idf_root_component": true,
+        "native_idf_examples": [
+          "examples/espidf_basic/CMakeLists.txt"
+        ],
+        "platformio": true
+      },
+      "dependency_declarations": [],
+      "package_export_rules": {
+        "include": [
+          "AGENTS.md",
+          "CHANGELOG.md",
+          "CMakeLists.txt",
+          "CONTRIBUTING.md",
+          "Doxyfile",
+          "LICENSE",
+          "README.md",
+          "SECURITY.md",
+          "docs/HARDWARE_NOTES.md",
+          "docs/CLI.md",
+          "docs/FEATURE_MATRIX.md",
+          "docs/PORTING.md",
+          "docs/VALIDATION_STATUS.md",
+          "idf_component.yml",
+          "examples/01_basic_bringup_cli/main.cpp",
+          "examples/common/*.h",
+          "examples/common/*.cpp",
+          "examples/espidf_basic/CMakeLists.txt",
+          "examples/espidf_basic/README.md",
+          "examples/espidf_basic/sdkconfig.defaults*",
+          "examples/espidf_basic/main/CMakeLists.txt",
+          "examples/espidf_basic/main/main.cpp",
+          "include/TCA9548A/*.h",
+          "library.json",
+          "platformio.ini",
+          "scripts/generate_version.py",
+          "scripts/pio.cmd",
+          "src/*.cpp",
+          "tools/tca9548a_hil.py"
+        ]
+      },
+      "generated_version_path": "include/TCA9548A/Version.h",
+      "tool_pins_evidence": [
+        "platformio.ini:6: platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip",
+        "platformio.ini:7: framework = arduino",
+        "platformio.ini:72: platform = platformio/native@1.2.1",
+        "platformio.ini:73: framework =",
+        "platformio.ini:74: test_framework = unity",
+        "platformio.ini:128: platform = platformio/native@1.2.1",
+        "platformio.ini:129: framework ="
+      ],
+      "license_file": "LICENSE",
+      "source_review_evidence": [
+        "include/TCA9548A/TCA9548A.h",
+        "src/TCA9548A.cpp"
+      ]
+    }
+  ],
+  "captured_utc": "2026-10-23T14:26:19.732982+00:00",
+  "exclusions": [
+    {
+      "directory": "_archive",
+      "reason": "Dated project archives, not current independent libraries.",
+      "evidence_paths": [],
+      "entry_count": 2,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "ADS1261_ESP32",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 24,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "AsyncSD",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 24,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "AT21CS11",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 25,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "CO2Control",
+      "reason": "Firmware application; library.json description identifies the application.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 27,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "EasyEDA",
+      "reason": "EDA project container.",
+      "evidence_paths": [],
+      "entry_count": 3,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "EE871-E2",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 42,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "EEPROM_24Cxx",
+      "reason": "Empty directory; active EEPROM library is 24Cxx.",
+      "evidence_paths": [],
+      "entry_count": 0,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "ESP32_Interfaces",
+      "reason": "Interface probe application (platformio.ini and src).",
+      "evidence_paths": [
+        "platformio.ini"
+      ],
+      "entry_count": 9,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "ESP32_LM_mainboard",
+      "reason": "Board firmware (.ino entry point), not an independent library.",
+      "evidence_paths": [],
+      "entry_count": 35,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "ESP32CloudflareWifi",
+      "reason": "WiFi/Cloudflare proof application.",
+      "evidence_paths": [
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 11,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "ESS23-RS-p08",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 19,
+      "root_git_is_worktree_pointer": true
+    },
+    {
+      "directory": "FieldCore-node",
+      "reason": "Firmware consumer; separately audited, not an independent I2C library.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 28,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "KiCAD",
+      "reason": "EDA project container.",
+      "evidence_paths": [],
+      "entry_count": 4,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "LGClimateLink",
+      "reason": "Climate-link application; README and application tree.",
+      "evidence_paths": [
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 14,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "MAX31865",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 22,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "MotorControl-RS",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 23,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "NextionNX3224T028_UART",
+      "reason": "UART display test application.",
+      "evidence_paths": [
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 9,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "PistonNode",
+      "reason": "Firmware application; library.json description identifies the application.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 23,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "RadarNode",
+      "reason": "Firmware application; library.json description identifies the application.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 23,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "SensorNodeFGI",
+      "reason": "Sensor-node application (src and examples), not an independent library.",
+      "evidence_paths": [
+        "platformio.ini"
+      ],
+      "entry_count": 10,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "SHZK-PT",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 23,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "SIM7080G-Core",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 26,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "StatusLED",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 25,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "SystemChrono",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 24,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "TLP300Node",
+      "reason": "Firmware application; library.json description identifies the application.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 22,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "TunnelMonitor-Cloudflare",
+      "reason": "Cloudflare backend.",
+      "evidence_paths": [
+        "README.md"
+      ],
+      "entry_count": 26,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "TUSB32x",
+      "reason": "Current planning repository, not an implemented peer.",
+      "evidence_paths": [
+        "README.md"
+      ],
+      "entry_count": 5,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "VibWire-108",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 28,
+      "root_git_is_worktree_pointer": false
+    },
+    {
+      "directory": "VTN4xx",
+      "reason": "Non-I2C library; library.json and README identify its transport or service.",
+      "evidence_paths": [
+        "library.json",
+        "README.md",
+        "platformio.ini"
+      ],
+      "entry_count": 27,
+      "root_git_is_worktree_pointer": false
+    }
+  ],
+  "consumer": {
+    "directory": "FieldCore-node",
+    "commit": "4e6a05e769383b95046df3936eee81984f4d9aa7",
+    "branch": "rodtester",
+    "dirty": false,
+    "status": "",
+    "version": "1.3.0",
+    "authors": [
+      {
+        "name": "FieldCore"
+      }
+    ],
+    "license": "UNLICENSED",
+    "kind": "Firmware consumer, not a core dependency"
+  },
+  "selection_rule": "Inspect immediate Projects directories with their own manifests/source; do not recurse into dependencies, archive trees or worktrees. None of the 17 selected roots has a .git pointer file."
+}

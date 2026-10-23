@@ -51,6 +51,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Added
 
+- Completed execution prompt 1: current inventory of 17 I2C libraries and the
+  FieldCore consumer, source-backed engineering decisions, local tool inventory
+  and a 38-prompt progress ledger on one recorded execution branch. Driver code
+  and later prompt work remain unimplemented.
+
 - Shared chip-evidence reference and TI-first public implementation audits,
   including reset-mask, reserved Try.SRC, error-preservation and IRQ examples.
 - Provenance for 13 pinned public source files from six repositories, including

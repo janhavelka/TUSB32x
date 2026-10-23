@@ -11,7 +11,11 @@ stage requires a fresh audit of relevant sibling I2C libraries before editing.
 
 Each prompt has a bounded scope, prerequisites, delegation guidance and its own
 tests, documentation and commit/sync gate. The [scope audit](docs/audit/promptset-scope-review.md)
-maps the original stages to the new sequence; implementation has not started.
+maps the original stages to the new sequence. Promptset execution has started:
+[prompt 1's current comparison](docs/library-comparison.md) and
+[engineering decisions](docs/design-decisions.md) establish the implementation
+baseline. Driver implementation has not started. See
+[execution progress](docs/implementation-progress.md) and [validation](docs/validation.md).
 
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
 timing, electrical and failure-case findings from TI documents and public code,
