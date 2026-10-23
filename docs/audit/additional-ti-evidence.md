@@ -140,3 +140,29 @@ to add bit-banged bus timing, power control or delays to the portable core.
 
 No implementation was compiled, no device was accessed, and no physical timing,
 current, voltage or USB interoperability claim was validated in this review.
+
+## Execution prompt 2 corrections, 2026-10-23
+
+The completed [variant matrix](../variant-matrix.md) and
+[feature coverage](../feature-coverage.md) supersede affected preparation claims
+above while preserving this dated report. Fresh official downloads matched all
+seven archived PDFs; the separate TUSB321AI SLLSER2A source was added.
+
+- V SLLSEO5D section 5.5 p6 places VCONN FET resistance 1.25 ohm in the **maximum**
+  column. The earlier additional-evidence report's typical label was wrong;
+  CHIP_EVIDENCE and the completed matrix now use maximum.
+- Current TI LI/HI product pages discourage DFP/DRP applications. Preserve
+  documented register capabilities but do not treat them as a new-design
+  recommendation or a hardware qualification result.
+- G SDAA284 Figure 2-2 p9 repeats N's HI-enable and L/A-supply summary errors;
+  exact pin/operating tables govern. L p4 also retains conflicting CC pad-rating
+  rows despite its p2 revision-history correction; A/V ID supply-off evidence
+  conflicts with their broad absolute-max ID row. Named board gates retain these.
+- TUSB321AI has its own SLLSER2A source and no I2C or enable pin. TUSB321A is its
+  summary name; G's TUSB321I naming is not a new exact-part qualification.
+- B/L/A/V DFP sections exclude a Type-C 1.0 DRP peer. All six 320 parts' local 3 A
+  advertisement needs at least 3.5 V; TUSB320 itself has the 0 to 70 degrees C temperature
+  range, unlike the industrial parts. Exact conditions remain in the matrix.
+
+No chip was physically tested. The new matrix identifies scope, evidence classes,
+strict future-revision policy and the exact operations or board claims still gated.

@@ -5,6 +5,13 @@ not another implementation stage. Read the sections needed for the current task.
 It supplies concrete starting facts and counterexamples without making each
 numbered prompt repeat the research. No driver or hardware was tested here.
 
+Execution prompt 2 rechecked these sources. Use the completed
+[variant matrix](../variant-matrix.md) and [feature coverage](../feature-coverage.md)
+for the exact revision policy, current LI/HI DFP/DRP recommendation, electrical
+conflicts and named capability gates. The 322I FET resistance below is corrected
+to maximum after independently checking the table columns. Earlier dated audits
+retain explicit correction notes rather than silently losing their history.
+
 ## Verify inherited claims before coding
 
 For each register, address, timing, procedure or support claim being implemented:
@@ -218,7 +225,7 @@ for exact pages and conditions. Preserve dimensions and min/typ/max labels.
 | Software reset | 26/49/95 ms min/typ/max; retain separate owner-clock policy margin |
 | Software clock policy | Existing `OWNER_CLOCK_MARGIN_MS=1`: 5/30/95 ms become 6/31/96 elapsed ticks, anchored to known completion/fresh owner time; not TI-specified 6/31/96 ms waits |
 | LAI/HAI supply | Exact operating table 2.7–5.0 V; local DFP 3 A advertisement needs >=3.5 V; remote 3 A detection as UFP does not impose that local minimum |
-| 322 supply/VCONN | 4.5–5.5 V; VCONN limit 225/300/375 mA min/typ/max; FET resistance 1.25 ohm typical; bulk capacitance 10–200 uF |
+| 322 supply/VCONN | 4.5–5.5 V; VCONN limit 225/300/375 mA min/typ/max; FET resistance 1.25 ohm maximum; bulk capacitance 10–200 uF |
 | I2C pull-up rail and startup | 1.65–3.6 V; 3.3 V I2C footnote requires VDD >3.0 V; L/A ramp <=25 ms; retain exact startup-polarity conflict below |
 | VBUS sensing | Resistor min/typ/max 855/887/920 kohm versus common 900 kohm prose; system threshold 2.95/3.3/3.8 V with specified network; a 28 V system range is not the pad rating |
 | LAI/HAI Rd | Dead-battery 4.1/5.1/6.1 kohm; ordinary UFP/DRP 4.6/5.1/5.6 kohm, min/typ/max |

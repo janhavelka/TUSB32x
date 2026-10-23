@@ -57,3 +57,20 @@ prompts 2-4. Sibling source cannot settle them. SDK pins and actual aggregate
 timeout bounds must be proved in their adapter prompts. Native IDF is not located
 in this shell; this does not justify substituting Arduino-as-component. Physical
 fixtures and all future build/test claims remain separate from prompt 1 completion.
+
+## Prompt 2: family and evidence decisions
+
+Completed 2026-10-23. Exact source revisions/pages, all named variants and electrical
+conditions are in [variant matrix](variant-matrix.md); implementation/test work is
+tracked in [feature coverage](feature-coverage.md). The focused
+[peer/public re-audit](audit/execution-2-peers.md) records current declarations,
+helpers, tests, licenses and package rules. These are future implementation rules.
+
+| Concern | Peer file/symbol or TI source | Revision | Selected rule | Reason | Check |
+| --- | --- | --- | --- | --- | --- |
+| Explicit capabilities | TMP1x2 Config.h modelAddressMin/hasAlertOutput; LDC1614 Config.h validChannelMask; B/L/A/V exact pin/ID tables | bafc340 / c0ab4c1; SLLSEN9F/SLLSEP2D/SLLSEQ8D/SLLSEO5D | Six explicit 320 variants, separately gated 322I, no 321 GPIO target; LAI primary | Shared identity cannot establish exact BOM, polarity or capabilities | Variant/address negative cases and independent eight-byte vectors in 9/18 |
+| Revision policy | TMP1x2 variant tests, LDC1614 shared DEVICE_ID_VALUE; L/A Table 12, V Table 6-11 p20 | bafc340 / c0ab4c1; L/A/V above | Exact 01/02 only, no base A0; unexpected revision retained with CHIP_ID_MISMATCH, no write/trust promotion | Public 06 assertion and permissive Linux logging do not establish silicon support | Unexpected/reversed/partial identity and write-gate tests in 9/12/18 |
+| Provenance/package | 24Cxx manifest/check_reference_archive.py/check_package_contents.py; TMP1x2 library.json; original TI notices | 936aa85 / bafc340; eight exact PDF records | Retain old bytes/metadata/terms; exclude reference payload from production and packages | Reference research is not MIT source; ordinary consumers need no research tools | Eight PDF hashes/terms verified now; extracted package guard in 32 |
+| LI/HI selection caveat | Current TI LI/HI product pages; L mode definitions | Pages checked 2026-10-23; SLLSEP2D | Retain documented compatibility, expose TI DFP/DRP discouragement; choose LAI examples | Product recommendation differs from existence of register capabilities | Capability/help/docs check in 22/35; no LI/HI DFP/DRP qualification claim |
+| Board ownership and unresolved claims | B/L/A/V exact electrical/pin tables versus N/G summaries | Exact revisions in variant guide | No core pin/power policy; no universal disputed startup recipe; exact 5.0 V extended 320 ceiling; narrow 322 write gates | Independent read/identity work need not wait for unrelated silicon ambiguities | Named gates/source requirements in variant guide; physical prerequisites in 23–31 |
+| Maintainability | TMP1x2 explicit Model helpers and LDC1614 explicit DeviceVariant/channel checks | bafc340 / c0ab4c1 | Small descriptor only for identical verified behavior; one existing operation path; no discovery/override framework | Family differences fit typed values and direct checks | API/source review in 5/9/18; no driver added in this prompt |

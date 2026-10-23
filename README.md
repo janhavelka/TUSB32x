@@ -14,7 +14,11 @@ tests, documentation and commit/sync gate. The [scope audit](docs/audit/promptse
 maps the original stages to the new sequence. Promptset execution has started:
 [prompt 1's current comparison](docs/library-comparison.md) and
 [engineering decisions](docs/design-decisions.md) establish the implementation
-baseline. Driver implementation has not started. See
+baseline. Prompt 2 adds the [variant matrix](docs/variant-matrix.md),
+[feature coverage](docs/feature-coverage.md) and verified source provenance.
+The matrix separates exact silicon facts, library policy and unresolved gates;
+TI's current LI/HI DFP/DRP caveat remains visible. Driver implementation has not
+started. See
 [execution progress](docs/implementation-progress.md) and [validation](docs/validation.md).
 
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,

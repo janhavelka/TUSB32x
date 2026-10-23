@@ -7,6 +7,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Verified family capabilities against current TI sources and pinned public code.
+  Corrected the TUSB322I VCONN resistance to a maximum, recorded LI/HI product
+  recommendations and exact electrical conflicts, and selected strict revision
+  acceptance without inferred capabilities.
+
 - Independently reviewed execution prompt 1 and corrected peer console/lifetime
   claims, an API source citation, Doxygen fixture expectations and validation
   provenance. The chosen baseline and later prompt scopes remain unchanged.
@@ -54,6 +59,10 @@ Entries below describe those artifacts, not released driver functionality.
   documentation at the end.
 
 ### Added
+
+- Completed prompt 2 variant/source boundary and feature-to-test matrix, with
+  named unresolved gates and board prerequisites. Added the separate TUSB321AI
+  source and original-terms/current-verification metadata for all eight TI PDFs.
 
 - Completed execution prompt 1: current inventory of 17 I2C libraries and the
   FieldCore consumer, source-backed engineering decisions, local tool inventory

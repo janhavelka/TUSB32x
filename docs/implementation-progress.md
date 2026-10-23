@@ -4,14 +4,14 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-The user authorized prompt 1 only in this invocation.
+Current authorization: execute prompt 2 only; do not start prompt 3.
 
 ## Prompt status
 
 | Prompt | Status |
 | --- | --- |
 | [1: ecosystem-audit](prompts/1-ecosystem-audit.md) | COMPLETE |
-| [2: family-capabilities](prompts/2-family-capabilities.md) | NOT STARTED |
+| [2: family-capabilities](prompts/2-family-capabilities.md) | COMPLETE |
 | [3: register-contracts](prompts/3-register-contracts.md) | NOT STARTED |
 | [4: silicon-procedures](prompts/4-silicon-procedures.md) | NOT STARTED |
 | [5: value-api-contracts](prompts/5-value-api-contracts.md) | NOT STARTED |
@@ -74,3 +74,42 @@ Three fresh-context reviewers checked coverage/scope, source correctness and
 inventory/validation. The lead verified findings against actual peer files.
 Corrections and repeated checks are recorded in [validation](validation.md).
 No later prompt was started; the execution branch remains unchanged.
+
+## Prompt 2 execution record
+
+Started from synchronized commit `9670c53b15b3e8c338479134e539ef5b4dd441d4`, the
+completed independent prompt 1 review. Local and same-name origin branch matched
+after fetch, with zero ahead/behind and a clean worktree. The execution branch
+and original base are unchanged.
+
+Scope: family capabilities, source provenance and board prerequisites only.
+The lead owns variant/coverage matrices, shared decisions, source metadata and
+Git. Delegation used two gpt-6-astra agents at high reasoning for disjoint B/L
+and A/V/GPIO source reviews, and gpt-6.1-sol at high reasoning for the peer/public
+source audit. The latter owned only `docs/audit/execution-2-peers.md`; other agents
+were read-only. Reviewers then checked the completed matrices independently.
+
+Focused peers remained clean on main: TMP1x2 `bafc340`, 24Cxx `936aa85`, LDC1614
+`c0ab4c1`. Full revisions, exact declarations, tests, AGENTS and build/package
+paths are in [the focused report](audit/execution-2-peers.md). Adopt explicit
+variant/address and shared-identity boundaries, independently derived fakes and
+complete provenance. Reject sensor semantics, guessed exact identity, inherited
+blocking/retry behavior, permissive unexplained revisions and packaged PDFs.
+No sibling repository was fetched or modified.
+
+The [variant matrix](variant-matrix.md) establishes the six explicit 320 parts,
+separate 322I gates, GPIO-only exclusions, exact board electrical requirements
+and strict future-revision policy. [Feature coverage](feature-coverage.md) maps
+planned APIs/CLI to exact sources and future tests. Current TI product pages add
+the LI/HI DFP/DRP recommendation; source corrections include the 322I VCONN
+resistance maximum. Dated preparation reports retain explicit correction notes.
+All eight PDFs retain original terms; the seven old byte streams are unchanged.
+No driver, full register specification or complete procedure implementation was
+introduced. Prompt 3 remains NOT STARTED.
+
+Validation and remaining silicon/board gates are recorded in
+[validation](validation.md) and the variant matrix. Hardware qualification is
+not inferred from the source review. Commit/sync evidence belongs in the handoff
+and the next progress update, avoiding a self-referencing commit edit.
+Source hashes, document links, metadata, preservation and focused peer-state
+checks passed. Review findings were resolved against the actual sources.

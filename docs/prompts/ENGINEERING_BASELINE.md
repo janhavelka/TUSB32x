@@ -190,6 +190,14 @@ struct OperationTiming { uint64_t nowMs = 0; uint64_t deadlineMs = 0; };
 and nonzero `i2cTimeoutMs`. `Variant` names explicitly verified parts;
 `DeviceAddress` names verified strap/address choices. Validate their combination.
 The application selects the exact variant; identification does not guess it.
+
+The completed [variant matrix](../variant-matrix.md#identity-and-revision-policy)
+defines exact revision acceptance: unknown revisions retain raw evidence but
+fail initialization with CHIP_ID_MISMATCH and cannot enable writes or KNOWN
+configuration. Keep its current product caveats and named gates visible; do not
+infer capabilities from a shared signature. Register/procedure details remain
+owned by prompts 3 and 4.
+
 `DeviceProfile` contains only TI-verified silicon settings, such as `portMode`,
 `sourceCurrent`, `sourcePreference`, `drpDutyCycle` and variant-specific controls.
 Do not put desired initialization writes or health thresholds in DriverConfig.

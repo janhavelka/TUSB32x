@@ -6,7 +6,12 @@
     "revision_date": "May 2017",
     "retrieved_utc": "2026-10-23T10:17:20.465775+00:00",
     "sha256": "62f7b3f65338e25ebd6fd46ef04474ba806b06b1cc04bc0b3d7b8191b01ca87d",
-    "bytes": 1313743
+    "bytes": 1313743,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.919838+00:00",
+    "current_source_matches_archive": true
   },
   {
     "file": "TI-TUSB320LI-HI-SLLSEP2D.pdf",
@@ -15,7 +20,12 @@
     "revision_date": "May 2017",
     "retrieved_utc": "2026-10-23T10:17:20.984105+00:00",
     "sha256": "6e570c562b3bc9ee0c822353f3abebfad692ab27bfd862ff1c07da57e8c0ff81",
-    "bytes": 1286861
+    "bytes": 1286861,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.789633+00:00",
+    "current_source_matches_archive": true
   },
   {
     "file": "TI-TUSB320-I-SLLSEN9F.pdf",
@@ -24,7 +34,12 @@
     "revision_date": "March 2022",
     "retrieved_utc": "2026-10-23T10:17:21.076633+00:00",
     "sha256": "1306e448c3f3b169f3b90854710033b9a1aede1d04ba35088f3d2e3ed260d2c4",
-    "bytes": 1601733
+    "bytes": 1601733,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.878836+00:00",
+    "current_source_matches_archive": true
   },
   {
     "file": "TI-TUSB321-SLLSEO6C.pdf",
@@ -33,7 +48,12 @@
     "revision_date": "August 2018",
     "retrieved_utc": "2026-10-23T10:17:21.247432+00:00",
     "sha256": "ef1cea96d1e85a985410e1316a6b52381cf50a482681dbb91da9a9920025305e",
-    "bytes": 846489
+    "bytes": 846489,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.896836+00:00",
+    "current_source_matches_archive": true
   },
   {
     "file": "TI-TUSB32x-Application-Issues-SLAAE24.pdf",
@@ -42,7 +62,12 @@
     "revision_date": "May 2021",
     "retrieved_utc": "2026-10-23T10:18:16.920138+00:00",
     "sha256": "0c30a8fbe63f1e28069061b68813ad95e03e93ea3d8d3ab89620976577c8e43e",
-    "bytes": 674525
+    "bytes": 674525,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.751121+00:00",
+    "current_source_matches_archive": true
   },
   {
     "file": "TI-CC-Selection-Guide-SDAA284.pdf",
@@ -51,7 +76,12 @@
     "revision_date": "March 2026",
     "retrieved_utc": "2026-10-23T10:18:17.216584+00:00",
     "sha256": "6827e47802a63f01f0ff4863f9b97fa565399e782b064af55755318c3499a128",
-    "bytes": 777774
+    "bytes": 777774,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.921838+00:00",
+    "current_source_matches_archive": true
   },
   {
     "file": "TI-TUSB322I-SLLSEO5D.pdf",
@@ -60,6 +90,25 @@
     "revision_date": "March 2021",
     "retrieved_utc": "2026-10-23T10:18:17.406248+00:00",
     "sha256": "7cbd82a81e2b32f56caeca413a6be83372c91e401cae32a0cf85db0646dc9683",
-    "bytes": 1586968
+    "bytes": 1586968,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:38:47.867633+00:00",
+    "current_source_matches_archive": true
+  },
+  {
+    "file": "TI-TUSB321AI-SLLSER2A.pdf",
+    "url": "https://www.ti.com/lit/ds/symlink/tusb321ai.pdf",
+    "document": "SLLSER2A",
+    "revision_date": "May 2017",
+    "retrieved_utc": "2026-10-23T14:39:46.526345+00:00",
+    "sha256": "45ef0bd52c8e656a2ed297d5243007431518a5470668ef6ada883af37dee9aa8",
+    "bytes": 855642,
+    "rights_holder": "Texas Instruments Incorporated",
+    "terms": "Original TI copyright, notices and Important Notice retained in the unmodified PDF. TI technical/application resources are supplied AS IS for development with TI products; other reproduction/display is prohibited under the retained notice and no other TI or third-party intellectual-property license is granted. Not covered by the project MIT license.",
+    "terms_location": "Final PDF page: IMPORTANT NOTICE AND DISCLAIMER; original copyright notices throughout.",
+    "current_source_verified_utc": "2026-10-23T14:39:46.526345+00:00",
+    "current_source_matches_archive": true
   }
 ]
