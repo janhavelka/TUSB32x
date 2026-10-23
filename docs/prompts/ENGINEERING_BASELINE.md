@@ -223,6 +223,13 @@ The register meanings come from the exact TI variants from prompts 2–4 and
 encoder table. Enum ordinal is not a register encoding unless explicitly stated.
 Do not cast an enum straight into a register to avoid writing the table.
 
+Prompt 5 now supplies the complete passive aggregates in `include/TUSB32x/`.
+Its [API inventory](../api-contracts.md) fixes the previously open identity/IRQ
+and diagnostic fields, coarse OperationPhase labels and RegisterDecode result.
+Result IRQ evidence belongs only to that operation; cached diagnostics may retain
+historical IRQ evidence. Separate recovery/mode/reset uncertainty remains visible
+after result take. These refinements add no callable driver or competing state rules.
+
 | Type | Initial exact members and meaning |
 | --- | --- |
 | Variant | UNSPECIFIED, TUSB320, TUSB320I, TUSB320LI, TUSB320HI, TUSB320LAI, TUSB320HAI, TUSB322I. UNSPECIFIED is invalid binding. TUSB322I operations remain capability-gated by resolved source evidence. |

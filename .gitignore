@@ -1,0 +1,2 @@
+# Local compiler and documentation output; never part of the delivered library.
+/build/

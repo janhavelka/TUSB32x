@@ -1,7 +1,8 @@
-# TUSB32x library planning
+# TUSB32x library development
 
-This repository currently contains an audit and implementation promptset, not a
-finished device driver. The requested starting device is **TI TUSB320LAI**. The
+This repository provides portable C++17 value types and Status helpers alongside
+the audited implementation contracts. The device driver is still planned.
+The requested starting device is **TI TUSB320LAI**. The
 planned library covers the verified I2C-capable TUSB320 variants through explicit
 capabilities; the name is not a claim of compatibility with every TUSB32x product.
 
@@ -17,8 +18,8 @@ maps the original stages to the new sequence. Promptset execution has started:
 baseline. Prompt 2 adds the [variant matrix](docs/variant-matrix.md),
 [feature coverage](docs/feature-coverage.md) and verified source provenance.
 The matrix separates exact silicon facts, library policy and unresolved gates;
-TI's current LI/HI DFP/DRP caveat remains visible. Driver implementation has not
-started. An independent prompt 2 review clarified the TUSB322I VCONN supply
+TI's current LI/HI DFP/DRP caveat remains visible. An independent prompt 2 review
+clarified the TUSB322I VCONN supply
 prerequisite and the unresolved write boundary for its shared fault/control
 register. See
 [execution progress](docs/implementation-progress.md) and [validation](docs/validation.md).
@@ -30,6 +31,15 @@ Prompt 4 adds the [device procedure guide](docs/device-behavior.md): selected
 transport framing, exact role/reset/recovery/IRQ steps, timing anchors, transfer
 ceilings and failure vectors. Driver implementation and hardware qualification
 remain later work; unresolved TUSB322I writes and board prerequisites stay explicit.
+
+Prompt 5 implements the [public passive values](include/TUSB32x/TUSB32x.h),
+[Status helpers](include/TUSB32x/Status.h) and fully documented settings,
+callbacks and decoder-result types. The [API guide](docs/api-contracts.md)
+separates these implemented values from future callable methods; the
+[architecture](docs/architecture.md) keeps transport and scheduling application-owned.
+[Reusable checks](test/README.md) cover independent headers, constexpr behavior
+and linked consumers. Validators, decoder logic, driver methods and build/package
+metadata remain future work; no runnable device example is available yet.
 
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
 timing, electrical and failure-case findings from TI documents and public code,
@@ -68,5 +78,5 @@ inspected without changing them. Audit observations are not claims that their
 builds, CI, or hardware tests passed during this task.
 
 The implementation agent must keep native host, Arduino, native ESP-IDF, package,
-CI, and physical hardware evidence separate. No implementation or hardware
-validation is claimed by the existence of this promptset.
+CI, and physical hardware evidence separate. The current checks establish only
+the passive C++ contract; they do not qualify a physical device or framework adapter.

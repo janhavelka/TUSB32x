@@ -352,3 +352,85 @@ The dated original peer audit is preserved as historical evidence. No source
 code, new framework or runtime abstraction was introduced. Driver/adapter and
 hardware checks remain NOT RUN; remote CI was not dispatched or polled.
 Unresolved silicon/board gates remain explicit. Prompt 5 is NOT STARTED.
+
+## Prompt 5: portable values and API inventory, 2026-10-23
+
+Scope: implemented passive public headers and constexpr helpers; exact planned
+callable inventory, architecture and reusable host/compile-only fixtures.
+GCC 15.1.0 (MinGW-W64 x86_64 UCRT) and Doxygen 1.13.2 were executed locally.
+No framework SDK is needed by these headers. No driver, validator or decoder
+behavior is inferred from compiling a declaration sketch.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Focused peer re-audit | PASS | All five current clean local HEADs, actual source/test bodies and registration in execution-5-peers; no sibling fetch/build |
+| Independent delivered headers | PASS | Status.h, Config.h, TUSB32x.h and CommandTable.h each compiled alone in strict C++17 |
+| Real passive consumer | PASS | test_compile_contracts.cpp linked with status_other_tu.cpp and executed with NDEBUG; checks remain active in Release |
+| Status/error contract | PASS | All 23 exact ordered names from both TUs, constexpr helpers, explicit bool, invalid codes 23/127/255, full int32 extremes and wide cross-TU detail |
+| Fixed values and defaults | PASS | All 17 structs, callback signatures, uint64 token/time, exact seven-bit addresses, default configuration/port/IRQ/diagnostics and independent validity |
+| Planned methods | PASS, syntax only | PlannedApi.h and planned_api.cpp outside include/; exact baseline inventory and noncopy/nonmove checked, never linked |
+| Source Doxygen | PASS | EXTRACT_ALL=NO, undocumented/enum/parameter/incomplete/doc warnings treated as errors; all 17 public structs present in XML index |
+| Documentation and scope | PASS | Local links/anchors, UTF-8/LF/final newlines, JSON, whitespace and no reference-byte/numbered-prompt edits; final counts below |
+| Independent contract review | PASS | Header/fixture/API/architecture inspection against original prompt and baseline; findings corrected before final checks |
+
+Actual C++ commands, executed from the repository root using PowerShell's
+`$p5Flags` and `$p5Output` as defined in [test instructions](../test/README.md):
+
+```text
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -I include -x c++ -fsyntax-only -
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -I include -DNDEBUG test/test_compile_contracts.cpp test/consumer/status_other_tu.cpp -o <TEMP>/tusb32x-p5-checks/passive-contracts.exe
+<TEMP>/tusb32x-p5-checks/passive-contracts.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -I include -fsyntax-only test/contract/planned_api.cpp
+```
+
+The first command ran four times, each with one `#include <TUSB32x/header.h>`
+on stdin. The executable printed:
+`PASS passive values, 23 error names, constexpr Status and multiple translation units`.
+No expected-failure compilation or static assertions were suppressed.
+
+The final Doxygen command was `doxygen -`, with this stdin configuration
+(absolute paths resolved from the checkout and TEMP):
+
+```text
+PROJECT_NAME = TUSB32x
+OUTPUT_DIRECTORY = "<TEMP>/tusb32x-p5-checks/doxygen"
+INPUT = "<checkout>/include/TUSB32x"
+RECURSIVE = YES
+EXTRACT_ALL = NO
+WARN_IF_UNDOCUMENTED = YES
+WARN_IF_DOC_ERROR = YES
+WARN_IF_INCOMPLETE_DOC = YES
+WARN_NO_PARAMDOC = YES
+WARN_IF_UNDOC_ENUM_VAL = YES
+WARN_AS_ERROR = YES
+GENERATE_XML = YES
+GENERATE_HTML = YES
+GENERATE_LATEX = NO
+QUIET = YES
+```
+
+XML inspection independently required exactly the 17 published structs: Status,
+DriverConfig, DeviceProfile, OperationToken, OperationTiming, PortSnapshot,
+ConfigurationSnapshot, IdentitySnapshot, InterruptSnapshot, OperationResult,
+OperationProgress, TransportStats, ManagedTransportEvidence, HealthPolicy,
+HealthSnapshot, DriverDiagnostics and RegisterDecode. This is a direct stage check;
+the reusable Doxygen guard/negative fixtures remain assigned to later prompts.
+
+Review fixes clarified operation-local IRQ results versus historical diagnostic
+IRQ evidence, mode settling versus proof of an old sequence, adapter-added retry
+scope, health-helper staging and a test's ABI wording. No silicon rule changed.
+No driver behavior or packaging metadata was added. The only
+new implemented methods are complete constexpr Status/token helpers; all remaining
+callables stay in docs/contract fixtures until their owning implementation stage.
+
+Final documentation checks passed for 80 Markdown files and 452 local links/anchors.
+All 38 numbered prompts retain their contents and numbering. Archived TI sources
+and provenance are unchanged. The first author Doxygen attempt needed its missing
+output parent created, then passed; the lead's final run used TEMP and passed.
+Generated output under build/ is ignored and not part of the deliverable.
+
+NOT RUN: validators, register decoding, driver transport/state/health behavior,
+framework or package builds and physical hardware qualification. Those methods
+are not implemented in prompt 5. Remote CI was neither dispatched nor polled.
+Prompt 6 remains NOT STARTED. This stage's passed checks establish the portable
+value contract and planned signature syntax only.

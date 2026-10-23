@@ -4,7 +4,9 @@
 
 This repository will provide a general-purpose, framework-neutral C++17 library
 for the verified TUSB320 family, starting with TUSB320LAI. It currently contains
-the audit, TI references and implementation prompts. Do not describe planned
+passive public values, Status helpers, their checks, the audit, TI references and
+implementation prompts. Test commands are in [test/README.md](test/README.md).
+The device facade and build/validators remain planned. Do not describe planned
 interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to

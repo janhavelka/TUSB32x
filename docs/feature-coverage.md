@@ -1,7 +1,8 @@
 # Feature, source and verification coverage
 
-Prompts 2–4, 2026-10-23. This matrix defines the capability boundary; no driver,
-CLI, host suite or hardware qualification exists yet. **Planned** means the
+Prompts 2–5, 2026-10-23. This matrix defines the capability boundary; passive
+values/Status and their host checks exist, but no driver, CLI or hardware
+qualification exists yet. **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
 **Outside API** means board/application responsibility or an excluded device.
@@ -9,8 +10,9 @@ These are documentation labels, not new runtime health/status values.
 
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
-listed there; V names TUSB322I alone. Every test below is required future
-evidence, not an executed PASS. Actual specification checks are in
+listed there; V names TUSB322I alone. Silicon/operation tests below remain future
+evidence; the final passive-value table records prompt 5's implemented subset.
+Actual checks are in
 [validation](validation.md). Planned commands follow [CLI_CONTRACT](prompts/CLI_CONTRACT.md).
 
 Prompt 3 completed the [register contract](register-map.md) and
@@ -79,3 +81,22 @@ and effect/timing specification; prompts 5–6 fix the value/state contracts usi
 results. Later rows become implemented/tested only when their real suites and
 relevant physical checks run. Gated rows remain explicit without blocking
 independent, verified capabilities.
+
+## Prompt 5 implemented values and planned API mapping
+
+These entries distinguish executable passive-value checks from future device
+behavior. Exact fields and planned signatures are in [API contracts](api-contracts.md).
+
+| Feature / state | API or value | Source / provenance | Actual check; remaining owner |
+| --- | --- | --- | --- |
+| Status — Implemented | Err, Status, errorName | Engineering baseline; LDC/LSM representation and TMP constexpr/explicit-bool mechanism in current peer audit | PASS 23 names/order, int32 extremes, invalid code names, constant evaluation, explicit conversion and multiple TUs; callback normalization remains9 |
+| Transport/settings — Passive values implemented | I2cWriteFn, I2cWriteReadFn, DriverConfig, DeviceProfile | Callback baseline plus exact variant/register tables B pp16-19, L/A pp16-20, V pp17-20 | PASS signatures/defaults/standalone headers; variant/profile validators7, actual callback path9 |
+| Configuration/port — Passive values implemented | ConfigurationSnapshot, ProfileField, PortSnapshot, PortField | Baseline and register/device guides; explicit raw/typed validity | PASS defaults, mask values and independent raw copy; publication/lifetime6, observations12/15 |
+| Operation/diagnostics — Passive values implemented | OperationToken/Timing/Result/Progress, identity/IRQ values, DriverDiagnostics | Owner baseline and prompt4 retained effect rules | PASS fixed values/default invalidity and token domain; admission/time6/11, retained IRQ16, diagnostics17 |
+| Health — Passive values implemented | DriverState, ManagedTransportEvidence, HealthPolicy/Snapshot | Baseline policy; no TI health claim | PASS default values only; validation/projection/counters behavior17 |
+| Decoder — Result implemented, function Planned | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS passive defaults and planned signature syntax; independent decode/error/output-preservation vectors10, CLI formatting22 |
+| Facade/validators — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only, no calls linked; build/validators7, callable engine9-17 |
+| Source docs — Present | Four public headers with file/type/member/enum/function Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen and visibility of17 public structs; reusable guard/package integration8/33 |
+
+No pass above represents a successful I2C transaction, driver validator,
+silicon decoder, framework build, CI run or physical qualification.

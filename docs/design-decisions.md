@@ -111,3 +111,26 @@ records current code, tests, registration and deliberately rejected differences.
 | Reset proof | B/L/A reset tables, V §6.3.2 p9 and Table 6-10 p20 | B F/L D/A D/V D | One command,96-tick wait,F; record actual controls; V DRP readback is conservative consistency policy; completed settling is separate from acceptance | No all-register default assumption or automatic desired reapply; own reset success can coexist with older recovery UNKNOWN | P17–P20; pending-reset discovery never adds a secondF |
 | IRQ evidence | B Table 7-6 p16/Table 7-7 p18; L/A Table 9 p18; V Table 6-9 p19; TI-hosted error paths | Exact PDFs; Linux 97becb1 | ACK actual controls, service one complete observation/ACK/recheck, preserve data on later failure | Coalescing prevents lossless events; no invented5 ms ACK wait; V fault handling remains unresolved | P21–P26; ACK2/service 5 callbacks; original error and pending evidence |
 | Source and scope | Four fresh official PDFs; pinned Linux/regmap helpers; peer reports | Verified 2026-10-23 | No new gate resolved, no driver/adapter success claim; future Doxygen carries exact source and policy distinctions | Source review and arithmetic are not physical qualification | Hashes, visual tables, local links and scoped diff; validation records limits |
+
+## Prompt 5: portable values and callable boundary
+
+Completed 2026-10-23. [Current peer evidence](audit/execution-5-peers.md) records
+full revisions and actual declaration/source/test/runner/registration inspection.
+The [API inventory](api-contracts.md) and [architecture](architecture.md) separate
+implemented passive values from later callable work. No settled silicon rule changed.
+
+| Concern | Peer file/symbol | Revision | Selected rule | Reason | Check |
+| --- | --- | --- | --- | --- | --- |
+| Status | LDC/LSM Status.h; TMP Status.h::errorName/operator bool | 1db38b6 / e262bf2 / bafc340 | Exact 23-code baseline, full int32 detail, static text, explicit bool and header constexpr names | No aliases, callback/owner timeout confusion or missing constexpr definition | All names/order, invalid codes, signed extremes, conversion and two linked translation units |
+| Config versus settings | LSM Config.h; ADS Config.h::DriverConfig/DeviceProfile; INA Config.h | e262bf2 / 235af3e / 40838b5 | Borrowed callbacks and exact variant/address in DriverConfig; silicon settings only in DeviceProfile | No host calibration, bus ownership or power authorization in a candidate | Isolated headers, callback signatures, default/validity checks |
+| Evidence storage | ADS AppliedProfileSnapshot; INA AppliedConfigState/JobResult; LSM diagnostics | 235af3e / 40838b5 / e262bf2 | Fixed desired/observed/verified/raw values; diagnostic identity/IRQ plus independent recovery/mode/reset uncertainty | Later reset must not hide earlier recovery; result consumption must not erase needed facts | Default invalidity and independent copied values now; transition behavior in6/11-17 |
+| IRQ attribution | TMP exact-token result tests; LSM copied result/progress; completed device guide | bafc340 / e262bf2; prompt4 | Result IRQ is operation-local; diagnostics retain historical IRQ work, never current latch guarantee | An early failed service must not inherit a previous ACK success | Header/API review now; failed-service regression required in16 |
+| Public scope | LSM test_compile_contracts.cpp; TMP core_no_arduino consumer | e262bf2 / bafc340 | Four complete value headers; future noncopyable facade only in compile-only fixture | No stubs or unimplemented link promises | Strict header compilation, fixture syntax and linked real Status consumer |
+| Pure decode | Existing TI field tables and public-value vocabulary | B F / L D / A D / V D | One planned namespace decodeRegister; fixed RegisterDecode stores field codes with validity, not a single-byte port snapshot | Shared CLI decoding without guessed context or private dependencies | Exact planned signature and rejection order; implementation/vectors in10 |
+| Documentation/style | LDC Doxyfile; TMP public documentation checks | 1db38b6 / bafc340 | Complete Doxygen now, strict warnings and actual XML visibility; no new documentation framework | Undocumented/hidden values cannot pass on generated output alone | Doxygen1.13.2 warnings-as-errors; all17 public structs visible |
+
+No ABI size/serialization promise is inferred from standard layout and trivial
+copyability. Core values use fixed storage; architecture-specific size quotas are
+not copied from a sensor library. There is no new scheduler, allocation layer,
+event bus or general register container. Validators remain prompt7; detailed
+state/admission tables remain prompt6; hardware qualification remains separate.

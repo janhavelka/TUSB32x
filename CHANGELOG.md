@@ -1,7 +1,7 @@
 # Changelog
 
-This checkout currently contains library planning and implementation prompts.
-Entries below describe those artifacts, not released driver functionality.
+This checkout contains audited implementation contracts and passive C++17 values.
+Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
@@ -75,6 +75,12 @@ Entries below describe those artifacts, not released driver functionality.
   documentation at the end.
 
 ### Added
+
+- Implemented portable C++17 Status, callback/settings, operation/snapshot,
+  diagnostic/health and register-decode result values with complete Doxygen.
+- Added the exact planned API inventory, decoder boundary and architecture guide,
+  plus reusable standalone-header, constexpr and multiple-translation-unit checks.
+  Future driver methods remain outside delivered headers until implemented.
 
 - Completed prompt 4 transport and device procedures: exact role changes,
   one-shot reset, original-part recovery, IRQ service, wait anchors, callback/byte

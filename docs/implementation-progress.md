@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently review completed prompt 4; do not start prompt 5.
+Current authorization: execute prompt 5 only; do not start prompt 6.
 
 ## Prompt status
 
@@ -14,7 +14,7 @@ Current authorization: independently review completed prompt 4; do not start pro
 | [2: family-capabilities](prompts/2-family-capabilities.md) | COMPLETE |
 | [3: register-contracts](prompts/3-register-contracts.md) | COMPLETE |
 | [4: silicon-procedures](prompts/4-silicon-procedures.md) | COMPLETE |
-| [5: value-api-contracts](prompts/5-value-api-contracts.md) | NOT STARTED |
+| [5: value-api-contracts](prompts/5-value-api-contracts.md) | COMPLETE |
 | [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | NOT STARTED |
 | [7: host-build](prompts/7-host-build.md) | NOT STARTED |
 | [8: metadata-versioning](prompts/8-metadata-versioning.md) | NOT STARTED |
@@ -261,3 +261,51 @@ their inspected code/test/build evidence is unchanged and all four peers are
 clean. Siblings remained read-only. No implementation, hardware qualification
 or prompt 5 work was added. Commit/sync evidence belongs in this review's handoff
 and the next progress update, avoiding a self-referencing commit edit.
+
+## Prompt 5 execution record
+
+Started from `d29cb36b3e0f5ed57dc5512964ce40e2b5326ae2`, the independently
+reviewed prompt 4 completion. HEAD and same-name origin branch were equal after
+fetch, ahead/behind 0/0 and worktree clean. The execution branch/base are unchanged.
+Prompt 5 is complete; prompt 6 remains NOT STARTED.
+
+Implemented four portable public headers: exact constexpr Status/errors,
+terminal callback/binding/settings values, operation/result/snapshot/diagnostic
+values, and the passive RegisterDecode result. Every public type/member/enum/
+function has source Doxygen. Default values have no I2C, clock, allocation or
+implicit power policy. The noncopyable/nonmovable facade, validators, decoder
+and health projection remain planned signatures in the API guide and a separate
+compile-only fixture. No fake method definitions or public unresolved calls exist.
+
+[Current peer evidence](audit/execution-5-peers.md) records all five clean HEADs,
+actual declarations/implementations/tests, examples, runner record names, AGENTS
+and registration. The selected Status and profile split stand. Peer sensor
+aliases/replay, combined hardware/host profiles and ABI-specific sizes were rejected.
+Sibling sources remained read-only and no sibling build/fetch occurred.
+
+The lead owns shared contracts and Git. Three disjoint delegated tasks used
+gpt-6.1-sol/high for the four value headers, gpt-6.1-sol/high for the peer report
+and later linked passive-value test, and gpt-6-astra/high for independent
+callback/error/value/scope review. The lead wrote the API/architecture guides,
+planned fixture and second translation unit, reviewed actual headers and peer
+evidence, integrated changes and ran the final checks.
+
+Review refinements: result IRQ evidence belongs only to that operation while
+diagnostics may retain historical IRQ observations; independent recovery/mode/
+reset uncertainty cannot be overwritten by the newest result. The decoder stores
+field codes without inventing port applicability. Copyability tests make no ABI
+compatibility promise. These close previously unspecified value details without
+changing silicon procedures or adding competing state rules.
+
+PASS: four standalone strict C++17 headers; linked NDEBUG passive/Status consumer
+with 23 error names, constexpr/explicit-bool/full-detail checks and independent
+validity; syntax-only planned API; strict Doxygen and all 17 public structs visible;
+local documentation/provenance/scope checks. Exact commands/results are in
+[validation](validation.md). Local generated Doxygen output is ignored under
+build/; the final run's output is in TEMP. No generated files are committed.
+
+README, CHANGELOG, AGENTS, architecture/API, baseline, coverage, decisions and
+test instructions were updated. Variant/register/procedure guides and archived
+TI evidence were reviewed and need no semantic changes. No firmware/package,
+driver behavior or hardware qualification is claimed. Commit/sync evidence is
+reported in the handoff and next progress update, avoiding self-reference.
