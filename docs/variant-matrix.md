@@ -2,7 +2,8 @@
 
 Prompt 2 evidence review: 2026-10-23. TUSB320LAI is the primary acceptance target.
 This is a source-backed specification, not implemented or physically qualified
-support. Register encodings and complete procedures belong to prompts 3 and 4.
+support. Register encodings are now specified in the
+[register guide](register-map.md); complete procedures belong to prompt 4.
 All API and CLI names below are planned contracts.
 
 ## Evidence and current sources

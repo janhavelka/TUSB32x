@@ -112,7 +112,7 @@ field codes are unshifted. An enum ordinal need not equal either.
 | --- | --- |
 | 08 advertisement | `C0`; codes 0 default, 1 1.5 A, 2 3 A, 3 reserved; 322 write access remains unresolved |
 | 08 detected current | `30`; codes 0 default, 1 medium, 2 charge-through 500 mA, 3 high |
-| 08 accessory | `0E`; codes 0 none, 1–3 reserved, 4 audio, 5 charge-through; base 6 generic debug / 7 reserved; extended 6 local DFP / 7 local UFP debug |
+| 08 accessory | `0E`; codes 0 none, 1–3 reserved, 4 audio, 5 audio charged-through; base 6 generic debug / 7 reserved; extended 6 local DFP / 7 local UFP debug |
 | 08 active cable | `01`; retain raw flag and source-role applicability; not proof of powered VCONN |
 | 09 attachment | `C0`; codes 0 detached, 1 local SOURCE/DFP, 2 local SINK/UFP, 3 accessory |
 | 09 direction / IRQ | `20`: 0 CC1 / 1 CC2, subject to validity; `10`: IRQ W1C, zero has no clear effect |
@@ -123,8 +123,15 @@ field codes are unshifted. An enum ordinal need not equal either.
 | 45 disable Rd/Rp | `04`, distinct from 0A bit 0; internal bits 1:0 must not be changed from defaults; no documented 45 on 322 |
 | 322 fault | 09 bit `08`; RCU label alone does not establish a clear transaction |
 
-Startup `08=00`, `09=20`, `0A=00` requires exact variant confirmation; soft reset
-is not proof of a complete power-on register image. Direction's reset bit cannot
+L/A/V tables specify reset bytes `08=00`, `09=20`, `0A=00`; L/A also `45=00`.
+Base B specifies only masked defaults: `08 & FE = 00`, `09 & E6 = 20`,
+`0A & F0 = 00`, `45 & 04 = 00`. Unknown base bits are not documented zeros;
+in particular, B gives no numeric default for protected `45[1:0]`. See the
+completed [register guide](../register-map.md) and
+[independent vectors](../register-vectors.md). V Table 6-8's accessory reset
+literal has a width typo; the field remains three bits, with zero established
+by the full-byte reset and NONE default. Software reset is not proof of a
+complete power-on register image. Direction's reset bit cannot
 be published as a connected CC2 orientation. Reserved fields retain raw evidence
 without fabricated semantic values. Base debug maps to `Accessory::DEBUG`.
 Orientation names the chip's CC1/CC2 inputs. The application maps those to its

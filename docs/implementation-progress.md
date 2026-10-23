@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 2; do not start prompt 3.
+Current authorization: execute prompt 3 only; do not start prompt 4.
 
 ## Prompt status
 
@@ -12,7 +12,7 @@ Current authorization: independently audit completed prompt 2; do not start prom
 | --- | --- |
 | [1: ecosystem-audit](prompts/1-ecosystem-audit.md) | COMPLETE |
 | [2: family-capabilities](prompts/2-family-capabilities.md) | COMPLETE |
-| [3: register-contracts](prompts/3-register-contracts.md) | NOT STARTED |
+| [3: register-contracts](prompts/3-register-contracts.md) | COMPLETE |
 | [4: silicon-procedures](prompts/4-silicon-procedures.md) | NOT STARTED |
 | [5: value-api-contracts](prompts/5-value-api-contracts.md) | NOT STARTED |
 | [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | NOT STARTED |
@@ -139,3 +139,41 @@ numbered prompts or production code changed. Hardware and future behavior tests
 remain unexecuted; named silicon/board gates remain explicit. Prompt 3 is NOT
 STARTED. Commit/sync evidence belongs in this review's handoff and the next
 progress update, avoiding a self-referencing commit edit.
+
+## Prompt 3 execution record
+
+Started from synchronized prompt 2 review commit
+`cd591d4b56b83bda4f3f641bf5ee1c86f5d8a08c`. HEAD and upstream matched after fetch,
+with a clean tree; the recorded execution branch and original base are unchanged.
+Scope: register access, encodings and independent vectors, without production
+code or prompt 4 procedure implementation. The lead owns the register guide,
+vectors and shared records. Two gpt-6-astra/high agents review B/L/A and V source
+tables read-only; one gpt-6.1-sol/high agent owns the focused peer audit report.
+Only the lead changes Git state. All three agents subsequently reviewed the
+actual register guide/vectors read-only; no confirmed defect remained. The lead
+checked the source pages, peer implementations, public helpers and arithmetic.
+
+PCA9555 remained clean on main at `498178e`, LDC1614 at `c0ab4c1` and ADS1115 at
+`381236e`;
+full revisions and source/test/build paths are in audit/execution-3-peers.md.
+Adopt named access masks, procedure guards, explicit semantic validation and
+independent literal bytes. Reject pair wrapping/pointer parking, ADC framing and
+timing, and fake models that turn shared constants into their own oracle.
+
+docs/register-map.md and docs/register-vectors.md complete the map and 82 literal
+cases: 36 identity/range/decode cases, 21 composition cases and 25 failure/boundary
+cases. They separate partial base defaults, protected internal bits, live/command
+bits and profile comparison. Shared evidence now records the exact audio
+charged-through meaning and the V accessory reset width typo. V08/V09 write gates
+and V_RETURN_DRP remain unresolved; unchanged proved controls permit independent
+supported work. No runtime API, driver or procedure implementation was added.
+
+Local validation passed: eight source hashes, eight access-mask partitions,
+all 21 literal compositions, selected field/regmap/DRP arithmetic, peer state and
+all 18 cited test registrations, source helper hashes, Markdown links and diff
+checks. validation.md records source pages and check limits. Future behavioral
+tests, physical qualification and firmware/package builds remain NOT RUN. There
+is no C++ source requiring Doxygen in this prompt; the guide specifies the
+citations/comments due with future CommandTable/codecs. Prompt 4 is NOT STARTED.
+Commit/sync evidence belongs in the handoff and next progress update, avoiding
+a self-referencing commit edit.

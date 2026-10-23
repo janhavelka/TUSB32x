@@ -195,8 +195,12 @@ The completed [variant matrix](../variant-matrix.md#identity-and-revision-policy
 defines exact revision acceptance: unknown revisions retain raw evidence but
 fail initialization with CHIP_ID_MISMATCH and cannot enable writes or KNOWN
 configuration. Keep its current product caveats and named gates visible; do not
-infer capabilities from a shared signature. Register/procedure details remain
-owned by prompts 3 and 4.
+infer capabilities from a shared signature. Register definitions are in the
+completed [register guide](../register-map.md) and
+[independent vectors](../register-vectors.md); procedure details remain prompt 4
+work. Compare readable profile fields separately from write-permission masks:
+V08/V09 fields still participate in observation/equality while their writes are
+gated. Base reset defaults are partial masks, not invented complete zero bytes.
 
 `DeviceProfile` contains only TI-verified silicon settings, such as `portMode`,
 `sourceCurrent`, `sourcePreference`, `drpDutyCycle` and variant-specific controls.
@@ -231,7 +235,7 @@ Do not cast an enum straight into a register to avoid writing the table.
 | PortRole | UNKNOWN, NOT_APPLICABLE, SOURCE, SINK. Snapshot has separate localRole and peerRole; do not derive a normal peer power role from an accessory encoding. |
 | Orientation | UNKNOWN, NOT_APPLICABLE, CC1, CC2. Detached has NOT_APPLICABLE; failed/unread field UNKNOWN. |
 | DetectedCurrent | UNKNOWN, NOT_APPLICABLE, DEFAULT, MA_1500, CHARGE_THROUGH_500_MA, MA_3000. Only valid in documented local-sink/accessory contexts. |
-| Accessory | UNKNOWN, NOT_APPLICABLE, NONE, AUDIO, CHARGE_THROUGH, DEBUG, DEBUG_LOCAL_DFP, DEBUG_LOCAL_UFP. Gate raw-code interpretation by selected variant. |
+| Accessory | UNKNOWN, NOT_APPLICABLE, NONE, AUDIO, CHARGE_THROUGH, DEBUG, DEBUG_LOCAL_DFP, DEBUG_LOCAL_UFP. CHARGE_THROUGH means the audio charged-through accessory. Gate raw-code interpretation by selected variant. |
 | SnapshotCoherence | SEQUENTIAL, BOOKENDS_MATCH, CHANGED_DURING_READ. None means hardware-atomic. Matching bookends only prove the observations they contain. |
 
 `DriverConfig` has exactly the following initial field/default contract:

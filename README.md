@@ -23,6 +23,11 @@ prerequisite and the unresolved write boundary for its shared fault/control
 register. See
 [execution progress](docs/implementation-progress.md) and [validation](docs/validation.md).
 
+Prompt 3 adds the [register contract](docs/register-map.md) and
+[independent encoding vectors](docs/register-vectors.md). They specify exact
+access masks, field encodings, safe write images and partial base-part defaults.
+Operation procedures and driver implementation remain later work.
+
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
 timing, electrical and failure-case findings from TI documents and public code,
 starting with TI's GitHub organization. The [source manifest](docs/reference/public-implementations.json)

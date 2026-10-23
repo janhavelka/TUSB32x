@@ -159,3 +159,46 @@ gaps. Full register semantics/procedures and their behavioral tests remain due
 in the assigned later prompts. Hardware, driver/CLI tests, firmware builds and
 package extraction were NOT RUN; remote CI was not dispatched or polled.
 Unresolved silicon gates are retained, not treated as proved capabilities.
+
+## Prompt 3: register contracts and vectors, 2026-10-23
+
+Scope: complete register specification and independent expected bytes, without
+production declarations, codecs or operation procedures. Started from synchronized
+`cd591d4b56b83bda4f3f641bf5ee1c86f5d8a08c` on the existing execution branch.
+Two independent silicon reviewers checked B/L/A and V; a peer reviewer audited
+source conventions. All three then reviewed the actual guide/vector drafts;
+the lead checked source evidence, masks, literals and the full scoped diff.
+
+| Check | Result | Evidence and limits |
+| --- | --- | --- |
+| Exact TI tables | PASS | Visually inspected B pp16–19, L/A pp16–20 and V pp15–20 from archived PDFs; lead additionally inspected B pp18–19 and A p20 for partial defaults/protected bits |
+| Current source/provenance | PASS | Eight archive sizes/SHA-256 verified; no archived byte/metadata changed. Current official B/L/A/V URLs still return F/D/D/D. Fresh V download matched 1,586,968 bytes/SHA-256 7cbd82a8… at 2026-10-23T15:07:44.442351+00:00 |
+| Public helper evidence | PASS | Reviewer freshly fetched the pinned Linux driver, regmap header/core/I2C backend and matched hashes. Lead independently checked those cached bytes plus Betrusted (15 size/SHA/blob comparisons) and actual reset/IRQ/Try.SRC code; TI hosting does not establish authorship or silicon authority |
+| Access/encoding contract | PASS | Complete map, default validity masks, separate persistent/protected/live/command/reserved masks, comparison masks and semantic tables reviewed against exact pages; V access/return gates remain explicit |
+| Independent arithmetic | PASS | Eight complete/disjoint byte-mask partitions; all 21 C vectors match independent integer arithmetic, legal output masks and command exclusion; selected field extraction, reset-mask defect and DRP equality/inequality checked |
+| Vector inventory | PASS | D01–D36, C01–C21 and N01–N25 unique and consecutive: 82 literal cases; requirements include future callback/error tests, not 82 executed driver tests |
+| Focused peers | PASS | PCA9555/LDC1614/ADS1115 clean at recorded HEADs/main/local upstream; 18 named test definitions and RUN_TEST registrations verified. No sibling fetch/edit/build |
+| Documentation/scope | PASS | All 74 Markdown files and 408 local links/anchors checked; 38 numbered prompts unchanged. Changed/new text UTF-8/LF/final newline, JSON and whitespace checks pass; no generated images/download cache or production code in the diff |
+
+The independent arithmetic check parsed the literal composition rows and used
+separate integer masks: 08=C0, 09=06 (B) or 07 (extended), 0A=F0 (B) or F7
+(extended/V), and 45=07 with protected 03. It checked requested field containment,
+legal command bits,
+`(actual & persistent & ~update) | field | command`, expected bytes and preserved
+internal fields. This is specification arithmetic, not an implemented composer
+or runtime test. Three reviewers also independently checked the 21 C rows.
+
+Source corrections: base defaults are documented only under FE/E6/F0/04 masks,
+not complete zero-filled bytes; 45 internal defaults are numeric only in L/A;
+accessory 5 means audio charged-through; V accessory reset has a width typo.
+Managed ACK/reset may obtain a safe control image through their own reads, while
+apply/raw admission retains its stronger existing evidence prerequisites.
+Readable profile comparison is distinct from write permission, especially on V.
+No authoritative resolution of V advertisement/fault semantics was found in the
+bounded current TI search; gates remain rather than inventing legal writes.
+
+Checks used ad hoc Python and read-only source/Git inspection, including
+`git diff --check`. Driver/CLI behavior, procedure timing, firmware builds,
+package consumption and hardware qualification were NOT RUN: those
+implementations belong to later prompts. Remote CI was not dispatched or polled.
+Prompt 4 remains NOT STARTED.

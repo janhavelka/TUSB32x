@@ -13,8 +13,15 @@ listed there; V names TUSB322I alone. Every test below is required future
 evidence, not an executed PASS. Actual prompt 2 checks are in
 [validation](validation.md). Planned commands follow [CLI_CONTRACT](prompts/CLI_CONTRACT.md).
 
+Prompt 3 completed the [register contract](register-map.md) and
+[independent vectors](register-vectors.md): map/access/defaults, semantic
+encodings, comparison/composition and negative cases. Rows below that name
+prompt 3 now have their register specification evidence; implementation and
+behavioral tests remain planned. No unresolved gate was closed by byte arithmetic.
+
 | Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
+| Register access/defaults and safe byte composition — Specified; implementation Planned | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; actual suites due9/10/18/21/22 |
 | Explicit variant/address selection — Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | Every legal pair; cross-family pair, UNSPECIFIED and invalid enum rejection with zero callbacks; no scan; prompts 5/9/11/20 |
 | Eight-byte identity — Planned | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / init, probe, capabilities | Independently fixed vectors; reverse order, wrong NUL, same-address unrelated device, partial/failed transfer, no inference of enable/model; 9/12/18/22 |
 | Revision acceptance — Planned; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize, readRegisterSync / init, reg, diag | Base never probes A0; unknown/06 returns CHIP_ID_MISMATCH without write permission; raw value retained; mismatch cannot create KNOWN; 9/12/18/22 |

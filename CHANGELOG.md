@@ -65,6 +65,12 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Added
 
+- Completed prompt 3 register access, field encodings and independent positive/
+  negative vectors. Distinguished partial TUSB320/I defaults from complete
+  extended reset tables, protected internal bits from reserved read-only bits,
+  and readable profile settings from write permissions. Preserved TUSB322I
+  access gates and equivalent DRP encodings; no driver behavior is claimed.
+
 - Completed prompt 2 variant/source boundary and feature-to-test matrix, with
   named unresolved gates and board prerequisites. Added the separate TUSB321AI
   source and original-terms/current-verification metadata for all eight TI PDFs.
