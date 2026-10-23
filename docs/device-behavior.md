@@ -69,8 +69,8 @@ Nonempty reads may remain wholly inside 00..0A, or read one present 45/A0.
 Reject holes, wrapping, absent registers and zero lengths before callbacks.
 Use R(00,8) for identity, scalar reads for this guide's configuration and port
 plans, and only one-byte data writes. Public raw access is scalar. This avoids
-depending on implicit pointer persistence, ambiguous restart wording, pointer
-parking or cross-register write effects. Range allowlists do not authorize
+depending on implicit pointer persistence, conflicting implicit-pointer wording,
+pointer parking or cross-register write effects. Range allowlists do not authorize
 crossing into 0B or accessing base A0/V45.
 
 A callback is terminal and returns OK or a documented I2C_* status. Normalize
@@ -262,7 +262,7 @@ without traffic: L/A §7.3.3 p14 and V §6.4.4 p14 do not prescribe this workaro
 | 2 | W(45,04), literal data | Mark possible effects before invocation; ambiguous failure retains uncertainty and ends without00 cleanup |
 | 3 | Next fresh timestamp anchors wait 31 ticks | Owner deadline can end the operation; no early00, no extension and no intermediate port publication |
 | 4 | W(45,00), literal data | Failure may leave either termination state; no replay |
-| 5 | R(45,1), require `(value & 07) == 0`; fresh completion check | Mismatch returns CONFIGURATION_MISMATCH and leaves incomplete evidence; full success proves this recorded sequence |
+| 5 | R(45,1), require `(value & 0x07) == 0`; fresh completion check | Mismatch returns CONFIGURATION_MISMATCH and leaves incomplete evidence; full success proves this recorded sequence |
 
 TI requires ignoring transient status between the writes. There is no port read
 in this plan. A later zero45 proves current control bits only. The operation
@@ -278,9 +278,10 @@ configuration remains UNKNOWN until full proof; success does not adopt desired.
 
 For each B/L/A/V variant, R(0A,1) obtains actual valid persistent controls; reject
 reserved/unsafe controls or a currently asserted reset bit with
-CONFIGURATION_UNKNOWN before writing. Compose `(actual 0A & F0/F7) | 08` as
-appropriate and attempt W0A exactly once. No retries, automatic role restoration,
-ACK or desired-profile replay. On callback failure retain possible reset effects
+CONFIGURATION_UNKNOWN before writing. Compose `(actual0A & 0xF0) | 0x08` for B,
+or `(actual0A & 0xF7) | 0x08` for L/A/V, and attempt W0A exactly once.
+No retries, automatic role restoration, ACK or desired-profile replay.
+On callback failure retain possible reset effects
 and the original error; bounded reconciliation is a new explicit operation.
 
 After a successful command, use the next fresh timestamp and wait 96 ticks,
@@ -323,8 +324,11 @@ Table 7-7 p18 identifies the RCU interrupt field.
 | Planned operation | Exact B/L/A plan | Evidence and limit |
 | --- | --- | --- |
 | Refresh | S, no write | Historical sampled IRQ; no implied ACK |
-| ACK-only | R09, W09 with `(actual & 06/07) | 10` | Fresh actual duty/accessory bits, never desired. Callback acceptance is not a sampled-clear guarantee; no recheck in this API |
+| ACK-only | R09, then W09 using the variant's ACK formula below | Fresh actual duty/accessory bits, never desired. Callback acceptance is not a sampled-clear guarantee; no recheck in this API |
 | Service | S, publish complete observation, compose ACK from final 09, W09, one R09 recheck | At most five callbacks. Recheck updates separate IRQ evidence, not the complete port snapshot |
+
+For ACK-only and service, compose `(actual09 & 0x06) | 0x10` on B or
+`(actual09 & 0x07) | 0x10` on L/A. Both use the observed actual controls.
 
 V ACK/service and every09 write remain unavailable under V_FAULT_CLEAR.
 V09 reads retain raw fault bit3/validity with unresolved consuming semantics;

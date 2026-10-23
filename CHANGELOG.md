@@ -7,6 +7,12 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Independently audited prompt 4 against TI sources, current peers and the
+  committed diff. Made reset/ACK formulas explicit by variant, fixed the ACK
+  table's unescaped bitwise-OR delimiter, and repeated procedure, timing,
+  provenance and documentation checks; no silicon procedure
+  or transfer bound changed.
+
 - Independently reviewed prompt 3 against TI tables, source code and literal
   vectors. Clarified counted reads before recovery rejection and corrected the
   PCA9555 runner's evidence-retention description. Register encodings and silicon

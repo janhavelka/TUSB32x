@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: execute prompt 4 only; do not start prompt 5.
+Current authorization: independently review completed prompt 4; do not start prompt 5.
 
 ## Prompt status
 
@@ -237,3 +237,27 @@ future source citations are specified. All 34 applicable transfer-bound triples,
 18 cited peer test registrations and 422 local links passed. All three reviewers
 found no remaining concrete issue in the completed guide. Prompt 5 is NOT STARTED. Commit/sync
 evidence belongs in the handoff and next progress update, avoiding a self-reference.
+
+## Independent prompt 4 review
+
+Reviewed completed commit `d5884da8f1a5b17d38f506b440a66a710c75e7fb` against the
+full original prompt and its diff from `ff0d6a21b65579b7bc3b9b454b16a14b21b74257`.
+At review start, HEAD matched the same-name origin branch after fetch, with
+zero ahead/behind and a clean worktree. The execution branch and base are unchanged.
+Three fresh-context, read-only reviewers checked coverage/simplicity, exact TI
+silicon procedures and verification/peer claims in parallel. The lead reviewed
+the actual diff, source contracts, peer changes and independent arithmetic.
+
+No silicon/procedure defect, missing requirement or incorrect transfer ceiling
+was confirmed. Reset and ACK expressions now state each variant's hexadecimal
+mask directly, avoiding ambiguous slash shorthand; pointer wording is more
+precise. Moving the ACK formula outside its table also fixes the unescaped
+bitwise-OR table delimiter. These are documentation corrections, not behavior changes.
+
+All repeated checks passed; the independent prompt 4 section of validation.md
+records source pages, counts and current peer revisions. LDC1614, ADS1115 and
+LSM6DS3TR advanced through documentation-only commits since the original audit;
+their inspected code/test/build evidence is unchanged and all four peers are
+clean. Siblings remained read-only. No implementation, hardware qualification
+or prompt 5 work was added. Commit/sync evidence belongs in this review's handoff
+and the next progress update, avoiding a self-referencing commit edit.

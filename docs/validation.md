@@ -299,3 +299,56 @@ current freshness and base valid-time units remain explicit gates/prerequisites.
 Adapter aggregate bounds/framing traces, driver/CLI behavior, firmware/package
 builds and hardware qualification are NOT RUN. Remote CI was not dispatched or
 polled. Prompt 5 remains NOT STARTED.
+
+## Independent prompt 4 review, 2026-10-23
+
+Reviewed `d5884da8f1a5b17d38f506b440a66a710c75e7fb` and its actual diff from
+`ff0d6a21b65579b7bc3b9b454b16a14b21b74257`, after rereading the full original
+prompt. Three fresh-context reviewers independently audited coverage/contracts,
+TI procedures and bounds/verification/peer claims. The lead checked the actual
+guide, scoped diff and peer deltas and repeated independent arithmetic.
+
+No silicon/procedure defect, omitted requirement or incorrect bound was found.
+The guide now expands the reset and ACK mask alternatives into explicit
+hexadecimal expressions per variant and names the implicit-pointer wording
+conflict precisely. Its ACK formula previously contained an unescaped bitwise-OR
+delimiter inside a Markdown table cell; moving the formula below the table
+restores its three columns. There is no change to enabled procedures or gates.
+
+Repeated checks:
+
+- Visually inspected B pp7,11–12,14–16,18–19; L/A pp6,10,13–15,18–20;
+  V pp6–7,9–16,18–20; N pp5,9. The silicon reviewer freshly downloaded all four
+  exact B/L/A/V PDFs at 2026-10-23T15:57:28Z; every SHA-256 matched the archive.
+  The review confirms the cited source revisions and does not add hardware proof.
+- All eight PDF byte counts/SHA-256 and archive coverage passed. Four cached
+  pinned Linux/helper files passed 12 size/SHA-256/Git-blob comparisons; helper
+  contents agree with the documented reset-mask/cleanup/IRQ counterexamples.
+  No archive byte, provenance field or numbered prompt changed.
+- All 34 applicable callback/TX/RX triples across 13 plan rows passed independently
+  expanded R/W arithmetic. Literal role/reset/ACK bytes, all 30 P vectors and 12 T
+  vectors, 11,988 fractional-time cases and uint64 rollover/half-range boundaries
+  passed. These remain specification checks, not executed driver tests.
+- All 18 named peer test definitions and actual RUN_TEST registrations passed
+  inspection. Relevant implementation, test-body and workflow claims agree.
+  The current peer revisions below are clean on main with equal local upstream
+  refs; siblings were not fetched. Their changes since the first prompt 4 audit
+  affect only README/documentation indexes and retained-branch audit documents.
+- All 76 Markdown files and 422 local links/anchors passed; JSON parses and
+  UTF-8/LF/final-newline/whitespace checks pass after the clarifications.
+- All 118 procedure-guide table rows have consistent column counts. The ACK row
+  now has the intended three columns, and all four explicit reset/ACK formulas
+  reproduce their existing literal vectors. A separate reviewer confirmed the
+  final four-file diff changes no procedure semantics or transfer bounds.
+
+| Peer | Current HEAD | Change to inspected implementation/test/build files |
+| --- | --- | --- |
+| PCA9555 | 498178e4d9e4acb6fab7d8b816ad5021efe8806a | None |
+| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | None |
+| ADS1115 | 235af3e8c722661a89a44766a4ccd903a654f6fe | None |
+| LSM6DS3TR | e262bf22f3d0cf035fbbca10f45b3e0752bf2bac | None |
+
+The dated original peer audit is preserved as historical evidence. No source
+code, new framework or runtime abstraction was introduced. Driver/adapter and
+hardware checks remain NOT RUN; remote CI was not dispatched or polled.
+Unresolved silicon/board gates remain explicit. Prompt 5 is NOT STARTED.
