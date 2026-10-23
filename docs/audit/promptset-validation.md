@@ -134,3 +134,28 @@ state, avoiding a self-referencing commit hash in this file.
 
 This remains documentation work. No driver tests, firmware builds, remote CI,
 hardware operations or release publication are claimed for this follow-up.
+
+## Correctness and simplicity audit — 2026-10-23
+
+The [correctness review](promptset-correctness-review.md) records the confirmed
+defects, clarified contracts and simplifications. Silicon, API/evidence and
+CLI/tooling received separate agent reviews followed by lead integration and
+another cross-contract review. The new-execution branch rule was corrected in
+`4a1e240`, pushed and verified synchronized before the remaining audit fixes.
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Documentation structure | PASS | 31 Markdown files; 130 local links including anchors; fifteen indexed stages with COMMON and recurring-audit requirements |
+| Text and diff | PASS | UTF-8, balanced fences, changed Markdown LF/final newline; git diff --check |
+| TI source archive | PASS | Seven PDFs parse, 195 pages; every byte count and SHA-256 matches provenance |
+| Register vectors | PASS | Independent arithmetic for extended/base IRQ ACK, reset-bit exclusion and extended mode-write sequence |
+| Integer-clock margins | PASS | Arithmetic cases across sub-millisecond completion positions for the 5, 30 and 95 ms intervals; no shorter hardware wait |
+| CLI records | PASS | Eleven literal records, ASCII and unique keys; longest literal 288 bytes including newline/NUL |
+| Record storage examples | PASS | Conservative full-width RESULT 382 bytes and PORT 394 bytes including newline/NUL fit the revised 512-byte bound |
+| API/CLI integration review | COMPLETE | One operation/result owner; known actual versus desired mismatch; historical snapshot invalidation/time; delayed request ordering; output reservation; manual/automatic and handler/owner work separation |
+
+The arithmetic checks validate prompt examples and bounds, not executable driver
+behavior or physical timing. P04-P12 still require the real regression tests,
+adapter builds and evidence appropriate to implementation. Existing TI ambiguity
+gates remain explicit. No hardware session, firmware build or remote CI run was
+needed or claimed for this documentation audit.

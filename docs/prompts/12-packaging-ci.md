@@ -51,7 +51,11 @@ a gate. Sibling green CI does not verify this library.
 6. Build extracted-package Arduino and genuine native-IDF consumers on S2/S3 for
    the supported matrix; link images, without sibling or source-checkout paths.
    Verify `app_main`/native APIs and absence of Arduino component linkage. SDK
-   header-only compilation is insufficient.
+   header-only compilation is insufficient. These links can satisfy the same
+   revision's firmware matrix as well as package consumption; do not require an
+   identical second source-checkout matrix. Retain the archive identity and
+   extracted build paths with the evidence. Earlier P09/P10 source builds remain
+   evidence only for their tested revisions.
 7. Check local Markdown links in repository and archive. Excluded audit/vendor/
    test files must not leave broken package links; label repository-only paths
    or use verified official source URLs. Manifest framework/platform claims match
@@ -64,6 +68,9 @@ Use one `tools/validate.py --checks ...` interface with P11 verdict/exit rules.
 produce INCOMPLETE/nonzero; focused selection names its narrower scope and never
 claims complete validation. Locally use existing `scripts/pio.cmd`; no second
 PlatformIO Core install. Pinned isolated Linux CI is a separate environment.
+Reuse registered CTest checks and existing guard implementations from this
+wrapper and CI. Each check runs once per requested configuration; do not repeat
+the full suite through nested wrappers or create parallel test implementations.
 
 | Check / proposed files | Required evidence |
 | --- | --- |
@@ -74,7 +81,7 @@ PlatformIO Core install. Pinned isolated Linux CI is a separate environment.
 | `tools/check_doxygen.py`, `tools/test_check_doxygen.py` | Actual Doxygen warnings fail; public API and relevant CLI/helper contracts documented in source; broken refs/missing-doc negative cases |
 | Python unittest + runner/fixture CTest | Fault parsing, provenance, cleanup/artifacts/verdicts and real C++ transcript path actually execute |
 | `tools/check_package.py`, `tools/test_check_package.py` | Whitelist/malicious/missing-member fixtures, clean headers/linked consumer, shared example files and docs links |
-| Arduino + native-IDF matrix | Real S2/S3 links with documented pinned tools, source/package results labeled separately |
+| Arduino + native-IDF matrix | Real S2/S3 links with documented pinned tools and source/archive identity; extracted-package builds can satisfy both firmware and distribution checks |
 
 Use standard CMake targets, CTest and unittest; no custom test framework. Python
 discovery belongs inside the opt-in test block. Pass
@@ -87,6 +94,10 @@ Test guard failure/exit paths; printed SKIP must not become green full validatio
 
 Create `.github/workflows/ci.yml` with minimal `contents: read`, explicit timeouts,
 separate host/Python/docs/Arduino/native-IDF jobs and bounded artifacts/retention.
+Build one archive and supply it to firmware jobs for the supported matrix when
+that satisfies both firmware and clean-package checks. Share existing CTest and
+unittest registrations between the validator and CI rather than running each
+suite again through every entry point.
 Host strict flags include `-Wall -Wextra -Wpedantic -Wconversion
 -Wsign-conversion -Werror`; Linux ASan/UBSan uses a supported compiler. Do not
 apply unsupported sanitizers to embedded SDKs. Pin actions to verified full SHAs
@@ -102,7 +113,14 @@ Missing remote/service access is BLOCKED/NOT RUN for that check, not authority t
 invent a remote or claim configured CI passed. Routine commits and pushes are
 already authorized under AGENTS.md; use the configured upstream and verify sync.
 
-These are proposed acceptance commands after implementation, not prior results:
+The proposed full acceptance entry point after implementation is:
+
+```powershell
+python tools/validate.py --checks all
+```
+
+Use focused commands while developing or diagnosing a check, rather than running
+them all and then repeating the same checks through the full validator:
 
 ```powershell
 python scripts/generate_version.py check
@@ -115,11 +133,12 @@ python tools/check_doxygen.py
 .\scripts\pio.cmd run -e esp32s2dev -e esp32s3dev
 .\scripts\pio.cmd pkg pack -o build/TUSB32x.tar.gz .
 python tools/check_package.py build/TUSB32x.tar.gz
-python tools/validate.py --checks all
 ```
 
 P09 creates consistent proposed `esp32s2dev`/`esp32s3dev` environment names.
-Native IDF is separate `idf.py -C examples/esp_idf/basic set-target <target> build`
+The pio run above is a source-build diagnostic alternative to the extracted
+firmware matrix, not an additional identical final gate. Native IDF is separate
+`idf.py -C examples/esp_idf/basic set-target <target> build`
 with isolated directories per target/version; record actual S2/S3 commands and
 results. Expected output pasted from docs is not run evidence.
 

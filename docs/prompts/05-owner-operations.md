@@ -3,8 +3,9 @@
 Read [COMMON.md](COMMON.md), [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md),
 [MAINTAINABILITY.md](MAINTAINABILITY.md) and [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 Use P01 silicon evidence, P02 contracts and P04 transport/register helpers.
-Implement one readable engine in src/TUSB32xOperations.cpp; keep lifecycle and
-cached access in src/TUSB32x.cpp. Do not create a second synchronous engine.
+Implement one readable engine, preferably in src/TUSB32xOperations.cpp; lifecycle
+and cached access belong with the facade. Small adjacent private responsibilities
+may share a source unit under the baseline. Do not create a second synchronous engine.
 
 ## Fresh evidence
 
@@ -42,6 +43,7 @@ paths/revisions/dirty state and concrete adopted/rejected behavior.
 1. Give phases clear names: read identity/control, compose/write, await fresh owner
    time, wait silicon interval, read verification, compare and finish. Keep each
    phase invariant/transition near its switch; no numeric switch-offset protocol.
+   Expose only coarse progress labels; private phases are not a public contract.
 2. maxTransfers counts terminal callback attempts. Zero means none, default one
    means at most one, failure consumes one. Time-only phases are CPU-bounded and
    hold no bus lock/buffer across polls. No delay, spin, retry or hidden work loop.
@@ -50,6 +52,7 @@ paths/revisions/dirty state and concrete adopted/rejected behavior.
    Owner time resolution is at most 1 ms and may be floored. Use the named
    OWNER_CLOCK_MARGIN_MS = 1 for hardware scheduling, separate from TI values and
    deadline comparison. TI 5 ms needs 6 elapsed ticks; 95 ms needs 96 ticks.
+   The base dead-battery recovery 30 ms wait needs 31 elapsed ticks.
 4. Clip callback timeout to remaining operation time and driver cap, including
    lock and all bus phases. Never submit zero timeout or refresh full timeout
    independently for pointer selection/read/verification.
@@ -74,6 +77,7 @@ paths/revisions/dirty state and concrete adopted/rejected behavior.
 | startVerifyProfile | Read and compare retained desired image using persistent masks; exclude RO/W1C/reset. |
 | startReconcile | Read-only identity/config/termination/reset observation after uncertainty; no role/reset replay. |
 | startReset | One explicit reset write, required wait and bounded observation; no automatic profile restoration. |
+| startRecoverDeadBattery | Explicit base 320/I post-VDD-return recovery with valid identity and caller-owned prerequisite/need; no automatic initialization writes. Other variants reject before traffic. |
 | Port/IRQ methods | P06 uses this same engine; ACK is an explicit effect-bearing write. |
 
 1. Base TUSB320 mode change requires observed unattached state. Test that check
@@ -92,12 +96,29 @@ paths/revisions/dirty state and concrete adopted/rejected behavior.
 5. Desired, observed and verified generations/publication points are separate.
    Failed/cancelled apply cannot leave old image claimed current. Only complete
    verify/reconcile repairs evidence it actually proves; unrelated reads do not.
+   Verify/reconcile may establish KNOWN actual controls differing from desired, publishing
+   the actual verified image without replacing desired. Report CONFIGURATION_MISMATCH
+   when comparing them. Permit a subsequent explicit apply from that known state;
+   matching an interrupted desired profile must not be a recovery prerequisite.
 6. Set possible HardwareEffect before callback, refine only with positive evidence.
    Preserve first terminal failure/detail and NONE/CONFIRMED/PARTIAL/INDETERMINATE
    independently of operation outcome. No blind rollback from cancel/end/timeout.
 7. Explicit cleanup is new owner-selected policy after observation. If P01 needs
    a separate termination control, define a small typed operation with precise
    prerequisites/tests. Do not add generic recovery that guesses USB role.
+8. Implement base dead-battery recovery in this same engine: read 0x45, require
+   internal bits 1:0 zero or fail CONFIGURATION_UNKNOWN before writes, write
+   literal 0x04, wait 30 ms plus the clock margin from fresh completion evidence,
+   write literal 0x00, and verify `(reg45 & 0x07) == 0`. Bound it to four callbacks,
+   six TX bytes and two RX bytes (bus address phases excluded). No transient port
+   publication. Retain interrupted sequence/effect/termination evidence; a later
+   clear bit alone does not prove the sequence's history. Do not replay it without
+   a new explicit owner request or add a startup/power-policy state machine.
+   Existing diagnostics must expose retained unresolved sequence/effect evidence
+   after the result is taken; no hidden recovery-history admission restriction.
+9. Set PortSnapshot.invalidated before possible port-affecting writes and on
+   end/external invalidation. Preserve historical fields/time/provenance; only a
+   complete fresh observation clears it. Readback of configuration alone does not.
 
 ## Behavioral tests
 
@@ -108,6 +129,16 @@ Check exact bytes/order and retained facts, not source tokens alone:
   resultSnapshot repeat, exact take once, old/stale token poll/cancel/take.
 - Tokens survive end/bind/forget; exhaustion fixture without huge real iterations.
 - Initialize/verify/reconcile perform no writes; reset never reapplies desired.
+- Reconcile a partial apply to a known actual image different from desired, retain
+  desired/mismatch, then successfully admit explicit apply without a trust deadlock.
+- Verify a different actual image with complete identity/control/effect proof:
+  publish it as KNOWN while returning CONFIGURATION_MISMATCH and retaining desired.
+  Repeat with an unresolved transition; that incomplete proof remains UNKNOWN.
+- Base dead-battery recovery: exact 0x45 read/04/wait/00/read order, wrong variant
+  and missing identity rejection, unexpected internal bits with no writes, at most
+  four callbacks, and no transient port publication. Inject cancel/error/deadline
+  at each boundary, including the 31-tick wait; preserve effects and never retry.
+  A later clear 0x45 bit must not certify completion of an interrupted sequence.
 - Every phase with budgets 0/1/larger, failed attempt charging, total ceilings and
   bounded local work; no lock held through waits.
 - Before-first-call/equal/short/late-callback deadline, uint64 rollover, invalid

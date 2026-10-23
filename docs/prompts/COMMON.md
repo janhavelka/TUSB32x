@@ -52,6 +52,13 @@ at least two useful peers for each material design choice. Recheck conflicting
 documentation against code and tests. If a peer is unavailable, record it and
 use the available evidence; do not manufacture equivalence or block unrelated work.
 
+Keep this recurring audit focused. P00 inventories the ecosystem; later stages
+check current revisions/dirty state and inspect relevant code/tests or changes.
+Reuse dated evidence for unchanged decisions after confirming it still applies.
+Do not repeat the full seventeen-library inventory, produce another large report
+or redesign an agreed API for every prompt. Record short audit updates in the
+progress entry and amend the comparison/decision records when conclusions change.
+
 Baseline references are TMP1x2, 24Cxx, INA228, INA3221, ADS1115, OPT4001, LDC1614,
 BME280, SHT3x-main, LSM6DS3TR, MB85RC, MCP45HVX1, PCA9555, RV3032-C7, SCD41,
 SSD1315 and TCA9548A. Re-discover new siblings in stage 00 and the final audit.
@@ -176,11 +183,12 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
   attempt means no I2C failure. Success/failure and consecutive-failure semantics
   must be explicit and tested, including counter saturation.
 - Keep an all-callback transport statistics source covering every callback,
-  including raw/probe traffic. Any managed-only projection is explicitly a filtered
+  including raw diagnostics and initialization. Any managed-only projection is explicitly a filtered
   view, never a hidden exclusion from the source counter. Separate callback
   attempts, backend bus transactions/bytes and filtered managed-health counts;
   do not fabricate transaction-phase information the backend does not expose.
-- Raw access/probes bypass managed health; independent adapter counters include
+- Explicit raw Sync access bypasses managed health; CLI probe is an alias of
+  managed initialization and uses its accounting. Independent adapter counters include
   all callback traffic, with physical transactions separately described. Resetting
   counters never repairs state or config trust.
   An OFFLINE projection never suppresses an explicitly requested legal operation
@@ -205,6 +213,11 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
   original TUSB320/TUSB320I. Keep separate enable polarity, addresses, revision
   evidence, controls, debounce encodings and timing capabilities. Unsupported
   variants/features fail before traffic. TUSB321 GPIO-only is outside I2C support.
+- Original TUSB320/I has a specific post-dead-battery source-startup sequence:
+  explicit `startRecoverDeadBattery`, qualified 0x45=0x04, at least 30 ms wait,
+  0x45=0x00 and verification. Reuse the owner engine and clock margin. Stable VDD
+  and when the procedure is needed are caller prerequisites; read-only initialize
+  cannot perform or prove it. Do not impose this procedure on later variants.
 - Audit TUSB322I as a separate family extension and implement evidence-supported
   operations if the specification closes. Its identity/defaults/VCONN and register
   differences need explicit capability handling. Track unresolved advertisement
@@ -233,6 +246,10 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
 - Expose all implemented applicable chip features, owner stepping/budgets/results,
   health, trust, provenance, transport counters, variant capabilities, register
   inspection and bounded diagnostics. No irrelevant peer command filler.
+- Keep firmware commands mapped to one core operation or cached/synchronous
+  action. Python runners own bounded repeated sampling, dumps and fixture suites,
+  consuming their own operation results explicitly. Do not add a second firmware
+  job engine, result store or generic diagnostic workflow framework.
 - Console processing and output are bounded; delayed USB or a lost host cannot
   stall the owner. Handle line overflow and report dropped output. No unbounded
   Serial-ready wait, watch loop, memory-growing latency log or background auto-reset.

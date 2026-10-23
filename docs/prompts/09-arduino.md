@@ -30,6 +30,10 @@ the adapter/example files; the shared processor and core retain the same API.
    application is explicit. EN and supply readiness are board prerequisites;
    documentation must include TI's startup wording conflict and the chosen board
    sequence. Do not fabricate a universal GPIO enable pulse.
+   For original TUSB320/I source-capable startup after VDD returns, document the
+   separate explicit recover-dead-battery operation after identity initialization.
+   Use the existing engine and its 30 ms wait; do not duplicate register writes
+   in Arduino setup or run the workaround on LAI/HAI or other later variants.
 6. Use bounded input/output buffering and finite loop work; report dropped output
    and keep owner service responsive when USB disconnects or host stops reading.
    Firmware prints actual library/framework/target/build/git/dirty identity.

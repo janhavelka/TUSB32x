@@ -67,6 +67,13 @@ describe the current contract.
 Use readability judgment rather than arbitrary line-count or abstraction quotas.
 A longer explicit register table can be clearer than a compact generic mechanism.
 When adding a helper, explain the repeated rule or boundary it makes clearer.
+The baseline source tree assigns responsibilities and preferred names; small
+adjacent private responsibilities may share a source file. Split only when it
+helps navigation or independent changes, and keep build lists/docs accurate.
+Public names and framework boundaries remain fixed. Keep firmware commands
+simple; host tools can compose repeated operations without another device-side
+scheduler or result store. Reuse registered tests from validation/CI instead of
+building a second orchestration layer with the same checks.
 
 ## Doxygen is written with the code
 
@@ -125,6 +132,12 @@ At each stage inspect the following and update the affected files in the same
 change. Do not add meaningless edits to unaffected files; record which were
 reviewed and why no change was needed. Stage 13 checks consistency, not first-time
 documentation.
+
+Keep one authoritative explanation for each contract and link to it. Closely
+related guides may be combined when their required content and stable links stay
+easy to find; do not duplicate state tables or create empty documents to satisfy
+a filename inventory. README, CHANGELOG, AGENTS and CONTRIBUTING keep their
+distinct repository roles.
 
 | Artifact | Update when |
 | --- | --- |

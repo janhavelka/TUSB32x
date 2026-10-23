@@ -2,8 +2,9 @@
 
 Read [COMMON.md](COMMON.md), [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md),
 [MAINTAINABILITY.md](MAINTAINABILITY.md) and [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
-Implement src/TUSB32xPort.cpp and src/TUSB32xDiagnostics.cpp through P04 helpers
-and P05's one operation engine. Keep physical USB policy in the application.
+Implement port decoding and diagnostics through P04 helpers and P05's one operation
+engine. The baseline's preferred source split is optional while adjacent private
+responsibilities remain small. Keep physical USB policy in the application.
 Re-audit current sibling code, tests, examples, runners and CI before edits.
 
 ## Fresh evidence
@@ -36,6 +37,14 @@ dirty state and filtered-vs-all traffic differences; names alone prove nothing.
    acquisition owner-time/time validity, config generation/trust and mixed-time
    coherence. Software publication is atomic under owner serialization; hardware
    register capture is not asserted atomic by a burst.
+   Keep historical field validity separate from invalidated: it starts true,
+   becomes false on complete fresh publication, and becomes true on end/external
+   invalidation/possible port-affecting writes. Retain old fields/time/provenance.
+   Detached orientation/current are valid NOT_APPLICABLE interpretations, not
+   usable orientation/current values. The application still checks observation age.
+   Use the owner timestamp before the observation's first required read as its
+   acquisition boundary. Never label a later fresh poll/publication timestamp as
+   the hardware sampling instant; derived age includes acquisition time.
 6. Changed bookends get only the documented finite recheck budget. Report remaining
    uncertainty; never spin until stable. Sequence counts published observations,
    not every physical edge.
@@ -54,6 +63,9 @@ the same token/deadline/result engine. Cached getters never read or ACK.
 3. Full service observes, retains/publishes, explicitly ACKs and performs bounded
    recheck. Each callback is a P05 owner step. Budget/deadline ends leave pending
    evidence/progress visible. No repeated ACK loop or automatic follow-up job.
+   A completed observation remains published if ACK or recheck later fails;
+   preserve its time/sequence and report service failure/ACK uncertainty separately.
+   Failed incomplete recheck reads cannot replace it with partial data.
 4. Failed ACK may have cleared the latch. Retain uncertainty. Readback can establish
    current state but cannot prove no event disappeared between phases. Coalescing
    latch cannot provide lossless edge history.
@@ -70,7 +82,7 @@ the same token/deadline/result engine. Cached getters never read or ACK.
 
 1. Implement baseline TransportStats totalAttempts/totalSuccess/totalFailures/
    lastStatus with saturating uint32 counters. One wrapper counts every callback,
-   including initialization/raw/probe/ACK/reset, once. Count before/after actual
+   including initialization/raw/ACK/reset, once. Count before/after actual
    invocation, not per API call or expected physical bus transaction.
 2. Normalize illegal callback IN_PROGRESS to I2C_ERROR preserving detail; no pending
    transfer may retain buffers. A failed callback consumes one attempt, independently
@@ -116,10 +128,15 @@ Add/register test/test_port.cpp and test/test_diagnostics.cpp using fixed fakes:
   local-vs-peer, not-applicable, invalid field and raw preservation semantics.
 - Failed second read, changing bookends, old snapshot retention and no fake detach;
   sequence/age/generation/coherence and bounded publication.
+- Historical validity retained while invalidated changes after end/external
+  invalidation/possible port-affecting writes; fresh publication alone clears it.
+  Successful service observation retained after ACK/recheck failure with the
+  original service error and independent ACK evidence.
 - Pending IRQ preserved by every setter; ACK applied 50% vs desired 30%; failed ACK,
   reassertion in every phase, coalesced events and bounded stuck-IRQ handling.
 - Budgets 0/1/larger, deadline/cancel after ACK, no-pin polling and no lossless claim.
-- Every callback counted once, raw/probe all-source inclusion and managed exclusion,
+- Every callback counted once, raw Sync all-source inclusion and managed exclusion,
+  probe alias sharing initialize's managed accounting,
   callback I2C_BUSY vs local BUSY, illegal callback progress, no-I2C preconditions.
 - Full health table: threshold 1/default/max, invalid policy unchanged output,
   failed init, successful managed callback after OFFLINE, saturation, retained

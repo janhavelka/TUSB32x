@@ -53,12 +53,13 @@ the descriptive names below are suggested acceptance cases, not a mandated API.
 | Six-part capabilities | Both legal addresses per variant; wrong address/model rejected without callbacks; no base `0xA0`; no base preference/accessory-disable/termination-state-machine operation |
 | Identity | Exact eight-byte order; reversed/wrong/partial signature rejected; matching signature cannot infer polarity; unknown revision follows explicit policy |
 | Register ranges | Pointer supplied each read; only documented contiguous ranges; holes/wrap rejected; short/incomplete receive never changes public output |
-| Encodings | All advertisement/detect/accessory/attachment/duty/mode/preference/debounce encodings; base versus extended differences; raw reserved state retained; detached direction/current not made valid |
+| Encodings | All advertisement/detect/accessory/attachment/duty/mode/preference/debounce encodings; base versus extended differences; raw reserved state retained; detached direction/current are valid NOT_APPLICABLE interpretations, never usable orientation/current claims |
 | Settings versus W1C | P04 `0xB5 -> ACK 0x15`, staged `0x02` ignored; settings write `0x02` keeps pending IRQ; base `0xB4 -> ACK 0x14`; unknown applied settings require reconciliation or explicit failure |
 | Reset command isolation | P04 `0xDE -> debounce update 0x56`; reset bit is not replayed by ordinary writes; `0x45` internal bits preserved |
 | Extended mode sequence | Disable, set mode, completed-write-based 5 ms wait, enable; exact bytes preserve applied non-mode fields; fault/cancel after each boundary retains disabled/uncertain state |
 | Base mode sequence | Attached precheck rejects before writing; unattached prerequisite and read/write attachment race documented without claiming atomic enforcement |
 | Reset lifecycle | Command attempted once; no successful readiness before documented wait/evidence; timeout/cancel/error after command keeps reset/configuration uncertainty; `end()` is not a reset |
+| Base dead-battery recovery | Explicit base 320/I operation requires identity and caller-owned VDD-return prerequisite; check 0x45 internal bits zero before literal 04, wait 31 ticks from fresh completion boundary, literal 00, verify `(reg45 & 0x07) == 0`; four callbacks maximum; no transient port snapshot or automatic initialization write |
 | TUSB322I gate | Separate signature, mode-00 meaning, absent `0x45`, independent IRQ/fault ACK if supported; unresolved advertisement write rejected before callbacks; autonomous VCONN side effects documented |
 
 Use explicit named tests for these fault boundaries:
@@ -77,6 +78,12 @@ Use explicit named tests for these fault boundaries:
 4. `failed_status_read_preserves_observation`: old data remains distinguishably
    stale with its age/generation; failure does not synthesize detach or zero current.
    Partial multi-byte results cannot become a new complete observation.
+   Preserve historical field validity/time when invalidated becomes true after
+   end, external invalidation or a possible port-affecting write. Only complete
+   fresh publication clears it. A successful pre-ACK service observation survives
+   later ACK/recheck failure while the operation reports its original error.
+   A delayed final poll must not replace the acquisition boundary with publication
+   time and make old observations appear newly sampled.
 5. `irq_reassertion_remains_visible`: event between read/ACK, during ACK, before
    recheck and after last recheck. Bound service work and expose remaining work.
    Status read alone does not clear IRQ; coalesced events are not counted as exact
@@ -85,6 +92,16 @@ Use explicit named tests for these fault boundaries:
    disableTerm and disableRdRp. Clearing 0A while 45 remains disabled cannot report
    TerminationState::ENABLED. Failed/uncertain control writes and pending reset
    preserve UNKNOWN wherever complete configured-availability evidence is absent.
+7. `reconcile_partial_profile_allows_explicit_apply`: prove actual persistent
+   controls after an interrupted apply while desired differs. Publish that actual
+   verified image as KNOWN, retain desired and mismatch evidence, then admit a new
+   explicit apply. Do not replay the cancelled operation or claim it succeeded.
+8. `dead_battery_recovery_retains_interrupted_sequence`: reject other variants and
+   missing identity without callbacks; unexpected 0x45 internal bits reject before
+   writes. Inject error/cancel/deadline after each read/write/wait, preserve original
+   error and effects through end/rebind, and never certify completed recovery from
+   a later clear bit alone. Only a new explicit request may repeat the procedure.
+   After taking the result, diagnostics still expose the unresolved sequence.
 
 ## Time and owner scheduling tests
 
@@ -114,6 +131,9 @@ that the driver waits for a fresh owner timestamp before time-sensitive decision
   fresh anchor. Keep the 1 ms software margin separate from the TI timing constant;
   it does not extend the operation deadline. Distinguish software wait policy
   from a hardware guarantee and port readiness.
+- Apply the same fresh-anchor/sub-ms tests to the base dead-battery 30 ms wait:
+  require 31 elapsed ticks before writing 0x45=0x00. Stalled time and late callbacks
+  cannot shorten it; no transient port snapshot is published during recovery.
 - An operation due at 110 ms with a callback starting at 108 ms gets no more
   than 2 ms remaining timeout. A success returned at 111 ms cannot be reported
   as an on-time operation from stale 108 ms evidence. Preserve actual write effects.
@@ -133,8 +153,11 @@ that the driver waits for a fresh owner timestamp before time-sensitive decision
 Test invalid enums, null and invalid buffer lengths where those APIs exist,
 timeout limits, unsupported register writes and static message lifetime. Check
 that every callback is counted once, failures count as attempts, local rejections
-do not count as I2C failures, and raw/probe traffic remains in the all-callback
+do not count as I2C failures, and raw Sync traffic remains in the all-callback
 source even when excluded from a managed projection. Counter reset is passive.
+The probe CLI alias has the same managed accounting as initialization. Complete
+verification with a desired mismatch retains KNOWN actual evidence and desired
+unchanged; an unresolved transition still prevents KNOWN.
 
 Health, trust, data freshness, port attachment, IRQ pending and operation outcome
 must be independently testable. Detach is normal. OFFLINE cannot suppress an

@@ -21,7 +21,7 @@ The baseline's dated source table gives precise starting files, not a substitute
 
 ## Work 1: names, types and ownership
 
-1. Use the baseline exact folder map, namespace/class TUSB32x::TUSB32x, Err list,
+1. Use the baseline responsibility map, namespace/class TUSB32x::TUSB32x, Err list,
    Status representation/helpers, public signature vocabulary and typed settings.
    Keep PascalCase types, uppercase enum members, camelCase public fields/methods
    and _camelCase private members. No legacy aliases for a new API.
@@ -51,10 +51,19 @@ and CPU bounds, writes/ACK/reset effects, output validity and allowed UNKNOWN st
    retain desired candidate at admission but keep applied/observed copies separate.
 2. startVerifyProfile compares retained desired settings; startReconcile observes
    interrupted effects without replaying role/reset/termination writes. Share
-   verification helpers. If transient completion cannot be proved, retain UNKNOWN.
+   verification helpers. Both establish KNOWN actual settings when the complete
+   identity/control/effect proof succeeds, even when desired comparison returns
+   CONFIGURATION_MISMATCH. If transient completion cannot be proved, retain UNKNOWN.
+   Reconciliation may establish KNOWN actual controls that differ from desired;
+   keep desired unchanged and report CONFIGURATION_MISMATCH when compared. Permit
+   subsequent explicit apply using that evidence, without replaying old work.
 3. startAcknowledgeInterrupt is explicit ACK-only; startServiceInterrupt adds
    observe/publish/ACK/bounded recheck. Both write. startReset does not reapply the
    desired profile. Raw Sync writes cannot bypass required typed role sequences.
+   startRecoverDeadBattery is the explicit base 320/I post-VDD-return operation;
+   require valid identity and caller-owned VDD readiness/need, reject other variants
+   before traffic, and keep initialization read-only. Use its exact P01/baseline
+   0x45 sequence and ordinary retained-result/effect contract.
 4. Active operation owns one slot: conflicting admission BUSY. Terminal result
    owns the slot: RESULT_PENDING until exact take. Token mismatch cannot advance,
    cancel or consume represented work. Failed calls preserve output arguments.
@@ -96,6 +105,14 @@ and CPU bounds, writes/ACK/reset effects, output validity and allowed UNKNOWN st
    acquisition time/sequence, config provenance and mixed-time qualification.
 2. Stage complete observations before software publication. Failed second read
    retains old valid snapshot/age. Successful burst is not hardware atomic capture.
+   PortSnapshot.invalidated distinguishes historical interpretation from current
+   usability: initially true, false only on fresh complete publication, true on
+   end/external invalidation/possible port-affecting write. Preserve old data/time.
+   A detached observation has valid NOT_APPLICABLE orientation/current fields.
+   A complete service observation survives a subsequent ACK/recheck failure;
+   report the service error and ACK uncertainty independently.
+   Port observation time is the owner timestamp before its first required read,
+   not a precise hardware sampling instant or a later publication timestamp.
 3. Retain IRQ pending/ACK uncertainty independently; no required event queue or
    callback dispatcher. GPIO observation is optional application evidence only.
 4. Specify all-callback TransportStats and explicitly filtered managedTransport;

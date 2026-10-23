@@ -36,8 +36,10 @@ together. Do not add aliases for names that have never shipped.
 
 ## Folder and responsibility map
 
-Use this layout. Create a source unit when its responsibility is implemented;
-do not add empty classes or unused placeholders merely to match the tree.
+Use these responsibilities and preferred private source names. Public header/API
+names remain fixed. Adjacent small private responsibilities may share a source
+unit until separate files improve readability; keep build lists and docs aligned.
+Do not add empty classes or unused placeholders merely to match the tree.
 
 ```text
 include/TUSB32x/
@@ -152,6 +154,10 @@ struct Status {
 constexpr const char* errorName(Err code);
 ```
 
+The errorName line is a signature sketch: provide its complete constexpr
+definition in Status.h so every translation unit can use it, including constant
+evaluation. Do not put its only definition in a .cpp file.
+
 `detail` preserves full backend evidence when relevant; document each non-backend
 use. Provide one canonical `errorName`, with UNKNOWN for invalid enum input.
 Do not add redundant `toString`, `getError`, integer-return or bool-return APIs.
@@ -242,6 +248,7 @@ uint8_t rawStatus08 = 0;
 uint8_t rawStatus09 = 0;
 uint8_t rawValidMask = 0; // STATUS_08_VALID and STATUS_09_VALID constants.
 uint16_t validFields = 0; // Named PortField mask bits below.
+bool invalidated = true; // Historical fields are not current usable evidence.
 Attachment attachment = Attachment::UNKNOWN;
 PortRole localRole = PortRole::UNKNOWN;
 PortRole peerRole = PortRole::UNKNOWN;
@@ -267,6 +274,21 @@ state. An unsupported/unknown raw code leaves its field flag clear. A failed
 transfer cannot populate flags from zero-filled buffers. No public `valid=true`
 shortcut may imply all fields share applicability or time.
 
+`invalidated` is separate from historical field validity. Set it false only when
+a complete fresh observation is published. Set it true on end, external device
+invalidation, and before a write that may change port configuration, termination
+or reset state, including an uncertain write. Preserve the old raw/typed fields,
+sequence, acquisition time and configuration provenance. A failed refresh does
+not change those facts or clear invalidated. ACK-only traffic preserves the
+observation; sampled interruptPending is not a claim about the latch after ACK.
+An uninvalidated snapshot can still be old: the application checks its age.
+For PortSnapshot, observedUptimeMs records the supplied owner timestamp before
+the first required read of the published observation. With observedTimeValid it
+identifies that acquisition boundary in the owner clock domain, not the instant
+of hardware sampling. An age derived from it conservatively includes acquisition
+time; sequential registers still have different sampling times. Do not replace
+it with a later post-callback poll/publication timestamp and imply younger data.
+
 The flag values in that listed order are `1U << 0` through `1U << 8`.
 STATUS_08_VALID is `1U << 0`; STATUS_09_VALID is `1U << 1` in rawValidMask.
 
@@ -282,6 +304,17 @@ replacement; increment verifiedGeneration on each complete verified commit.
 Use saturating uint32 values, with zero reserved for no record; at saturation the
 value is a diagnostic counter, not a unique identity. Snapshots/results copy the
 relevant generation; OperationToken remains the correlation identity.
+
+KNOWN means the actual persistent configuration and required effect evidence are
+established; it does not mean the actual profile equals the desired profile.
+Read-only verification or reconciliation may publish the proved actual image as verifiedProfile
+and advance verifiedGeneration without replacing desiredProfile. If it compares
+against a retained desired profile and finds a difference, report
+CONFIGURATION_MISMATCH while retaining that known actual image. Unresolved
+transient completion remains UNKNOWN. A later explicit apply can use established
+actual controls even when they differ from desired; do not require the interrupted
+desired profile to match before allowing recovery. Reconciliation never proves
+that an earlier operation succeeded or that an unobserved sequence occurred.
 
 Decoded profile comparison is semantic where different register encodings mean
 the same mode, especially 322I DRP00/11. Preserve raw observed bits and compare
@@ -313,6 +346,7 @@ class TUSB32x {
   Status startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token);
   Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);
   Status startReset(const OperationTiming& timing, OperationToken& token);
+  Status startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token);
   Status poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers = 1);
   Status cancel(OperationToken token);
   Status resultSnapshot(OperationToken token, OperationResult& out) const;
@@ -352,12 +386,13 @@ the token no longer identifies represented work. Document these cases in P02.
 | startInitialize | Identity and initial register observation only. Never apply defaults, reset, ACK IRQ or change role. Successful evidence enables managed initialized state. |
 | startReadProfile | Read current persistent settings; no desired-profile replacement and no trust promotion by itself. |
 | startApplyProfile | Explicit complete candidate application and persistent-field verification. Retain the desired candidate at admission; keep it separate from observed/applied values even after cancellation. |
-| startVerifyProfile | Compare the complete retained desired image; promote KNOWN only after complete matching verification and required identity/effect evidence. |
+| startVerifyProfile | Read actual persistent settings and compare with retained desired. Complete identity/control/effect proof establishes KNOWN actual state even when the comparison returns CONFIGURATION_MISMATCH. Keep desired unchanged; incomplete proof remains UNKNOWN. |
 | startReconcile | Read identity/configuration/termination/reset evidence needed to resolve a previously interrupted sequence. No role/reset replay and no hidden cleanup write. May finish with CONFIGURATION_UNKNOWN when observation cannot prove completion. Share verification helpers rather than duplicate them. |
 | startRefreshPort | Live read-only port refresh; preserve old successful snapshot on failure. |
 | startAcknowledgeInterrupt | Explicit ACK-only write using a fresh safe image of actual control bits, never staged desired settings. No promise of full service/recheck. |
 | startServiceInterrupt | Observe/publish, explicit W1C ACK, bounded recheck. It is a write operation even if caller thinks of it as reading events. |
 | startReset | Explicit one-shot reset command and bounded observation. No automatic desired-profile reapply. A failed/uncertain reset is never resent by the operation. |
+| startRecoverDeadBattery | Explicit base TUSB320/TUSB320I post-VDD-return sequence from P01, using the same operation engine. Requires valid identity; the caller owns the VDD-return prerequisite and decision that recovery is needed. Other variants return UNSUPPORTED_FEATURE without traffic. No automatic initialization write or desired-profile replay. |
 | poll | Only managed-operation path that invokes callbacks; explicitly named Sync diagnostics are separate. Zero budget invokes none; default at most one. Time-only transitions are bounded too. |
 | cancel | Local cancellation succeeds with OK; retained operation result has CANCELLED. No callback/rollback. Terminal result with matching token remains unchanged. |
 | resultSnapshot/takeResult | Copy terminal result without/with consumption. Successful delivery returns OK even if the result contains I2C_ERROR. Failure leaves `out` unchanged. |
@@ -378,6 +413,22 @@ If safe composition needs a read before a write, a one-callback Sync write canno
 perform both: use a current proved safe image or reject without traffic. Never
 hide two callbacks in a function documented as one.
 
+For startRecoverDeadBattery, first read 0x45 and require its TI-internal bits
+1:0 to be zero; otherwise fail CONFIGURATION_UNKNOWN before any write. Write
+literal 0x04, wait the TI 30 ms interval plus OWNER_CLOCK_MARGIN_MS from a fresh
+completion boundary, write literal 0x00, then verify `(reg45 & 0x07) == 0`. This is at
+most four callbacks (two one-byte reads and two two-byte writes), six TX bytes
+and two RX bytes, excluding bus address phases. Apply normal deadline/result/
+effect rules and publish no transient port snapshot. Preserve interrupted
+sequence and termination evidence through cancel/end/rebind; a later read of
+0x00 alone cannot prove that the required sequence and wait occurred. An explicit
+owner-selected new attempt is not an automatic replay. No startup state machine
+or core VDD/power-policy field is required.
+Retain that unresolved sequence in the existing effect record, and expose its
+kind/uncertainty through diagnostics as well as the terminal result, including
+after result consumption. No admission restriction may depend on hidden recovery
+history. Current termination-control evidence and sequence completion are separate.
+
 ## State, result and effect separation
 
 Use compact typed enums with exactly these initial members:
@@ -385,7 +436,8 @@ Use compact typed enums with exactly these initial members:
 ```cpp
 enum class OperationKind : uint8_t {
   NONE, INITIALIZE, READ_PROFILE, APPLY_PROFILE, VERIFY_PROFILE,
-  RECONCILE, REFRESH_PORT, ACKNOWLEDGE_INTERRUPT, SERVICE_INTERRUPT, RESET
+  RECONCILE, REFRESH_PORT, ACKNOWLEDGE_INTERRUPT, SERVICE_INTERRUPT, RESET,
+  RECOVER_DEAD_BATTERY
 };
 enum class OperationState : uint8_t {
   IDLE, ACTIVE, SUCCEEDED, FAILED, CANCELLED, TIMED_OUT
@@ -430,9 +482,10 @@ operation's result or claim the old operation succeeded.
 `transfers`, `startedUptimeMs`, `completedUptimeMs`, `completedTimeValid`, and
 copied relevant identity/configuration/port/IRQ evidence with explicit validity.
 Use a small fixed aggregate. Do not introduce a public polymorphic result tree.
-`OperationProgress` contains token/kind/state, a stable named phase, cumulative
+`OperationProgress` contains token/kind/state, a coarse named phase, cumulative
 `transfers`, `lastPollTransfers`, `deadlineMs`, `waiting`, `readyAtMs`,
-`readyAtValid` and `resultPending`. Do not expose private numeric switch offsets.
+`readyAtValid` and `resultPending`. Public phase labels describe reading, writing,
+waiting or finishing; they do not freeze private switch phases or offsets.
 
 | Example | API Status | Terminal outcome/effect | Other independent evidence |
 | --- | --- | --- | --- |
@@ -441,7 +494,7 @@ Use a small fixed aggregate. Do not introduce a public polymorphic result tree.
 | Failure after termination-disable verified | I2C_ERROR from poll | FAILED / PARTIAL or INDETERMINATE according to failed phase | Termination DISABLED if still proved, otherwise UNKNOWN; configuration UNKNOWN |
 | Backend timeout on role write | I2C_TIMEOUT | FAILED / INDETERMINATE | No reset/retry; later explicit reconciliation needed |
 | Owner deadline after successful write | TIMEOUT | TIMED_OUT / PARTIAL | Callback transport success still counted; no late commit as success |
-| Complete readback mismatch | CONFIGURATION_MISMATCH | FAILED / NONE for read-only verification | Transport successes increase; configuration UNKNOWN |
+| Complete readback mismatch | CONFIGURATION_MISMATCH | FAILED / NONE for read-only verification | Transport successes increase; KNOWN actual image with complete required proof, otherwise UNKNOWN |
 | Valid cable detach | OK | SUCCEEDED / NONE for port refresh | Snapshot valid; attachment detached; health unaffected by detach |
 | Projected OFFLINE then explicit diagnostic read | Actual callback outcome | No health-based rejection | All-callback counters include it; raw traffic does not change managed projection |
 
@@ -454,7 +507,8 @@ The owner's clock resolution is at most 1 ms; integer times may be floored.
 Use a named `OWNER_CLOCK_MARGIN_MS = 1` for hardware delay scheduling, separate
 from TI's specified interval and from owner deadline semantics. A TI 5 ms minimum
 wait needs 6 elapsed integer ticks; a 95 ms reset-completion scheduling delay
-needs 96. These are software margins, not new TI timing facts. Test sub-ms
+needs 96; the base dead-battery recovery 30 ms wait needs 31. These are software
+margins, not new TI timing facts. Test sub-ms
 callback completion to prove the selected clock cannot shorten those intervals.
 Owners extending a 32-bit hardware counter do so correctly in their adapter;
 simply casting a wrapping timestamp is insufficient. Never renew the deadline
@@ -515,8 +569,10 @@ last terminal operation status, last failed transport status with timestamp and
 timestamp validity, and explicitly named `managedTransport` evidence. The latter
 contains `initialized`, `totalSuccess`, `totalFailures`, `consecutiveFailures`,
 `lastStatus` and last-success/failure time validity. Its callbacks are the filtered
-production-operation subset. Raw/probe diagnostics are in TransportStats but
+production-operation subset. Explicit Sync diagnostics are in TransportStats but
 excluded from managed projection; never hide them from the source totals.
+The CLI probe alias calls startInitialize and follows managed initialization
+accounting; a command alias never changes the underlying callback classification.
 Do not add backend bytes/transactions when the callback cannot report them;
 example adapters may expose their own separate, accurately named counters.
 

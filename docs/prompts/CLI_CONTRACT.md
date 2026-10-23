@@ -30,9 +30,9 @@ not prove it has no chip side effects.
 ## Files and ownership
 
 Use `examples/common/Tusb32xCli.h/.cpp`, `Tusb32xCliOutput.cpp`,
-`Tusb32xCliDiagnostics.cpp`, `ConsoleBuffer.h` and `BoardConfig.h`. Keep parsing and
-dispatch in the first source, formatting/help in the second, and finite diagnostic
-jobs in the third. Split another source only for a clear responsibility. Use one
+`ConsoleBuffer.h` and `BoardConfig.h`. Keep parsing and dispatch in the first
+source and formatting/help in the second. Add another source only for a current,
+clear responsibility. Use one
 example-only `tusb32x_cli::Cli` with `setup()`, `feed()`, `processCommand()`,
 `tick()`, `printHelp()` and injected platform functions. Do not introduce a
 reusable command framework, registry, plug-in architecture or inheritance tree.
@@ -47,7 +47,7 @@ pretending the Python rows are firmware code generation.
 Each row records canonical name/aliases, topic, syntax, execution class,
 hardware-effect description, prerequisites, capability, output record keys,
 maximum callbacks per owner step, aggregate byte bounds, fixture and behavioral
-test. Use only `CACHE_ONLY`, `PURE`, `CORE_JOB`, `CLI_JOB`, `RAW_I2C` and
+test. Use only `CACHE_ONLY`, `PURE`, `CORE_JOB`, `RAW_I2C` and
 `PLATFORM_ACTION`. Effect classes are `NONE`, `LOCAL_STATE`, `READ_OBSERVATION`,
 `DEVICE_WRITE` and `PLATFORM_EFFECT`. A live read may consume evidence on a
 particular variant; record that separately. Capability denial precedes traffic.
@@ -64,31 +64,37 @@ in P09/P10; this contract does not add a new startup sequence.
 | Topic | Canonical grammar and aliases | Meaning and routing |
 | --- | --- | --- |
 | common | `help [topic|command]`, alias `?`; `version`, alias `ver` | Cache only; topics: common, connection, port, profile, interrupt, job, registers, diagnostics, all. Include firmware/library/framework/target identity. |
-| common | `color [on|off|0|1]`; `verbose [0|1]`; `quiet [0|1]`; `hilmark <nonce>` | Local only. Quiet is inverse verbose for progress chatter; never hide errors or terminal records. Nonce is 1..32 ASCII letters/digits/underscore/hyphen. |
+| common | `color [on|off|0|1]`; `verbose [0|1]`; `hilmark <nonce>` | Local only. Verbose controls progress chatter; never hide errors or terminal records. Nonce is 1..32 ASCII letters/digits/underscore/hyphen; `none` is reserved. |
 | connection | `bus`, `console`, `capabilities` | Cache only; configured variant/address, strap assumptions, adapter framing, finite timeouts, pins, build identity and counters. Capability output distinguishes configured and observed identity. |
 | connection | `variant [name]`, alias `model`; `addr [address]`; `bind`; `end`, alias `unbind` | Queries cache only; target edits require ended, idle instance with no retained result and pass full validation before replacing anything. Bind/end are bus-silent. End is no hardware reset. |
-| connection | `init [timeout_ms]`, alias `initialize` | `startInitialize`: read-only identification and observation; never reset/apply or infer exact variant from identity bytes. |
-| connection | `probe`; `discover`, alias `detect` | Explicit read-only diagnostic jobs using selected target or legal family addresses; no target reselection, profile application or bus recovery. ACK alone is not identity. |
+| connection | `init [timeout_ms]`, aliases `initialize`, `probe` | `startInitialize`: read-only identification and observation of the selected target; never reset/apply, scan addresses or infer exact variant from identity bytes. |
 | port | `read`, alias `status`; `sample`, alias `snapshot`; `freshness` | Read starts `startRefreshPort`; sample/freshness print cached validity, observation sequence/time/age and provenance. Live read does not acknowledge the TUSB320 interrupt latch. |
-| profile | `cfg`, alias `settings`; `profile [show]`; `profile reset`; `profile discard`; `profile validate` | Cache/pure. Show CLI staged, core desired, observed and trusted applied fields separately. Reset stages verified variant defaults. Discard copies core retained desired to staging; if none exists, reject CONFIGURATION_UNKNOWN without changing staging and direct the user to profile reset. Neither writes. Validation is not apply. |
-| profile | `profile read [timeout_ms]`; `apply [timeout_ms]`; `verify [timeout_ms]`; `reconcile [timeout_ms]` | Profile read starts `startReadProfile`. Apply starts `startApplyProfile(staged,...)`; only accepted admission updates core desired. It is the explicit hardware mutation. Verify compares reads with core retained desired. Reconcile observes/computes trust without replaying writes. |
+| profile | `cfg`, alias `settings`; `profile [show]`; `profile reset`; `profile discard`; `profile validate` | Cache/pure. Show CLI staged, core desired, observed and trusted applied fields separately. Reset stages the documented DeviceProfile candidate defaults for the variant; these are not a chip reset image. Discard copies core retained desired to staging; if none exists, reject CONFIGURATION_UNKNOWN without changing staging and direct the user to profile reset. Neither writes. Validation is not apply. |
+| profile | `profile read [timeout_ms]`; `apply [timeout_ms]`; `verify [timeout_ms]`, aliases `selfcheck`, `selftest`; `reconcile [timeout_ms]` | Profile read starts `startReadProfile`. Apply starts `startApplyProfile(staged,...)`; only accepted admission updates core desired. It is the explicit hardware mutation. Verify and its aliases compare reads with core retained desired and require that desired profile; they are not a general hardware test. Reconcile observes/computes trust without replaying writes. |
 | profile | `mode [port|dfp|ufp|drp]`; `current [default|1a5|3a0]`; `duty [30|40|50|60]`; `debounce [milliseconds]`; `preference [normal|try-sink|try-source]`; `ufpaccessory [on|off]`; `termination [on|off]`; `rd-rp [on|off]` | Getters show staging; setters only stage. `port` selects PORT-pin-determined MODE00 on verified TUSB320 variants; TUSB322I MODE00 means DRP, so port is unsupported there. Termination means the extended 0x0A DISABLE_TERM control. Rd-rp means the separate capability-gated 0x45 Rd/Rp control; neither substitutes for the other. On/off means enabled/disabled, with raw disable polarity shown separately. Advertisement is a CC category, not measured load or PD. Print exact variant debounce values from P01; unsupported controls/values reject before staging. |
 | interrupt | `irq`; `irq read`; `irq ack [timeout_ms]`; `irq service [timeout_ms]`; `intpin` | Bare irq is cached retained evidence; read inspects live without TUSB320 W1C acknowledgement. Ack is explicit write; service is bounded read/publish/ack/recheck with documented coalescing limits. Intpin calls an opt-in application input reader; no GPIO setup in common code. |
 | lifecycle | `reset [timeout_ms]`; `invalidate <external-reset|power-loss|target-change>` | Reset starts `startReset`, never automatic reapply. Invalidate passes an explicit CONFIGURATION_UNKNOWN reason to local invalidateDeviceState and preserves effect evidence. Explicit role/reset actions may affect autonomous VCONN on TUSB322I. |
-| job | `job [status]`, alias `progress`; `job auto [0|1]`; `job step [0..255]` | Status/cache and local scheduler mode; explicit step calls `poll(token,nowMs,budget)` once, default budget 1. Zero makes no callbacks. Auto stepping uses the same bounded owner path. |
-| job | `job start <initialize|read|read-profile|apply|verify|reconcile|acknowledge-irq|service-irq|reset> [timeout_ms]`; `cancel [token]`, aliases `job cancel`, `stop` | Same named operation routes, admission rules and effects as top-level forms; no duplicate engine. Cancel/stop is local, preserves effects and produces a terminal result; stopping a diagnostic does not imply rollback. |
+| lifecycle | `recover-dead-battery [timeout_ms]` | `startRecoverDeadBattery`, kind `RECOVER_DEAD_BATTERY`: explicit source-capable startup recovery for original TUSB320/TUSB320I only, using the P01/baseline sequence and prerequisites. Never an init side effect; unsupported variants reject before traffic. |
+| job | `job [status]`, alias `progress`; `job auto [0|1]`; `job step [0..255]` | Status/cache and local scheduler mode; explicit step selects this turn's single `poll(token,nowMs,budget)`, default budget 1. It replaces automatic stepping for that turn, including budget zero; never poll again afterward. |
+| job | `cancel [token]`, aliases `job cancel`, `stop` | Cancel/stop is local, preserves effects and produces a terminal result; cancellation does not imply rollback. Start operations through their named commands above. |
 | job | `result [token]`, alias `job result`; `result take <token>` | Non-consuming `resultSnapshot` versus exact-token `takeResult`. Untaken terminal result fences further jobs. No implicit discard when a new command arrives. |
-| registers | `reg <address>`, aliases `rreg`, `rawread`; `dump [status|config|all]`; `decode <address> <byte>` | Reg aliases all call the same readRegisterSync diagnostic API; no invented managed/raw API pair. Dump is a finite CLI job over that route, with variant-allowlisted register order/read effects. Output raw/reserved/unknown encodings; decode is pure. All callbacks count in transportStats; raw diagnostics do not update managed health evidence. |
+| registers | `reg <address>`, aliases `rreg`, `rawread`; `decode <address> <byte>` | Reg aliases all call the same readRegisterSync diagnostic API; no invented managed/raw API pair. Output raw/reserved/unknown encodings; decode is pure. All callbacks count in transportStats; raw diagnostics do not update managed health evidence. |
 | registers | `wreg <address> <byte>`, alias `rawwrite` | Same writeRegisterSync diagnostic API. Enforce access/masks and trust invalidation. Reject changes requiring sequenced role/reset/termination procedures; direct users to typed operations. Mixed W1C/reset composition is deliberate, not generic RMW or unchecked arbitrary bus writes. |
 | diagnostics | `drv`, aliases `health`, `state`; `diag`; `xfer_stats`, alias `counters`; `xfer_reset`; `xfer_assert <attempts> [successes failures]` | Cached projection/trust/transport summaries. Diag has zero traffic. Idle-only xfer_reset calls clearTransportStats and never repairs trust, consumes a result or resets managed health evidence. Assertions reject saturated totals and report counter source. |
-| diagnostics | `watch <count> [interval_ms]`; `stress <count> [interval_ms]`; `stats [reset]`; `selfcheck`, alias `selftest`; `selftest fixture <suite>` | Finite live-read or read-only verification jobs; count/interval/deadline explicit and bounded. Fixture subcommand alone selects a documented mutating suite. No generic full-test button that silently changes role. |
 
 P01/P02 must close the exact variant capability and control-value table before
 those rows are implemented. TUSB322I advertisement writes remain unavailable
-until the TI wording is resolved with evidence. `scan` is deliberately not a
-discovery alias: a broad application bus scan is a separate optional
-`PLATFORM_ACTION`, with explicit range/probe support and owner serialization if
-implemented. Do not import general-call reset, sensor calibration or USB PD rows.
+until the TI wording is resolved with evidence. Address discovery and bus scans
+are outside this CLI. Do not import general-call reset, sensor calibration or
+USB PD rows.
+
+Repeated watch/stress sampling, register dumps and fixture suites belong to the
+host runner. It issues bounded sequences of the ordinary commands above, consumes
+each matching terminal result explicitly, and records run statistics on the host.
+For dumps it selects a finite variant-allowlisted register list and documents
+read effects. Firmware has no bulk diagnostic scheduler, second run ID, aggregate
+result slot or hidden child-result consumption. This keeps every device feature
+available through the same one-operation routes used by ordinary C++ owners.
 
 Hardware-changing command names already express the requested action. Do not add
 repeated `confirm`, arm/confirm cycles or conversational permission gates to normal
@@ -117,22 +123,27 @@ RCU means Read/Clear/Update; it does not establish read-to-clear behavior. Verif
 clear/update semantics independently and gate unsupported actions while wording
 is unresolved. Preserve raw fault evidence without promising a read clears it.
 
-Invalid syntax, unsupported feature, busy owner or stale token preserves staging,
-desired/applied generations, caches, retained result and callback counters. A raw
+Invalid syntax, unsupported feature, busy owner or stale token leaves staging,
+desired/applied generations, caches, retained result and callback counters unchanged
+by that command handler. Already-admitted work may independently advance through
+the turn's automatic poll. Cached/pure handlers have the same no-I2C scope; they
+do not suspend existing work. Zero-delta handler tests use an idle driver or
+disable automatic stepping, and separate tests prove automatic work still
+progresses under cached/rejected command traffic. A raw
 write can invalidate trust even when its callback reports failure. Subsequent
 successful unrelated reads do not restore profile trust.
 
 ## Bounded parser, console and appearance
 
 Use fixed storage: 192-byte line including terminator, at most 12 tokens, maximum
-32 bytes per token; help/diagnostic output is incremental. Timeout arguments are
+32 payload bytes per token plus storage for its terminator; help output is
+incremental. Timeout arguments are
 decimal 1..2147483647 ms, default 1000 ms, translated once into the chosen
 uint64_t owner deadline using its validated half-range/modulo arithmetic,
 including natural rollover. Callback timeout remains clipped
-to remaining time. Counts are 1..100000, intervals 1..3600000 ms; calculate a
-finite whole-run interval with checked multiplication before forming its owner
-deadline. Byte/address values accept decimal
-or `0x` hex; other numbers have documented bases. Reject signs on unsigned values,
+to remaining time. Host-runner counts are 1..100000 and intervals 1..3600000 ms;
+validate a finite whole-run host deadline with checked arithmetic. Byte/address
+values accept decimal or `0x` hex; other numbers have documented bases. Reject signs on unsigned values,
 overflow, octal assumptions, NaN/infinity, junk suffixes, extra tokens, empty
 required values and nonexact booleans/enums.
 
@@ -142,14 +153,24 @@ not turn malformed input into a mutation. Feed at most 64 input bytes and execut
 at most one complete command per owner turn; stop remains responsive. Keep no
 unbounded line queue. Report rejected complete commands rather than silently
 overwriting a pending command.
+Use one owner-poll call site per turn. Dispatch selects an explicit job-step
+budget or the automatic budget, then that call site polls at most once. An
+explicit zero budget suppresses automatic callbacks for the same turn.
+Local-command callback counts describe the handler; core JOB/RESULT counts
+describe its operation. Do not attribute an older automatic job's transfer to
+the cached or rejected command merely because they share a loop turn.
 
-Begin with an 8192-byte fixed output queue and 384-byte maximum formatted record.
+Begin with an 8192-byte fixed output queue and 512-byte maximum formatted record.
 Drain at most one nonblocking backend write of at most 256 bytes per loop turn.
 Prove these values fit both supported board examples; an evidence-based smaller
 queue is allowed when tests/docs agree. Drop whole records on overflow, increment
 saturating dropped-byte/record counters, and emit an output-loss marker when
 space returns. A machine record is never truncated into plausible success.
 Terminal results remain queryable even when their announcement is dropped.
+Before `result take`, reserve space for its complete bounded response, including
+the copied RESULT and END, before releasing the core slot. If that space is not
+available, leave the slot intact and report output loss/rejection when space
+returns; do not defer a destructive take or add a second retained result cache.
 Output loss inside a runner response invalidates that response. A disconnected
 USB host must not stall polling, cancellation, transport deadlines or teardown.
 
@@ -170,17 +191,25 @@ values: use bounded fixed tokens or separate human messages. The host strips ANS
 only around human output. Unknown fields may be recorded; missing required keys,
 duplicate keys and contradictory terminal records fail schema validation.
 
-Every complete input line, including rejected commands, receives a monotonically
-increasing nonzero `request` within the example session. A poisoned line uses
-`command=invalid` rather than guessing a partly parsed command. `hilmark <nonce>`
-echoes exactly the validated nonce and associates it with later requests until
+Every complete input line, including rejected commands, receives an increasing
+nonzero uint64 `request` within the example session. Unknown commands, malformed
+commands and poisoned lines use `command=invalid`; never echo arbitrary input
+as a canonical command ID. Use the reserved `nonce=none` before the first marker.
+At request-counter exhaustion, stop accepting commands, preserve current work
+and results, and report session exhaustion; never wrap or silently reset IDs.
+`hilmark <nonce>` echoes exactly the validated nonce and associates it with later requests until
 the next mark; it does no I2C. An admitted job retains its original request/nonce
 even when later input changes the marker. A runner uses
 fresh begin/end markers and verifies the expected request, canonical command and
 operation token within that frame. Cache queries receive their own request IDs;
 result payloads also carry `origin_request` to identify the operation being
-reported. A new boot banner, request regression, identity change or framing loss
-invalidates the runner session. Do not claim the host revision proves firmware.
+reported. Check request monotonicity on ACK/MARK records that acknowledge new
+input lines. JOB/RESULT/END for an older admitted request may follow a newer
+request's response: for example, apply request 24 may finish after job status
+request 25. Correlate those records with the saved origin/token instead of
+calling them request regression. A regressed new-input ACK/MARK, new boot banner,
+identity change, session exhaustion or framing loss invalidates the runner
+session. Do not claim the host revision proves firmware.
 
 Illustrative record shapes below are future protocol examples, not test results:
 
@@ -192,14 +221,17 @@ TUSB ACK schema=1 nonce=case_8_begin request=24 command=apply code=IN_PROGRESS d
 TUSB JOB schema=1 nonce=case_8_begin request=24 token=17 state=ACTIVE callbacks=1 deadline_ms=12000
 TUSB RESULT schema=1 nonce=case_8_begin request=24 origin_request=24 token=17 kind=APPLY_PROFILE state=FAILED code=I2C_TIMEOUT detail=-7 effect=INDETERMINATE callbacks=2 desired_generation=3 applied_generation=2 configuration=UNKNOWN
 TUSB END schema=1 nonce=case_8_begin request=24 command=apply outcome=FAILED code=I2C_TIMEOUT detail=-7 token=17
-TUSB PORT schema=1 nonce=case_9_begin request=30 raw_valid_mask=3 valid_fields=31 attachment=DETACHED local_role=NOT_APPLICABLE peer_role=NOT_APPLICABLE orientation=NOT_APPLICABLE detected_current=NOT_APPLICABLE sequence=9 observed_ms=12050 observed_time_valid=1 age_ms=12
+TUSB PORT schema=1 nonce=case_9_begin request=30 raw_valid_mask=3 valid_fields=31 invalidated=0 attachment=DETACHED local_role=NOT_APPLICABLE peer_role=NOT_APPLICABLE orientation=NOT_APPLICABLE detected_current=NOT_APPLICABLE sequence=9 observed_ms=12050 observed_time_valid=1 age_ms=12
 TUSB FIRMWARE schema=1 nonce=case_10_begin request=31 git=unknown tree=unknown build=unknown
 TUSB FRAMEWORK schema=1 nonce=case_10_begin request=31 name=esp-idf version=unknown target=esp32s3
 ```
 
 Finalize field ordering and maximum lengths in `tools/tusb32x_cli_contract.py` and
-`docs/CLI.md` before parser implementation. The ACK example is sent before owner
-stepping; later JOB/RESULT describe the evolving configuration. Preserve the
+`docs/CLI.md` before parser implementation. Test each record's maximum with
+32-character nonces, full-width integers and longest legal enum names, including
+the newline and C terminator in its storage bound. Split an oversized schema
+into explicit record types instead of truncating values. The ACK example is sent
+before owner stepping; later JOB/RESULT describe the evolving configuration. Preserve the
 start API's `IN_PROGRESS` on admission: it is expected progress, not a runner
 failure. An `OK` staging ACK means local acceptance only. `HardwareEffect`
 NONE/CONFIRMED/PARTIAL/INDETERMINATE, configuration
@@ -211,9 +243,14 @@ PORT uses the baseline's raw/typed validity masks and exact enum names; there is
 no whole-snapshot `valid` shortcut. NOT_APPLICABLE is a valid interpretation of a
 detached observation. Use `observed_time_valid=0 age_ms=unknown` when no supported
 observation time exists; do not calculate age from a default zero timestamp.
+Include the snapshot's `invalidated` flag. Historical valid fields/time may
+remain visible after invalidation; consumers require `invalidated=0` plus each
+field's validity bit before using them as current port evidence.
 
-ACK is an input-action response; END closes that request. A local staged command
-has ACK/END immediately. Admitted work has an IN_PROGRESS ACK and its END only
+ACK is an input-action response; END closes that request. Each input line has
+one ACK, except hilmark uses MARK as its acknowledgement; do not emit both for
+the same marker request. A local staged command has ACK/END immediately.
+Admitted work has an IN_PROGRESS ACK and its END only
 at terminal completion, after RESULT. A failed admission has a typed END and no
 token or terminal operation result. A later cancel/status/result request has its
 own END and cannot close another request by accident. All aliases normalize to
@@ -226,10 +263,10 @@ One admitted operation produces exactly one spontaneous terminal RESULT and one
 END for its original request. A `result` query may repeat the retained payload,
 with its own request and the same origin/token, and is not another completion.
 `result take <token>` emits the copied payload and releases that exact slot;
-wrong/stale tokens do neither. The runner consumes results explicitly. CLI
-diagnostic jobs use the same one-slot ownership rule and never steal a core job
-or clear a result to make room. Record no bus transaction/byte count unless the
-backend supplies it; tracked callback attempts always include raw/probe traffic.
+wrong/stale tokens do neither. The runner consumes results explicitly before
+the next operation; firmware never clears a result to make room. Record no bus
+transaction/byte count unless the backend supplies it; tracked callback attempts
+always include diagnostic and initialization traffic.
 
 ## Required execution tests
 
@@ -239,7 +276,10 @@ transport. Test each canonical/alias/help route against state, output and exact
 callback deltas; execute Arduino/IDF adapters against that same contract. Add
 `tools/test_cli_transcript.py` for the Python-to-live-C++ path. Validate positive
 and deliberately broken records, malformed lines, output backpressure, token
-reuse, zero/one/N callback budgets, retained results, staged-versus-applied IRQ
+reuse, interleaved old-job completion/new-query responses, request exhaustion,
+pre-marker/invalid-command records, zero/one/N callback budgets, retained results
+and failed take-response reservation, manual step with auto enabled without a
+second poll, staged-versus-applied IRQ
 ACK, unsupported variants and cancellation with uncertain effects. Static guards
 supplement these tests; a matching command string is not proof of behavior.
 

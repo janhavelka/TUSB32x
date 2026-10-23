@@ -42,8 +42,9 @@ Split files by responsibility when it helps a reader, not to satisfy a line limi
    `0x45`, and extended-only `0xA0`. Reject unknown variants, illegal addresses,
    unavailable controls and undocumented ranges before calling transport.
    Raw diagnostics obey the same evidence and side-effect constraints. A raw
-   one-callback write must not bypass a required multistep mode procedure;
-   reject sequence-changing writes and direct callers to the typed operation.
+   one-callback write must not bypass a required multistep mode or dead-battery
+   recovery procedure; reject sequence-changing writes and direct callers to
+   the typed operation.
 2. **Transfers.** A byte write sends `[register, value]`. A read explicitly
    supplies `[register]` then receives the exact requested bytes. Implement only
    verified contiguous ranges; reject crossing undocumented holes or pointer
@@ -89,6 +90,7 @@ Managed mode changes must follow P05's full procedure.
 | Extended `0x0A` ordinary settings | Persistent mask `0xF7`; reset `0x08` must be zero |
 | Explicit soft reset | Compose verified applied persistent fields and `0x08`; record that effects may outlive an error/cancel |
 | `0x45` Rd/Rp disable | Change only `0x04`; preserve TI-internal `0x03`; do not expose internal bits as editable settings |
+| Base dead-battery recovery | After identity validation, read `0x45`; require internal `0x03` bits zero, write literal `0x04`, wait at least 30 ms, write literal `0x00`, verify `0x07` bits zero |
 
 Write zero to reserved/RO positions where specified by the verified map; do not
 echo live status under the pretext of preservation. For `0x45`, verify the
@@ -113,6 +115,21 @@ Minimum golden examples, independently checked against TI:
 - `0x45` preservation: use `(observed & 0x03) | requestedDisableBit` for
   the documented fields if P01 confirms that policy; never zero internal bits
   merely because a default constant is available.
+- Base `startRecoverDeadBattery`: after successful identity validation, read
+  `[0x45]` and require `(value & 0x03)==0`; then write `[0x45,0x04]`, wait
+  at least 30 ms after completion, write `[0x45,0x00]`, read `[0x45]` and
+  verify `(value & 0x07)==0`. The 1 ms owner-clock margin makes the wait
+  31 elapsed ticks from the fresh anchor. An initial value `0x01`, `0x02`
+  or `0x03` rejects before any write. This is the literal sequence from
+  SLLSEN9F §7.4.3 p14, reconciled with its internal-bit rule in Table 7-7 p19.
+  A read of final zero without the sequence cannot establish recovery.
+  P05 schedules these phases in the existing engine; no implicit initialization
+  write, soft reset, profile replay, IRQ ACK or automatic cleanup is added.
+  Do not publish status sampled between the two writes as port observations.
+  The application owns the stable VDD-return prerequisite and decides when the
+  source-capable startup procedure is needed. LI/HI, LAI/HAI and TUSB322I reject
+  this operation before transport; their dead-battery sections do not prescribe
+  it (SLLSEP2D/SLLSEQ8D §7.3.3 p14; SLLSEO5D §6.4.4 p14).
 
 If actual RW state is unknown, reconcile it in an explicit bounded operation or
 return an unavailable/untrusted result. No ACK or setter may apply a desired
@@ -127,8 +144,9 @@ must remain a visible feature gate until resolved.
 ## Diagnostics and tests in this stage
 
 Every callback contributes exactly once to all-callback transport statistics.
-Raw/probe traffic may be excluded from managed health projection, never from
-the source counters. Failed local validation performs no transport and increments
+Explicit raw Sync traffic is excluded from managed health projection, never from
+the source counters. The CLI probe alias is managed initialization, not a raw
+address-only probe. Failed local validation performs no transport and increments
 no bus-failure counter. Raw writes report effects and invalidate affected trust.
 Getters and reset-statistics helpers are passive and cannot repair trust.
 
@@ -141,8 +159,12 @@ and a small W1C/reset/live-status fake. Required cases:
   wrap rejection, success/failure with unchanged output, useful native detail.
 - All field encodings and invalid enum casts. Iterate the small raw byte domain
   where useful; expected values must not call production codecs or mask helpers.
-- The five composition examples above, staged-versus-applied ACK, IRQ arriving
+- All composition examples above, staged-versus-applied ACK, IRQ arriving
   between read and write, reset bit read as one, and preservation of internal bits.
+- Recovery vectors: exact literal writes, unexpected internal-bit rejection,
+  unsupported variants, no transient port publication during the sequence,
+  readback mismatch and failure after either write. P05 tests the 31-tick wait,
+  cancellation/deadline boundaries and preservation of possible effects.
 - Fault before callback, error with no application, error after application,
   short transfer where exposed, late success, and unavailable phase information.
   Prove no hidden write replay and no health/trust repair from unrelated success.

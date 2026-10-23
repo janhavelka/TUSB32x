@@ -41,10 +41,10 @@ below are printed pages, not zero-based PDF viewer indexes:
 
 | Local file under `docs/reference/source/` | Required evidence |
 | --- | --- |
-| `TI-TUSB320-I-SLLSEN9F.pdf` | Pins p4; timing p7; modes pp13–14; programming pp15–16; Table 7-7 pp16–19; initialization p27 |
+| `TI-TUSB320-I-SLLSEN9F.pdf` | Pins p4; timing §6.7 p7; modes pp13–14, including dead-battery exit §7.4.3 p14; programming §7.5 pp15–16; Table 7-7 pp16–19; initialization p27 |
 | `TI-TUSB320LI-HI-SLLSEP2D.pdf` | Pins pp3–4; timing p6; §7.3.2 p14; programming p15; Tables 7–12 pp16–20; initialization p28 |
 | `TI-TUSB320LAI-HAI-SLLSEQ8D.pdf` | Pins p3; electrical/timing pp4–6; §7.3.2 p14; §7.4 p15; Tables 7–12 pp16–20; initialization p28 |
-| `TI-TUSB322I-SLLSEO5D.pdf` | Pins p3; timing §5.7; mode procedures §6.3.2; VCONN §6.3.8; Tables 6-6–6-11 pp17–20 |
+| `TI-TUSB322I-SLLSEO5D.pdf` | Pins p3; timing §5.7 p7; mode procedures §6.3.2; VCONN §6.3.8; programming §6.5 pp15–16; Tables 6-6–6-11 pp17–20 |
 | `TI-TUSB321-SLLSEO6C.pdf` | GPIO-only interface, features p1 and pins p3 |
 | `TI-TUSB32x-Application-Issues-SLAAE24.pdf` | Family Table 2-1 p3; startup p5; non-failsafe pins p7; interrupt clear p9 |
 | `TI-CC-Selection-Guide-SDAA284.pdf` | Family comparison/selection pp8–9; compare summaries with exact datasheets |
@@ -53,7 +53,8 @@ Create `docs/variant-matrix.md`, `docs/register-map.md`,
 `docs/device-behavior.md` and a feature-to-source/API/CLI/test coverage table.
 Each fact needs document revision, section/table and page. Distinguish specified
 maximum, nominal/typical value, board assumption and software policy. Preserve
-`docs/audit/ti-family.md` as dated evidence rather than rewriting its conclusions.
+`docs/audit/ti-family.md` as dated evidence; record subsequent corrections with
+their audit date and source rather than silently replacing its conclusions.
 
 ## Concrete family matrix to verify
 
@@ -62,7 +63,7 @@ Keep named public variants even where one small internal descriptor is shared.
 
 | Exact variants | ADDR low/high, 7-bit | Enable | `0xA0` | Controls |
 | --- | --- | --- | --- | --- |
-| TUSB320, TUSB320I | `0x60 / 0x61` | Active low | Undocumented; never probe it | Base map; mode changes only while unattached |
+| TUSB320, TUSB320I | `0x60 / 0x61` | Active low | Undocumented; never probe it | Base map; mode changes only while unattached; explicit dead-battery exit procedure for Rp |
 | TUSB320LI, TUSB320HI | `0x47 / 0x67` | LI low; HI high | Documented `0x01` | Extended map; disable-term/mode/wait/enable-term procedure |
 | TUSB320LAI, TUSB320HAI | `0x47 / 0x67` | LAI low; HAI high | Documented `0x02` | Extended map; same procedure; verify electrical/timing separately |
 | TUSB322I extension | `0x47 / 0x67` | Active low | Documented `0x02` | Separate defaults, identity and VCONN; unresolved features stay gated |
@@ -122,8 +123,9 @@ evidence with explicit validity rather than substituting a plausible value.
 ## Transport, sequences and unresolved gates
 
 1. Specify one-byte pointers, supported contiguous reads, exact lengths and
-   legal boundaries. Every logical read sets its pointer. §7.4 explicitly
-   describes STOP after pointer selection; do not mandate repeated START.
+   legal boundaries. Every logical read sets its pointer. SLLSEN9F §7.5,
+   SLLSEP2D/SLLSEQ8D §7.4 and SLLSEO5D §6.5 describe STOP after pointer
+   selection; do not mandate repeated START.
    Record chosen adapter framing and hardware validation still required. Bound
    the complete callback, including lock acquisition and both bus phases.
 2. Separate RO/live, persistent RW, W1C and self-clearing command bits. IRQ
@@ -137,17 +139,38 @@ evidence with explicit validity rather than substituting a plausible value.
    desired mode while disabled, wait at least 5 ms after that write completes,
    then enable termination. Each write is separately observable and may fail
    after application. Cancellation cannot restore a previous port state.
+   Separately, base TUSB320/I requires the dead-battery exit sequence in
+   SLLSEN9F §7.4.3 p14 to present Rp on both CC pins after VDD returns:
+   write `0x45=0x04`, wait at least 30 ms, then write `0x45=0x00`.
+   Dead battery includes VDD absent with no cable attached. The application
+   owns stable supply/I2C readiness and decides when this source-capable startup
+   prerequisite applies; the library executes it only through explicit
+   `startRecoverDeadBattery(timing, token)` after successful identity validation.
+   Initialization remains read-only and neither performs nor proves recovery.
+   First read `0x45` and require internal bits `[1:0]==0`; otherwise fail
+   without writing. This reconciles the literal sequence with Table 7-7 p19's
+   prohibition on changing the internal defaults. Verify `0x45[2:0]==0`
+   after the final write. Do not publish intermediate status as port observations:
+   TI says status flags during the sequence must be ignored. Preserve write
+   effects on failure/cancellation and never replay or clean up automatically.
+   A final zero register alone cannot prove the required timing history.
+   Use the existing operation engine; add no startup engine or power policy.
+   The operation is unsupported on LI/HI, LAI/HAI and TUSB322I: their respective
+   SLLSEP2D/SLLSEQ8D §7.3.3 p14 and SLLSEO5D §6.4.4 p14 do not specify it.
 4. For LAI/HAI, verify 400 kHz maximum, enable-to-I2C availability maximum 100 ms
    and reset 26/49/95 ms min/typ/max in §6.6–6.7. Recheck corresponding values
    per other variant; never inherit timing by similar name. Waits must start at
    known callback completion or a later fresh owner timestamp. A stale timestamp
-   passed before a slow write cannot start the 5 ms or reset wait. Reset readiness
-   and operation deadline are separate; a cleared command bit alone is insufficient
+   passed before a slow write cannot start the 5 ms, 30 ms or reset wait.
+   Reset readiness and operation deadline are separate; a cleared command bit alone is insufficient
    evidence of configuration trust or port readiness.
    The selected owner clock has resolution at most 1 ms and may return ordinary
    floor-valued millisecond timestamps. Define a named 1 ms software margin for
    hardware waits: the 5 ms TI mode wait requires at least 6 elapsed ticks from
-   the fresh anchor; relying on the 95 ms reset maximum requires at least 96.
+   the fresh anchor; the base 30 ms recovery wait needs at least 31 ticks;
+   relying on the 95 ms reset maximum requires at least 96. SLLSEN9F §6.7 p7,
+   SLLSEP2D/SLLSEQ8D §6.7 p6 and SLLSEO5D §5.7 p7 independently specify
+   the same 95 ms maximum; it does not guarantee attachment or profile trust.
    This margin prevents an early expiry caused by timestamp quantization. Keep
    the TI value and software margin separate in constants, citations and docs.
    Do not add this margin to the owner's operation deadline or extend that deadline.

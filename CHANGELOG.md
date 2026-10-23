@@ -7,6 +7,11 @@ Entries below describe those artifacts, not released driver functionality.
 
 ### Changed
 
+- Corrected chip/protocol, snapshot, reconciliation and CLI result/correlation
+  instructions after an independent promptset audit; added explicit original
+  TUSB320/I dead-battery recovery to the planned API.
+- Simplified repeated diagnostics into host-runner sequences and reduced duplicate
+  firmware state, grammar, documentation, audit and build requirements.
 - Clarified branch lifetime: create one new branch for each new promptset
   execution, then retain it through all prompts, sessions and agents.
 - Expanded AGENTS.md using current sibling Git, CI, ownership and engineering

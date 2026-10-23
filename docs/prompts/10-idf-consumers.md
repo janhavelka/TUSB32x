@@ -74,6 +74,12 @@ interleaves two devices and checks observable results instead of private fields.
 Document this mapping; do not copy FieldCore enums or implement a product wrapper
 inside the chip library. Reference source paths are evidence, not lib_deps.
 
+For original TUSB320/I source-capable use after VDD returns, the application
+establishes supply readiness and explicitly requests startRecoverDeadBattery
+after read-only identity initialization. The core owns that documented 0x45/
+30 ms sequence. No duplicated adapter register procedure, automatic replay or
+equivalent requirement for later variants belongs in the integration example.
+
 ## Required build and failure cases
 
 Establish and run real `idf.py -C examples/esp_idf/basic set-target esp32s2 build`

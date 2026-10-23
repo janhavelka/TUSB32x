@@ -59,6 +59,15 @@ Review the implementation against these specific misuse cases:
   is verified when only the transport succeeded.
 - A timeout ends a job after a write but drops its possible hardware effect.
 - A profile is staged while IRQ is pending; ACK accidentally writes the new profile.
+- Base source-capable startup claims dead-battery recovery from a clear 0x45 bit,
+  without evidence of the required 30 ms sequence after VDD return.
+- IRQ observation succeeds but ACK fails; the implementation discards the useful
+  observation or falsely reports the whole service succeeded.
+- A cached snapshot keeps historical validity after external invalidation and is
+  mistaken for currently usable port information.
+- A newer status command finishes before an older operation; the runner mistakes
+  the older operation's valid delayed result for a board reboot.
+- A full output queue consumes result take before its complete reply can be queued.
 - A STOP-separated access silently gets two full timeout budgets or is reported
   as one physical transaction.
 - USB stalls, reconnects or DTR resets the board; runner accepts stale success or

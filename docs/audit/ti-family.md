@@ -2,13 +2,15 @@
 
 Audit date: 2026-10-23. This is preparation for an implementation promptset, not a driver or a claim of hardware validation. Read the exact selected device's complete datasheet before implementation. Register facts below are intentionally compact; the source-location index identifies the material that must be re-audited.
 
+Correction audit, 2026-10-23: re-reading the archived base datasheet and visually checking printed p14 identified the previously omitted dead-battery exit sequence. The requirements below now include that procedure and distinguish a complete port observation from later interrupt-service failure. No driver or hardware validation was performed.
+
 ## Source provenance
 
 Official PDF bytes are archived in [reference/source](../reference/source/). [provenance.json](../reference/source/provenance.json) records source URLs, document identifiers, revision dates, retrieval timestamps in UTC, byte counts, and SHA-256 hashes. TI retains ownership of these documents. A filename or a shared marketing prefix is not evidence of register compatibility.
 
 | Evidence | Revision | Locations to re-audit |
 | --- | --- | --- |
-| [TUSB320/TUSB320I datasheet](https://www.ti.com/lit/ds/symlink/tusb320.pdf) | SLLSEN9F, March 2022 | Pin table p4; timing p7; modes pp13-14; programming pp15-16; Table 7-7 pp16-19; initialization p27 |
+| [TUSB320/TUSB320I datasheet](https://www.ti.com/lit/ds/symlink/tusb320.pdf) | SLLSEN9F, March 2022 | Pin table p4; timing p7; modes pp13-14, dead-battery exit §7.4.3 p14; programming §7.5 pp15-16; Table 7-7 pp16-19; initialization p27 |
 | [TUSB320LI/TUSB320HI datasheet](https://www.ti.com/lit/ds/symlink/tusb320li.pdf) | SLLSEP2D, May 2017 | Pins pp3-4; timing p6; modes pp13-14; programming p15; Tables 7-12 pp16-20; initialization p28 |
 | [TUSB320LAI/TUSB320HAI datasheet](https://www.ti.com/lit/ds/symlink/tusb320lai.pdf) | SLLSEQ8D, May 2017 | Pins p3; electrical pp4-6; modes pp13-14; programming p15; Tables 7-12 pp16-20; initialization p28 |
 | [Application issues](https://www.ti.com/lit/an/slaae24/slaae24.pdf) | SLAAE24, May 2021 | Family Table 2-1 p3; CC versus PD p4; power sequence p5; non-failsafe pins p7; interrupt clear p9 |
@@ -54,6 +56,12 @@ Ascending ID bytes, 0x00..0x07: `30 32 33 42 53 55 54 00`.
 
 Base-only: `09:0`, `0A:2-0`, and accessory code 7 are reserved; mode changes require unattached state. Debounce `0A:7-6` encodes 133/116/151/168ms. [SLLSEN9F, Table 7-7, pp16-19](https://www.ti.com/lit/ds/symlink/tusb320.pdf)
 
+Base TUSB320/TUSB320I also requires a separate dead-battery exit procedure to present Rp on both CC pins after VDD returns: write `0x45=0x04`, wait 30 ms, then write `0x45=0x00`. Ignore status flags during those steps. Dead battery includes VDD absent with no cable connected; this is not solely a discharged-battery case. [SLLSEN9F, §7.4.3 p14](https://www.ti.com/lit/ds/symlink/tusb320.pdf)
+
+Selected software contract: `startRecoverDeadBattery(timing, token)` executes that procedure explicitly in the existing operation engine after successful identity validation. The application owns stable supply/I2C readiness and decides when source-capable startup needs it. Read-only initialization does not perform or prove recovery. Read `0x45` first and reject nonzero internal bits `[1:0]` before writing; then the literal bytes also respect the internal-default rule. Wait at least 31 elapsed millisecond ticks from a fresh completion anchor for the 30 ms TI interval, including the separate 1 ms clock margin. Verify `[2:0]==0` after the final write. Retain possible effects on failure/cancellation, never publish transient status as ordinary port observations, and never infer timed completion from a final zero alone. This contract is an engineering choice; it adds neither automatic recovery nor a separate power-policy state machine.
+
+Do not apply that workaround to LI/HI, LAI/HAI or TUSB322I. Their dead-battery sections omit it, and TUSB322I does not document `0x45`; the proposed operation is unsupported there. [SLLSEP2D, §7.3.3 p14](https://www.ti.com/lit/ds/symlink/tusb320li.pdf), [SLLSEQ8D, §7.3.3 p14](https://www.ti.com/lit/ds/symlink/tusb320lai.pdf), [SLLSEO5D, §6.4.4 p14](https://www.ti.com/lit/ds/symlink/tusb322i.pdf)
+
 ### Second generation additions
 
 LI/HI adds `09:0` UFP-accessory disable; `0A:2-1` source preference 0 normal/1 Try.SNK/2 reserved/3 Try.SRC; `0A:0` termination/state-machine disable. Accessory 6/7 distinguishes local DFP/UFP debug. Debounce becomes 168/118/134/152ms. Mode change: set termination-disable; set mode; wait 5ms; clear termination-disable. `45:2` remains separate. [SLLSEP2D, section 7.3.2 and Tables 8-12, pp14,17-20](https://www.ti.com/lit/ds/symlink/tusb320li.pdf)
@@ -97,15 +105,16 @@ These are engineering recommendations derived from the evidence, not TI-specifie
 - Generic read-modify-write must never replay a set W1C bit while changing duty/accessory settings. Explicit acknowledgement must preserve configuration, and an unrelated setter must not acknowledge an event.
 - Acknowledgement preserves current observed/trusted applied RW fields, not unapplied desired settings. Test a staged profile different from the hardware profile while an interrupt is pending. If current RW state is unknown, observe/reconcile it before composing ACK or report that the operation cannot proceed.
 - Treat self-clearing command bits separately from persistent configuration. Changing debounce/preferences must not replay a reset read as set.
-- Preserve TI-internal reserved fields in 0x45; expose a named operation only if justified. Do not replace the documented mode-change procedure with this different register.
+- Preserve TI-internal reserved fields in 0x45. The explicit base recovery operation first requires them to be zero and then uses the prescribed literal writes; unexpected values are rejected without attempted repair. Do not replace the documented mode-change procedure with this different register.
 - Test every documented encoding, reject reserved writes, retain unknown raw status values, and cover a hardware-updated status byte changing between the read and write phases.
 
 ### State, timing, and transport tests
 
 - Use a fake monotonic clock and scripted transport. Verify no reads before readiness, reset completion/timeout, the required mode-switch pause, clock wraparound, cancellation, and no holding a shared bus lock across a timed wait.
 - Base-mode change while attached must fail without writing. Extended-mode change must exercise each step and each injected failure. A partial write sequence must surface uncertain configuration/state instead of pretending the requested role became active.
+- Base dead-battery recovery tests require identity first, exact `0x45` reads/writes, rejection of nonzero internal bits and other variants, the 30 ms hardware wait plus clock margin, no publication of transient status, and failures/cancellation after each write. Readback of zero alone is not evidence that the timed procedure ran.
 - A setter changes requested configuration; it does not prove the actual attachment role. Model configured role, observed local role, orientation validity, current advertisement, detected-current validity, and transport health separately.
-- A failed read cannot create a synthetic detach, zero-current result, or healthy status. Publish a new cached observation only after its entire operation succeeds; preserve freshness metadata for older observations.
+- A failed observation read cannot create a synthetic detach, zero-current result, or healthy status. A complete successful observation read may publish its snapshot; a later ACK or recheck failure retains that observation with its timestamp and reports the service failure independently. Partial reads never publish, and older observations retain their freshness metadata. The transient flags during base dead-battery recovery are not ordinary publishable observations.
 - Acknowledge interrupts explicitly, read back acknowledgement state, and bound any retry/service loop. Keep unserviced work visible when new interrupts continue arriving. Test reassertion during acknowledgement and after the last read. Document coalescing and observation limits.
 - This audit found no specified minimum delay between interrupt-clear attempts in the cited interrupt descriptions. Do not transfer the separate role-change 5ms requirement into interrupt handling. A chosen retry interval is software policy, not a TI timing guarantee.
 - No I2C in an ISR. An ISR may signal a worker; the application owns scheduling and synchronization. Distinguish polling operation from optional pin notifications.

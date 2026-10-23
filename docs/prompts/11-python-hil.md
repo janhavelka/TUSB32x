@@ -25,7 +25,8 @@ No generic HIL engine or EEPROM scratch-window policy. Add:
 - `tools/test_tusb32x_hil_runner.py`: parser/session/planning/fake-serial tests;
 - `tools/test_cli_transcript.py`: persistent real C++ CLI integration;
 - `tools/validate.py`, `tools/test_validate.py`: explicit check selection and
-  missing-tool/failed-command behavior;
+  missing-tool/failed-command behavior, invoking the registered CTest checks and
+  existing guard commands instead of implementing them again;
 - `tools/requirements-hil.txt`: audited pinned optional pyserial dependency.
   Standard-library parser tests work without pyserial or hardware.
 
@@ -49,21 +50,30 @@ function/exception docstrings for schemas, deadlines, verdicts and cleanup.
    expected canonical command/request/token and exactly one original terminal
    RESULT/END pair for admitted work. Query repetition is not a new completion.
    Consume retained results with `result take <token>`. Stream stale input but
-   never let it certify a new request.
+   never let it certify a new request. Require increasing new-input ACK/MARK
+   request IDs, while accepting an older admitted request's JOB/RESULT/END after
+   a newer query response. Correlate by original request/token; never treat that
+   legal interleaving as a reboot. Reject session exhaustion without ID reuse.
 4. Enforce one monotonic host deadline before writes/reads and after returns.
    Remaining budget covers fragments/markers/completion; no new full timeout per
    read. Late success fails. Bound line/response bytes/count even for endless
    ANSI or boot noise. Reject missing/duplicate/contradictory/truncated records,
-   wrong tokens, request regression, restart, malformed values and output loss.
+   wrong tokens, regressed new-input ACK/MARK, restart, malformed values and
+   output loss. Handle the reserved pre-marker nonce and command=invalid exactly.
 5. Parse machine schema from CLI_CONTRACT. Match exact typed statuses/states/
    effects; human OK/PASS is supplementary. Expected rejection passes only its
    own command with expected state/callback delta. Do not infer physical bus
    transaction count from terminal callback attempts.
+   Exact handler callback-delta assertions require an idle core or automatic
+   stepping disabled. Account for independent progress of an older operation
+   when testing cached/rejected commands with automatic stepping enabled.
 6. Record host commit/dirty state separately from firmware library version,
    commit/tree/build, framework/version and target. Labels do not prove firmware.
    Unknown identity cannot satisfy `--expect-*` or identity-required mutation
    suites. Check variant/address, applied profile/trust/generation and attachment
-   before writes; revalidate after reset/reconnect before any cleanup.
+   before writes; revalidate after reset/reconnect before any cleanup. Port facts
+   require the relevant validity bits and `invalidated=0`; a recent timestamp
+   alone cannot make an invalidated historical observation usable.
 7. Stream timestamped TX/RX to disk, retaining a fixed tail and aggregate stats
    only. Defaults: response 256 KiB, run transcript 32 MiB, retained tail 64 KiB;
    any overrides have finite documented ceilings. Cap hits produce incomplete/
@@ -79,6 +89,16 @@ function/exception docstrings for schemas, deadlines, verdicts and cleanup.
 
 ## Explicit suites
 
+Implement repeated sampling, stress, register dumps and fixture procedures here
+as finite sequences of ordinary CLI commands. Complete and explicitly take each
+operation's result before starting the next. A register dump uses a bounded,
+variant-allowlisted sequence of reg commands with documented read effects.
+Keep run counts, intervals, whole-run deadlines and summaries on the host; no
+firmware bulk commands, child-result consumption or second result/token scheme
+is required. Stop on unexplained failure. Read-only verification aliases require
+an existing retained desired profile; a readonly suite must report that
+precondition or test its rejection without applying a profile to satisfy it.
+
 | Suite | Required evidence |
 | --- | --- |
 | `readonly` (default) | Identity, cache-only routes, live identify/status, zero/one-callback budgets, malformed-input fences, staging/validation without apply, retained-result handling and provenance |
@@ -86,7 +106,7 @@ function/exception docstrings for schemas, deadlines, verdicts and cleanup.
 | `orientation` | Reversible connector fixture, both orientations, local role/orientation validity and board/fixture identity |
 | `role-current` | Fixture/power capability, local sink/source/DRP, supported CC advertisement categories, stage/apply/verify evidence; no inferred PD/current measurement |
 | `interrupt` | Wired INT, assertion/ack/reassertion, retained events, staged!=applied 0x09 preservation and independently verified clear semantics; RCU alone is not read-to-clear evidence |
-| `reset-termination` | Explicit sequence/reset waits, timeout/cancel/effect uncertainty and legal reconciliation without blind replay |
+| `reset-termination` | Explicit sequence/reset waits, timeout/cancel/effect uncertainty and legal reconciliation without blind replay; original TUSB320/TUSB320I dead-battery recovery through recover-dead-battery under its source-capable fixture prerequisites, with denial on other variants |
 | `fault` | Operator/fixture-induced NACK/disconnect/power cycle, trust invalidation, owner responsiveness and new identity checks; no automatic supply/VBUS manipulation |
 | `console` | Authorized physical reconnect/backpressure, queue/loss reporting, reboot detection and framing re-establishment; native zero-write model is separate proof |
 | `accessory` | Exact supported fixtures plus capability denial on other variants; absent fixture is NOT RUN |
@@ -103,13 +123,16 @@ replay uncertain role/reset/apply or imply readback undoes a real USB event.
 Inject fake serial and monotonic clock. Cover fragmented ANSI/CRLF, stale marks,
 echo-only OK/PASS, missing/duplicate/out-of-order records, identity change, boots,
 token reuse, expired writes/late replies, short writes, exceptions/missing ports,
-capture caps, Ctrl-C, atomic reports and cleanup eligibility. No wall-clock sleeps
+pre-marker nonce, invalid commands, request exhaustion, older completion after
+newer query, output-full result take, invalidated historical port data, capture
+caps, Ctrl-C, atomic reports and cleanup eligibility. No wall-clock sleeps
 are needed for parser tests. Test every guard's negative path.
 
 Run one persistent `tusb32x_cli_host` with real shared CLI and scripted hardware,
 including failed writes, staged!=applied IRQ ACK and full readonly plan execution.
-Good hand-written transcripts alone are insufficient. Register CTest `hil_runner`,
-`cli_transcript` and `validate_runner`, with finite timeouts and the exact built
+Good hand-written transcripts alone are insufficient. Register CTest `hil_runner`
+and `validate_runner`; extend the existing P08 `cli_transcript` registration
+rather than registering a duplicate. Use finite timeouts and the exact built
 fixture path supplied by CMake. These are future acceptance commands:
 
 ```powershell

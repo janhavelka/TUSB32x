@@ -217,6 +217,11 @@ Do not create empty files or successful hardware stubs to fill the tree.
   another applicable disable control remains effective or evidence is unresolved.
 - Initialization is read-only; applying a profile and resetting are explicit
   operations. No automatic reset, role change, IRQ clear or desired-profile replay.
+- Base TUSB320/I post-dead-battery recovery is the explicit
+  `startRecoverDeadBattery` operation in the existing engine: qualified 0x45
+  writes 0x04, at least 30 ms wait, then 0x00 and verification. The application
+  establishes stable VDD and when source-capable startup needs it. Do not apply
+  this sequence to later variants or infer its history from one register read.
 - CC current indications are not measured load or a USB PD contract. The core
   owns no VBUS switch, charger, USB stack or external power policy. Document the
   TUSB322I's device-side VCONN effects without turning them into application policy.
@@ -226,6 +231,9 @@ Do not create empty files or successful hardware stubs to fill the tree.
 - Maintain one shared CLI and thin Arduino/native-IDF front ends using
   [CLI_CONTRACT](docs/prompts/CLI_CONTRACT.md). Keep help, aliases, strict parsing,
   typed output, bounded console work and cached/live/staged/write semantics aligned.
+- Keep firmware commands tied to single core operations. Python runners sequence
+  repeated reads, dumps, soak tests and fixture suites, taking each owned result.
+  Do not create a second firmware scheduler or terminal-result store for them.
 - Python runners must correlate fresh requests/results and check firmware-reported
   identity. Host checkout identity is not proof of flashed firmware. Preserve
   failed/incomplete evidence; missing fixtures are NOT RUN, not PASS.

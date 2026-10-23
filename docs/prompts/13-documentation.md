@@ -33,6 +33,9 @@ generate large boilerplate comments from function names.
 6. Explain current/orientation/accessory validity, requested vs actual local role,
    ordinary detach, stale observations, coalescing IRQs, non-atomic hardware
    snapshots, explicit acknowledgement and attached-current tracking uncertainty.
+   Explain historical field validity versus PortSnapshot.invalidated and age.
+   Include original TUSB320/I's explicit post-dead-battery recovery and its caller
+   prerequisites; do not imply read-only initialization completed that sequence.
 7. Include Arduino and native IDF build/run commands, generic host/owner example,
    clean package use, FieldCore-style adaptation and testing entrypoints. All
    snippets must compile or be clearly labeled pseudocode; test important snippets.
@@ -69,6 +72,9 @@ operation outcome, HardwareEffect, configuration trust, PortSnapshot and optiona
 DriverState are different concepts. TIMEOUT and I2C_TIMEOUT mean different layers.
 Successful `takeResult` reports delivery success; its copied result may contain a
 failed operation. Document these with small concrete examples.
+Treat the guide table as required content, not a requirement to duplicate it in
+separate files. Combine closely related topics where this improves navigation,
+preserve links and keep one authoritative version of each API/state table.
 
 ## Source Doxygen audit
 

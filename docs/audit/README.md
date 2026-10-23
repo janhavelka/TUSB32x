@@ -134,6 +134,11 @@ documentation checks from major milestones requiring exact-commit remote CI.
 
 ## Use
 
+The subsequent [correctness and simplicity review](promptset-correctness-review.md)
+records confirmed prompt defects, resolved ambiguities, simpler implementation
+choices and verified TI facts that were retained. It supersedes conflicting
+earlier planning observations without claiming implementation or hardware results.
+
 Open the [master prompt](../prompts/README.md) and execute the ordered stages.
 The common contract carries the selected defaults, while each stage names the
 current siblings and vendor evidence to re-read. Future implementation reports
