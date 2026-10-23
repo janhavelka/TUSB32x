@@ -9,6 +9,18 @@ Start with [the promptset](docs/prompts/README.md). It contains a master executi
 prompt, a common contract, and fifteen ordered implementation prompts. Every
 stage requires a fresh audit of relevant sibling I2C libraries before editing.
 
+The prompts now include a [concrete engineering baseline](docs/prompts/ENGINEERING_BASELINE.md)
+for API names, errors, health states, lifetimes and folder responsibilities, plus
+a [CLI contract](docs/prompts/CLI_CONTRACT.md) with command and runner conventions.
+[Maintainability rules](docs/prompts/MAINTAINABILITY.md) require simple code,
+engineering English and documentation with every change, including source Doxygen.
+[Agent guidance](docs/prompts/AGENT_WORKFLOW.md) permits delegation and model
+selection according to task complexity and the active runtime's capabilities.
+
+[AGENTS.md](AGENTS.md) defines the engineering and Git workflow. Keep the entire
+promptset on one branch; commit and verify upstream sync after each prompt and
+at coherent, checked units during a prompt. The lead handles Git for shared work.
+
 The supporting [audit](docs/audit/README.md) records source observations from
 this repository's parent directory, `Projects/`.
 `FieldCore-node` is the consumer inspected for the user's `fieldcore-noce`

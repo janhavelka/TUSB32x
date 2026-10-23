@@ -15,6 +15,9 @@ stay in the same checkout. Do not restart or replace them between stages.
 Implement the TUSB32x library by executing docs/prompts/00-audit.md through
 docs/prompts/14-final-audit.md in order. Read AGENTS.md, ../AGENTS.md, this index,
 and docs/prompts/COMMON.md first. Treat COMMON.md as requirements for every stage.
+Read its ENGINEERING_BASELINE.md, CLI_CONTRACT.md, MAINTAINABILITY.md and
+AGENT_WORKFLOW.md companion contracts. They already select concrete defaults;
+verify them against current sources rather than redesigning names from scratch.
 
 Before each stage, inspect the current relevant sibling I2C libraries, including
 actual public headers, implementation, examples/CLI, tests, Python runners, CI
@@ -27,16 +30,26 @@ variant. Start with TUSB320LAI; implement the explicitly verified family matrix,
 not a speculative wildcard family. Never infer exact silicon from ACK alone.
 
 Finish each stage's implementation and meaningful checks, update its evidence
-and progress, then continue. Routine design choices are yours to resolve using
-the audited evidence. Ask only for missing information that actually prevents
-dependent work; continue independent work. Hardware/tooling gaps must be reported
+and progress, commit and sync, then continue. Also commit and sync coherent,
+checked units during a prompt as they become ready. Routine design choices are
+yours to resolve using the audited evidence. Ask only for missing information
+that actually prevents dependent work; continue independent work. Hardware/tooling gaps must be reported
 as NOT RUN or BLOCKED, never PASS. Do not silently drop required family features,
 frameworks, tests, CLI parity, Python runners or packaging to finish sooner.
 
 Use agents where useful for independent audit, implementation in disjoint files,
-or final review. The lead owns integration. Complete authorized local work;
-publish/flash only within the user's actual execution authorization and available
-target information. Do not create a different worktree for every prompt.
+or final review. You may select their supported models and reasoning by task
+complexity using AGENT_WORKFLOW.md. The lead owns integration and reviews their
+evidence. Keep code direct, small and readable. Use simple engineering English.
+Write Doxygen in source and update affected README/CHANGELOG/guides as each
+behavior is implemented; documentation is part of every stage's completion gate.
+Keep the entire promptset on its existing branch, across prompts, sessions and
+subagents. The lead owns Git mutations, preserves unrelated changes and follows
+AGENTS.md: fetch/integrate safely, commit completed units, push to the configured
+upstream and verify synchronization. No further permission is needed for routine
+commits/pushes. Do not create a branch/worktree per prompt or rewrite shared history.
+Report actual sync failures. Release publication and hardware flashing require
+their own task authorization and target information.
 
 At completion provide the API and capability summary, changes, exact validation
 results, remaining hardware evidence and links to docs/validation.md and the final
@@ -45,6 +58,15 @@ firmware image or hardware validation.
 ```
 
 ## Ordered stages
+
+The detailed contracts are maintained once so stage prompts do not drift:
+
+| Contract | Concrete decisions |
+| --- | --- |
+| [Engineering baseline](ENGINEERING_BASELINE.md) | API names/signatures, Err codes, diagnostics/health, state tables, lifetimes and file layout |
+| [CLI and tooling contract](CLI_CONTRACT.md) | Commands/aliases, effects, output records, parser/runner and test conventions |
+| [Maintainability and documentation](MAINTAINABILITY.md) | Simple code and language, per-file Doxygen, doc updates and negative checker fixtures |
+| [Agent workflow](AGENT_WORKFLOW.md) | Model selection by complexity, bounded delegation, disjoint writes and independent review |
 
 | Stage | Outcome |
 | --- | --- |
@@ -67,18 +89,22 @@ firmware image or hardware validation.
 Tests belong alongside each behavior change. Stage 07 adds cross-cutting
 conformance and hostile cases; it is not permission to defer earlier tests.
 Documentation similarly evolves with the code and is reconciled in stage 13.
+Every stage must identify changed public symbols, updated source documentation,
+affected general docs and meaningful checks before it is marked complete.
 
 ## Progress and handoff
 
 At execution create `docs/implementation-progress.md` with a row for every stage:
-NOT STARTED, IN PROGRESS, COMPLETE, or BLOCKED; revision/dirty state; references
-re-audited; changes; commands and outcomes; remaining work. Record important API
+NOT STARTED, IN PROGRESS, COMPLETE, or BLOCKED; branch/revision/dirty state;
+references re-audited; changes; commands and outcomes; completed commits and
+verified upstream sync (or its exact failure); remaining work. Record important API
 choices in `docs/design-decisions.md`. Do not mark a required validation COMPLETE
 when only its instructions or fixtures exist.
 
-After each stage summarize the resulting behavior, evidence, and unresolved
-decisions. A new session reads those two files plus the common contract before
-continuing. Preserve hardware limitations through the final report.
+After each stage summarize the resulting behavior, evidence, commit/sync result
+and unresolved decisions. Do not call a local commit alone a completed sync.
+A new session keeps the same branch and reads those two files plus the common
+contract before continuing. Preserve hardware limitations through the final report.
 
 Supporting evidence: [audit index](../audit/README.md),
 [TI family audit](../audit/ti-family.md), and [reference archive](../reference/README.md).

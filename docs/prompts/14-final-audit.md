@@ -6,6 +6,12 @@ peer for each concern. Do not assume P00's inventory or this promptset is timele
 Use independent review agents for protocol, owner/portability and CLI/tooling where
 available; the lead integrates fixes and owns shared Git actions.
 
+Use [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md) to select available models by review
+complexity. Prefer strong independent review for TI/owner state and a coding model
+for executable CLI/tooling review. A fast agent can check links/inventory, but is
+not the sole reviewer of W1C/reset or lifetime behavior. Give reviewers explicit
+read-only scopes; the lead assigns and integrates fixes.
+
 ## Review and fix
 
 1. Compare every requirement in P00-P13 and COMMON with actual code, tests and
@@ -30,7 +36,58 @@ available; the lead integrates fixes and owns shared Git actions.
    linking, physical hardware, electrical compliance or new-variant qualification.
 7. Fix findings in scope, adding focused regression tests. Re-run affected checks;
    once stable, run the required final matrix. Follow exact-final-commit CI policy
-   where applicable, without manufacturing a remote or publishing without authority.
+   where applicable. Commit and sync final fixes on the existing promptset branch
+   under AGENTS.md; verify upstream equality. Do not invent a remote or turn
+   routine Git synchronization into release publication.
+
+## Review tracks and concrete questions
+
+| Track | Inspect | Questions to answer with evidence |
+| --- | --- | --- |
+| Device/protocol | Capability table, byte codecs, write composer, timing and fake-device tests | Can any setter ACK IRQ, replay reset, touch an unsupported register or apply staged values unintentionally? What does a failed phase leave in hardware? |
+| Owner/public API | Baseline declarations, operation engine, time/effect tests and generic owner consumer | Do names/Status codes match docs? Can stale tokens affect newer work? Can end lose a result/effect? Does callback time shorten a wait? |
+| Diagnostics | TransportStats, managed evidence, projectHealth, port/config snapshots | Are callback and physical transaction counts separated? Does OFFLINE influence I2C? Can resetting statistics erase trust/effects? |
+| CLI/adapters/runners | Shared processor, thin platform frontends, Python parser and real CLI fixture | Are setters staged, mutations explicit, invalid inputs silent, records correlated and terminal results consumed only once? |
+| Distribution | CMake/PIO/IDF modes, packaged files, extracted consumers, CI registration | Does a clean consumer require a sibling, Git, Python or Arduino? Are all claimed tests/builds actually executed? |
+| Maintainability/docs | Public/source Doxygen, helpers/files, READMEs/changelog/guides and generated docs | Is there duplicate state/protocol logic, unnecessary abstraction, stale comment or a hidden public symbol? |
+
+Review the implementation against these specific misuse cases:
+
+- Caller treats successful result delivery as successful hardware operation.
+- Invalid input or an old token changes a retained result or increments I2C failures.
+- A diagnostic read makes the application think configuration or port freshness
+  is verified when only the transport succeeded.
+- A timeout ends a job after a write but drops its possible hardware effect.
+- A profile is staged while IRQ is pending; ACK accidentally writes the new profile.
+- A STOP-separated access silently gets two full timeout budgets or is reported
+  as one physical transaction.
+- USB stalls, reconnects or DTR resets the board; runner accepts stale success or
+  restores a profile against the wrong session.
+- A compiler build has NDEBUG, so assertion-only tests vanish and still report pass.
+- Doxygen hides an undocumented public method, and the checker mistakes silence
+  for coverage. A source comment promises behavior that the implementation violates.
+
+Add tests for real findings at the boundary that failed. Do not build a large new
+test framework solely to prove one function. Remove unused compatibility aliases,
+parallel platform protocol copies and speculative extensibility discovered by
+the review. Keep private implementation private; improve observable contracts
+rather than expose fields to tests.
+
+For each finding record `severity | file/symbol | reproducible failure or evidence |
+fix | regression check | remaining limit`. A review opinion without evidence is
+not a passing or failing hardware result. All findings that can be fixed locally
+are fixed before the final validation run. Missing physical fixtures remain an
+explicit qualification gap, not an invented implementation defect.
+
+## Documentation and simplicity gate
+
+Every fix updates its Doxygen/source explanation and affected guide/CLI/changelog
+in the same change. Re-run focused checks, then only the broader checks justified
+by the final changes. Confirm the library remains a small direct device driver:
+one protocol path, one operation engine, fixed storage, plain typed facts, no
+owned scheduler/bus/power policy and no generic framework introduced for convenience.
+Record intentional departures from ENGINEERING_BASELINE and CLI_CONTRACT with
+their reasons and propagated changes. Hand off in simple engineering English.
 
 ## Final deliverables
 

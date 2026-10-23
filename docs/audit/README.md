@@ -98,6 +98,40 @@ ACK configuration, incomplete role transitions, timeout/cancel effect retention,
 IRQ coalescing, snapshot coherence limits and conflicting startup wording.
 It does not turn a CC controller into a USB PD stack or a board power policy.
 
+## Expanded implementation instructions
+
+The follow-up prompt revision turns the audit choices into concrete contracts:
+
+- [Engineering baseline](../prompts/ENGINEERING_BASELINE.md): exact proposed API,
+  errors, state/health names, fields, lifetime rules and source responsibilities.
+- [CLI/tooling contract](../prompts/CLI_CONTRACT.md): selected grammar, diagnostic
+  records, bounds, test paths and runner semantics.
+- [Maintainability](../prompts/MAINTAINABILITY.md): direct code, plain engineering
+  language, Doxygen in source and affected general docs updated every stage.
+- [Agent workflow](../prompts/AGENT_WORKFLOW.md): user-authorized delegation,
+  model choice by complexity and independent review with disjoint file ownership.
+
+These are selected TUSB32x rules, not a claim that every sibling uses identical
+symbols. The numbered stages contain current peer paths, chip tables, concrete
+tests and documentation deliverables. Read the updated validation record for the
+scope of this documentation-only revision.
+
+## Repository guidance adopted from sibling AGENTS
+
+On 2026-10-23 the guidance was compared again against TMP1x2, 24Cxx, LDC1614,
+LSM6DS3TR, INA3221 and ADS1115. Their current AGENTS.md files consistently require
+one promptset branch, checked commits/pushes for completed chunks, preservation of
+concurrent changes, lead-owned Git operations and confirmed upstream sync.
+The user's explicit request makes that workflow applicable to TUSB32x.
+
+The updated [AGENTS.md](../../AGENTS.md) also adopts LDC1614/LSM6DS3TR's explicit
+ownership and source-evidence rules, INA3221/ADS1115's small-change and reuse
+principles, and TMP1x2/24Cxx's portable CLI, tooling and honest-validation rules.
+These were fitted to TUSB32x's selected API and TI behavior. Sensor operations,
+automatic initialization replay, compatibility facades and device-specific
+health counting were not copied. Parent CI policy still distinguishes routine
+documentation checks from major milestones requiring exact-commit remote CI.
+
 ## Use
 
 Open the [master prompt](../prompts/README.md) and execute the ordered stages.

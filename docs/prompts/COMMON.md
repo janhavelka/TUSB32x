@@ -4,6 +4,42 @@ Every numbered prompt incorporates this file. Requirements apply across stages;
 later prompts must preserve earlier contracts. If evidence calls for a change,
 update the decision record, API, tests, CLI, runner and docs together.
 
+Read these companion contracts as part of this file:
+
+- [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md): selected names, types,
+  statuses, state tables, method contracts and file responsibilities.
+- [CLI_CONTRACT.md](CLI_CONTRACT.md): selected command grammar, records and tools.
+- [MAINTAINABILITY.md](MAINTAINABILITY.md): simple code, engineering language,
+  source Doxygen and general documentation required in every stage.
+- [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md): authorized delegation, model choice,
+  file ownership and review responsibilities.
+
+These are prepared defaults, grounded in the audit. Re-audit to check them, not
+to restart design from a blank page. Change a default only for a specific source,
+consumer or test reason; update all affected contracts and record that reason.
+Concrete baseline tables take precedence over this file's broad descriptions.
+Verified TI facts and the user's instructions take precedence over both.
+
+## Git completion rule for every prompt
+
+Follow [AGENTS.md](../../AGENTS.md#git-workflow-one-branch-for-the-whole-promptset).
+The user authorizes routine commits and pushes for this repository. Keep this
+entire promptset on its existing branch across stages, sessions and subagents.
+After each completed prompt, commit the checked code/tests/docs and sync before
+reporting completion or starting the next prompt. Also commit and sync a coherent,
+checked unit during a prompt when it is ready; do not defer everything to P14.
+The lead stages only task-owned work and handles Git for subagents.
+
+Sync includes fetching, safely integrating upstream work if needed, pushing to
+the configured upstream and confirming zero ahead/behind. Preserve concurrent
+changes and shared history; no force-push or per-prompt worktrees. Record branch,
+completed commit IDs and sync result in progress/handoff evidence. A real missing
+remote/access/network or conflict is reported specifically; a failed push is not
+a completed sync. Continue independent local work while that limitation remains,
+preserve its unsynced status and retry when possible. Routine Git synchronization
+does not authorize release/tag or registry publication, hardware flashing or
+sibling changes.
+
 ## Mandatory recurring audit
 
 Before editing for **every** prompt, inspect current relevant peers beneath the
@@ -25,6 +61,10 @@ temperature conversions, FIFO, SMBus general-call reset, CRC or ADC calibration
 because a peer offers them. No copied sensor-specific symbols or README claims.
 
 ## Naming, organization and maintenance ownership
+
+Use the exact selected names in ENGINEERING_BASELINE. Do not invent a second
+name for a concept that already has one. Public methods, error names, CLI keys,
+tests and docs must agree; raw backend detail does not replace a typed Status.
 
 - Repository, manifest, CMake target and public namespace: `TUSB32x`; primary
   class `TUSB32x::TUSB32x`; public include `<TUSB32x/TUSB32x.h>`.
@@ -106,6 +146,9 @@ because a peer offers them. No copied sensor-specific symbols or README claims.
   aggregate elapsed time and refresh time between callbacks. Anchor hardware
   waits to known completion time or the next fresh owner timestamp; stale
   pre-callback time must not shorten a required hardware delay.
+  The selected millisecond clock contract and one-tick hardware-wait margin in
+  ENGINEERING_BASELINE also apply. A floor-rounded timestamp cannot by itself
+  prove that five elapsed ticks means five complete milliseconds after the write.
 - Separate desired settings, observed register values and trusted applied state.
   Track configuration generation and observation age/provenance. Raw writes,
   external reset/power loss, partial apply and ambiguous writes invalidate trust
@@ -200,6 +243,14 @@ because a peer offers them. No copied sensor-specific symbols or README claims.
   target identity changed. Missing fixtures are NOT RUN, not PASS.
 
 ## Packaging, verification and reporting
+
+- Documentation is part of each behavior change. Write/update Doxygen in C++
+  headers and source, Python docstrings, README/CHANGELOG and affected guides
+  before completing the stage. P13 reconciles already maintained documentation.
+- Keep implementation readable and small using MAINTAINABILITY. Avoid speculative
+  abstractions, duplicate logic, unnecessary aliases and comments that restate code.
+- Subagents and model selection are explicitly allowed under AGENT_WORKFLOW.
+  Use simple engineering English in their tasks, output and the final implementation.
 
 - `library.json` is version truth; `scripts/generate_version.py` provides
   `sync/check/bump/set`, with stable generated headers and honest unknown Git

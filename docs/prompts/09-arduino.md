@@ -4,6 +4,10 @@ Read [COMMON.md](COMMON.md). **Re-audit current siblings first:** TMP1x2 S2/S3
 USB console configuration, INA228/ADS1115 bus adapters, LSM6DS3TR owner-soak example
 and TCA9548A transport tests. Inspect official docs for the selected pinned SDK.
 
+Use [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) for core symbols and
+[CLI_CONTRACT.md](CLI_CONTRACT.md) for commands. Arduino-specific work belongs in
+the adapter/example files; the shared processor and core retain the same API.
+
 ## Work
 
 1. Add `examples/01_basic_bringup_cli/main.cpp` with the shared processor and a
@@ -29,6 +33,66 @@ and TCA9548A transport tests. Inspect official docs for the selected pinned SDK.
 6. Use bounded input/output buffering and finite loop work; report dropped output
    and keep owner service responsive when USB disconnects or host stops reading.
    Firmware prints actual library/framework/target/build/git/dirty identity.
+
+## Concrete adapter and loop responsibilities
+
+- A non-owning adapter context holds the application's `TwoWire*`, selected address
+  if required by the backend, finite timeout settings and adapter counters. It
+  never deletes the bus or calls `Wire.begin()` from a driver callback.
+- `setup()` configures the example's own bus/console, verifies board prerequisites,
+  constructs DriverConfig and calls `bind`. Read-only initialization is queued
+  explicitly; no apply/reset/IRQ acknowledgement is hidden in startup.
+- `loop()` processes bounded input, advances at most the configured callback
+  budget, copies completed facts, and flushes bounded output. A retained terminal
+  result is consumed once by the command/operation owner. It is not overwritten
+  by a background watch or a new user command.
+- The callback validates arguments, sets/clips the backend timeout, checks every
+  write/read length, and returns a terminal Status with original backend detail.
+  A combined pointer/read uses one aggregate timeout and preserves serialization
+  across its phases. Do not grant a full new timeout to the second phase.
+- Error mapping explicitly distinguishes a backend-confirmed address NACK from
+  generic bus failure; TIMEOUT is the operation layer, I2C_TIMEOUT the callback
+  layer. Do not claim no hardware effect merely because the return code failed.
+- Where Arduino supplies only a wrapping millisecond clock, extend it correctly
+  in the application or use a native monotonic 64-bit source available to that
+  platform. Do not repeatedly cast raw `millis()` to uint64_t and call it monotonic.
+- The optional IRQ handler only records a flag/notification using the platform's
+  synchronization rules. The owner reads that flag and admits `startServiceInterrupt`.
+  No core calls, Serial printing or register reads in the ISR.
+- Stop accepting new commands before adapter/driver teardown. Finish or cancel
+  locally, retain/report effects and result, release the binding, then destroy
+  example-owned resources. Never end another application's shared Wire instance.
+
+Use compile-time board overrides for model/address/pins. SDA/SCL defaults must
+be documented as example board choices. An absent optional IRQ/enable pin is
+represented explicitly, not guessed from another sensor example. CLI displays
+actual runtime wiring/timeout/framing; header defaults are not physical evidence.
+
+Establish named S2/S3 environments for CLI and owner_service, with explicit source
+filters so each image has one setup/loop and includes needed common sources only.
+`scripts/pio.cmd run -e esp32s2dev` and `-e esp32s3dev` remain the primary bring-up
+commands; name additional owner-example environments consistently in platformio.ini.
+
+The inspected TMP1x2 platformio.ini provides these concrete starting points:
+
+| Environment | Board | USB flags | Monitor control lines |
+| --- | --- | --- | --- |
+| `esp32s3dev` | `esp32-s3-devkitc-1` | `ARDUINO_USB_MODE=1`, `ARDUINO_USB_CDC_ON_BOOT=1` | RTS 0; DTR 0 in this example |
+| `esp32s2dev` | `esp32-s2-saola-1` | `ARDUINO_USB_MODE=0`, `ARDUINO_USB_CDC_ON_BOOT=1` | RTS 0; DTR 1 for its TinyUSB CDC transmit requirement |
+
+Both use 115200 monitor speed. These are audited example settings, not universal
+USB rules or proof of board wiring. Recheck the pinned SDK/backend before adopting
+them, include a clear deliberate difference if changed, and document that opening
+a serial port can toggle control lines. Do not copy the bus pins from TMP1x2.
+
+## Source and example documentation
+
+Add Doxygen `@file`, context lifetime, callback `@param/@return`, total timeout,
+framing and effect comments in adapter headers/source. Explain USB/control-line
+choices and the owner-loop bounds where implemented. Update examples/README,
+the example's wiring/build README, docs/integration, CLI diagnostics docs and
+CHANGELOG. Record S2 and S3 builds separately in validation. An SDK or pin change
+must update the comments and guide in the same edit.
 
 ## Tests and completion
 
