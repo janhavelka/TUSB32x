@@ -556,3 +556,68 @@ NOT RUN: runtime driver/transport/health behavior, real adapter timing, firmware
 package consumption and physical hardware. The contract/example syntax and
 integer arithmetic prove none of these. No remote CI was dispatched or polled,
 as required for this first promptset outside prompt34. Prompt7 is NOT STARTED.
+
+## Independent prompt 6 review, 2026-10-25
+
+Audited the full original prompt and actual `87979dc..b129c37` diff on the same
+execution branch, starting clean at b129c37be1feeba9c4474f8b1788a9b42c9ac86e.
+Fetch confirmed local/upstream equality and zero ahead/behind. Three fresh-context
+reviewers independently covered correctness/edge cases, requirements/simplicity,
+and verification/peer provenance. The lead checked the source and diff directly.
+
+No confirmed code or contract defect was found. Every required method, admission,
+result, lifetime, independent state, time, publication and health rule is present.
+The new settings-uncertainty flag has a specific retained-evidence purpose.
+Examples remain compile-only, with no driver definitions, successful fake-device
+behavior or framework dependency. The initialization-readiness refinement is
+consistent across the baseline, API guide, values and recovery prerequisites.
+
+Repeated checks passed:
+
+- GCC 15.1.0 strict C++17 standalone compilation of all four public headers, linked
+  NDEBUG two-translation-unit passive test execution, and syntax checks of
+  planned_api.cpp, owner_examples.cpp and time_arithmetic.cpp (60 static assertions).
+  Commands are the prompt 6 recipe above; review output directories are under TEMP.
+- Doxygen 1.13.2 with the same fatal warnings and EXTRACT_ALL=NO; generated XML
+  contains all 17 public structs. The source Doxygen agrees with the contracts.
+- Current peer HEAD/branch/dirty states match all six entries in execution-6-peers.
+  Direct implementation/test/registration checks confirmed exact-token delivery,
+  delayed callback boundaries, desired/verified separation, rejected replay and
+  checked uint32 wrap conversion. Peer tests/builds/fetch and remote CI were not run.
+- Independent procedure-bound and timing arithmetic, archived PDF byte/hash
+  checks, Markdown links/anchors and scoped Git whitespace checks passed. These
+  remain specification/evidence checks, not future driver behavioral results.
+
+The review identified a reproducibility gap in the written validation record:
+the fractional-time calculation lacked its complete command. This is the exact
+standalone calculation used for the 11,988 cases, runnable from PowerShell with
+Python's standard library (executed with Python 3.12.10):
+
+```powershell
+@'
+from fractions import Fraction
+
+cases = 0
+for duration_ms in (5, 30, 95):
+    for fraction_us in range(1, 1000):
+        completed_ms = Fraction(108000 + fraction_us, 1000)
+        for delay_ms in (0, 1, 2, 10):
+            fresh_sample_ms = completed_ms + Fraction(1, 10000) + delay_ms
+            anchor_ms = int(fresh_sample_ms)
+            ready_ms = anchor_ms + duration_ms + 1
+            assert Fraction(ready_ms) - completed_ms >= duration_ms
+            if delay_ms == 0:
+                assert Fraction(anchor_ms + duration_ms) - completed_ms < duration_ms
+            cases += 1
+assert cases == 11988
+print(f'PASS {cases} exact fractional-time cases')
+'@ | python -
+if ($LASTEXITCODE -ne 0) { throw 'Fractional-time specification check failed' }
+```
+
+The command proves the stated integer scheduling relationship for the listed
+grid of completion fractions and fresh-sample delays. It does not prove that an
+adapter samples freshly, meets its timeout, or that a future engine obeys the
+contract. Original procedure ceilings and TI sources are unchanged; no physical
+qualification, runtime state machine, firmware or package result is claimed.
+Prompt 7 remains NOT STARTED. This review changes documentation only.

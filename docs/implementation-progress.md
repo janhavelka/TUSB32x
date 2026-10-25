@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 6 completely; do not start prompt 7.
+Current authorization: independently audit completed prompt 6; do not start prompt 7.
 
 ## Prompt status
 
@@ -386,3 +386,37 @@ or fake successful driver. Runtime state/transport/health, firmware/package and
 physical qualification are NOT RUN and assigned to later prompts. Prompt 7 is
 NOT STARTED. The lead commits/syncs this checked unit; final branch/commit/equality
 evidence is reported in the handoff and the next progress update.
+
+## Independent prompt 6 review
+
+Reviewed 2026-10-25 against the full original prompt 6 and the actual
+`87979dc..b129c37` diff. Starting commit was
+`b129c37be1feeba9c4474f8b1788a9b42c9ac86e`. The recorded execution branch/base
+is unchanged; the worktree was clean and fetch confirmed upstream equality,
+zero ahead/behind, before review edits.
+
+Three fresh-context read-only reviewers worked in parallel: gpt-6-astra/high
+checked correctness and time/effect edge cases; gpt-6.1-sol/high mapped every
+requirement and reviewed scope/simplicity; gpt-6.1-sol/high independently compiled
+the fixtures and rechecked actual peer implementations, tests and registration.
+The lead read the original prompt, contracts, values, fixtures and scoped diff,
+verified findings against those artifacts and repeated local verification.
+
+No confirmed code or API-contract defect, missing prompt 6 deliverable or
+unnecessary abstraction was found. Identity readiness with UNKNOWN configuration,
+raw-versus-managed evidence and retained reset-acceptance uncertainty are explicit
+documented policies, not bugs. All six peer revisions and clean states still
+match execution-6-peers; no sibling was modified, fetched, built or tested.
+
+Fixed a gap in verification documentation: the independent fractional-time check
+was described without its runnable command. Validation now contains the exact
+self-contained 11,988-case Fraction command. No public value, planned API,
+silicon rule, driver implementation or example behavior changed.
+
+PASS: strict four-header compilation; linked NDEBUG two-TU passive consumer;
+all three syntax-only fixtures and their 60 arithmetic assertions; strict Doxygen
+and visibility of all 17 public structs; procedure/timing arithmetic, archived
+source hashes, local links and scoped whitespace. Detailed commands and evidence
+are in validation. Runtime driver behavior, adapters, firmware/packages and
+hardware remain NOT RUN. Prompt 7 remains NOT STARTED. The lead commits/syncs
+this audit record and reports exact final equality in the handoff.

@@ -7,6 +7,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Changed
 
+- Independently audited prompt 6's contracts, values and fixtures against the
+  original requirements and current peer code. Repeated local checks and added
+  the reproducible fractional-time verification command; no code or API-contract
+  correction was needed.
+
 - Finished owner admission, state, time, publication and health contracts, with
   explicit result/effect retention and future failure vectors. Separated identity
   readiness from configuration trust to allow explicit interrupted recovery
