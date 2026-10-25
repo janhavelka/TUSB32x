@@ -41,6 +41,13 @@ separates these implemented values from future callable methods; the
 and linked consumers. Validators, decoder logic, driver methods and build/package
 metadata remain future work; no runnable device example is available yet.
 
+Prompt 6 finishes the [owner/state contracts](docs/api-contracts.md): exact
+admission/results, borrowed lifetimes, fresh owner time, retained write evidence,
+snapshot publication and passive health. [Compile-only examples](test/contract/owner_examples.cpp)
+show observation, explicit apply, cancellation and two devices on an external
+owner. Independent integer-time vectors compile successfully; runtime engine,
+adapter and hardware behavior still require their later implementation tests.
+
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
 timing, electrical and failure-case findings from TI documents and public code,
 starting with TI's GitHub organization. The [source manifest](docs/reference/public-implementations.json)

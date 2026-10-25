@@ -29,6 +29,8 @@ struct OperationToken {
 /// @details Valid unsigned deadline-minus-now is in (0, 2^63); resolution is at most 1 ms.
 /// Natural rollover is allowed. Callbacks provide no completion time; the owner must sample freshly
 /// after a callback. Defaults do not describe a valid nonzero interval. No clock is owned here.
+/// Active poll samples must advance by less than 2^63, including equal ticks and natural wrap.
+/// A zero callback budget still permits deadline/wait transitions; it never invokes transport.
 struct OperationTiming {
   uint64_t nowMs = 0;      ///< Owner admission timestamp in milliseconds.
   uint64_t deadlineMs = 0; ///< Immutable exclusive completion deadline in the same clock domain.
@@ -120,6 +122,8 @@ enum class PortField : uint16_t {
 /// @details Fields are historical when invalidated; even current copies require per-field validity
 /// and age/coherence checks. Publication follows 0x09, 0x08, 0x09 once, with no retry-until-stable.
 /// Changed 0xE0 bookends clear dependent current/accessory/cable validity. No hardware atomicity.
+/// Failed acquisition preserves the previous complete data/time. End, external invalidation and
+/// possible port-affecting writes set invalidated; only complete fresh publication clears it.
 struct PortSnapshot {
   uint8_t rawStatus08 = 0; ///< Register 0x08 sample; unavailable until STATUS_08_VALID.
   uint8_t rawStatus09 = 0; ///< Final register 0x09 sample; unavailable until STATUS_09_VALID.
@@ -170,6 +174,10 @@ enum class ProfileField : uint16_t {
 /// Reserved encodings retain raw bytes but invalidate the affected field. A complete raw transfer
 /// alone cannot establish KNOWN. Failed/partial acquisitions preserve the previous complete image.
 /// Desired and verified generations saturate; zero means no record and tokens identify operations.
+/// Apply admission changes desired only. Full identity/control/effect proof can publish KNOWN actual
+/// settings even on CONFIGURATION_MISMATCH; read-profile alone cannot promote trust. Result take
+/// never adopts desired or erases interrupted effects. Historical verified values can remain valid
+/// records while state is UNKNOWN; their generation does not assert current usability.
 struct ConfigurationSnapshot {
   bool hasDesiredProfile = false; ///< An accepted desired candidate exists; not actual device proof.
   DeviceProfile desiredProfile{}; ///< Last accepted desired settings; never an implied write.
@@ -187,7 +195,7 @@ struct ConfigurationSnapshot {
   uint8_t mismatchExpected = 0; ///< Expected comparison image; meaningful under mismatchMask only.
   uint8_t mismatchObserved = 0; ///< Successful readback byte; meaningful under mismatchMask only.
   uint8_t mismatchMask = 0; ///< Persistent bits compared; status/commands do not imply mismatch.
-  uint64_t observedUptimeMs = 0; ///< Owner-domain observation timestamp in milliseconds.
+  uint64_t observedUptimeMs = 0; ///< Owner time before the first required profile read, not publication.
   bool observedTimeValid = false; ///< observedUptimeMs is supported by owner time evidence.
   uint8_t rawConfig08 = 0; ///< Complete raw 0x08 sample, qualified by CONFIG_08_VALID.
   uint8_t rawConfig09 = 0; ///< Complete raw 0x09 sample, qualified by CONFIG_09_VALID.
@@ -228,6 +236,8 @@ struct InterruptSnapshot {
 /// Their own validity/provenance applies. The interrupt member starts empty for each operation and
 /// records only that operation's partial IRQ work, never an earlier operation's ACK acceptance.
 /// Taking a result delivers this value; delivery does not change status or erase hardware effects.
+/// A frozen result never gains a later timestamp. Callback failures and local cancellation/end lack
+/// a completion sample; success/protocol failure/expiry on a fresh poll records that software time.
 struct OperationResult {
   OperationToken token{}; ///< Instance-local correlation token; zero means no result.
   OperationKind kind = OperationKind::NONE; ///< Admitted operation kind.
@@ -237,7 +247,7 @@ struct OperationResult {
   uint32_t transfers = 0; ///< Number of terminal callback attempts, not physical transactions.
   uint64_t startedUptimeMs = 0; ///< Accepted admission time in owner-domain milliseconds.
   uint64_t completedUptimeMs = 0; ///< Terminal time only when completedTimeValid is true.
-  bool completedTimeValid = false; ///< Fresh terminal owner time is available; cancel/end may lack it.
+  bool completedTimeValid = false; ///< Fresh terminal owner time exists; callback failure/cancel lacks it.
   IdentitySnapshot identity{}; ///< Copied attributed identity/revision evidence with its validity.
   ConfigurationSnapshot configuration{}; ///< Copied desired/actual/trust and effect evidence.
   PortSnapshot port{}; ///< Copied port observation, independently valid/invalidated/aged.
@@ -245,13 +255,15 @@ struct OperationResult {
 };
 
 /// @brief Passive copied progress; waiting never implies an internal sleep or a renewed deadline.
+/// @details Terminal progress remains until exact take; then it is IDLE with no token. Rejected polls
+/// preserve this value. waiting may be true before a fresh sample establishes readyAtValid.
 struct OperationProgress {
   OperationToken token{}; ///< Represented instance-local token, or zero when no work/result exists.
   OperationKind kind = OperationKind::NONE; ///< Represented operation kind.
   OperationState state = OperationState::IDLE; ///< Active or retained terminal software state.
   OperationPhase phase = OperationPhase::NONE; ///< Coarse phase, not a private engine state.
   uint32_t transfers = 0; ///< Cumulative terminal callback attempts for this operation.
-  uint8_t lastPollTransfers = 0; ///< Callback attempts during the last poll; zero for a zero budget.
+  uint8_t lastPollTransfers = 0; ///< Attempts in last accepted active poll; zero for its zero budget.
   uint64_t deadlineMs = 0; ///< Immutable admitted owner-domain deadline in milliseconds.
   bool waiting = false; ///< A required hardware interval is currently pending.
   uint64_t readyAtMs = 0; ///< Owner-domain earliest ready timestamp, only when readyAtValid.
@@ -272,8 +284,10 @@ struct TransportStats {
 /// @brief Filtered production-operation transport history for optional passive health projection.
 /// @details Explicit raw diagnostics are excluded here but counted in TransportStats. Counters and
 /// failure streak saturate. Successful transport resets the streak without repairing configuration.
+/// Basic Status-only callbacks supply no completion timestamp, so callback-time validity remains
+/// false. Clearing TransportStats does not clear this history, live streak or initialized readiness.
 struct ManagedTransportEvidence {
-  bool initialized = false; ///< Complete read-only initialization proof is current for this target.
+  bool initialized = false; ///< Matching identity plus complete raw profile acquired; not KNOWN trust.
   uint32_t totalSuccess = 0; ///< Saturating managed successful-callback count.
   uint32_t totalFailures = 0; ///< Saturating managed failed-callback count.
   uint32_t consecutiveFailures = 0; ///< Saturating failures since the last managed successful callback.
@@ -307,13 +321,17 @@ struct HealthSnapshot {
 /// @brief Independent binding, trust, effect and diagnostic history retained by an owner instance.
 /// @details Latest-operation fields never erase unresolved recovery, mode-transition or reset
 /// acceptance evidence. Taking a result or clearing transport totals cannot repair those facts.
+/// configurationWriteUnresolved also retains ordinary settings/raw-write uncertainty across later
+/// read-only results. Only complete current proof or explicit local forgetting clears that obligation.
+/// hardwareEffect may describe a later raw write; lastOperationKind/status remain managed history.
 struct DriverDiagnostics {
   bool bound = false; ///< A valid transport/device binding is current.
-  bool initialized = false; ///< Current complete read-only initialization proof is available.
+  bool initialized = false; ///< Current matching identity and complete raw profile, independent of trust.
   ConfigurationState configurationState = ConfigurationState::UNCONFIGURED; ///< Current trust.
-  HardwareEffect hardwareEffect = HardwareEffect::NONE; ///< Latest terminal operation's effects.
+  HardwareEffect hardwareEffect = HardwareEffect::NONE; ///< Latest managed terminal or raw-write effect.
   TerminationState terminationState = TerminationState::UNKNOWN; ///< Retained all-control proof.
   ResetState resetState = ResetState::NONE; ///< Retained reset settling/postcondition proof.
+  bool configurationWriteUnresolved = false; ///< Possible settings change lacks complete current proof.
   bool recoverySequenceUnresolved = false; ///< Base dead-battery sequence completion remains unproved.
   bool modeTransitionUnresolved = false; ///< Required mode settling/current-control proof is unresolved.
   bool resetAcceptanceUncertain = false; ///< Reset-command acceptance remains ambiguous, even if settled.

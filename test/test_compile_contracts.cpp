@@ -280,11 +280,24 @@ void diagnosticDefaults() {
   CHECK(diagnostics.configurationState == t::ConfigurationState::UNCONFIGURED);
   CHECK(diagnostics.hardwareEffect == t::HardwareEffect::NONE && diagnostics.terminationState == t::TerminationState::UNKNOWN);
   CHECK(diagnostics.resetState == t::ResetState::NONE && !diagnostics.recoverySequenceUnresolved);
+  CHECK(!diagnostics.configurationWriteUnresolved);
   CHECK(!diagnostics.modeTransitionUnresolved && !diagnostics.resetAcceptanceUncertain);
   CHECK(diagnostics.lastOperationKind == t::OperationKind::NONE && diagnostics.lastOperationStatus.ok());
   CHECK(diagnostics.lastFailedTransportStatus.ok() && diagnostics.lastFailedTransportUptimeMs == 0);
   CHECK(!diagnostics.lastFailedTransportTimeValid && !diagnostics.managedTransport.initialized);
   CHECK(!diagnostics.identity.identityValid && !diagnostics.interrupt.observationValid);
+
+  // Ordinary settings uncertainty is independent of the latest read-only outcome.
+  // This checks copied value storage, not an unimplemented driver's transitions.
+  t::DriverDiagnostics interrupted{};
+  interrupted.configurationWriteUnresolved = true;
+  interrupted.lastOperationKind = t::OperationKind::READ_PROFILE;
+  interrupted.hardwareEffect = t::HardwareEffect::NONE;
+  const auto retained = interrupted;
+  interrupted.configurationWriteUnresolved = false;
+  CHECK(retained.configurationWriteUnresolved);
+  CHECK(retained.hardwareEffect == t::HardwareEffect::NONE);
+  CHECK(retained.lastOperationKind == t::OperationKind::READ_PROFILE);
 }
 
 void registerValueDefaults() {

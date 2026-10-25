@@ -229,6 +229,11 @@ and diagnostic fields, coarse OperationPhase labels and RegisterDecode result.
 Result IRQ evidence belongs only to that operation; cached diagnostics may retain
 historical IRQ evidence. Separate recovery/mode/reset uncertainty remains visible
 after result take. These refinements add no callable driver or competing state rules.
+Prompt 6 adds `DriverDiagnostics.configurationWriteUnresolved = false`: ordinary
+settings writes, including raw Sync, also need a visible retained proof obligation.
+Set it before a possible settings write and retain it across later read-only
+results; complete current-control/effect proof or explicit forgetting clears it.
+It is independent of recovery/mode/reset flags and does not assert old acceptance.
 
 | Type | Initial exact members and meaning |
 | --- | --- |
@@ -495,13 +500,24 @@ unknown bits reject that change without blocking independent permitted fields.
 Capability and local argument checks still precede admission.
 
 Accepted initialize clears initialized and current identity usability before
-observing again. Preserve historical values and unresolved effects; failed
-reinitialization cannot leave initialized true because an earlier attempt succeeded.
+observing again. Preserve historical values and unresolved effects; incomplete
+or contradictory identity/initial-register acquisition cannot leave initialized
+true because an earlier attempt succeeded. Prompt 6 separates current identity
+readiness from configuration trust: complete matching I plus complete raw P can
+set initialized=true even when reserved controls or retained effects make the
+operation return CONFIGURATION_UNKNOWN. This permits explicit base recovery after
+end/rebind and read-only initialization; requiring KNOWN first would deadlock it.
 A complete identity contradiction also invalidates current identity/configuration/port usability.
 Successful initialize or reconciliation can establish initialization through the
 same complete identity/initial-register observation helper. Promotion to KNOWN
 uses the full configuration/effect proof; neither operation erases pending reset
 or recovery history simply because readable registers now look ordinary.
+The [finished method/state contract](../api-contracts.md#method-admission-and-output-preservation)
+specifies every method's rejection rows, publication and lifetime rules. It also
+defines invalidation reasons without inventing transport failures or idle
+operation records. A failed fresh observation alone preserves previous proof
+unless initialize, a possible write, contradictory data or an unresolved effect
+has invalidated it.
 
 `end` is the sole public unbinding method; do not add a second unbind alias.
 CLI setters may edit their own candidate DeviceProfile without calling the core.
@@ -666,6 +682,13 @@ hardware wait from that fresh boundary. Thus `maxTransfers > 1` is a ceiling,
 not a promise to consume it. With the basic callbacks the conservative engine
 still uses at most one per call; do not invent elapsed time by dividing a budget.
 No early wait expiry based on pre-callback nowMs. No sleep or busy wait.
+Zero callback budget still permits bounded time validation, deadline expiry,
+pending completion and wait transitions. Failed callbacks freeze their result
+immediately with unknown completion time; terminal polls never revise it.
+Successful bytes are processed on the next valid fresh poll after the deadline
+check, while adverse identity/reset/control evidence invalidates usability
+immediately. The API guide bounds the direct pass to six local stages, each at
+most once, and keeps every procedure's callback/byte ceilings unchanged.
 
 A callback failure keeps its original typed error/detail as the primary terminal
 outcome even if the next owner timestamp also shows an expired deadline. Deadline
@@ -709,6 +732,9 @@ A different association cannot silently discard unresolved effects: end, consume
 the result, and invoke explicit forgetDeviceEvidence before changing target.
 This is a local evidence contract, not hardware identity proof. No operation can
 act on the old bus after end.
+The different-target guard reads configurationWriteUnresolved, recoverySequenceUnresolved,
+modeTransitionUnresolved, resetAcceptanceUncertain and resetState MAY_BE_PENDING.
+It never infers old effects from a later result or UNKNOWN configuration alone.
 A new target cannot inherit current identity, configuration or port usability from
 the old one. Successful binding to a different association starts empty target
 records, including desired/observed/verified profiles and raw validity; it retains
@@ -733,10 +759,22 @@ contains `initialized`, `totalSuccess`, `totalFailures`, `consecutiveFailures`,
 `lastStatus` and last-success/failure time validity. Its callbacks are the filtered
 production-operation subset. Explicit Sync diagnostics are in TransportStats but
 excluded from managed projection; never hide them from the source totals.
+Scalar raw identity/revision bytes are not the managed I proof: raw reads never
+publish identity or change initialized. An owner interpreting a raw discrepancy
+as an external change explicitly invalidates device state. Raw reset/control
+safety evidence can invalidate configuration/port independently of identity.
 The CLI probe alias calls startInitialize and follows managed initialization
 accounting; a command alias never changes the underlying callback classification.
 Do not add backend bytes/transactions when the callback cannot report them;
 example adapters may expose their own separate, accurately named counters.
+Diagnostic hardwareEffect is the latest managed terminal or later raw-write
+effect; lastOperationKind/status remain managed terminal history. Raw reads do
+not replace it. Ordinary settings uncertainty survives independently in
+configurationWriteUnresolved, so a later read-only effect NONE cannot hide it.
+Basic Status-only callbacks supply no completion timestamps. Their last-success/
+failure time-valid flags remain false, even after a later owner poll; operation
+completion and snapshot acquisition have separate fresh-sample rules. Last failed
+status/detail remains retained. No later unrelated action backfills a time.
 
 The optional helper is a pure projection:
 
@@ -757,8 +795,9 @@ Do not put health thresholds in silicon tables. A user may ignore this helper.
 | Input/event | Evidence update | Projection |
 | --- | --- | --- |
 | Constructed, end, or bound without completed initialization | initialized false | UNINIT regardless of old failure totals |
-| Failed initialization/reinitialization | Record actual callbacks only; initialized remains false, including after identity mismatch with successful transport | UNINIT; diagnostics show the actual failure |
+| Incomplete or mismatching initialization/reinitialization identity/initial-register acquisition | Record actual callbacks only; initialized remains false, including after identity mismatch with successful transport | UNINIT; diagnostics show the actual failure |
 | Successful complete initialization observation, including reconciliation's shared path | initialized true; last managed success sets streak zero | READY |
+| Complete matching I and complete raw P but reserved controls or retained effects prevent KNOWN | initialized true; configuration remains UNKNOWN and operation may return CONFIGURATION_UNKNOWN | READY; identity permits explicit recovery, health does not assert trust |
 | Managed callback succeeds after initialization | Increment success; streak becomes zero | READY, including after OFFLINE |
 | Managed callback fails, initialized true, streak below threshold | Increment failure and saturating streak | DEGRADED |
 | Managed callback fails and streak reaches threshold | Increment failure and saturating streak | OFFLINE |

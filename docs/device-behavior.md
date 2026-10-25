@@ -157,6 +157,11 @@ codes retain raw bytes but invalidate their typed fields. Verify/reconcile can
 publish KNOWN actual controls and CONFIGURATION_MISMATCH together when all
 identity/control/effect proof is complete; desired remains unchanged. A successful
 unrelated read cannot supply missing effect proof.
+The [owner contract](api-contracts.md#lifecycle-and-operation) distinguishes
+current identity readiness from KNOWN configuration: matching I and complete
+raw P can establish initialized even when an unresolved recovery sequence or
+reserved control makes the operation return CONFIGURATION_UNKNOWN. This permits
+explicit recovery after end/rebind without making initialization write anything.
 
 For an interrupted L/A mode write, reconciliation must first allow the 6-tick
 settling interval from a retained valid completion boundary, or conservatively

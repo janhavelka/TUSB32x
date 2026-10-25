@@ -482,3 +482,77 @@ Only audit/progress/changelog records changed. Detailed owner transitions,
 validators, decoder and device operations remain future work. Protocol behavior,
 framework/package builds and hardware checks are NOT RUN; remote CI was not
 dispatched or polled. Prompt 6 is NOT STARTED.
+
+## Prompt 6: owner, state, time and evidence contracts, 2026-10-25
+
+Scope: normative future method/state behavior, complete ownership/publication
+tables, compile-only owner examples and one additional passive diagnostic flag.
+The starting source was 87979dc07fc319603f0bd6ed21224b45ea20d1d8 on the existing
+execution branch. No operation engine, adapter, validator or health function was
+implemented or linked. The lead reread the original prompt and baseline and
+verified returned reviews against source, test bodies and the actual diff.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Focused peer audit | PASS, source review | Six clean local revisions; exact code/test/runner/registration sources in execution-6-peers. Lead also read TMP exact take/registered sentinel tests, INA replay path and FieldCore wrapping-time helper |
+| Four independent public headers | PASS | MinGW GCC15.1.0, C++17, Wall/Wextra/Wpedantic/Wconversion/Wsign-conversion/Werror; include each alone via stdin |
+| Real two-TU passive consumer | PASS | Compile/link/run with NDEBUG; all23 errors, constexpr/explicit bool/int32 details/defaults, independent raw/effect storage including configurationWriteUnresolved |
+| Planned callable inventory | PASS, syntax only | planned_api.cpp; no future method linked or implemented |
+| External owner examples | PASS, syntax only | owner_examples.cpp: passive observation, explicit apply, cancelled possible write, exact take and two devices sharing an external bus/context; fake callbacks return I2C_ERROR |
+| Integer clock specification | PASS, compile time | time_arithmetic.cpp: 60 static assertions, including half-range/equal/backward/wrap, wide timeout clamp, 6/31/96 waits and checked uint32 extension/output preservation |
+| Source Doxygen | PASS | Doxygen1.13.2, EXTRACT_ALL=NO and all documented warning checks fatal; XML index exposes all17 public structs including updated diagnostic value |
+| Procedure bounds and physical-time arithmetic | PASS, specification only | 13 existing table rows,34 variant count triples;30 P and12 T vectors, literal bytes/rollover and11,988 exact Fraction cases for sub-ms completion; no procedure count changed |
+| Source provenance | PASS | All8 archived PDFs retain size/SHA-256 and unchanged Git bytes |
+| Documentation/source integrity | PASS | Local Markdown links/anchors, complete38-prompt order, UTF-8/final-newline/whitespace and actual scoped diff; no source/library build promises added |
+| Independent final reviews | PASS, source review | Separate coverage/simplicity and strong time/effect reviewers; corrected initialization baseline, incomplete-F preservation, raw uncertainty and precise publication/invalidation boundaries |
+
+Executed commands use the full recipe in [test/README](../test/README.md).
+The final run used `$env:TEMP/tusb32x-p6-checks` for outputs:
+
+```powershell
+$contractOutput = Join-Path $env:TEMP 'tusb32x-p6-checks'
+New-Item -ItemType Directory -Force -Path $contractOutput | Out-Null
+$contractFlags = @('-std=c++17','-Wall','-Wextra','-Wpedantic',
+                   '-Wconversion','-Wsign-conversion','-Werror','-I','include')
+foreach ($header in @('Status.h','Config.h','TUSB32x.h','CommandTable.h')) {
+    "#include <TUSB32x/$header>" | & g++ @contractFlags -x c++ -fsyntax-only -
+    if ($LASTEXITCODE -ne 0) { throw "Header failed: $header" }
+}
+& g++ @contractFlags -DNDEBUG test/test_compile_contracts.cpp `
+    test/consumer/status_other_tu.cpp -o "$contractOutput/passive-contracts.exe"
+if ($LASTEXITCODE -ne 0) { throw 'Passive consumer compile/link failed' }
+& "$contractOutput/passive-contracts.exe"
+if ($LASTEXITCODE -ne 0) { throw 'Passive consumer checks failed' }
+& g++ @contractFlags -fsyntax-only test/contract/planned_api.cpp `
+    test/contract/owner_examples.cpp test/contract/time_arithmetic.cpp
+if ($LASTEXITCODE -ne 0) { throw 'Planned contract compilation failed' }
+```
+
+Doxygen ran from stdin (`doxygen -`) with INPUT=include/TUSB32x,
+OUTPUT_DIRECTORY pointing to that TEMP directory's doxygen subdirectory,
+RECURSIVE=YES, EXTRACT_ALL=NO, WARN_IF_UNDOCUMENTED=YES, WARN_IF_DOC_ERROR=YES,
+WARN_IF_INCOMPLETE_DOC=YES, WARN_NO_PARAMDOC=YES, WARN_IF_UNDOC_ENUM_VAL=YES,
+WARN_AS_ERROR=YES, GENERATE_XML=YES, GENERATE_HTML=YES, GENERATE_LATEX=NO and
+QUIET=YES. The generated XML index was parsed and required exactly17 public
+TUSB32x structs. No generated files or tool dependencies enter the library.
+
+The reused independent Python procedure check derives I/P/F/S read/write plans,
+compares their length/TX/RX counts to the maintained table, checks the30/12 vector
+IDs and literal byte equations, and uses exact Fraction arithmetic for completion
+fractions1–999 microseconds with four post-return delays for each5/30/95 ms wait.
+It also verifies archive byte lengths/hashes and unchanged tracked PDF bytes.
+This is specification verification; later code still must meet those bounds.
+
+Reviews found and fixed the recovery identity/trust deadlock and the ordinary
+raw-write uncertainty gap. The latter needed one public passive boolean rather
+than hidden gate history or inferred old effects. Further corrections preserve
+old actual proof on unsuccessful read-only verification, freeze callback failures
+without made-up time, defer successful publication until a fresh deadline check,
+retain immediate adverse evidence/ACK acceptance, and order active end/invalidate
+before freezing cancelled snapshots. O01–O25 record the required future runtime
+regressions; none is reported as a passed driver behavioral test.
+
+NOT RUN: runtime driver/transport/health behavior, real adapter timing, firmware,
+package consumption and physical hardware. The contract/example syntax and
+integer arithmetic prove none of these. No remote CI was dispatched or polled,
+as required for this first promptset outside prompt34. Prompt7 is NOT STARTED.

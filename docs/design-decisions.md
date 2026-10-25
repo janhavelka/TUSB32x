@@ -134,3 +134,27 @@ copyability. Core values use fixed storage; architecture-specific size quotas ar
 not copied from a sensor library. There is no new scheduler, allocation layer,
 event bus or general register container. Validators remain prompt7; detailed
 state/admission tables remain prompt6; hardware qualification remains separate.
+
+## Prompt 6: owner, time and retained evidence
+
+Completed 2026-10-25. [Current peer evidence](audit/execution-6-peers.md) records
+six clean local revisions, actual implementations/tests/examples/runners and
+registration. The [API contract](api-contracts.md) completes every method's
+admission/output, state, timing, publication and lifetime rules. No silicon
+sequence, callback ceiling, register gate or future callable name changed.
+
+| Concern | Peer file/symbol | Revision | Selected rule | Reason | Check |
+| --- | --- | --- | --- | --- | --- |
+| Slot/tokens | TMP Operations.cpp::admit/takeResult; LSM _checkStart/takeResult | bafc340 / e262bf2 | Exact instance uint64 tokens, BUSY versus RESULT_PENDING, immutable terminal copy, delivery OK even for failure | Delayed owner work cannot advance or consume a replacement; no peer FIFO or failed-output mutation | Method/token rows; O01–O05 future runtime vectors; planned-signature compilation |
+| Time | LDC poll; LSM reset wait; ADS delayed/ambiguous write tests | 1db38b6 / e262bf2 / 235af3e | Fresh post-callback owner turn, half-range uint64 time, zero-budget local progress, immediate frozen callback failure, six bounded local stages | Reject stale-time callback batching, direct comparisons and invented completion timestamps | 60 static arithmetic vectors; p4 exact fractional-time vectors; future O12–O16 |
+| Desired and actual | ADS startApplyProfile; INA startReconcile; LSM profile tests | 235af3e / 40838b5 / e262bf2 | Desired at admission only; no-op/pre-write failure preserves old proof; shared read-only F can establish KNOWN actual on desired mismatch | Reject corrective reconcile/replay and premature APPLYING; failed acquisition alone is not contradictory evidence | Configuration/publication table and future O07–O11 |
+| Initialization readiness | TMP/ADS separate transport/identity lifecycle; TUSB base recovery prerequisite | bafc340 / 235af3e; prompt4 | Matching I plus complete raw P establishes identity readiness even when controls/effects leave CONFIGURATION_UNKNOWN | Explicitly refines baseline's earlier broad failed-initialize rule: otherwise end/rebind recovery deadlocks behind its identity gate | Baseline health/lifecycle corrected; future O09; no claim a failed/incomplete I/P initialized |
+| Ordinary write uncertainty | INA unknown/dirty register evidence; LDC retained write provenance | 40838b5 / 1db38b6 | Add one passive configurationWriteUnresolved flag, separate from recovery/mode/reset history and latest result | Raw write then read-only result NONE must not hide different-target admission uncertainty; avoid inference from UNKNOWN or old effect | Public default/copy check; future O25; no extra state enum or engine |
+| Raw effects and cause | LDC tracked diagnostics; LSM operation results | 1db38b6 / e262bf2 | Diagnostic effect may describe a later raw write; last operation fields remain managed history. Invalidation reason is local, never a counted transport error | Preserve provenance without fabricated operation records; callback time flags remain invalid with Status-only backend | Doxygen/row consistency; future O16/O17/O22 |
+| Owner lifetime | FieldCore I2cOwnerTransport/I2cDeviceBinding/I2cLifetime; TMP exact-token ownership | a002aba / bafc340 | Borrow context until end, retain both callback pointers in association, serialized external owner and checked uint32 extension | No FieldCore dependency, implicit bus ownership or false physical identity inference | Compile-only two-device observation/apply/cancel examples; no linked facade |
+| IRQ/health | TMP/LSM retained evidence; LDC/INA diagnostic-only offline policies | bafc340 / e262bf2 / 1db38b6 / 40838b5 | Complete S survives ACK/recheck failure; named validity separates sampled/accepted/rechecked facts; pure health ignores raw traffic | No event queue, retry policy, stale-time completion or trust repair from counters | Future O18–O24; strict passive-value/Doxygen checks |
+
+The initialization refinement and ordinary-write flag are deliberate gap fixes
+found while completing the contract, not evidence that peer conventions establish
+TI behavior. Runtime transitions, actual adapter bounds and physical qualification
+remain future checks. Owner examples and arithmetic stay outside delivered headers.

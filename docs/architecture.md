@@ -15,6 +15,8 @@ There is no device facade or operation engine yet. The
 | include/TUSB32x/CommandTable.h | Passive RegisterDecode value; decoder and register tables arrive with implementation in prompt 10 |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/PlannedApi.h and planned_api.cpp | Explicitly compile-only future signatures, never linked or delivered |
+| test/contract/owner_examples.cpp | Compile-only passive observation, explicit apply/cancel and two devices sharing an external fake owner; no driver definitions |
+| test/contract/time_arithmetic.cpp | Independent compile-time integer time vectors; not engine behavior or hardware timing proof |
 | docs/reference/ | Research sources and provenance, excluded from production compilation and future ordinary packages |
 | .gitignore | Excludes local build/documentation output under build/ from commits |
 
@@ -53,8 +55,12 @@ copies remain bus-silent. Synchronous raw diagnostics have an explicit separate
 one-callback bound. Buffers never survive callback return; no DMA, retries,
 reentry or platform delays are hidden in core. The owner supplies a fresh time
 after each Status-only callback. Silicon waits and uncertainty follow the
-[device procedure guide](device-behavior.md); prompt 6 completes precise state
-and lifetime tables before the engine exists.
+[device procedure guide](device-behavior.md). Prompt 6 completes the precise
+[admission, state and lifetime tables](api-contracts.md#method-admission-and-output-preservation)
+before the engine exists. Each poll uses a bounded direct pass and at most one
+Status-only callback; zero budget still permits time-only transitions. Current
+identity readiness is separate from configuration trust so explicit recovery
+remains possible after rebind and read-only initialization.
 
 Desired input, raw observations, verified actual settings, port interpretation,
 IRQ evidence and operation outcome are separate values. Every incomplete or

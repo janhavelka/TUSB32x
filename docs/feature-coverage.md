@@ -100,3 +100,25 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 
 No pass above represents a successful I2C transaction, driver validator,
 silicon decoder, framework build, CI run or physical qualification.
+
+## Prompt 6 completed owner contracts
+
+All rows below are specified, with real checks limited to passive values and
+compile-only fixtures. [Method/state rules](api-contracts.md#method-admission-and-output-preservation)
+and future vectors O01–O25 are normative for their later implementation stages.
+Peer provenance is [execution-6-peers](audit/execution-6-peers.md); register and
+procedure sources remain the exact TI revisions already listed above.
+
+| Feature / variant | API / CLI mapping | Completed specification and actual evidence | Future behavioral owner |
+| --- | --- | --- | --- |
+| Admission/results, all bound I2C variants | bind/start/poll/cancel/end/take; CLI operation correlation | Exact precedence, output preservation, one token/result slot, lifetime and different-target gates; signature and owner-example syntax PASS | 11, conformance18/19, CLI20–22 |
+| Time/callback budgets, all | OperationTiming/Progress; owner scheduling, CLI limits | Immutable half-range deadlines, one callback, fresh wait anchors, immediate transport failure, six local stages; 60 constexpr vectors and earlier fractional-time arithmetic PASS | 9/11/14/19, adapters23/25/26 |
+| Configuration proof, exact applicable fields | initialize/read/apply/verify/reconcile; CLI profile commands | I/P/F publication, generations, identity readiness versus KNOWN, mismatch semantics and no replay; passive configurationWriteUnresolved default/copy PASS | 11–14/17–19 |
+| Recovery/reset/termination, variant-gated | reset/recover; explicit CLI mutations | Separate obligations, current disable controls, acceptance and completion; p4 sequence ceilings unchanged; future O08/O09/O18/O19 | 13/14/18/19 |
+| Port/IRQ, B/L/A plus gated V | refresh/ACK/service; CLI observation and service | S timestamps/bookends/validity; publication before ACK; partial evidence retained; no queue or automatic reservice; future O20/O21 | 15/16/18/21/22 |
+| Raw diagnostics/health, capability-gated | read/write Sync, stats/diagnostics/projectHealth; CLI reg/wreg/probe/health | Raw/all/managed accounting, unknown callback times, passive thresholds, no OFFLINE gate; source Doxygen PASS; future O22/O23/O25 | 17–19/21/22 |
+| Generic external owner, all | Two driver/token pairs on borrowed shared bus | Passive observation/apply/cancel examples and uint32 extension compile under strict C++17; no FieldCore include or driver implementation | Real generic owner27; framework adapters23–26 |
+
+No runtime operation, health helper or validator is linked by prompt 6. The
+configurationWriteUnresolved addition is a passive value; its update rules still
+need the future write/effect engine tests. Hardware and firmware remain NOT RUN.

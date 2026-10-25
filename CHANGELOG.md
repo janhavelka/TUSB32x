@@ -7,6 +7,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Changed
 
+- Finished owner admission, state, time, publication and health contracts, with
+  explicit result/effect retention and future failure vectors. Separated identity
+  readiness from configuration trust to allow explicit interrupted recovery
+  after rebind and read-only initialization. No driver methods are published yet.
+
 - Independently audited prompt 5's actual headers, contracts and fixtures against
   the original requirements and current peers. Repeated strict compilation,
   linked Status tests, Doxygen and documentation checks; no code or API correction
@@ -80,6 +85,9 @@ Entries below distinguish those artifacts from planned device-driver functionali
   documentation at the end.
 
 ### Added
+
+- Compile-only passive observation, explicit apply/cancellation and two-device
+  owner examples, plus independent unsigned-time and clock-extension vectors.
 
 - Implemented portable C++17 Status, callback/settings, operation/snapshot,
   diagnostic/health and register-decode result values with complete Doxygen.

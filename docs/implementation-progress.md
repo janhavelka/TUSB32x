@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently review completed prompt 5; do not start prompt 6.
+Current authorization: implement prompt 6 completely; do not start prompt 7.
 
 ## Prompt status
 
@@ -15,7 +15,7 @@ Current authorization: independently review completed prompt 5; do not start pro
 | [3: register-contracts](prompts/3-register-contracts.md) | COMPLETE |
 | [4: silicon-procedures](prompts/4-silicon-procedures.md) | COMPLETE |
 | [5: value-api-contracts](prompts/5-value-api-contracts.md) | COMPLETE |
-| [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | NOT STARTED |
+| [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | COMPLETE |
 | [7: host-build](prompts/7-host-build.md) | NOT STARTED |
 | [8: metadata-versioning](prompts/8-metadata-versioning.md) | NOT STARTED |
 | [9: transport-identity](prompts/9-transport-identity.md) | NOT STARTED |
@@ -336,3 +336,53 @@ decoder implementation and device operations stay in their assigned later
 prompts. No runtime protocol, framework/package or hardware qualification is
 claimed. The lead owns the review commit and synchronization; final evidence is
 reported in the handoff and next progress update without a self-reference.
+
+## Prompt 6 execution record
+
+Completed 2026-10-25 on the same execution branch/base. Starting commit was
+`87979dc07fc319603f0bd6ed21224b45ea20d1d8`, the independent prompt 5 review.
+Before editing, the worktree was clean and fetch confirmed equality with the
+same-name origin upstream (0 ahead / 0 behind). Prerequisite prompts 1–5 and
+their actual validation records were read; no driver/build stage was started.
+
+Completed the API method/admission, lifecycle/result, configuration, termination,
+reset, IRQ, owner-clock, snapshot and health tables. Added exact rejection and
+interruption vectors O01–O25 for later behavioral suites. Fixed three contract
+gaps found during review: matching identity plus complete raw profile can permit
+explicit recovery while configuration remains UNKNOWN; failed no-write proof
+acquisition alone preserves earlier actual trust; ordinary settings/raw-write
+uncertainty remains visible through later read-only results in the new passive
+configurationWriteUnresolved flag. Baseline and procedure cross-references now
+agree with these rules; no silicon encoding, sequence, wait or byte ceiling changed.
+
+Three fresh-context agents ran disjoint tasks in parallel: gpt-6.1-sol/high
+audited current peer code/tests/examples/runners/registration in
+[execution-6-peers](audit/execution-6-peers.md); gpt-6.1-sol/high authored only
+owner_examples.cpp and time_arithmetic.cpp; gpt-6-astra/high independently reviewed
+time/effects/admission and later the integrated contracts and fixtures read-only.
+The peer agent also performed an independent final coverage/simplicity review.
+The lead selected shared contracts, checked actual peer source/test bodies and
+the diff, updated public Doxygen/docs/tests, and repeated required verification.
+Final reviewer passes found no remaining confirmed issue in the scoped work.
+
+Current LDC/LSM/ADS/INA/TMP revisions match prompt 5 and remain clean; FieldCore
+is now a002abae533b0aa767c235c2197d3b548bdcdd83, rodtester, clean. Exact paths,
+full revisions and adopted/rejected rules are in the focused audit. Siblings
+remained read-only; their tests/builds/remote CI were not run. No unrelated peer
+replay, stale-time batching or evidence-erasing teardown was imported.
+
+PASS: strict isolated compilation of four public headers; linked NDEBUG
+two-translation-unit value/Status executable including the new flag's independent
+storage; syntax-only planned signatures and observation/apply/cancel/two-device
+examples; 60 constexpr unsigned-time vectors; Doxygen warnings-as-errors with all
+17 public structs visible; 13 procedure-bound rows/34 variant counts, 30 procedure
+vectors/12 time vectors, 11,988 exact fractional-time checks and 8 unchanged TI
+PDF hashes; Markdown links/anchors, numbered prompt inventory and diff whitespace.
+Commands, evidence and limits are in [validation](validation.md).
+
+All output is in TEMP; no generated artifacts are committed. Methods remain
+planned in docs and compile-only fixtures, with no missing public link promises
+or fake successful driver. Runtime state/transport/health, firmware/package and
+physical qualification are NOT RUN and assigned to later prompts. Prompt 7 is
+NOT STARTED. The lead commits/syncs this checked unit; final branch/commit/equality
+evidence is reported in the handoff and the next progress update.

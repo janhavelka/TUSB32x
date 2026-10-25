@@ -68,6 +68,8 @@ enum class DeviceAddress : uint8_t {
 /// @details Accepted binding copies this value and borrows i2cUser until end returns. No pins, clocks,
 /// locks, power policy or bus ownership are transferred. Callbacks run only in a serialized owner
 /// context, never an ISR; do not reenter the instance. Binding itself performs no I2C or settings write.
+/// Target association includes variant, address, context and both callbacks; equal pointer values do
+/// not prove physical identity. After end the association is retained without invoking the old bus.
 struct DriverConfig {
   I2cWriteFn i2cWrite = nullptr;         ///< Required terminal write callback.
   I2cWriteReadFn i2cWriteRead = nullptr; ///< Required terminal pointer-write/read callback.
