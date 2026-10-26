@@ -364,7 +364,7 @@ class TUSB32x {
   TUSB32x& operator=(TUSB32x&&) = delete;
   /// @brief Validate then atomically copy a binding; zero callbacks and fixed work.
   /// @param[in] config Borrowed callbacks/context and copied exact variant/address/timeout.
-  /// @return INVALID_CONFIG/UNSUPPORTED_FEATURE from validation, then BUSY, RESULT_PENDING or
+  /// @return INVALID_CONFIG from validation, then BUSY, RESULT_PENDING or
   /// CONFIGURATION_UNKNOWN for unresolved target replacement; OK otherwise. Errors change nothing.
   Status bind(const DriverConfig& config);
   /// @brief Cancel locally, unbind and invalidate usability; retain result/effects, zero callbacks.

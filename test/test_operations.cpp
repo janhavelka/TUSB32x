@@ -749,6 +749,38 @@ void identityAndUnsafeControls() {
   }
 }
 
+void resetEvidenceSurvivesReinitialization() {
+  for (const auto& part : PARTS) {
+    Fixture f(part);
+    f.bind();
+    f.script(0x80, 0x14, 0x38);
+    const auto first = f.start();
+    CHECK(f.finish(first).is(t::Err::CONFIGURATION_UNKNOWN));
+    CHECK(f.take(first).configuration.resetState == t::ResetState::MAY_BE_PENDING);
+    CHECK(f.device.end().ok());
+    CHECK(f.device.bind(f.config).ok());
+
+    // Clear current bytes cannot prove the earlier reset's settling interval.
+    f.fake = Fake{};
+    f.script();
+    const auto second = f.start(200, 1000);
+    CHECK(f.finish(second, 200).is(t::Err::CONFIGURATION_UNKNOWN));
+    CHECK(f.fake.complete());
+    const auto result = f.take(second);
+    CHECK(result.configuration.rawConfig0A == 0x30);
+    CHECK(result.configuration.hasObservedProfile);
+    CHECK(result.configuration.resetState == t::ResetState::MAY_BE_PENDING);
+    CHECK(result.configuration.state == t::ConfigurationState::UNKNOWN);
+    CHECK(result.configuration.terminationState == t::TerminationState::UNKNOWN);
+    CHECK(result.hardwareEffect == t::HardwareEffect::NONE);
+    CHECK(f.device.diagnostics().initialized);
+    CHECK(f.device.diagnostics().resetState == t::ResetState::MAY_BE_PENDING);
+    auto changed = f.config;
+    changed.address = static_cast<t::DeviceAddress>(part.base ? 0x61 : 0x67);
+    CHECK(f.device.bind(changed).is(t::Err::CONFIGURATION_UNKNOWN));
+  }
+}
+
 void independentTerminationEvidence() {
   for (const auto& part : PARTS) {
     for (unsigned controls = 0; controls < 4; ++controls) {
@@ -1006,6 +1038,7 @@ int main() {
   failedReinitializationAtEveryPhase();
   invalidationAndFrozenResults();
   identityAndUnsafeControls();
+  resetEvidenceSurvivesReinitialization();
   independentTerminationEvidence();
   identityPublicationNeedsFreshTime();
   callbackAssociationAndNullContext();

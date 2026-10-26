@@ -1353,3 +1353,56 @@ cases themselves passed. After edits stopped, the final lead Debug and Release
 full runs passed that guard and every other suite. Initial package link checks
 also exposed repository-only references, corrected before the successful repack.
 No check was suppressed, weakened or relabeled to obtain these passes.
+
+
+## Prompt 11 independent audit (2026-10-26)
+
+Audited original prompt 11 in full, actual `fe1f7ca..2dd4304` diff and current
+code, not the previous handoff. Started clean/synchronized at
+`2dd43046cdfe7f2eed92d8fa372e27305cad58f4`. Three fresh reviewers and the lead
+found no production defect. Fixed the bind validation return-code comment and
+added all-variant reset-history reinitialization coverage. Current peer evidence
+is in [execution-11-peers](audit/execution-11-peers.md).
+
+Tools remain GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1,
+Python 3.12.10 and Doxygen 1.13.2. Lead used a fresh Ninja Multi-Config tree.
+Reviewers used distinct build/p11-fresh-correctness, -coverage and -tests trees.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Final strict Debug/Release | PASS | 6/6 registered CTests each after the new regression; independent public headers/future fixtures compile; no assertion suppression |
+| Owner suite | PASS | 20,490 checks in each final configuration; new clear-register reinitialization cannot discard pending reset or permit target replacement |
+| Existing regressions | PASS | 161,670 protocol and 8,602,548 codec checks; validator/value/version/launcher suites pass unchanged |
+| Extra public probes | PASS | 371 checks: reset obligation through clear reinit for all variants, near-half-range forward expiry and rollover; no private state mutation |
+| Public/package boundary | PASS | Reviewer extracted original 36-file archive, compared every byte to audited commit and linked/called all 15 methods from public headers only; lead repacked current files and verified source equality, IDF selection and tool-independent tests-OFF consumer |
+| Documentation | PASS | Strict Doxygen, all 15 delivered owner methods visible and future jobs absent; real decoder/17 public structs visible; version check/no-op, local links/anchors and whitespace |
+| Other tool/hardware evidence | NOT RUN | No changed need to rerun native PlatformIO/IDF registration, firmware or hardware. Earlier same-day MinGW sanitizer probe lacks ASan/UBSan; no sanitizer pass claimed. Remote CI excluded by initial promptset policy |
+
+Lead final commands:
+
+```powershell
+cmake -S . -B build/p11-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p11-independent-audit --config Debug
+ctest --test-dir build/p11-independent-audit -C Debug --output-on-failure
+cmake --build build/p11-independent-audit --config Release
+ctest --test-dir build/p11-independent-audit -C Release --output-on-failure
+& build/p11-independent-audit/test/Release/tusb32x_operations.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude -Isrc build/p11-fresh-correctness/additional.cpp build/p11-independent-audit/Release/libTUSB32x.a -o build/p11-independent-audit/additional.exe
+& build/p11-independent-audit/additional.exe
+doxygen Doxyfile
+python build/p10-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p11.tar.gz
+python build/p11-package.py
+git diff --check
+```
+
+Files beneath build are session-only inspection scripts/probes, not new shipped
+guards. The additional public probe was read before recompilation/execution;
+its reset-history case is now retained in the real operations suite. The
+package script builds/runs a renamed extraction beneath unrelated Git with
+Git/Python/Doxygen/PIO absent from child PATH, requesting C++11 and receiving
+C++17 from the library. No sibling source or tool dependency enters the build.
+All required checks passed without weakened contracts; only the tested scope
+and software evidence above are claimed.

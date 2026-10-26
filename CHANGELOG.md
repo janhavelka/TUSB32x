@@ -44,6 +44,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Changed
 
+- Independently audited prompt 11 against its original requirements and diff.
+  Corrected bind's documented validation errors and added an all-variant
+  regression proving that clear read-only reinitialization cannot erase retained
+  reset uncertainty. No production behavior or public signature changed.
+
 - Independently audited prompt 10 against the original prompt, actual diff,
   current peers and archived TI tables. Repeated strict native, codec, consumer,
   package and documentation checks; no implementation correction was needed.

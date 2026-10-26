@@ -116,3 +116,80 @@ was requested and no peer suite was executed.
 The lead's validation/progress records own actual TUSB commands and outcomes,
 including protocol regressions, public linkage and documentation. This report
 does not claim a build, firmware link, hardware transaction or physical pass.
+
+## Independent implementation recheck, 2026-10-26
+
+Fresh review inspected the actual `fe1f7ca..2dd4304` implementation diff,
+`test/test_operations.cpp`, the production owner/protocol paths and current
+baseline/API contracts. No sibling was fetched, built or changed. The four
+driver HEADs, branches and clean index/worktree states still match the original
+table. FieldCore HEAD/branch also match, but its worktree now has nine unrelated
+modified files and no staged changes:
+
+- `docs/guidelines/rodtester/integration.md`
+- `docs/reports/rodtester-production-timing-evidence.md`
+- `include/TunnelMonitor/i2c/I2cDiagnostics.h`
+- `include/TunnelMonitor/storage/StorageDiagnostics.h`
+- `src/i2c/I2cDiagnostics.cpp`
+- `src/measurement/rodtester/RodCycleCoordinator.cpp`
+- `src/storage/StorageDiagnostics.cpp`
+- `test/host/rodtester/production_campaign_transcript.py`
+- `test/host/rodtester/production_runtime.cpp`
+
+Reopened all five peer AGENTS, the four drivers' actual admission/poll/cancel/take
+implementations and matching fixed tests, public ownership declarations,
+examples/CLI, runner assumptions and source registration/workflows listed above.
+Rechecked FieldCore synchronous buffer ownership, physical timeout clipping,
+result identity/retention, native registration and the separate 6000 ms sensor
+reclaim contract. These sources still support the selected differences; none
+authorizes a TUSB result cutoff, hidden retry/replay or teardown evidence loss.
+The dirty FieldCore diagnostics/production campaign work was preserved.
+
+The owner suite has independent literal identity/register traces for all seven
+variants; it does not derive expected initialization bytes or callback plans from
+the production codecs. Rejected delivery compares unchanged caller object bytes.
+Every one of the 15 delivered public owner methods is called by runtime tests.
+The private `nextToken` arithmetic fixture checks the uint64 exhaustion boundary
+without a public seed or unbounded loop. `CHECK` is independent of `NDEBUG`;
+Release test translation units also have `-UNDEBUG` after `-DNDEBUG`.
+
+The reviewed implementation suite exercises 20,138 owner checks, including all
+initialization callback failures, cancellation/end/invalidation boundaries,
+fresh-time/deadline ordering, independent instances and null-context callback
+association. A narrow missing regression was reported to the lead: after a reset
+bit is observed, a later complete clear-register initialization must retain
+`MAY_BE_PENDING` and `UNKNOWN`. The checked-in tests at this review point prove
+retention through same-target rebind, but do not yet perform that full second
+initialization. The production implementation already preserves the obligation;
+the lead added `resetEvidenceSurvivesReinitialization` for all seven variants.
+Independent review of that literal-read test and reruns in Debug and Release
+pass with 20,490 owner checks, including its changed-target rejection afterward.
+No production logic was changed for this regression.
+
+Independent local commands on the reviewed implementation:
+
+```text
+cmake -S . -B build/p11-fresh-tests -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p11-fresh-tests --config Debug
+ctest --test-dir build/p11-fresh-tests -C Debug --output-on-failure
+cmake -S . -B build/p11-fresh-tests -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/p11-fresh-tests --config Debug
+ctest --test-dir build/p11-fresh-tests -C Debug --output-on-failure
+cmake -S . -B build/p11-fresh-tests/release -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build/p11-fresh-tests/release --config Release
+ctest --test-dir build/p11-fresh-tests/release -C Release -R 'tusb32x_(operations|protocol|compile_contracts|validators)$' -V
+cmake --build build/p11-fresh-tests --config Debug
+ctest --test-dir build/p11-fresh-tests -C Debug -R '^tusb32x_operations$' -V
+cmake --build build/p11-fresh-tests/release --config Release
+ctest --test-dir build/p11-fresh-tests/release -C Release -R '^tusb32x_operations$' -V
+```
+
+PASS: GNU 15.1.0 strict builds and all six registered CTests in both the default
+configuration and explicit Debug; separate optimized Release build and all four
+C++ suites. The first Ninja configuration had no `CMAKE_BUILD_TYPE`, so it was
+reconfigured and rebuilt with explicit Debug before reporting a Debug pass.
+The initial Release printed 20,138 owner checks, 161,670 protocol checks,
+8,602,548 codec checks and 76,452 validator checks. The final focused Debug/Release
+reruns printed 20,490 owner checks. The lead's validation record owns final integration
+and additional configurations. This recheck does not claim remote CI, firmware
+or hardware evidence.

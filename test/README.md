@@ -44,6 +44,8 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   unchanged outputs, retained results, exact take, association changes including
   null contexts/both callbacks, independent instances on one serialized fake bus,
   separate configuration/termination/reset facts and transport-statistics clearing.
+  A complete clear-register reinitialization after observed reset, end and same-target
+  bind must retain pending reset evidence on all seven variants.
   Budgets 0/1/larger, fresh pending completion, late success versus original backend
   failure, timestamp validity, rollover, backward/half-range rejection and clipped
   callback timeouts are executed. A bounded private token-arithmetic fixture

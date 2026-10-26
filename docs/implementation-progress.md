@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 11 completely; prompt 12 remains separate.
+Current authorization: independently audit completed prompt 11; prompt 12 remains separate.
 
 ## Prompt status
 
@@ -890,3 +890,43 @@ MinGW sanitizer runtimes remain unavailable; no sanitizer pass is claimed. Lead
 commits/pushes the complete checked unit on this same branch and verifies upstream
 equality and a clean worktree before handoff. The final commit belongs in the
 handoff and next progress update, avoiding a self-referencing hash-edit loop.
+
+
+## Prompt 11 independent audit (2026-10-26)
+
+Started clean at synchronized `2dd43046cdfe7f2eed92d8fa372e27305cad58f4`, the
+completed prompt-11 implementation, on the existing execution branch. Reread
+original prompt 11 in full and reviewed its actual `fe1f7ca..2dd4304` diff,
+current production/tests and frozen contracts. The selected IDE prompt 16 was
+not executed. Three fresh parallel reviewers covered requirements/simplicity/
+public consumption (gpt-6.1-sol/high), timing/effects/correctness (gpt-6-astra/high),
+and tests/current peers (gpt-6.1-sol/high). Lead independently checked their
+source findings, diffs and probes, and ran the final integration checks.
+
+No production defect was found. Corrected bind's Doxygen: binding validation
+returns INVALID_CONFIG, not UNSUPPORTED_FEATURE. Added a missing persistent
+regression across all seven variants: observed reset, end/same-target rebind,
+then a complete clear-register initialization must retain MAY_BE_PENDING and
+UNKNOWN. Current identity usability may still become initialized; changing the
+unresolved target remains rejected. The engine already met this contract.
+No public signature, runtime behavior, chip gate or build/package rule changed.
+
+The [fresh peer review](audit/execution-11-peers.md#independent-implementation-recheck-2026-10-26)
+records unchanged driver revisions and FieldCore's now-dirty unrelated worktree;
+all sibling work was preserved. Updated source/test documentation, Unreleased,
+progress and validation. Reviewed README, AGENTS, CONTRIBUTING, API/architecture,
+feature matrix and TI guides: their implemented scope and contracts remain
+accurate, so no incidental edits were needed.
+
+PASS: final fresh-tree Debug/Release 6/6 CTests each; 20,490 owner checks,
+161,670 protocol and 8,602,548 codec checks; 371 additional public-path probes;
+strict Doxygen/all 15 public owner methods visible; source-equal extracted
+36-file package/ordinary consumer, version/no-op and links/whitespace checks.
+The independent extracted public consumer also calls all 15 methods and completes
+initialization. Exact commands/limits are in
+[validation](validation.md#prompt-11-independent-audit-2026-10-26).
+No firmware/hardware or later-operation evidence is claimed. Sanitizers remain
+unavailable from the recorded installed-tool probe; not rerun for this comment/
+regression-only change. Lead commits and synchronizes the checked audit on this
+branch and reports final commit/equality/clean state in the handoff, recording
+the commit in the next progress update without a self-referencing edit loop.
