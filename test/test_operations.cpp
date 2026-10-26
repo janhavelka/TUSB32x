@@ -15,6 +15,7 @@
 
 int runProfileObservationChecks();
 int runProfileApplicationChecks();
+int runResetRecoveryChecks();
 
 namespace {
 
@@ -1049,6 +1050,7 @@ int main() {
   tokenBoundaryArithmetic();
   failures += runProfileObservationChecks();
   failures += runProfileApplicationChecks();
+  failures += runResetRecoveryChecks();
   if (failures != 0) {
     std::printf("FAIL %d of %zu owner checks\n", failures, checks);
     return 1;

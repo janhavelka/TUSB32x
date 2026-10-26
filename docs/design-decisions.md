@@ -402,3 +402,31 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   independent fractional-clock and literal-vector tests cover these decisions.
   No retry, cleanup, framework dependency, new package source or hardware
   qualification is introduced.
+
+## Prompt 14: explicit reset and original-device recovery (2026-10-26)
+
+- Add two real start methods to the existing engine and transport. Reset obtains
+  fresh actual 0A controls, uses the existing composer once, anchors 96 elapsed
+  ticks after callback return and runs one complete F. No desired-profile replay
+  or exact invented reset-byte comparison. B/L/A may resample PORT; 322I requires
+  semantic DRP. A contradictory independently valid mode prevents reset completion
+  even if another field is reserved. Incomplete proof or asserted reset returns
+  CONFIGURATION_UNKNOWN; otherwise contradictory 322I role returns mismatch.
+- Base-only recovery requires current identity and external VDD readiness. Reject
+  other variants before traffic and initial internal45 bits before writing. Use
+  TI's literal04, fresh 31-tick wait, literal00 and final low-three-bit proof.
+  Four callbacks and 6TX/2RX bytes; no transient port observation or cleanup.
+- One shared write path records possible effects before transport. Failed writes
+  retain their original error/detail and INDETERMINATE effect; no retry. Reset
+  acceptance uncertainty remains historical through later successful proof/reset.
+  Successful recovery clears only its sequence obligation: termination can become
+  ENABLED while full configuration remains UNKNOWN pending F. Final04 establishes
+  DISABLED without sequence success; internal-bit anomalies remain UNKNOWN.
+- A completed new reset may return OK/CONFIRMED while older recovery history keeps
+  configuration UNKNOWN. Clear controls alone never prove the historical recovery
+  recipe. Only an explicit new recovery request may repeat it. Pending other
+  reset/mode work rejects recovery; own recovery history alone does not.
+- Current peer/TI sources, revisions and rejected conventions are recorded in
+  [execution-14-peers](audit/execution-14-peers.md). Fixed public tests and an
+  independent exhaustive reset-byte probe cover these policies. Host evidence
+  does not qualify board readiness, physical wait accuracy or autonomous VCONN.

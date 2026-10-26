@@ -12,8 +12,9 @@ alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
 It also provides a non-copyable owner facade with bus-silent lifecycle,
 instance-local tokens, retained results, read-only initialization, profile
-observation, explicit desired-profile apply/verification and read-only
-reconciliation. Other operation families and framework firmware remain planned.
+observation, explicit desired-profile apply/verification, read-only reconciliation,
+explicit reset and original TUSB320/I dead-battery recovery. Other operation
+families and framework firmware remain planned.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to

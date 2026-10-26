@@ -2,12 +2,24 @@
 
 This checkout contains audited implementation contracts, portable C++17 values
 and a cooperative owner engine with read-only initialization, profile observation,
-explicit profile application, desired verification and read-only reconciliation.
+explicit profile application, desired verification, read-only reconciliation,
+explicit reset and original TUSB320/I dead-battery recovery.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
+
+- Linked `startReset` and base-only `startRecoverDeadBattery` through the existing
+  cooperative engine. Reset preserves actual controls in its one-shot command,
+  waits 96 elapsed owner ticks and verifies once without desired replay. Recovery
+  requires caller-established stable VDD and valid identity, qualifies internal
+  45 bits, writes literal 04/00 around a fresh 31-tick wait and verifies readback
+  within four callbacks. Failures preserve original status/detail, possible effects
+  and independent interrupted-sequence history through cancellation, result take
+  and rebind. Other variants reject recovery without traffic; TUSB322I reset
+  requires semantic DRP proof. Added literal-byte, timing and fault-boundary
+  regressions; software procedures do not establish hardware qualification.
 
 - Independent prompt-13 audit and permanent literal-byte regressions for UFP
   role changes and settings-only 0A updates. These close gaps demonstrated by

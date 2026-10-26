@@ -8,8 +8,9 @@ The library also contains [private transport/identity helpers](docs/transport.md
 and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
 binding/lifecycle, token-checked polling/cancellation/result delivery, cached
 evidence, read-only initialization, profile observation, explicit profile apply,
-desired-profile verification and read-only reconciliation. Port refresh, reset,
-IRQ operations, public raw diagnostics and firmware adapters remain planned.
+desired-profile verification, read-only reconciliation, explicit reset and
+original TUSB320/I dead-battery recovery. Port refresh, IRQ operations, public
+raw diagnostics and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -25,8 +26,8 @@ variant-specific field validity without a binding or device access. Reserved
 codes remain raw evidence. Single-byte direction/current codes need complete
 port context before use; CC indications are not measured current or permission
 to draw power. The private codecs also compare settings and compose qualified
-write bytes. The owner engine executes supported profile changes; reset,
-recovery and IRQ operations remain planned.
+write bytes. The owner engine executes supported profile changes, reset and
+base-part recovery; IRQ operations remain planned.
 
 ## Consume the library
 
@@ -93,6 +94,22 @@ CONFIGURATION_MISMATCH. Cancellation or failure never rolls back hardware:
 desired input, historical values and unresolved effects survive. Reconcile can
 observe an interrupted apply, after its required wait, so a later explicit apply
 can proceed from proved actual settings. It never replays the old request.
+
+`startReset` reads actual 0A controls, sends the reset command once, waits
+96 elapsed owner ticks and performs one identity/control verification. The
+95 ms TI reset maximum and separate one-tick clock margin do not prove attachment
+readiness or a power-on reset. Reset can resample PORT on the six 320 parts and
+returns TUSB322I to DRP. Desired settings remain retained for explicit owner policy.
+
+`startRecoverDeadBattery` is only for original TUSB320/TUSB320I with validated
+identity and application-established stable VDD/readiness. It reads 45, requires
+internal bits 1:0 clear, writes literal 04, waits 31 elapsed owner ticks, writes
+literal 00 and verifies bits 2:0 clear. This is at most four callbacks; the
+30 ms TI minimum has a separate one-tick margin. Interrupted sequence evidence
+survives result take, end/rebind and read-only reconciliation. Clear controls
+alone cannot prove the required sequence ran. Other variants reject recovery
+without traffic. Neither operation retries, replays desired settings or publishes
+transient recovery port observations. See the [procedure guide](docs/device-behavior.md).
 
 One terminal result blocks replacement until `takeResult` delivers it. Result
 delivery returns OK even when the copied operation failed. See the

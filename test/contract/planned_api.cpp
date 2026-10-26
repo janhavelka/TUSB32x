@@ -25,8 +25,8 @@ static_assert(std::is_same_v<decltype(&Driver::startReconcile), ImplementedStart
 static_assert(std::is_same_v<decltype(&Driver::startRefreshPort), Start>);
 static_assert(std::is_same_v<decltype(&Driver::startAcknowledgeInterrupt), Start>);
 static_assert(std::is_same_v<decltype(&Driver::startServiceInterrupt), Start>);
-static_assert(std::is_same_v<decltype(&Driver::startReset), Start>);
-static_assert(std::is_same_v<decltype(&Driver::startRecoverDeadBattery), Start>);
+static_assert(std::is_same_v<decltype(&ImplementedDriver::startReset), ImplementedStart>);
+static_assert(std::is_same_v<decltype(&ImplementedDriver::startRecoverDeadBattery), ImplementedStart>);
 
 // Type-check every remaining planned method and the default poll budget. These
 // calls generate no runtime claims: the file is checked with -fsyntax-only.

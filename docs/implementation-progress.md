@@ -1095,3 +1095,41 @@ provenance/version checks and extracted ordinary package consumption. Hardware,
 firmware and unavailable sanitizer runtimes remain separate evidence limits.
 Lead commits and syncs this checked audit on the same branch, then verifies
 upstream equality and a clean worktree; final commit evidence is in the handoff.
+
+## Prompt 14: reset and original-device recovery (2026-10-26)
+
+Started clean and synchronized at `a6bcccfe3353461fcc8ee838fcdb0f946a81e821`
+on `promptset/tusb32x-implementation-20261023`. Re-read the original prompt,
+COMMON, owner/time/effect baseline and TI procedures. Current sibling evidence
+and byte-identical official TI downloads are recorded in
+[audit](audit/execution-14-peers.md). No sibling writes or remote CI checks.
+
+Implemented `startReset` and `startRecoverDeadBattery` in the existing engine.
+Reset composes from fresh actual controls, attempts once, waits 96 fresh-anchored
+ticks and performs bounded identity/control proof. Base-only recovery performs
+R45/literal04/31-tick wait/literal00/R45 with four callbacks. Both preserve desired,
+original backend errors, historical evidence and terminal result ownership.
+There is no automatic replay, cleanup, port publication or new engine.
+
+Parallel general coding agents owned disjoint tests and guides/peer audit; a
+strong reasoning reviewer independently checked TI, time/effects and an exhaustive
+public-API probe. The lead reviewed the actual source, tests and diff. Review
+caught a false COMPLETED possibility when an unrelated reserved field hid a valid
+non-DRP 322I reset result; fixed independent field validity and error precedence.
+Tests also caught missing cached WAITING state before the fresh wait anchor.
+A fixture's reserved preference byte was corrected from valid36 to reserved34.
+No expected silicon behavior was weakened to make tests pass.
+
+PASS: Debug/Release six CTests each; 86,298 new reset/recovery assertions;
+previous owner/profile/protocol/codec suites; strict independent 1,792 command
+and 512 post-reset vectors; Doxygen with 21 delivered methods; native PlatformIO;
+source-equal 36-file package and tool-independent tests-OFF consumer;
+links/provenance/version checks. Exact commands and limits are in
+[validation](validation.md#prompt-14-reset-and-original-device-recovery-2026-10-26).
+
+Updated public Doxygen, API/architecture/procedure/variant/feature guides,
+metadata descriptions, README/CHANGELOG, contributor/agent/test guidance and
+planned fixtures. No version bump or future callable declaration. Hardware,
+firmware and unavailable sanitizer runtimes remain separate evidence limits.
+Lead commits and syncs this completed checked unit on the existing branch and
+verifies upstream equality/clean state; final commit evidence is in the handoff.

@@ -432,6 +432,28 @@ class TUSB32x {
   /// Full proof may establish KNOWN actual with CONFIGURATION_MISMATCH against retained desired;
   /// unresolved proof returns CONFIGURATION_UNKNOWN. Old failed results are never rewritten.
   Status startReconcile(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit one explicit reset; admission copies timing and performs no I2C.
+  /// @param timing Immutable owner deadline and admission time in milliseconds.
+  /// @param token Receives a new token only on IN_PROGRESS; preserved on rejection.
+  /// @return Normal admission errors, including NOT_INITIALIZED without current identity.
+  /// @details UNKNOWN configuration is allowed: poll first observes actual 0x0A controls.
+  /// One composed reset write is followed by 96 elapsed owner ticks and full identity/control
+  /// proof, bounded to 7/8/7 callbacks for base/extended-320/322I. Desired settings are never
+  /// replayed. Reset may resample PORT; 322I must return to DRP. Completion does not prove
+  /// attachment readiness or clear historical ambiguous acceptance/recovery evidence.
+  Status startReset(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit the original TUSB320/TUSB320I dead-battery recovery only; no admission I2C.
+  /// @param timing Immutable owner deadline and admission time in milliseconds.
+  /// @param token Receives a new token only on IN_PROGRESS; preserved on rejection.
+  /// @return UNSUPPORTED_FEATURE for other bound variants, NOT_INITIALIZED without identity,
+  /// or CONFIGURATION_UNKNOWN for a pending mode/reset transition; normal slot errors apply.
+  /// @details Caller establishes stable VDD/I2C readiness and decides source startup needs
+  /// recovery, including VDD loss without a cable. Poll checks internal 0x45 bits are zero,
+  /// writes literal 0x04, waits 31 elapsed ticks from fresh completion evidence, writes 0x00
+  /// and verifies low three bits. Four callbacks, six TX/two RX bytes excluding address phases.
+  /// No cleanup/replay or transient port publication occurs. Success proves this sequence and
+  /// termination, not a full profile; interrupted history survives result take/end/rebind.
+  Status startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token);
   /// @brief Advance one bounded owner turn; no sleep, cleanup or retry.
   /// @param[in] token Exact represented token; zero is INVALID_PARAM, absent is RESULT_NOT_AVAILABLE,
   /// different is TOKEN_MISMATCH, checked before time. Terminal calls return frozen status unchanged.
@@ -479,6 +501,8 @@ class TUSB32x {
  private:
   enum class Phase : uint8_t {
     WAIT, BASE_PRECHECK, APPLY_WRITE, APPLY_WAIT,
+    RESET_PRECHECK, RESET_WRITE, RECOVERY_PRECHECK, RECOVERY_DISABLE,
+    RECOVERY_ENABLE, RECOVERY_VERIFY, PROCEDURE_WAIT,
     IDENTITY, REVISION, CONFIG08, CONFIG09, CONFIG0A, CONFIG45, DONE
   };
   /// @brief One composed write in a fixed profile plan of at most six entries.
@@ -491,6 +515,7 @@ class TUSB32x {
   ProfileWrite _writes[6]{};
   uint8_t _writeCount = 0;
   uint8_t _writeIndex = 0;
+  uint8_t _commandByte = 0;
   DriverConfig _config{};
   bool _hasAssociation = false;
   uint64_t _lastToken = 0;

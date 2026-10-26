@@ -1,9 +1,9 @@
 # Feature, source and verification coverage
 
-Prompts 2-13, updated 2026-10-26. This matrix defines the capability boundary;
+Prompts 2-14, updated 2026-10-26. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
-reconciliation, explicit apply/desired verification, native builds and host
+reconciliation, explicit apply/desired verification, reset/base recovery, native builds and host
 checks exist. CLI, other operation families and hardware qualification remain planned.
 **Planned** means the
 source boundary is established and implementation/testing is still due.
@@ -14,7 +14,7 @@ These are documentation labels, not new runtime health/status values.
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
 listed there; V names TUSB322I alone. Later operation tests below remain future
-evidence; the implemented-values table records the subset delivered in prompts 5-13.
+evidence; the implemented-values table records the subset delivered in prompts 5-14.
 Actual checks are in
 [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md). Planned commands follow [CLI_CONTRACT](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CLI_CONTRACT.md).
 
@@ -22,7 +22,7 @@ Prompt 3 completed the [register contract](register-map.md) and
 [independent vectors](register-vectors.md): map/access/defaults, semantic
 encodings, comparison/composition and negative cases. Rows below that name
 prompt 3 now have their register specification evidence. Read-only initialization,
-profile observation, apply, verification and reconciliation have owner behavior; other device
+profile observation, apply, verification, reconciliation, reset and base recovery have owner behavior; other device
 operations remain planned. Prompt 10 implements and tests the pure
 field codecs/comparison and qualified byte composer, without executing any
 procedure. No unresolved gate was closed by byte arithmetic.
@@ -31,7 +31,8 @@ Prompt 4 completed the [device procedure guide](device-behavior.md). Every enabl
 plan now has exact source citations, prerequisites, wait anchors, retained effects,
 verification, callback/TX/RX ceilings and negative/failure vectors. Initialization,
 profile reads and read-only reconciliation are implemented through prompt 12;
-prompt 13 adds explicit profile application and desired verification. Other plans
+prompt 13 adds explicit profile application and desired verification; prompt 14
+adds explicit reset and original-part recovery. Other plans
 remain specified operations. The source-to-operation mapping
 below supplements the feature rows without turning a future test into a PASS.
 
@@ -52,8 +53,8 @@ below supplements the feature rows without turning a future test into a PASS.
 | Try.SNK / Try.SRC, UFP accessories, termination disable — Implemented; V UFP-accessory writes gated | L/A/V; absent on B | TI fact: L/A §7.2/Tables 8–10 pp10–11,17–19; V §6.3/Tables 6-8–10 pp9–12,17–20; V_FAULT_CLEAR affects 09 bit0 writes | DeviceProfile fields / preference, ufpaccessory, termination, apply | Reject B unsupported fields; reserved Try.SRC code2 never accepted; preferences not guaranteed role; termination effects not conflated with 45; V accessory changes reject without writes until safe 09 composition is proved; 3/4/10/13/18 |
 | Duty/debounce and accessory decoding — Codes/apply implemented; port Planned; V duty writes gated | B/L/A/V, exact per-variant encodings | TI fact: B Table 7-7 pp17–19; L/A Tables 8–10 pp17–19; V Tables 6-8–10 pp17–20; V_FAULT_CLEAR affects 09 bits2:1 writes | validateProfile, codecs, startApplyProfile, portSnapshot / duty, debounce, decode | Base and extended debounce differ; base accessory7 reserved; retain raw unknown values without fabricated semantic state; V duty changes reject without writes, while unchanged proved 09 controls permit independently supported 0A changes; derive complete cases in 3, implement 10/13/15/18 |
 | Separate 45 Rd/Rp control — Implemented B/L/A; unavailable V | Six 320 parts only | TI fact: B Table 7-7 p19; L/A Table 11 p20; V complete map pp17–20 lacks45 | DeviceProfile.disableRdRp / rd-rp, apply | Internal bits preserved, no register45 on V, clear0A disable does not prove Rd/Rp enabled; safe transition procedure specified4 and implemented13; 3/4/10/13/18 |
-| Explicit reset — Planned, effect differences retained | B/L/A/V | TI fact: B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | Actual reset mask emitted, no repeat after uncertain write, timed completion proof; six-part PORT resampling, V returns DRP, no automatic desired replay; 4/14/18/31 |
-| Post-dead-battery Rp recovery — Planned B only | TUSB320, TUSB320I | TI fact: B §7.4.3 p14; conservative identity/readback prerequisites are library policy | startRecoverDeadBattery / recover-dead-battery | Exact base-only operation, owner-qualified VDD, transient statuses not published, timed sequence/effects tested; other variants reject before callbacks; 4/14/18/31 |
+| Explicit reset — Implemented, effect differences retained | B/L/A/V | TI fact: B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | Actual reset mask emitted, no repeat after uncertain write, timed completion proof; six-part PORT resampling, V returns DRP, no automatic desired replay; 4/14/18/31 |
+| Post-dead-battery Rp recovery — Implemented B only | TUSB320, TUSB320I | TI fact: B §7.4.3 p14; conservative identity/readback prerequisites are library policy | startRecoverDeadBattery / recover-dead-battery | Exact base-only operation, owner-qualified VDD, transient statuses not published, timed sequence/effects tested; other variants reject before callbacks; 4/14/18/31 |
 | IRQ observation — Planned; ACK / bounded service — Planned B/L/A, gated V | B/L/A/V | TI fact: B Table 7-7 p18; L/A Table 9 p18; V Table 6-9 pp18–19; N §8 p9. Unresolved V_FAULT_CLEAR | startRefreshPort, startAcknowledgeInterrupt, startServiceInterrupt / irq read, irq ack, irq service | Explicit W1C, actual controls preserved, no implicit ACK in reads, new event during ACK/recheck; V raw fault retained, ACK/service rejected before any write until safe 09 composition is proved; 3/4/16/18/30 |
 | VCONN — Autonomous silicon effect, no software enable API; fault clear gated | TUSB322I only | TI fact: V §5.3 p4/§5.5 p6/§6.3.8 p13; unresolved Table 6-9 p19 | Raw port/fault evidence / read, decode; no VCONN setter | Ra/source/detach physical fixture with board-owned 5 V VDD prerequisite and 4.75–5.5 V VCONN qualification; limit225/300/375 mA, R_ON1.25 Ω max documented; active cable not powered-VCONN proof; six-part APIs reject invented control; 3/15/30 |
 | Safe raw register diagnostics — Planned; V 09 writes gated | All seven, exact allowlists | TI fact: complete maps above; policy: explicit pointers, no bypass of identity/access/procedure gates including V_FAULT_CLEAR | readRegisterSync, writeRegisterSync / reg, wreg, decode | Base A0/V45 absent; holes/wrap rejected; mixed fields safely composed; V 09 raw writes rejected until safe fault handling is proved; reset/role/termination sequence bypass rejected; 3/9/10/21/22 |
@@ -79,8 +80,8 @@ refer to the device guide, with arithmetic verification recorded in validation.
 | Fixed port observation; B/L/A/V | Status tables above;09/08/09 and E0 coherence comparison are policy | startRefreshPort / read, sample, irq read | P24/P26/P28; no retry-until-stable, no fresh physical-current inference;15/18/30 |
 | ACK/service; B/L/A only | B Table 7-6 p16/Table 7-7 p18; L/A Table 9 p18; N §8 p9; bounded recheck policy | startAcknowledgeInterrupt, startServiceInterrupt / irq ack, irq service | P21–P26; 2 or 5 callbacks, raw observations survive later error, coalescing/reassertion, V09 writes gated;16/18/30 |
 
-Initialization, profile observation, apply, desired verification and read-only
-reconciliation have host behavioral tests. Other procedure implementations and
+Initialization, profile observation, apply, desired verification, read-only
+reconciliation, reset and base recovery have host behavioral tests. Other procedure implementations and
 all hardware qualification remain planned.
 V_ADVERTISEMENT, V_FAULT_CLEAR, V_RETURN_DRP and the board/electrical/current
 gates remain open. Prompt 4 did not qualify adapters or close those gates.
@@ -105,13 +106,13 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Operation/diagnostics — Passive values implemented | OperationToken/Timing/Result/Progress, identity/IRQ values, DriverDiagnostics | Owner baseline and prompt4 retained effect rules | PASS fixed values/default invalidity and token domain; admission/time6/11, retained IRQ16, diagnostics17 |
 | Health — Passive values and private evidence accounting implemented | DriverState, ManagedTransportEvidence, HealthPolicy/Snapshot | Baseline policy; no TI health claim | PASS defaults and private managed/raw totals/streak/timestamp separation9; public validation/projection/views17 |
 | Decoder — Implemented | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS exhaustive mapped bytes/variants, reserved validity, invalid inputs and complete output preservation10; public linkage without private includes; CLI formatting22 |
-| Owner facade — Implemented subset; later jobs Planned | Lifecycle, startInitialize/startReadProfile/startApplyProfile/startVerifyProfile/startReconcile, tokened poll/cancel/snapshot/take, cached getters and totals clear | Baseline and current execution-11/12/13 peer audits | Registered tusb32x_operations and delivered public-link checks; other jobs14-17, conformance18-19 |
+| Owner facade — Implemented subset; later jobs Planned | Lifecycle, startInitialize/startReadProfile/startApplyProfile/startVerifyProfile/startReconcile/startReset/startRecoverDeadBattery, tokened poll/cancel/snapshot/take, cached getters and totals clear | Baseline and current execution-11/12/13/14 peer audits | Registered tusb32x_operations and delivered public-link checks; other jobs15-17, conformance18-19 |
 | Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
 | Source docs — Present | Five public headers with file/type/member/enum/function and generated version Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen, visibility of17 public structs and four version constants; complete omission guard33 |
 | Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, duplicate-declaration rejection, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
 | Component/native tool configuration — Implemented; firmware Planned | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration fixture, launcher argument/exit fixtures and native linkage; native-IDF firmware25-26, full packages32 |
 
-Host checks exercise read-only procedures and explicit profile writes through terminal fake
+Host checks exercise read-only procedures, profile writes and reset/recovery through terminal fake
 callbacks. No pass above represents a physical I2C transaction, framework
 firmware build, remote CI run or physical qualification.
 
@@ -120,7 +121,8 @@ firmware build, remote CI run or physical qualification.
 The table below retains prompt 6's specification provenance. Prompt 11 now
 implements its lifecycle, token/result and initialization time subset; prompt 12
 adds profile observation and read-only reconciliation; prompt 13 adds explicit
-apply and desired verification in the registered owner suite. [Method/state rules](api-contracts.md#method-admission-and-output-preservation)
+apply and desired verification; prompt 14 adds reset/base recovery in the registered
+owner suite. [Method/state rules](api-contracts.md#method-admission-and-output-preservation)
 and vectors O01–O25 remain normative for later write/port/diagnostic stages.
 Peer provenance is [execution-6-peers](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-6-peers.md); register and
 procedure sources remain the exact TI revisions already listed above.
@@ -157,8 +159,8 @@ HardwareEffect::NONE. No observation clears port invalidation or permits gated
 TUSB322I writes. The exact host commands and outcomes are recorded in validation.
 
 Prompt 13 adds public desired mismatch and interrupted apply/mode tests.
-Reset and base-recovery history remain prompt 14 work; no private-state injection
-or desired setter was added to make those future cases reachable early.
+Prompt 14 adds reset and base-recovery history coverage through their public
+operations; no private-state injection or desired setter was needed.
 The fresh [peer audit](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-12-peers.md)
 records the adopted snapshot/full-proof conventions and rejected profile replay.
 
@@ -196,3 +198,32 @@ original error/detail and independent termination/reset obligations survive.
 The fresh [prompt 13 peer audit](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-13-peers.md)
 records current source choices and the official TI recheck. Exact host outcomes
 remain in validation; no result here is physical hardware qualification.
+
+## Prompt 14 delivered reset and base recovery
+
+`startReset` uses a fresh actual 0A image to compose one command with bit 08,
+waits 96 elapsed owner ticks from fresh post-callback time and runs F once.
+Its callback/TX/RX ceilings are B 7/8/13, L/A 8/9/14 and V 7/8/13. Clear reset
+and variant postconditions are required; TUSB322I must return to semantic DRP.
+Reset preserves desired input, never retries an uncertain command and does not
+claim POR or attachment readiness. Six 320 parts can resample PORT, and 322I's
+autonomous VCONN effects remain subject to board-owned supply/power policy.
+
+`startRecoverDeadBattery` is restricted to original TUSB320/TUSB320I with current
+identity and caller-qualified stable VDD/readiness. Its literal R45/W4504/wait31/
+W4500/R45 sequence is bounded to four callbacks, six TX bytes and two RX bytes.
+Nonzero initial internal bits 03 reject before writes; final bits 07 must clear.
+The 31-tick wait includes the separate one-tick margin beyond TI's 30 ms minimum.
+No transient recovery port status is published. Success proves this sequence;
+full configuration trust still requires F.
+
+Both operations use the existing result/token/deadline and transport paths.
+Original errors/details, partial or indeterminate effects and independent reset/
+recovery obligations survive cancellation, expiry, end/rebind and result take.
+Read-only reconciliation observes current controls; a clear 45 cannot prove a
+missing historical recovery sequence. A later explicit recovery attempt is
+allowed for its own uncertainty, after any different mode/reset transition is
+reconciled. Other variants reject recovery without traffic. Existing 322 write
+restrictions remain in force. The current [peer and TI recheck](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-14-peers.md)
+records exact source choices; actual checks belong in validation. No hardware
+or linked framework firmware qualification is implied.

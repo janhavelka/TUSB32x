@@ -11,6 +11,8 @@ read-only profile observation/reconciliation and its conservative reset-settling
 wait. Prompt 13 adds explicit profile application/verification, literal role
 sequences, ambiguous-write effects and independent sub-ms timing fixtures;
 software owner-time tests do not prove physical hardware timing.
+Prompt 14 adds explicit reset and original TUSB320/TUSB320I recovery, literal
+command/procedure scripts, retained sequence history and physical-clock wait checks.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -117,6 +119,34 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   Active apply retains the previous terminal diagnostic effect/kind/status while
   separate flags expose live configuration uncertainty; termination updates the
   diagnostic history with the new result.
+  `test_reset_recovery.cpp` links both delivered public starts. Reset scripts
+  exercise all seven variants with exact E8/EA command composition, a single
+  command attempt, 96 elapsed ticks and one complete F. Bounds are B7/L/A8/V7
+  callbacks, 8/9/8 TX bytes and 13/14/13 RX bytes. A staged desired profile
+  survives reset with different actual controls and is never replayed or used
+  as reset's success comparison. TUSB322I semantic DRP00/11 succeeds; UFP/DFP
+  readback gives CONFIGURATION_MISMATCH. An asserted reset bit gives bounded
+  CONFIGURATION_UNKNOWN with no second command or read loop.
+  Reserved advertisement together with non-DRP mode cannot certify TUSB322I
+  reset completion; asserted reset also takes precedence over role mismatch.
+  Recovery scripts run only on original TUSB320/TUSB320I and require identity.
+  Initial internal45 values01/02/03 reject before writes. Qualified scripts
+  execute literal R45/W4504/wait31/W4500/R45 with four callbacks, six TX and
+  two RX bytes. Final low-three-bit mismatches fail without successful sequence
+  proof. No transient port observation is read or published. Six backend errors
+  are injected at each callback; each write runs both possible acceptance cases.
+  Cancellation, end, external invalidation and owner expiry cover every callback,
+  anchored wait and final fresh-time boundary. Effects, first error/detail,
+  callback accounting, retained results and bus-silent rejection are checked.
+  Independent microsecond completion at 200.1/200.9 or 300.1/300.9, with delayed
+  fresh owner samples, cannot advance the 31/96-tick wait early; stalled ticks,
+  zero budget, wait rollover and deadline equality do no early transport work. End/rebind and
+  read-only reconciliation retain ambiguous reset acceptance and interrupted
+  recovery history. Clear controls alone cannot certify the older recovery;
+  a new explicit recovery can resolve it while configuration awaits full proof.
+  A newer successful reset preserves that older unresolved recovery history.
+  Later reset success also preserves earlier ambiguous command acceptance,
+  while its complete waited F can resolve an interrupted mode transition.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot

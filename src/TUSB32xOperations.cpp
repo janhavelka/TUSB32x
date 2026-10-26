@@ -1,5 +1,5 @@
 /// @file TUSB32xOperations.cpp
-/// @brief Bus-silent lifecycle, explicit profile writes and bounded shared observation proof.
+/// @brief Bus-silent lifecycle, explicit writes/reset/recovery and bounded shared proof.
 #include "TUSB32x/TUSB32x.h"
 
 #include "TUSB32x/CommandTable.h"
@@ -100,7 +100,9 @@ Status TUSB32x::checkToken(OperationToken token) const {
 
 Status TUSB32x::finish(Status status, bool timeValid, uint64_t nowMs) {
   if (_configuration.state == ConfigurationState::APPLYING) invalidateConfiguration();
-  if (status.ok() && _progress.kind == OperationKind::APPLY_PROFILE &&
+  if (status.ok() && (_progress.kind == OperationKind::APPLY_PROFILE ||
+      _progress.kind == OperationKind::RESET ||
+      _progress.kind == OperationKind::RECOVER_DEAD_BATTERY) &&
       _result.hardwareEffect == HardwareEffect::PARTIAL)
     _result.hardwareEffect = HardwareEffect::CONFIRMED;
   _progress.state = status.ok() ? OperationState::SUCCEEDED :
@@ -197,6 +199,14 @@ Status TUSB32x::startVerifyProfile(const OperationTiming& timing, OperationToken
   return startOperation(OperationKind::VERIFY_PROFILE, timing, token);
 }
 
+Status TUSB32x::startReset(const OperationTiming& timing, OperationToken& token) {
+  return startOperation(OperationKind::RESET, timing, token);
+}
+
+Status TUSB32x::startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token) {
+  return startOperation(OperationKind::RECOVER_DEAD_BATTERY, timing, token);
+}
+
 Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing,
                                OperationToken& token, const DeviceProfile* candidate) {
   const uint64_t interval = timing.deadlineMs - timing.nowMs;
@@ -213,9 +223,19 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
       if (!valid.ok()) return valid;
     }
   }
+  if (kind == OperationKind::RECOVER_DEAD_BATTERY && _diagnostics.bound &&
+      _config.variant != Variant::TUSB320 && _config.variant != Variant::TUSB320I)
+    return error(Err::UNSUPPORTED_FEATURE);
   if (!_diagnostics.bound) return error(Err::NOT_BOUND);
   if (_progress.state == OperationState::ACTIVE) return error(Err::BUSY);
   if (_progress.resultPending) return error(Err::RESULT_PENDING);
+  if (kind == OperationKind::RESET || kind == OperationKind::RECOVER_DEAD_BATTERY) {
+    if (!_diagnostics.initialized) return error(Err::NOT_INITIALIZED);
+    if (kind == OperationKind::RECOVER_DEAD_BATTERY &&
+        (_diagnostics.modeTransitionUnresolved ||
+         _configuration.resetState == ResetState::MAY_BE_PENDING))
+      return error(Err::CONFIGURATION_UNKNOWN);
+  }
   ProfileWrite writes[6]{};
   uint8_t count = 0;
   bool baseMode = false;
@@ -261,6 +281,12 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
   _pendingStatus = Status::Ok();
   _writeCount = count;
   _writeIndex = 0;
+  if (kind == OperationKind::RESET) {
+    _phase = Phase::RESET_PRECHECK;
+    _waitMode = _diagnostics.modeTransitionUnresolved;
+  } else if (kind == OperationKind::RECOVER_DEAD_BATTERY) {
+    _phase = Phase::RECOVERY_PRECHECK;
+  }
   if (candidate != nullptr) {
     for (uint8_t i = 0; i < count; ++i) _writes[i] = writes[i];
     _configuration.desiredProfile = *candidate;
@@ -531,13 +557,18 @@ Status TUSB32x::publishConfiguration() {
   _configuration.observedUptimeMs = _observing.observedUptimeMs;
   _configuration.observedTimeValid = true;
   _configuration.hasObservedProfile = (_observing.observedValidFields & applicable) == applicable;
+  // SLLSEO5D 6.3.2 p9 promises reset to DRP, not an exact 0x0A reset image.
+  const bool resetRoleMismatch = _progress.kind == OperationKind::RESET &&
+      _config.variant == Variant::TUSB322I &&
+      (_configuration.observedValidFields & static_cast<uint16_t>(ProfileField::PORT_MODE)) != 0 &&
+      _configuration.observedProfile.portMode != PortMode::DRP;
   const bool fullProof = _progress.kind != OperationKind::READ_PROFILE;
   if (fullProof) {
     _diagnostics.initialized = true;
     _diagnostics.managedTransport.initialized = true;
     // A prior wait and one complete clear-reset F prove reset settling. Unrelated
     // reserved fields/recovery history may still prevent full configuration trust.
-    if (_waitReset && (_observing.rawConfig0A & 0x08U) == 0) {
+    if (_waitReset && !resetRoleMismatch && (_observing.rawConfig0A & 0x08U) == 0) {
       _configuration.resetState = ResetState::COMPLETED;
       _diagnostics.resetState = ResetState::COMPLETED;
     }
@@ -583,6 +614,15 @@ Status TUSB32x::publishConfiguration() {
   }
   _diagnostics.configurationState = _configuration.state;
   _diagnostics.terminationState = _configuration.terminationState;
+  if (_progress.kind == OperationKind::RESET) {
+    if ((_observing.rawConfig0A & 0x08U) != 0) return error(Err::CONFIGURATION_UNKNOWN);
+    if (resetRoleMismatch) return error(_configuration.hasObservedProfile ?
+        Err::CONFIGURATION_MISMATCH : Err::CONFIGURATION_UNKNOWN);
+    // Prove this reset independently of an older interrupted recovery recipe.
+    return _configuration.hasObservedProfile &&
+        _configuration.resetState == ResetState::COMPLETED &&
+        !_diagnostics.modeTransitionUnresolved ? Status::Ok() : error(Err::CONFIGURATION_UNKNOWN);
+  }
   if (_configuration.state != ConfigurationState::KNOWN) return error(Err::CONFIGURATION_UNKNOWN);
   if ((_progress.kind == OperationKind::RECONCILE ||
        _progress.kind == OperationKind::VERIFY_PROFILE ||
@@ -629,6 +669,46 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
         return finish(error(Err::CONFIGURATION_UNKNOWN), true, nowMs);
       _phase = Phase::APPLY_WRITE;
       _progress.phase = OperationPhase::WRITING;
+    } else if (_phase == Phase::RESET_PRECHECK) {
+      // TI reset command bit3: SLLSEN9F Table7-7 p19, L/A Table10 p19,
+      // SLLSEO5D Table6-10 p20. Compose from fresh actual controls, never desired.
+      detail::WriteRequest request{};
+      request.variant = _config.variant;
+      request.reg = 0x0A;
+      request.intent = detail::WriteIntent::RESET;
+      detail::WriteEvidence evidence{};
+      evidence.actual = _received[0];
+      evidence.actualValid = true;
+      const Status composed = detail::composeWrite(request, evidence, _commandByte);
+      if (!composed.ok()) return finish(composed, true, nowMs);
+      _phase = Phase::RESET_WRITE;
+      _progress.phase = OperationPhase::WRITING;
+    } else if (_phase == Phase::RECOVERY_PRECHECK) {
+      // SLLSEN9F 7.4.3 p14 + Table7-7 p19: zero-internal precheck is library
+      // policy qualifying TI's literal 04/00 writes; ordinary writes preserve bits.
+      if ((_received[0] & 0x03U) != 0)
+        return finish(error(Err::CONFIGURATION_UNKNOWN), true, nowMs);
+      _phase = Phase::RECOVERY_DISABLE;
+      _progress.phase = OperationPhase::WRITING;
+    } else if (_phase == Phase::RESET_WRITE || _phase == Phase::RECOVERY_DISABLE) {
+      const uint64_t ticks = _phase == Phase::RESET_WRITE ? 95 : 30;
+      _phase = Phase::PROCEDURE_WAIT;
+      _progress.phase = OperationPhase::WAITING;
+      _progress.waiting = true;
+      _progress.readyAtValid = true;
+      _progress.readyAtMs = nowMs + ticks + OWNER_CLOCK_MARGIN_MS;
+    } else if (_phase == Phase::RECOVERY_ENABLE) {
+      _phase = Phase::RECOVERY_VERIFY;
+      _progress.phase = OperationPhase::READING;
+    } else if (_phase == Phase::RECOVERY_VERIFY) {
+      const bool complete = (_received[0] & 0x07U) == 0;
+      if (complete) _diagnostics.recoverySequenceUnresolved = false;
+      // Only the base part has this procedure and its sole termination control
+      // is 45[2]. This read proves no complete profile or historical failed job.
+      _configuration.terminationState = (_received[0] & 0x03U) != 0 ?
+          TerminationState::UNKNOWN : complete ? TerminationState::ENABLED : TerminationState::DISABLED;
+      _diagnostics.terminationState = _configuration.terminationState;
+      return finish(complete ? Status::Ok() : error(Err::CONFIGURATION_MISMATCH), true, nowMs);
     } else if (_phase == Phase::APPLY_WRITE) {
       const bool wait = _writes[_writeIndex++].waitAfter;
       if (wait) {
@@ -656,33 +736,63 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
       _progress.phase = OperationPhase::WRITING;
     }
   }
+  if (_phase == Phase::PROCEDURE_WAIT) {
+    if (nowMs - _progress.readyAtMs >= detail::HALF_RANGE) return error(Err::IN_PROGRESS);
+    _progress.waiting = false;
+    _progress.readyAtValid = false;
+    _phase = _progress.kind == OperationKind::RESET ? Phase::IDENTITY : Phase::RECOVERY_ENABLE;
+    _progress.phase = _progress.kind == OperationKind::RESET ?
+        OperationPhase::READING : OperationPhase::WRITING;
+  }
   if (maxTransfers == 0) return error(Err::IN_PROGRESS);
-  if (_phase == Phase::APPLY_WRITE) {
-    const auto& write = _writes[_writeIndex];
+  if (_phase == Phase::APPLY_WRITE || _phase == Phase::RESET_WRITE ||
+      _phase == Phase::RECOVERY_DISABLE || _phase == Phase::RECOVERY_ENABLE) {
+    const bool apply = _phase == Phase::APPLY_WRITE;
+    const bool reset = _phase == Phase::RESET_WRITE;
+    const uint8_t reg = apply ? _writes[_writeIndex].reg : reset ? 0x0A : 0x45;
+    const uint8_t value = apply ? _writes[_writeIndex].value : reset ? _commandByte :
+        _phase == Phase::RECOVERY_DISABLE ? 0x04 : 0x00;
     // A terminal callback may apply data before returning an error. Publish the
     // possibility before invoking it; callback success alone is not final proof.
     invalidateConfiguration();
-    _configuration.state = ConfigurationState::APPLYING;
-    _diagnostics.configurationState = ConfigurationState::APPLYING;
+    if (apply) {
+      _configuration.state = ConfigurationState::APPLYING;
+      _diagnostics.configurationState = ConfigurationState::APPLYING;
+      if (_writes[_writeIndex].modeStep) _diagnostics.modeTransitionUnresolved = true;
+    } else if (reset) {
+      _configuration.resetState = ResetState::MAY_BE_PENDING;
+      _diagnostics.resetState = ResetState::MAY_BE_PENDING;
+      _waitReset = true;
+    } else {
+      _diagnostics.recoverySequenceUnresolved = true;
+    }
     _diagnostics.configurationWriteUnresolved = true;
-    if (write.modeStep) _diagnostics.modeTransitionUnresolved = true;
     _result.hardwareEffect = HardwareEffect::INDETERMINATE;
     const detail::ProtocolContext context{_config, _stats, _diagnostics};
     const auto transfer = detail::writeRegister(context, detail::TrafficSource::MANAGED,
-        write.reg, write.value, _progress.deadlineMs - nowMs);
+        reg, value, _progress.deadlineMs - nowMs);
     if (transfer.callbackInvoked) {
       ++_progress.transfers;
       _progress.lastPollTransfers = 1;
     }
-    if (!transfer.status.ok()) return finish(transfer.status);
+    if (!transfer.status.ok()) {
+      if (reset) _diagnostics.resetAcceptanceUncertain = true;
+      return finish(transfer.status);
+    }
     _result.hardwareEffect = HardwareEffect::PARTIAL;
+    if (_phase == Phase::RESET_WRITE || _phase == Phase::RECOVERY_DISABLE) {
+      _progress.phase = OperationPhase::WAITING;
+      _progress.waiting = true;
+      // The status-only callback supplied no completion timestamp.
+      _progress.readyAtValid = false;
+    }
     _pending = true;
     return error(Err::IN_PROGRESS);
   }
   const uint8_t reg = _phase == Phase::IDENTITY ? 0 : _phase == Phase::REVISION ? 0xA0 :
       _phase == Phase::CONFIG08 ? 8 :
       (_phase == Phase::CONFIG09 || _phase == Phase::BASE_PRECHECK) ? 9 :
-      _phase == Phase::CONFIG0A ? 10 : 0x45;
+      (_phase == Phase::CONFIG0A || _phase == Phase::RESET_PRECHECK) ? 10 : 0x45;
   if (_phase == Phase::CONFIG08) _observing.observedUptimeMs = nowMs;
   const detail::ProtocolContext context{_config, _stats, _diagnostics};
   const auto transfer = detail::readRegisters(context, detail::TrafficSource::MANAGED, reg,

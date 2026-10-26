@@ -8,16 +8,32 @@ from physical qualification. Register encodings are specified in the
 Public values, validators and supplied-byte `decodeRegister` now exist, with
 private transport/identity and pure codec/composition checks through prompt 10.
 The owner now implements initialization, profile observation and read-only
-reconciliation, explicit apply and desired verification for all seven I2C
-variants, subject to the gates below. Full identity/control/effect proof can
+reconciliation, explicit apply, desired verification and explicit reset for all
+seven I2C variants, subject to the gates below. Full identity/control/effect proof can
 establish KNOWN actual settings;
 this does not grant write permission or exact-part identification from a shared
-signature. Other device operations and CLI names below remain planned contracts.
+signature. Original TUSB320/I dead-battery recovery is also implemented;
+later device operations and CLI names below remain planned contracts.
 Apply changes only differing fields, verifies the complete final image and
 retains independent termination/effect evidence after interruption. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding
 or comparison. Existing equivalent DRP00/11 is preserved during unrelated
 changes; a real non-reset return to DRP remains unavailable.
+
+Explicit reset uses proved actual controls, one command and a 96-tick owner wait
+before one verification pass; the selected 95 ms scheduling bound plus a separate
+one-tick margin does not establish attachment readiness. Six 320 variants can
+resample PORT; TUSB322I returns to semantic DRP without an invented exact 0A image.
+Reset never reapplies desired settings. Device-side VCONN can change with role
+and attachment, subject to the 322I supply limits below.
+
+Only original TUSB320/TUSB320I admit `startRecoverDeadBattery`, after validated
+identity and caller-established stable VDD/readiness. Internal 45 bits 03 must be
+zero before the literal 04/31-tick-wait/00 sequence and final readback. The
+qualification, clock margin and readback are library policy beyond B §7.4.3 p14.
+LI/HI, LAI/HAI and 322I reject recovery before traffic; their own dead-battery
+descriptions do not prescribe that workaround. Interrupted sequence history
+survives result take and reconciliation even when later controls read clear.
 
 ## Evidence and current sources
 

@@ -29,8 +29,6 @@ class Driver : public ::TUSB32x::TUSB32x {
   Status startRefreshPort(const OperationTiming& timing, OperationToken& token);
   Status startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token);
   Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);
-  Status startReset(const OperationTiming& timing, OperationToken& token);
-  Status startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token);
   Status readRegisterSync(uint8_t reg, uint8_t& out);
   Status writeRegisterSync(uint8_t reg, uint8_t value);
 };

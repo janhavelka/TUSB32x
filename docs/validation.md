@@ -1644,3 +1644,58 @@ evidence, not an independent semantic-decoder oracle. Permanent regression bytes
 are literal and independent of production encoding. Mutation sources/executables
 and inspection scripts remain ignored under build; no faulty implementation or
 new test hook was delivered. No hardware qualification is inferred.
+
+## Prompt 14: reset and original-device recovery (2026-10-26)
+
+Started at synchronized `a6bcccfe3353461fcc8ee838fcdb0f946a81e821` on the same
+execution branch. Tools: GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1,
+Python 3.12.10, Doxygen 1.13.2; native PlatformIO platform 1.2.1.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict native Debug/Release | PASS | Six CTests each; independent public headers and compile contracts; Release checks active |
+| Reset/recovery public operations | PASS | 86,298 assertions: all seven reset variants, both recovery variants, local rejection, literal commands, callback/byte bounds, every callback fault and applied/not-applied write, cancel/end/deadline/external invalidation at every phase, desired/history preservation |
+| Timing | PASS | Independent microsecond callback completion, floor timestamps, fresh anchors, 31/96 elapsed ticks, no fresh sample, stalled time, zero/larger budgets and uint64 rollover; no physical timing claim |
+| Prior regressions | PASS | 89,140 apply/verify; 35,454 profile observation; 20,490 owner; 161,670 protocol; 8,602,548 codec checks, plus values/validators/version/launcher |
+| Independent literal probe | PASS | 1,792 reset pre-read byte/variant combinations and 512 final 322I control combinations; no production encoder oracle; one-attempt/bounds/postcondition checks |
+| Doxygen | PASS | No warnings; 17 public structs and all 21 implemented owner methods visible with briefs; future methods absent |
+| Native PlatformIO | PASS | Host consumer builds and runs; fake callback attempts remain zero |
+| Package/ordinary consumer | PASS | 36 byte-equal exported files, matching IDF selection, package links; renamed tests-OFF consumer under unrelated Git builds/runs without Git/Python/Doxygen/PIO on child PATH; C++17 propagates |
+| Documentation/provenance/version | PASS | Local links/anchors, UTF-8/LF/whitespace, eight vendor hashes, unchanged generated version; four current TI PDFs separately byte-match archived source |
+| Separate evidence limits | NOT RUN | Arduino/IDF firmware, physical hardware, electrical/VCONN and board readiness; same-day installed MinGW ASan/UBSan runtimes remain unavailable; MSVC/Clang/clang-format unavailable. Remote CI reserved for prompt34 |
+
+Commands from repository root:
+
+```powershell
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude build/p14-review/reset_probe.cpp build/native/Release/libTUSB32x.a -o build/p14-review/lead-probe.exe
+& build/p14-review/lead-probe.exe
+doxygen Doxyfile
+python build/p14-doxygen.py
+python build/p10-docs.py
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p14.tar.gz
+python build/p14-package.py
+git diff --check
+```
+
+The separate test agent also configured and passed all six CTests in a fresh
+`build/p14-tests` strict Debug tree. Probe and inspection scripts under build are
+session aids, not delivered guards. Lead inspected and reran the independent
+probe against the final library.
+
+During development, the timing fixture caught a missing WAITING flag immediately
+after a successful command callback; readiness remains invalid until a fresh
+owner sample. A reserved preference fixture incorrectly used valid Try.SRC36;
+corrected to reserved34 from the register guide. Independent review caught
+322I non-DRP evidence hidden by an unrelated reserved08: mode validity now guards
+reset completion independently. Asserted reset/incomplete interpretation returns
+UNKNOWN; complete non-DRP proof returns mismatch. Permanent regressions cover both.
+Final passing results supersede these initial failures. No hardware-success stub,
+retry, automatic cleanup or public test-only state hook was introduced.

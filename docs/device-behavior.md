@@ -1,10 +1,11 @@
 # Transport and silicon procedure contract
 
-Completed for prompt 4 on 2026-10-23. This guide specifies future implementation;
-it does not claim working driver code, adapter timing or hardware qualification.
+Initially specified in prompt 4 on 2026-10-23; implemented through reset/recovery
+in prompt 14 on 2026-10-26. Port/IRQ procedures below remain planned. Host checks
+prove software behavior, not adapter timing or physical hardware qualification.
 Read the [variant matrix](variant-matrix.md), [register map](register-map.md),
 [encoding vectors](register-vectors.md) and [owner baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
-The API names below are planned methods. Their admission/result details are
+The API guide identifies delivered methods. Admission/result contracts were
 completed in prompts 5–6; one operation engine implements them in prompts 11–17.
 
 ## Evidence and boundaries
@@ -335,6 +336,9 @@ otherwise UNKNOWN configuration to KNOWN. A later F can establish full trust
 after the recovery obligation is resolved. Keep one operation engine.
 Successful recovery returns OK/CONFIRMED for its own completed sequence, while
 configuration remains UNKNOWN until full proof; success does not adopt desired.
+The final zero control proves base termination ENABLED. Final 04 proves DISABLED
+but leaves sequence history unresolved; nonzero internal bits leave termination
+UNKNOWN. This scalar observation does not replace the historical full profile.
 
 ## One-shot reset and post-reset proof
 
@@ -351,13 +355,20 @@ then F. Require valid identity and full actual control interpretation, reset
 bit clear, and no unresolved transition/recovery obligation for KNOWN trust.
 An asserted reset bit after that bounded observation gives CONFIGURATION_UNKNOWN;
 do not keep polling until clear. V must additionally show semantic DRP00/11;
-otherwise report CONFIGURATION_MISMATCH, retain raw evidence and do not assert
+otherwise, with a complete valid profile and clear reset bit, report
+CONFIGURATION_MISMATCH, retain raw evidence and do not assert
 the documented reset-role postcondition. Requiring a DRP mode readback is a
 conservative library consistency check: V p9 promises DRP operation, while p20's
 affected-register list omits MODE_SELECT. Neither establishes a full reset image
 or qualifies contradictory mode readback. Never infer a complete default byte
 from this operating-role rule. Existing desired remains separate and is not the
 reset operation's success comparison; an explicit verify can compare it later.
+An asserted reset bit or incomplete profile interpretation instead returns
+CONFIGURATION_UNKNOWN. A separately valid non-DRP mode still prevents COMPLETED
+even when another field is reserved. Retain MAY_BE_PENDING and UNKNOWN trust;
+later explicit reconciliation can establish current state without rewriting the
+failed reset result. Historical ambiguous command acceptance is never erased by
+later successful reset or reconciliation.
 
 The digital reset can affect detection/accessory/attachment/direction (B p19,
 L/A p19, V p20). B/L/A sample PORT at reset/power-up (§7.4.1/§7.3.1); V always
@@ -435,7 +446,7 @@ three (or two if held disabled). V has one ordinary 0A write or three/two mode
 writes;08/09 changes stay gated and 45 is absent. Add F once, never per write.
 The same role waits apply before final F when a profile stays disabled.
 Only L/A receives the 6-tick mode wait; V gets no invented 5 ms requirement.
-The implemented apply/verify paths meet these ceilings. Each `poll` is a direct
+The implemented apply/verify/reset/recovery paths meet these ceilings. Each `poll` is a direct
 bounded pass: validate time, consume at most one pending completion, process
 at most one wait boundary, evaluate completion, select a callback and invoke
 it at most once. There is no transition-draining loop. Admission compares eight

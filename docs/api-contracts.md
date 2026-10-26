@@ -1,6 +1,6 @@
 # Portable values, decoding and owner API
 
-Prompts 5-13, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-14, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, two pure validators,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
@@ -9,7 +9,8 @@ without publishing bus-access methods. Prompt 10 adds pure codecs/composition.
 Prompt 11 implements the non-copyable device facade, lifecycle/token/result
 handling, cached evidence and read-only initialization. Prompt 12 adds
 `startReadProfile` and `startReconcile`; prompt 13 adds `startApplyProfile` and
-`startVerifyProfile`. Other operation families
+`startVerifyProfile`; prompt 14 adds explicit `startReset` and original-part
+`startRecoverDeadBattery`. Other operation families
 below remain planned. Later prompts publish their callable declarations with
 real implementations; the complete design inventory is not a promise that all
 listed signatures are delivered now.
@@ -200,6 +201,8 @@ none is ISR-safe.
 | startReconcile | Binding only; read-only F can establish initialization and KNOWN actual controls after invalidation. Retained reset evidence may require a 96-tick wait before the single F pass. B5/L/A6/V5 callback ceilings; no replay or cleanup writes. |
 | startApplyProfile | Current identity, KNOWN actual controls and resolved transition proof required. Validate complete input/gates before copying desired and advancing its generation; changed fields only, followed by F. At most B10/L/A12/V8 callbacks; no-op F performs no writes. |
 | startVerifyProfile | Retained desired input required; run read-only F and compare without adopting or replaying desired. Complete mismatching proof can establish KNOWN actual controls; B5/L/A6/V5 callback ceilings. |
+| startReset | Current validated identity required; UNKNOWN actual configuration allowed when a fresh 0A read supplies a safe command image. Send one command, wait 96 elapsed owner ticks, then run F once; B7/L/A8/V7 callbacks. Never compare or replay desired. |
+| startRecoverDeadBattery | Original 320/I only, current validated identity and caller-established stable VDD/readiness. Read 45, literal 04, wait 31 ticks, literal 00, read 45; at most 4 callbacks, 6 TX/2 RX. Own interrupted recovery permits a new explicit attempt; a different unresolved mode/reset transition rejects locally. |
 | poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
 | cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
 | resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
@@ -293,14 +296,56 @@ claims the earlier operation succeeded or discards its retained effect evidence.
 The [procedure guide](device-behavior.md#fixed-observations-and-shared-proof) documents
 the proof and independent termination controls.
 
+`startReset` qualifies actual 0A persistent controls with one fresh read and
+sets command bit 08 in their safe composed image. It never sends literal 01
+under mask 08, substitutes reset defaults for actual controls or resends a
+possibly accepted command. Successful callback acceptance starts no clock inside
+core: the next fresh poll anchors 96 elapsed ticks for TI's 95 ms maximum plus
+the separate one-tick clock margin. Then one complete F pass proves clear reset
+and applicable postconditions. Callback/TX/RX ceilings are B7/8/13, L/A8/9/14,
+V7/8/13, including the pre-read, command and F. No wait turn invokes transport.
+
+Reset affects digital logic, can resample PORT on the six 320 parts and returns
+TUSB322I to DRP. It is not POR or attachment-ready proof, and does not promise a
+whole-byte reset image or restore desired settings. TUSB322I accepts either
+documented semantic DRP code in final proof; a complete non-DRP image returns
+CONFIGURATION_MISMATCH, retains raw observation and leaves reset MAY_BE_PENDING
+with configuration/termination UNKNOWN. VCONN can change with source-role/attachment behavior, subject to
+the board's supply prerequisite. Historical desired/observed/verified values
+remain separate from present trust. An older unresolved recovery can keep
+configuration UNKNOWN even when this explicit reset succeeds.
+
+`startRecoverDeadBattery` requires original TUSB320/TUSB320I identity and the
+owner's decision that stable-VDD startup needs Rp recovery. Missing VDD with no
+cable is also a documented dead-battery case; the core has no battery monitor.
+It reads 45 and fails CONFIGURATION_UNKNOWN before writing when internal bits 03
+are nonzero, then writes literal 04, waits 31 elapsed owner ticks from fresh
+post-write time, writes literal 00 and reads 45 once. Final `(value & 0x07)==0` is
+required; mismatch returns CONFIGURATION_MISMATCH. Four callbacks, 6 TX/2 RX is the
+whole procedure ceiling. A final 04 can establish termination DISABLED while
+the failed sequence remains unresolved; nonzero internal bits keep termination
+UNKNOWN. The internal-zero qualification and final readback are
+library policy beyond TI's recipe. Other variants reject before transport.
+
+Recovery invalidates current configuration/port usability before a possible
+write and publishes no transient port observation between writes. Its own
+successful sequence can have CONFIRMED effect while configuration remains UNKNOWN
+until full F. Cancellation, expiry, end and failed callbacks never undo effects
+or trigger cleanup. The first error/detail, reset acceptance uncertainty and
+independent recovery obligation survive result take and same-target rebind.
+Later clear 45 can describe present controls but cannot prove the historical
+writes/wait; reconciliation observes once and never replays them. Only a new
+explicit recovery request can attempt that sequence again. Exact reset/retention
+and recovery citations are in the [procedure guide](device-behavior.md).
+
 ## Complete design inventory
 
 This sketch contains both the delivered subset above and future operations.
 Only the delivered subset is declared in the public class. The compile-only
 fixture checks the complete future inventory separately. Profile observation and
 read-only reconciliation are delivered in prompt 12; application and desired-profile
-verification are delivered in prompt 13; reset and
-recovery to 14; port to 15; IRQ to 16; raw access and health helpers to 17.
+verification are delivered in prompt 13; reset and recovery in 14. Port belongs
+to 15; IRQ to 16; raw access and health helpers to 17.
 No begin/init/unbind aliases or successful placeholder methods are provided.
 
 ```cpp
@@ -357,8 +402,8 @@ does not replay, and reset never reapplies a desired profile. The tables below
 finish the baseline's precedence, result retention and interruption rules.
 
 Pure binding/profile validators are implemented in prompt 7, decoding in 10,
-and the delivered owner subset in 11–13. Remaining driver methods are published
-with their owning work in prompts 14–17; health projection is prompt 17.
+and the delivered owner subset in 11–14. Remaining driver methods are published
+with their owning work in prompts 15–17; health projection is prompt 17.
 No unavailable function may appear in a runnable quick start before that work.
 The health validator requires offlineThreshold >= 1. Invalid policy returns
 INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it
@@ -491,7 +536,7 @@ I, P, F and S name the identity, profile, full proof and port plans in that guid
 | startAcknowledgeInterrupt | Current identity; UNKNOWN permitted if fresh R09 yields safe controls; B/L/A only | R09 + explicit ACK, 2 callbacks; no port refresh or recheck; preserve actual controls |
 | startServiceInterrupt | Same identity/variant gate; UNKNOWN permitted | S publication + ACK + one recheck, 5 callbacks; no loop until IRQ clears |
 | startReset | Current identity; UNKNOWN permitted if pre-read supplies safe 0A | One command, wait, F; B7/L/A8/V7; no desired comparison/reapply, no repeat reset |
-| startRecoverDeadBattery | Base only, current identity, caller stable VDD/readiness; own old recovery uncertainty allowed, different pending mode/reset rejected | R45,04,wait,00,R45: 4 callbacks,6TX/2RX; no intermediate port publication or desired replay |
+| startRecoverDeadBattery | Base only, current identity, caller stable VDD/readiness; own old recovery uncertainty allowed, different pending mode/reset rejected | R45,04,wait,00,R45: 4 callbacks, 6 TX/2 RX; no intermediate port publication or desired replay |
 | poll | Exact active token and valid owner time; UNKNOWN per admitted operation | Zero or one callback with basic transport; bounded local stages below; no new operation/deadline |
 | cancel | Exact represented token | Local OK; active result becomes CANCELLED, with independent write effects; no rollback |
 | resultSnapshot / takeResult | Exact terminal token | Fixed copy, then optional consume; failed delivery preserves out; no evidence repair |
@@ -611,7 +656,7 @@ matches `diagnostics.initialized`, not `lastOperationStatus.ok()`.
 
 F is the shared [reconciliation proof](device-behavior.md#fixed-observations-and-shared-proof),
 never a replay. Compare only persistent writable semantics, including 322I
-DRP00/DRP11 equivalence; exclude live status, W1C, reset commands and internal45
+DRP00/DRP11 equivalence; exclude live status, W1C, reset commands and internal 45
 bits. Verify and reconcile compare retained desired when present; initialize and
 reset do not treat old desired as their success postcondition. Verify/reconcile
 with complete proof and a desired difference return CONFIGURATION_MISMATCH but publish
@@ -633,6 +678,11 @@ purposes. Both generations saturate at UINT32_MAX; zero means no publication,
 and saturated values cannot uniquely correlate work.
 
 ### Termination, reset and retained obligations
+
+For explicit 322I reset, an asserted reset bit or incomplete profile interpretation
+returns CONFIGURATION_UNKNOWN before a role-mismatch status. Independently valid
+non-DRP mode evidence still prevents COMPLETED even if another field is reserved.
+Complete valid non-DRP proof with a clear reset bit returns CONFIGURATION_MISMATCH.
 
 | Evidence/event | Required fact |
 | --- | --- |
@@ -843,9 +893,9 @@ New targets reset current target readiness, but instance transport history remai
 These acceptance vectors cover the entire planned engine. Prompt 11's
 `tusb32x_operations` suite exercises initialization, lifecycle, token/result and
 time behavior. Prompts 12-13 add profile observation, read-only proof, apply,
-desired verification and their write/effect boundaries. Reset/recovery, port/IRQ
-and raw/health cases remain future
-acceptance requirements, not passed runtime tests.
+desired verification and their write/effect boundaries. Prompt 14 adds reset and
+base-recovery sequence, timing and retained-effect cases. Port/IRQ and raw/health
+cases remain future acceptance requirements, not passed runtime tests.
 Combine the rejection ordering above with every write/failure boundary in the
 procedure guide; test callback counts, outputs, state and original status together.
 
