@@ -35,6 +35,10 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Changed
 
+- Independently audited prompt 10 against the original prompt, actual diff,
+  current peers and archived TI tables. Repeated strict native, codec, consumer,
+  package and documentation checks; no implementation correction was needed.
+
 - Independently audited prompt 9 against the original requirements, actual diff,
   current peers and TI sources. Repeated strict native, protocol, package-consumer
   and documentation checks; supplemental edge cases and deliberate defect

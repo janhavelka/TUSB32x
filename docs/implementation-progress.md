@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 10; prompt 11 remains separate.
+Current authorization: independently audit completed prompt 10; prompt 11 remains separate.
 
 ## Prompt status
 
@@ -788,3 +788,51 @@ framework firmware, SDK framing/timeout and physical hardware remain later work.
 No remote CI was dispatched/polled. Lead commits/synchronizes this complete checked
 unit on the established branch and verifies upstream equality/clean state; final
 commit is reported in the handoff and next progress update without a hash loop.
+
+## Prompt 10 independent re-audit
+
+Completed 2026-10-26, starting at synchronized implementation commit
+`80995089454db7bd4cc4f28e1c66c62a98469266` on the same execution branch/base.
+Initial worktree/index were clean; fetch confirmed equal upstream, zero
+ahead/behind. Reread the complete original prompt from `dd82a79` and reviewed
+the actual `dd82a79..8099508` diff, current production/tests and frozen contracts.
+No later implementation prompt was started.
+
+Three fresh reviewers ran in parallel with disjoint scopes: gpt-6.1-sol/high
+checked requirements, scope, simplicity, public linkage, build/package and docs;
+gpt-6-astra/high checked TI, W1C/reset, variant ambiguity, actual-state/stage
+proofs and output preservation; another gpt-6.1-sol/high checked test independence,
+edge cases, Release execution and current peer sources. Each inspected actual
+files and ran independent native checks. The lead verified their findings against
+code, diff and source evidence. The last reviewer updated only the dated
+[peer audit](audit/execution-10-peers.md); the lead owns integration and Git.
+
+No confirmed functional defect, missing original requirement, necessary test gap
+or unnecessary abstraction was found. Production, tests, public declarations,
+source/package lists and silicon gates remain unchanged. The apparent original
+DE/reset, normal45 and detached-direction conflicts were checked against contracts
+already present at `dd82a79`: byte arithmetic does not authorize an unresolved
+reset/unqualified internal image, and the frozen single-byte decoder reports raw
+codes while complete paired applicability belongs to prompt 15. This audit did not alter
+those prerequisites or use rewritten prompt text as its acceptance evidence.
+
+README, AGENTS, CONTRIBUTING, API/architecture, register/variant/device guides,
+feature/source/test matrix and Doxygen were reviewed and remain accurate; no
+behavior or command changed. Only audit/progress/validation and the Unreleased
+review note are updated. Fresh TI downloads and pinned Linux/regmap/Rust bytes
+match their recorded hashes; actual tables and counterexample helpers were reread.
+
+PASS: fresh strict Debug/Release 5/5 CTests; 8,602,548 codec and 161,670 protocol
+checks, independent optimized NDEBUG execution, public tests-OFF consumers,
+strict Doxygen/visible decoder, version check/no-op, clean native PlatformIO,
+real 34-file package with a renamed extracted consumer under unrelated Git and
+no maintainer tools on child PATH, fresh host-only component registration,
+links/anchors/whitespace and all eight vendor hashes. Exact tools, commands and
+limits are in [validation](validation.md#prompt-10-independent-audit-2026-10-26).
+
+Fresh ASan/UBSan probe remains BLOCKED by missing MinGW -lasan/-lubsan; MSVC,
+Clang and clang-format remain unavailable on PATH. Later owner timing, paired
+port interpretation, firmware and hardware remain NOT RUN. No sibling was edited
+or remote CI dispatched/polled. Lead commits and synchronizes this checked audit
+on the existing branch, verifies equality and clean state, and reports the final
+commit in the handoff/next progress update without a self-referencing hash edit.

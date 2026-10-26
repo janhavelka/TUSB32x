@@ -105,3 +105,60 @@ exist. Extend the registered `tusb32x_protocol` runtime suite and public link
 checks; compile-only planned APIs remain separate. The public decoder must not
 need a private source include. Lead validation records actual local commands
 and outcomes; this source audit claims no build, remote CI or physical pass.
+
+## Independent post-implementation re-audit, 2026-10-26
+
+A fresh reviewer reopened the original prompt from
+`dd82a796e51dcfefa77db36a921d69aec0b12346:docs/prompts/10-register-codecs.md`,
+the parent/local guidance, COMMON, AGENT_WORKFLOW, maintainability and the
+baseline settings/decoder contract, then reviewed the actual production and
+test diff through `80995089454db7bd4cc4f28e1c66c62a98469266`. The execution
+branch remained `promptset/tusb32x-implementation-20261023`; its worktree/index
+were clean at this review's start. No fetch, push or other Git mutation was
+performed by this reviewer. Peer HEADs were freshly read and still exactly the
+three full revisions above, each on `main` with a clean worktree/index.
+
+Reopened current peer AGENTS and CommandTable headers, PCA9555's
+`src/PCA9555.cpp` preload/raw-write checks and `test/test_basic.cpp` mixed-pair
+verification, odd-start preservation, invalid-pin/register and short-transfer
+cases; LDC1614's `Config.h` variant values, `src/LDC1614.cpp` register predicates,
+read/write access and expected-profile helper, and `test/test_basic.cpp`
+capability/profile cases; TMP1x2's `src/TMP1x2.cpp` read/write allowlists and
+success-only output publication plus `test/test_core.cpp` local rejection and
+failure sentinels. The named example CLI, Python runner/fixture and checked-in
+workflow paths in the preceding sections were revisited for raw access,
+decoding/validity output, registration and pinned tool commands. The earlier
+adopted/rejected conventions remain supported by these current sources.
+In particular PCA's "mixed" test concerns register-pair reconciliation, not
+mixed RO/RW/W1C bits, and LDC's zero-on-error convention remains inappropriate
+for the TUSB public decoder. No peer was edited or tested.
+
+Independent local checks on GNU 15.1.0/Ninja and Python 3.12.10 passed:
+
+- Fresh strict Debug configure/build under `build/p10-reaudit-tests`, then
+  `ctest --test-dir build/p10-reaudit-tests -C Debug --output-on-failure`: 5/5.
+- Fresh strict Release configure/build under `build/p10-reaudit-tests-release`,
+  then the equivalent Release CTest command: 5/5. Direct protocol execution
+  reported 8,602,548 codec and 161,670 protocol checks, zero failures. Generated
+  test compile flags include `-DNDEBUG` followed by `-UNDEBUG`; codec checks also
+  use an unconditional CHECK function, so Release does execute their assertions.
+- Fresh tests-OFF public host consumer configure/build/run under
+  `build/p10-reaudit-tests/consumer`: successful supplied `08=90` interpretation
+  and zero fake callback attempts, using public includes and target linkage.
+
+The tests independently enumerate all supplied byte values for every mapped
+register and all variant values, complete semantic profile combinations and
+invalid enum domains, and all byte pairs for persistent comparison. Their
+expected tables/masks do not call production codecs. Decoder/error sentinels
+compare every result field; encoder, comparison and composer errors retain
+their output sentinel. Composer tests exercise every named intent/register
+domain, each named writable field, stage-proof rejection, staged/actual
+disagreement, pending IRQ and observed reset1, plus literal transport frames.
+Stage-proof tests are focused cases rather than every Boolean cross-product.
+No confirmed production defect or required test gap was found in this review;
+no maintained extra suite or speculative production change was added.
+
+These are fresh software checks of this reviewed revision, not new silicon
+qualification or proof of later jobs, timing, firmware, remote CI or hardware.
+No remote workflow status was requested. The strong silicon review remains a
+separate source check; this review does not infer TI behavior from peer tests.

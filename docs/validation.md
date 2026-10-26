@@ -1221,3 +1221,71 @@ wait, managed operation, fault clearing or hardware effects. No remote CI was
 dispatched/polled and no sibling was changed. Lead reviews/stages/commits/syncs
 this checked unit on the same branch; final equality and clean state are reported
 in the handoff, with the commit recorded in the next progress update.
+
+## Prompt 10 independent audit, 2026-10-26
+
+Started clean at synchronized `80995089454db7bd4cc4f28e1c66c62a98469266` on
+`promptset/tusb32x-implementation-20261023`, zero ahead/behind after fetch.
+Reread the original prompt in full from `dd82a79`, then inspected its actual
+implementation diff and current source/tests/contracts. Three fresh parallel
+reviewers independently checked coverage/scope/simplicity, silicon/correctness
+and tests/current peers. Lead verified code, source evidence and actual checks.
+No confirmed gap or bug required production, test, API or build/package changes.
+
+Pre-existing contracts at the original diff base already distinguish DE->56
+field arithmetic from reset-pending write qualification, require ordinary45
+internal03=00, and require single-byte raw direction codes rather than complete
+port applicability. Their interpretation was independently checked against the
+archived TI tables; no acceptance requirement or capability gate was weakened.
+
+Fresh tools: CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0 MinGW-W64 UCRT MCF SEH,
+Python 3.12.10, Doxygen 1.13.2, existing managed PlatformIO Core 6.1.19 and native
+1.2.1. Lead used a fresh Ninja Multi-Config tree at build/p10-independent-audit;
+reviewers used separate build/p10-reaudit-requirements, -correctness and -tests
+directories. These isolated review artifacts are not shipped or maintained guards.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh strict Debug/Release | PASS | 5/5 registered CTests in each configuration, all real core sources and five independent public-header TUs; Release checks active |
+| Codec/protocol | PASS | 8,602,548 codec checks and 161,670 protocol checks, no failures; literal oracle independence, complete output sentinels, field/intent/stage rejection reviewed; strong reviewer also compiled/executed strict optimized NDEBUG directly |
+| Ordinary public linkage | PASS | Independent fresh tests-OFF consumers and actual extracted package compile/link/run, supplied08=90 interpreted correctly, zero fake attempts |
+| Actual package | PASS | 34 unique source-equal files, explicit CMake/PIO/IDF core sources and matching include selection; vendor/audit/test/tool/build contents excluded; shipped relative guide links resolve |
+| Maintainer-tool independence | PASS | Fresh renamed archive extraction under unrelated Git, tests OFF, Git/Python/Doxygen/PIO absent from child PATH; C++17 propagated from a C++11 consumer request |
+| Native PlatformIO/component | PASS | Clean native build/run of all three actual core CPP units; separate fresh three-source host component fixture links/runs without a firmware claim |
+| Source evidence | PASS | Current B/L/A/V downloads match archive hashes; exact pinned Linux/regmap/Rust bytes and relevant helper bodies reread; all eight archived PDFs intact |
+| Version/docs | PASS | version check, repeated byte/mtime no-op sync, strict Doxygen and visible real decoder/17 public structs, local links/anchors, UTF-8/LF and diff whitespace |
+| Sanitizers | BLOCKED | Fresh minimal probe exits1: installed MinGW cannot link -lasan/-lubsan; no sanitizer pass claimed |
+| Other tools/later stages | NOT RUN | MSVC/Clang/clang-format absent; owner sequencing/timing, complete port interpretation, SDK adapters, linked firmware and physical hardware remain later work |
+
+Lead commands:
+
+```powershell
+cmake -S . -B build/p10-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p10-independent-audit --config Debug
+ctest --test-dir build/p10-independent-audit -C Debug --output-on-failure
+cmake --build build/p10-independent-audit --config Release
+ctest --test-dir build/p10-independent-audit -C Release --output-on-failure
+& build/p10-independent-audit/test/Release/tusb32x_protocol.exe
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p10-doxygen.py
+python build/p10-evidence.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd run -d examples/host/basic -e native -t clean
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p10.tar.gz
+python build/p10-package.py
+cmake -S build/p10-component-fixture -B build/p10-component-fixture/reaudit -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/p10-component-fixture/reaudit
+& build/p10-component-fixture/reaudit/registration_consumer.exe
+python build/p10-docs.py
+'int main() { return 0; }' | & g++ -x c++ '-fsanitize=address,undefined' -o build/p10-reaudit-sanitizer.exe -
+git diff --check
+```
+
+The sanitizer command is the expected unavailable-tool probe; every applicable
+positive check passed. No sibling was changed, remote CI dispatched/polled, or
+hardware behavior inferred from the fake. Audit evidence and Unreleased are the
+only tracked changes. Lead reviews/commits/synchronizes these on the existing
+execution branch and reports final equality/clean state in the handoff, recording
+the completed commit in the next progress update without a hash-edit loop.
