@@ -1,0 +1,31 @@
+{
+  "name": "TUSB32x",
+  "version": "0.1.0-dev.1",
+  "description": "Portable C++17 values, Status helpers and local validators for explicitly selected TUSB320-family parts. Device operations are still in development.",
+  "keywords": ["tusb320", "tusb320lai", "tusb322i", "usb-type-c", "i2c"],
+  "authors": [
+    {"name": "Thymos Solution s.r.o", "email": "info@thymos.cz", "url": "https://www.thymos.cz"},
+    {"name": "Jan Havelka", "maintainer": true}
+  ],
+  "license": "MIT",
+  "repository": {"type": "git", "url": "https://github.com/janhavelka/TUSB32x.git"},
+  "headers": [
+    "TUSB32x/TUSB32x.h", "TUSB32x/Config.h", "TUSB32x/Status.h",
+    "TUSB32x/CommandTable.h", "TUSB32x/Version.h"
+  ],
+  "build": {"includeDir": "include", "srcDir": "src", "srcFilter": "+<TUSB32x.cpp>"},
+  "export": {
+    "include": [
+      "include/TUSB32x/*.h", "src/TUSB32x.cpp", "CMakeLists.txt",
+      "library.json", "idf_component.yml", "LICENSE", "README.md", "CHANGELOG.md",
+      "Doxyfile", "docs/README.md", "docs/api-contracts.md", "docs/architecture.md",
+      "docs/register-map.md", "docs/register-vectors.md", "docs/variant-matrix.md",
+      "docs/device-behavior.md", "docs/feature-coverage.md", "docs/development.md",
+      "examples/README.md", "examples/host/basic/CMakeLists.txt",
+      "examples/host/basic/main.cpp", "examples/host/basic/profile.cpp",
+      "examples/host/basic/profile.h", "examples/host/basic/README.md",
+      "examples/host/basic/platformio.ini"
+    ],
+    "exclude": ["docs/reference/**", "docs/audit/**", "docs/prompts/**", "build/**", "**/.pio/**", "**/__pycache__/**"]
+  }
+}

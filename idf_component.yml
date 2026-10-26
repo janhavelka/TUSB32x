@@ -1,0 +1,39 @@
+version: "0.1.0-dev.1"
+description: "Portable TUSB32x values and local validators; device operations are in development."
+license: "MIT"
+maintainers:
+  - "Jan Havelka <info@thymos.cz>"
+repository: "https://github.com/janhavelka/TUSB32x.git"
+dependencies:
+  idf: ">=5.3.0"
+
+# IDF includes override excludes. Re-include only consumer files after excluding all.
+files:
+  exclude:
+    - "**/*"
+  include:
+    - "include/TUSB32x/*.h"
+    - "src/TUSB32x.cpp"
+    - "CMakeLists.txt"
+    - "library.json"
+    - "idf_component.yml"
+    - "LICENSE"
+    - "README.md"
+    - "CHANGELOG.md"
+    - "Doxyfile"
+    - "docs/README.md"
+    - "docs/api-contracts.md"
+    - "docs/architecture.md"
+    - "docs/register-map.md"
+    - "docs/register-vectors.md"
+    - "docs/variant-matrix.md"
+    - "docs/device-behavior.md"
+    - "docs/feature-coverage.md"
+    - "docs/development.md"
+    - "examples/README.md"
+    - "examples/host/basic/CMakeLists.txt"
+    - "examples/host/basic/main.cpp"
+    - "examples/host/basic/profile.cpp"
+    - "examples/host/basic/profile.h"
+    - "examples/host/basic/README.md"
+    - "examples/host/basic/platformio.ini"

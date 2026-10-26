@@ -1,7 +1,7 @@
 # Library architecture
 
-Prompts 5–7 provide portable values, constexpr Status/token helpers, pure validators
-and a real C++17 CMake library target.
+Prompts 5-8 provide portable values, constexpr Status/token helpers, pure validators,
+a C++17 CMake library target and deterministic package metadata/version tooling.
 There is no device facade or operation engine yet. The
 [API inventory](api-contracts.md) labels all future calls explicitly; the
 [engineering baseline](prompts/ENGINEERING_BASELINE.md) fixes their names.
@@ -14,8 +14,9 @@ There is no device facade or operation engine yet. The
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
 | include/TUSB32x/TUSB32x.h | Fixed operation, snapshot, result, diagnostic and health values; no callable facade yet |
 | include/TUSB32x/CommandTable.h | Passive RegisterDecode value; decoder and register tables arrive with implementation in prompt 10 |
+| include/TUSB32x/Version.h | Generated stable constexpr version values; no Git, timestamp or firmware identity |
 | src/TUSB32x.cpp | Bounded pure binding/profile validation; no driver instance or transport path yet |
-| CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external tools |
+| CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external maintainer tools for core consumption |
 | test/CMakeLists.txt and test/test_validators.cpp | Two genuine CTest suites, exhaustive validator cases and compile-only standalone-header/signature fixtures |
 | examples/host/basic/ | Standalone multi-file consumer of the real values and validators; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
@@ -24,6 +25,9 @@ There is no device facade or operation engine yet. The
 | test/contract/time_arithmetic.cpp | Independent compile-time integer time vectors; not engine behavior or hardware timing proof |
 | docs/reference/ | Research sources and provenance, excluded from production compilation and future ordinary packages |
 | .gitignore | Excludes local build/documentation output under build/ from commits |
+| library.json, idf_component.yml and Doxyfile | Version truth and synchronized component/documentation metadata, with explicit normal-package boundaries |
+| scripts/generate_version.py and tools/test_version_sync.py | Explicit maintainer sync/check/bump/set and isolated registered version fixtures |
+| scripts/pio.cmd and examples/host/basic/platformio.ini | Existing managed Windows Core launcher and pinned real native consumer |
 
 Status depends only on standard integer types. Config includes Status and
 standard size/integer types. TUSB32x includes Config for copied values.
@@ -52,9 +56,17 @@ The future source split is binding/validation/cache (`TUSB32x.cpp`), transport
 and composition (`TUSB32xProtocol.cpp`), operations (`TUSB32xOperations.cpp`),
 port observation (`TUSB32xPort.cpp`) and passive diagnostics
 (`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
-and Doxygen. The current source unit implements only the two validators;
-package/version metadata belongs to prompt 8. This stage proves source-tree
-consumption, without an install/export package claim.
+and Doxygen. The current source unit implements only the two validators.
+Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
+full archive/firmware consumption qualification remains prompt 32. CMake install
+exports remain outside the current implementation.
+
+When idf_component_register exists, the root build registers the same explicit
+source as an IDF component; otherwise it creates the ordinary host target. The
+component branch calls no Python/Git and owns no bus. Its registration fixture
+is a host check, not linked IDF firmware. Version metadata is checked in and
+updated only by explicit maintainer commands. Tests ON add Python fixtures;
+tests-OFF consumers have no new tool dependency. See [development](development.md).
 
 `TUSB32x` has no transitive link dependency. Core warnings are private and its
 public include directory/C++17 feature propagate to consumers. Tests are optional;

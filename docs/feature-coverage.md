@@ -1,6 +1,6 @@
 # Feature, source and verification coverage
 
-Prompts 2–7, updated 2026-10-26. This matrix defines the capability boundary; passive
+Prompts 2-8, updated 2026-10-26. This matrix defines the capability boundary; passive
 values/Status, pure validators, native builds and host checks exist, but no driver, CLI or hardware
 qualification exists yet. **Planned** means the
 source boundary is established and implementation/testing is still due.
@@ -11,7 +11,7 @@ These are documentation labels, not new runtime health/status values.
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
 listed there; V names TUSB322I alone. Silicon/operation tests below remain future
-evidence; the implemented-values table records the subset delivered in prompts 5-7.
+evidence; the implemented-values table records the subset delivered in prompts 5-8.
 Actual checks are in
 [validation](validation.md). Planned commands follow [CLI_CONTRACT](prompts/CLI_CONTRACT.md).
 
@@ -82,7 +82,7 @@ results. Later rows become implemented/tested only when their real suites and
 relevant physical checks run. Gated rows remain explicit without blocking
 independent, verified capabilities.
 
-## Prompts 5–7 implemented values, validators and planned API mapping
+## Prompts 5-8 implemented values, validators and planned API mapping
 
 These entries distinguish executable passive-value checks from future device
 behavior. Exact fields and planned signatures are in [API contracts](api-contracts.md).
@@ -97,7 +97,9 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Decoder — Result implemented, function Planned | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS passive defaults and planned signature syntax; independent decode/error/output-preservation vectors10, CLI formatting22 |
 | Facade — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only; callable engine9-17 |
 | Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
-| Source docs — Present | Four public headers with file/type/member/enum/function Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen and visibility of17 public structs; reusable guard/package integration8/33 |
+| Source docs — Present | Five public headers with file/type/member/enum/function and generated version Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen, visibility of17 public structs and four version constants; complete omission guard33 |
+| Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
+| Component/native tool configuration — Implemented; firmware Planned | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration fixture, launcher argument/exit fixtures and native linkage; native-IDF firmware25-26, full packages32 |
 
 No pass above represents a successful I2C transaction,
 silicon decoder, framework build, CI run or physical qualification.

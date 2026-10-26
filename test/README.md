@@ -1,6 +1,6 @@
-# Native contract and validator checks
+# Native contract, validator and version checks
 
-Prompts 5–7 provide real value/Status and validator checks, syntax-only planned
+Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
 The device facade and behavioral driver suites remain planned.
 
@@ -16,12 +16,15 @@ Set `-DCMAKE_BUILD_TYPE=Debug` at configure time for a single-configuration
 generator (for example Ninja). Repeat in `build/release` with Release selected
 at configure/build/test time. Tests default OFF. Strict GNU/Clang/MSVC warnings
 are private; suite checks stay active with NDEBUG, and test targets also undefine
-NDEBUG in Release. CTest must discover and run these two suites:
+NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these three suites:
 
 - `tusb32x_compile_contracts`: executed passive/Status checks across two TUs.
 - `tusb32x_validators`: variant/address/callback/timeout checks, exhaustive valid
   profile combinations, invalid enum bytes, input preservation and zero counting
   callbacks; unavailable valid fields return UNSUPPORTED_FEATURE.
+- `tusb32x_version_sync`: 17 isolated Python fixture tests for version truth,
+  drift/CLI exits, no-op bytes/mtimes, no Git or enclosing identity, and dirty
+  example independence. The suite cannot alter checkout metadata.
 
 The build separately compiles each public header as the only include and the
 three planned-contract fixtures as objects. They are compile checks, with no
@@ -41,7 +44,7 @@ $contractOutput = Join-Path $env:TEMP 'tusb32x-contract-checks'
 New-Item -ItemType Directory -Force -Path $contractOutput | Out-Null
 $contractFlags = @('-std=c++17', '-Wall', '-Wextra', '-Wpedantic',
              '-Wconversion', '-Wsign-conversion', '-Werror', '-I', 'include')
-foreach ($header in @('Status.h', 'Config.h', 'TUSB32x.h', 'CommandTable.h')) {
+foreach ($header in @('Status.h', 'Config.h', 'TUSB32x.h', 'CommandTable.h', 'Version.h')) {
     "#include <TUSB32x/$header>" | & g++ @contractFlags -x c++ -fsyntax-only -
     if ($LASTEXITCODE -ne 0) { throw "Header failed: $header" }
 }
@@ -77,7 +80,12 @@ arithmetic and example syntax, not the unimplemented engine or adapter timing.
 Future transition/fault requirements O01–O25 are in the
 [API guide](../docs/api-contracts.md#required-future-behavioral-checks).
 
-For source documentation, prompt 5 also runs Doxygen directly with a temporary
+Run current version/documentation checks with `python scripts/generate_version.py check`
+and `doxygen Doxyfile`; output stays under build/doxygen. Inspect XML/HTML for all
+17 public structs, both validators and the four generated version constants.
+The complete omission checker and negative fixtures remain prompt 33 work.
+
+For source documentation, prompt 5 also ran Doxygen directly with a temporary
 configuration: INPUT=include/TUSB32x, RECURSIVE=YES, EXTRACT_ALL=NO,
 WARN_IF_UNDOCUMENTED=YES, WARN_IF_DOC_ERROR=YES, WARN_IF_INCOMPLETE_DOC=YES,
 WARN_NO_PARAMDOC=YES, WARN_IF_UNDOC_ENUM_VAL=YES, WARN_AS_ERROR=YES,
@@ -87,4 +95,4 @@ and exact command are in [validation](../docs/validation.md).
 
 These checks prove current portable values, pure validators, linkage and planned
 signature syntax. Protocol, transport execution, owner behavior, health projection, framework builds,
-package consumption and physical hardware tests remain future work.
+full package qualification and physical hardware tests remain future work.

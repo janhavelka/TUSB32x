@@ -5,9 +5,10 @@
 This repository will provide a general-purpose, framework-neutral C++17 library
 for the verified TUSB320 family, starting with TUSB320LAI. It currently contains
 passive public values, Status helpers, pure binding/profile validators, a CMake
-library target and host consumer, alongside the audit, TI references and prompts.
+library target and host consumer, deterministic metadata/version tools and native
+IDF component registration, alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
-The device facade and package/version tools remain planned. Do not describe planned
+The device facade and framework firmware remain planned. Do not describe planned
 interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -92,7 +93,18 @@ to each numbered implementation prompt and to completed maintenance work here.
   -DTUSB32X_BUILD_TESTS=ON`, `cmake --build build/native --config Debug` and
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
-  only a C++17 toolchain. Compile-only planned contracts are never behavioral tests.
+  only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
+  and run the two C++ suites plus `tusb32x_version_sync`. Compile-only planned
+  contracts are never behavioral tests.
+- Version truth is `library.json`. Run `python scripts/generate_version.py sync`
+  and `python scripts/generate_version.py check`; use bump/set only for intentional
+  version changes. Generated Version.h and CMake/component/Doxygen fields must
+  stay aligned. No consumer build runs the generator. `doxygen Doxyfile` is the
+  current documentation command; the complete omission guard remains prompt 33.
+- On Windows use `scripts/pio.cmd` with the installed VS Code-managed Core.
+  The implemented PlatformIO environment is the native host consumer only:
+  `scripts\pio.cmd run -d examples/host/basic -e native -t exec`. See
+  [development metadata](docs/development.md) for pins and package-content policy.
 
 - **Initial promptset exception requested by the user:** remote CI belongs to
   prompt 34 only. Prompts 1–33 and 35–38 do not dispatch, poll, wait for or require

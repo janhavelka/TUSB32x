@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: completed independent prompt 7 audit; do not start prompt 8.
+Current authorization: implement prompt 8 completely; prompt 9 remains separate.
 
 ## Prompt status
 
@@ -17,7 +17,7 @@ Current authorization: completed independent prompt 7 audit; do not start prompt
 | [5: value-api-contracts](prompts/5-value-api-contracts.md) | COMPLETE |
 | [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | COMPLETE |
 | [7: host-build](prompts/7-host-build.md) | COMPLETE |
-| [8: metadata-versioning](prompts/8-metadata-versioning.md) | NOT STARTED |
+| [8: metadata-versioning](prompts/8-metadata-versioning.md) | COMPLETE |
 | [9: transport-identity](prompts/9-transport-identity.md) | NOT STARTED |
 | [10: register-codecs](prompts/10-register-codecs.md) | NOT STARTED |
 | [11: owner-engine](prompts/11-owner-engine.md) | NOT STARTED |
@@ -525,3 +525,64 @@ remain NOT RUN. No remote CI was dispatched or polled. Prompt 8 remains NOT
 STARTED; this review starts no later implementation unit. The lead commits and
 syncs these checked corrections on the same branch; final commit/equality and
 clean-state evidence belong in the handoff and next progress update.
+
+## Prompt 8 execution record
+
+Completed 2026-10-26 on the same execution branch/base, starting from the completed
+prompt 7 audit commit `93f2d31374dc16bcc95800d0e0c516c4372faa4a`. Initial status/index
+were clean; fetch showed same-name upstream equality and zero ahead/behind.
+The two prerequisite native suites passed before metadata changes. No new branch
+or later implementation unit was started.
+
+Re-audited current TMP1x2/24Cxx generators/guards, LDC component CMake,
+INA3221/OPT4001 packaging, author/license/format conventions, AGENTS, manifests,
+generated files, workflows, actual scripts/tests and relevant example/CLI/runner
+identity sources. [execution-8-peers](audit/execution-8-peers.md) records all full
+revisions, clean states, exact paths and selected/rejected rules. Lead verified
+actual source bodies and official IDF/PlatformIO documentation. Chose native 1.2.1
+and existing Core 6.1.19; IDF >=5.3.0 is admission only, pending real firmware links.
+
+Added development 0.1.0-dev.1 metadata, explicit package boundaries, native IDF
+registration sharing the real source list, generated stable version constants,
+strict sync/check/bump/set, managed Windows launcher, native PlatformIO consumer,
+MIT/ownership/format files and strict Doxyfile. No consumer invokes Python/Git;
+no version text contains timestamps/commits or claims flashed firmware identity.
+Maintainer Python fixtures are registered only with tests ON. No-op sync/set
+preserves bytes/mtimes and invalid arguments/metadata/templates fail distinctly.
+
+Delegation: gpt-6.1-sol/high owned only the peer audit, then reviewed packaging/
+component/launcher read-only; another gpt-6.1-sol/high owned only the existing-name
+tools/test_version_sync.py suite after its format/exits were fixed; gpt-6-astra/high
+reviewed generator/error paths, CMake, metadata, tests, package and launcher
+independently read-only. The lead owns metadata/generator/build integration, docs,
+all fixes and Git. No reviewer found a confirmed functional defect. Lead corrected
+an ad hoc Doxygen check's filename assumption using generated XML IDs; no warning
+was suppressed and all public values/functions remained visible.
+
+PASS: generator sync/check and root byte+mtime no-op; 17 isolated version cases,
+including missing/malformed SemVer, every version-field drift, exact argument/
+error exits, overflow, preflight, missing header/I/O failure, no Git, enclosing
+Git, dirty example and no child-process attempts; Debug/Release 3/3 CTests; five
+independent public headers, constexpr/cross-TU version values and existing 76,452
+validator cases; plain tests-OFF consumer; actual native PlatformIO compile/link/
+execution; real 29-file archive with forbidden content absent; renamed extracted
+strict consumer under unrelated Git without maintainer tools on child PATH,
+inheriting C++17 from a C++11 baseline; host-only component-registration fixture;
+six launcher argument/status comparisons and missing-install failure; strict
+Doxygen 17 structs/four version values and public functions; local links/anchors,
+Python docstrings/style, unchanged eight vendor hashes and scoped whitespace.
+Exact commands, versions and limits are in [validation](validation.md).
+
+The existing Core installed its resolved tool-scons 4.40801.0 while running the
+native example; no second Core was installed. Actual IDF manager archive creation,
+linked native-IDF/Arduino firmware, full hardened package matrix, the omission
+checker/negative fixtures, remote CI and physical hardware remain NOT RUN/later
+scope. Host sanitizers remain unavailable in the installed MinGW; no new sanitizer
+pass is claimed. clang-format is unavailable on PATH; its simple config was
+reviewed. Source-only register/variant/procedure guides needed no silicon changes.
+
+Updated README, CHANGELOG, CONTRIBUTING, AGENTS, docs/examples indexes,
+development/API/architecture/coverage, test/example guides and decision records.
+The lead commits this complete checked unit, fetches/pushes the existing upstream
+and verifies equality/clean task state. Final commit/sync evidence is in the
+handoff and next progress update without a self-referencing hash edit.

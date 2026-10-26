@@ -25,8 +25,19 @@ generator, or `build/host-basic/tusb32x_host_basic` with a single-config generat
 (append `.exe` on Windows). Expected output:
 
 ```text
+Package version: 0.1.0-dev.1
 Binding validation: OK; profile validation: OK; fake callback attempts: 0
 ```
+
+The version is the package version from generated Version.h, not flashed firmware
+identity. For the current portable PlatformIO environment on Windows, run:
+
+```text
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+```
+
+It pins `platformio/native@1.2.1` and uses the existing Core/host compiler. No
+version generator runs as a build side effect. See [development tools](../../../docs/development.md).
 
 Tests default OFF in the library; no test option is needed for this build. CMake
 and the compiler are the only build dependencies. Python, Git, Doxygen, framework

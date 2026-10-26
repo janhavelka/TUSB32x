@@ -193,3 +193,42 @@ Debug/Release checks, a clean renamed tests-OFF consumer under unrelated Git
 metadata with maintainer tools absent from PATH, and strict Doxygen visibility
 passed. Sanitizers are unavailable in the installed MinGW distribution; no
 firmware, package export, remote CI or hardware qualification is inferred.
+
+## Prompt 8: stable development metadata
+
+Completed 2026-10-26. The [fresh peer audit](audit/execution-8-peers.md) records
+actual generators, guards, manifests, ownership, workflows and source revisions.
+
+- Select `0.1.0-dev.1` as explicit development SemVer. library.json is the only
+  version truth; generated Version.h and literal CMake/component/Doxygen fields
+  are synchronized by an explicit Python command. CMake stores both the full
+  SemVer and its numeric project-version core because project VERSION cannot
+  represent prerelease/build suffixes. No release or per-prompt bump is implied.
+- Publish only four useful stable constexpr values: uint32 major/minor/patch and
+  the full static character array VERSION. Reject volatile Git/time macros,
+  VERSION_CODE arithmetic and inherited compatibility aliases. Generator root
+  comes from its own script path, with no Git or child-process discovery.
+- Use strict ASCII SemVer, bounded uint32 components and documented exit codes:
+  0 success, check drift 1, invalid inputs/templates/I/O 2. Preflight all managed
+  templates before writes; preserve bytes/mtimes on no-op sync/set. Document
+  possible partial updates after an actual write failure instead of claiming
+  multi-file atomicity. One isolated fixture suite grows in later guard work.
+- Share one explicit source list between ordinary CMake and conditional native
+  IDF registration. Reject the peer's configure-time Python requirement. Python
+  3.10+ is found only for tests ON. IDF >=5.3.0 is the peer-backed admission floor,
+  not a firmware-support claim; no speculative upper cap, Arduino, peripheral or
+  consumer-product dependency is added. Revisit SDK evidence with real adapters.
+- Keep normal packages to reviewed consumer files. PlatformIO uses an allowlist;
+  IDF excludes all then re-includes the same set because its include semantics
+  differ. Reference/vendor artifacts, audits, prompts, tests/tools/scripts and
+  build output stay out. Actual PlatformIO archive selection and plain extracted
+  consumption are tested now; full hardened distribution validation remains 32.
+- Reuse the existing managed Core 6.1.19 through pio.cmd and pin native 1.2.1 for
+  the real current host example. No generator build hook or firmware stub is
+  introduced. Launcher tests compare real CRT argument bytes/status against
+  direct invocation; missing installation fails explicitly. Formatting keeps
+  current include order and adds no framework-first preference.
+- Preserve evidenced Thymos Solution s.r.o / Jan Havelka / MIT metadata and the
+  current @janhavelka owner. Vendor terms and archived bytes remain untouched.
+  Doxyfile has public inputs, fatal missing-documentation warnings and visible
+  generated values; the complete omission checker remains prompt 33.

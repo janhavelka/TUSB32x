@@ -17,7 +17,7 @@ endforeach()
 
 # Each header is the only include in its generated translation unit.
 set(header_contract_sources)
-foreach(header IN ITEMS Status Config TUSB32x CommandTable)
+foreach(header IN ITEMS Status Config TUSB32x CommandTable Version)
   set(source "${CMAKE_CURRENT_BINARY_DIR}/include_${header}.cpp")
   file(WRITE "${source}" "#include <TUSB32x/${header}.h>\n")
   list(APPEND header_contract_sources "${source}")
@@ -27,3 +27,9 @@ add_library(tusb32x_header_contracts OBJECT ${header_contract_sources}
 target_link_libraries(tusb32x_header_contracts PRIVATE TUSB32x)
 tusb32x_strict_warnings(tusb32x_header_contracts)
 # No CTest entry: compiling planned signatures cannot prove driver behavior.
+
+# Python is a maintainer test dependency only; tests-OFF consumers never find it.
+find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+add_test(NAME tusb32x_version_sync
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_version_sync.py")
+set_tests_properties(tusb32x_version_sync PROPERTIES TIMEOUT 120)

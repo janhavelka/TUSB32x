@@ -3,8 +3,8 @@
 This set contains **38 complete prompts**, numbered **1 through 38** in execution
 order. It produces a general-purpose C++17 library for the verified TUSB320 family,
 starting with TUSB320LAI. The repository currently contains audited planning
-artifacts, passive C++17 values/Status helpers and a native library with pure
-validators; the device driver remains planned.
+artifacts, passive C++17 values/Status helpers, a native library with pure
+validators and deterministic metadata/version tools; the device driver remains planned.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

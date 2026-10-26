@@ -7,6 +7,14 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Development metadata at 0.1.0-dev.1 with library.json as version truth,
+  deterministic sync/check/bump/set tooling, generated constexpr version values
+  and isolated registered fixtures. Consumer builds need no version tool or Git.
+- Explicit-source native IDF component registration, managed Windows PlatformIO
+  launcher and pinned real native consumer environment. Added MIT/ownership and
+  formatting files, strict Doxyfile and explicit package content boundaries.
+  Linked framework firmware and full distribution qualification remain planned.
+
 - Portable C++17 CMake target `TUSB32x`, pure binding/profile validators with
   distinct invalid/unsupported results, registered native contract/validator
   checks and a standalone multi-file host consumer. Tests default OFF; ordinary

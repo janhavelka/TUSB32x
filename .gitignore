@@ -1,2 +1,5 @@
 # Local compiler and documentation output; never part of the delivered library.
 /build/
+.pio/
+__pycache__/
+*.py[cod]

@@ -1,7 +1,8 @@
 # Portable values, validators and planned API
 
-Prompts 5–7, updated 2026-10-26. The four headers under `include/TUSB32x/` provide
-complete passive values, constexpr Status/token helpers and two pure validators.
+Prompts 5-8, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+complete passive values, constexpr Status/token helpers, two pure validators
+and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
 `TUSB32x`; no device facade, decoder, bus access or operation engine is implemented
 yet. Other signatures below remain planned. Admission, publication and lifetime
@@ -24,6 +25,7 @@ The header Doxygen owns the complete field/default inventory.
 | Header and types | Contract |
 | --- | --- |
 | [Status.h](../include/TUSB32x/Status.h): Err, Status, errorName | Ordered uint8 errors; full int32 detail; static-lifetime message; constexpr helpers and explicit bool |
+| [Version.h](../include/TUSB32x/Version.h): VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION | Generated inline constexpr uint32 components and full SemVer character array; static lifetime, no I2C/allocation/Git/clock and no flashed-firmware identity claim |
 | [Config.h](../include/TUSB32x/Config.h): I2cWriteFn, I2cWriteReadFn, DriverConfig | Borrowed terminal callbacks/context, exact variant/address, nonzero timeout cap; defaults null/UNSPECIFIED/0x47/20 ms are not a valid binding |
 | Config.h: Variant, DeviceAddress | Six named 320 parts and separately gated 322I; no GPIO-only 321 target or floating-ADDR I2C option |
 | Config.h: PortMode, SourceCurrent, SourcePreference, DrpDutyCycle, CcDebounce, DeviceProfile | Requested silicon settings only; default DRP/default-current/normal/50%/168 ms and false disable controls are a candidate, not reset defaults |

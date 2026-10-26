@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Attach
+NamespaceIndentation: None
+PointerAlignment: Left
+IncludeBlocks: Preserve
+SortIncludes: false

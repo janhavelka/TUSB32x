@@ -822,3 +822,95 @@ MSVC/Clang, firmware, archive/package qualification and physical hardware remain
 NOT RUN. No remote CI was dispatched or polled, and no sibling was edited or
 built. The same execution branch is retained; final commit/sync evidence is
 reported in the handoff and next progress update.
+
+## Prompt 8: deterministic metadata and native integration, 2026-10-26
+
+Started at clean synchronized 93f2d31374dc16bcc95800d0e0c516c4372faa4a on the recorded
+execution branch, zero ahead/behind after fetch. Prompts 1-7 and prerequisite native
+checks were revisited. The [focused peer audit](audit/execution-8-peers.md) records
+actual current source/AGENTS/manifests/generators/tests/guards/workflows, full
+revisions, clean states and adopted/rejected choices. No sibling was edited,
+fetched or built, and no remote CI was dispatched or polled.
+
+Executed tools: CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0 MinGW-W64 UCRT MCF SEH,
+Python 3.12.10, Doxygen 1.13.2 and existing VS Code-managed PlatformIO Core 6.1.19.
+The native environment pins platformio/native 1.2.1; Core resolved and installed
+tool-scons 4.40801.0 from its configured source. This is a managed dependency,
+not a second Core. A preliminary package-list command hit the console's cp1252
+Unicode limitation; subsequent actual Core commands used process-local
+PYTHONIOENCODING=utf-8, without changing account settings or the launcher contract.
+
+| Check | Result | Evidence and limits |
+| --- | --- | --- |
+| Version commands | PASS | sync/check exit 0; no-op sync preserves bytes and nanosecond mtimes for manifest/header/CMake/component/Doxygen |
+| Registered generator suite | PASS | 17 isolated unittest cases; exact exits 0/1/2, ASCII SemVer/suffix/uint32 bounds, every field drift, preflight/I/O rejection, bump/set, repeated sync, no Git, enclosing Git, dirty example, process audit events and original-checkout preservation |
+| Native Debug/Release | PASS | 3/3 actual CTest suites each; five independent headers, compiled planned objects, runtime Status/values/inline version ODR and 76,452 validator cases; Release checks remain active |
+| Plain tests-OFF consumer | PASS | Independent strong reviewer builds/runs the CMake consumer; no Python/Git consumer dependency |
+| Native PlatformIO | PASS | Existing launcher/Core builds and executes real main.cpp/profile.cpp plus core library; prints 0.1.0-dev.1 and zero fake callbacks |
+| Real normal archive | PASS | pio pkg pack produces 29 regular unique files; every export pattern matches, all public headers and the one explicit source present; no vendor/reference/audit/prompt/test/tool/script/build payload |
+| Extracted clean consumer | PASS | Renamed actual archive under unrelated Git, no own .git/scripts/test, restricted child PATH without Git/Python/Doxygen/PIO; strict Release compile/link/run, tests OFF and public C++17 inherited from C++11 baseline |
+| Component registration | PASS, host fixture only | Explicit register args/source/include and public C++17 checked with a host function capturing idf_component_register; actual source and consumer link/run; no SDK or firmware proof |
+| Launcher | PASS | Six direct-vs-wrapper CRT argv-byte comparisons, exit 37 preserved, spaces/empty args/shell characters/quotes/trailing slash, temp profile containing spaces/metacharacters; missing executable reports stderr and returns 1 |
+| Doxygen | PASS | Installed Doxyfile runs with fatal missing/enum/parameter/doc warnings and EXTRACT_ALL=NO; XML has 17 public structs, real helpers/validators and all four version constants; generated Version.h HTML exists |
+| Source/document consistency | PASS | Python syntax/docstrings/100-column style, local Markdown paths/anchors, UTF-8/LF and whitespace; eight unchanged vendor hashes |
+| Independent review | PASS | Fresh strong reviewer checked actual generator/test/build/package/launcher boundaries and executed 17 fixtures/ordinary consumer; no confirmed defect or unnecessary abstraction |
+| Later evidence | NOT RUN | IDF manager archive tool, linked IDF/Arduino firmware, full hardened distribution matrix, complete omission guard/negative fixtures, remote CI and hardware remain later scope |
+
+Exact current commands from the repository root:
+
+```powershell
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+python tools/test_version_sync.py -v
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+doxygen Doxyfile
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd --version
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz
+```
+
+Version fixture processes are bounded to 10 seconds, registered suite to 120;
+C++ suites retain 30-second bounds. All fixture mutations are TEMP; generated
+integration/review artifacts are under ignored build/ and examples/host/basic/.pio.
+Version header output has no Git/time/firmware identity; an audit-hook fixture
+proves the CLI never even attempts a child process. No-op fields are compared as
+bytes/mtime, not only normalized text.
+
+Actual archive validation used tarfile member inspection, requiring unique
+regular relative paths, presence of every manifest export pattern/public header,
+one core source and absence of forbidden directories. Files were copied only
+after traversal/root containment checks into build/p8-clean-parent/renamed-library.
+The prior clean-consumer command was reused with that archive source, absolute
+CMake/Ninja/GCC executables, CMAKE_CXX_STANDARD=11, strict warning flags and child
+PATH restricted to Windows system directories. It builds/runs the ordinary
+consumer and verifies three effective C++17 compile commands/tests OFF.
+
+The host-only component fixture in build/p8-component-fixture verifies the exact
+SRCS/INCLUDE_DIRS and absence of extra args, checks that the host target was not
+created, then compiles/links the actual library consumer. It cannot verify the
+real SDK's dependency scanning, component archive or firmware link. Official
+IDF filter semantics and peer minima are source evidence only; admission metadata
+does not claim SDK/board qualification.
+
+Launcher evidence came from an ignored ad hoc build/p8-packaging-review fixture:
+a compiled temporary pio.exe prints argv bytes and returns 37, and CMD direct
+invocation is compared to scripts/pio.cmd for six cases. No real Core is replaced
+or installed. `python build/p8-packaging-review/review_launcher.py` passed in the
+lead and independent review. This artifact is session evidence, not a promised
+checked-in guard. The full guard stage remains 33.
+
+Initial Doxygen visibility inspection assumed the wrong capitalized filename;
+the actual generated XML refid resolves _version_8h.html. Corrected the check,
+verified the page and every required symbol, and suppressed no warning. The
+source configuration and generated comments were already correct.
+
+MSVC/Clang and clang-format were unavailable on PATH and NOT RUN. Host ASan/UBSan
+remain unavailable in this MinGW distribution; no new sanitizer pass is claimed.
+Vendor notices/license terms were preserved, no release/tag/publication occurred,
+and no unavailable driver/firmware behavior was stubbed. Final commit/sync and
+clean-state evidence belongs in the handoff and next progress update.

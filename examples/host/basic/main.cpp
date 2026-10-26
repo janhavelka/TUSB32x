@@ -2,6 +2,7 @@
 /// @brief Link and run local validators with explicitly fake application callbacks; no device I/O.
 #include <TUSB32x/Config.h>
 #include <TUSB32x/Status.h>
+#include <TUSB32x/Version.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -30,6 +31,7 @@ TUSB32x::Status fakeWriteRead(uint8_t, const uint8_t*, std::size_t, uint8_t*,
 /// @brief Validate an application binding and candidate without a physical device.
 /// @return Zero when both validators accept and no fake callback was attempted; one on failure.
 int main() {
+  std::printf("Package version: %s\n", TUSB32x::VERSION);
   TUSB32x::DriverConfig config{};
   config.i2cWrite = fakeWrite;
   config.i2cWriteRead = fakeWriteRead;

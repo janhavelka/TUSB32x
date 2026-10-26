@@ -4,6 +4,7 @@
 #include <TUSB32x/CommandTable.h>
 #include <TUSB32x/Status.h>
 #include <TUSB32x/TUSB32x.h>
+#include <TUSB32x/Version.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -14,10 +15,18 @@
 
 const char* errorNameFromOtherTranslationUnit(TUSB32x::Err code);
 TUSB32x::Status statusFromOtherTranslationUnit();
+const char* versionFromOtherTranslationUnit();
 
 namespace {
 
 namespace t = TUSB32x;
+
+static_assert(t::VERSION[0] >= '0' && t::VERSION[0] <= '9',
+              "Package version is a constant-evaluable public string");
+static_assert(std::is_same<decltype(t::VERSION_MAJOR), const std::uint32_t>::value &&
+              std::is_same<decltype(t::VERSION_MINOR), const std::uint32_t>::value &&
+              std::is_same<decltype(t::VERSION_PATCH), const std::uint32_t>::value,
+              "Numeric version components have the documented uint32 representation");
 
 constexpr bool sameText(const char* left, const char* right) {
   // Every input below is a fixed literal or errorName output; compare content, not pooled addresses.
@@ -315,6 +324,8 @@ void registerValueDefaults() {
 }  // namespace
 
 int main() {
+  check(versionFromOtherTranslationUnit() == t::VERSION,
+        "Inline package version has one address across translation units", __LINE__);
   statusNamesAndLinkage();
   profileDefaults();
   portDefaults();

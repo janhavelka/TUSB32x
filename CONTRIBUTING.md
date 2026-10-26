@@ -23,12 +23,29 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Two runtime CTest suites are currently registered; compile-only
+active in Release. Three runtime CTest suites are currently registered; compile-only
 signature/header fixtures are build checks. See [test/README.md](test/README.md).
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,
 Doxygen, PlatformIO, framework headers or sibling paths. Use available host
 sanitizers and record unavailable checks accurately in [validation](docs/validation.md).
+
+Tests ON additionally require Python 3.10+. Maintain version truth with:
+
+```text
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+python tools/test_version_sync.py -v
+doxygen Doxyfile
+```
+
+Use generator bump/set only for intentional version changes; never hand-edit
+Version.h. No generator or Git discovery runs during consumer builds. On Windows
+use `scripts/pio.cmd` for the existing managed Core. The pinned native consumer
+environment is currently usable; later firmware environments remain planned.
+[Development metadata](docs/development.md) defines version exits, pins, package
+allowlists, ownership and evidence limits. Extend the existing version fixture
+suite as guards mature; do not add a competing version source or fixture suite.
 
 Review the complete scoped diff, run the affected checks and update
 [progress](docs/implementation-progress.md). The lead stages owned changes,
