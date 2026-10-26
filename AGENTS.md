@@ -13,7 +13,8 @@ Test commands are in [test/README.md](test/README.md).
 It also provides a non-copyable owner facade with bus-silent lifecycle,
 instance-local tokens, retained results, read-only initialization, profile
 observation, explicit desired-profile apply/verification, read-only reconciliation,
-explicit reset and original TUSB320/I dead-battery recovery. Other operation
+explicit reset, original TUSB320/I dead-battery recovery and complete read-only
+port refresh with cached publication. IRQ acknowledgement/service, other operation
 families and framework firmware remain planned.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
@@ -100,8 +101,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the four C++ suites (including `tusb32x_protocol` and
-  `tusb32x_operations`) plus
+  and run the five C++ suites (including `tusb32x_protocol`,
+  `tusb32x_operations` and `tusb32x_port`) plus
   `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only planned
   contracts are never behavioral tests.

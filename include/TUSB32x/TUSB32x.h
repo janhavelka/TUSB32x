@@ -125,6 +125,9 @@ enum class PortField : uint16_t {
 /// Changed 0xE0 bookends clear dependent current/accessory/cable validity. No hardware atomicity.
 /// Failed acquisition preserves the previous complete data/time. End, external invalidation and
 /// possible port-affecting writes set invalidated; only complete fresh publication clears it.
+/// Normal source/sink roles are opposite; detached/accessory roles are NOT_APPLICABLE.
+/// Accessory direction and unresolved UFP-debug current stay UNKNOWN. Advertisement is a
+/// local category, never measured load, a PD contract or permission to supply board power.
 struct PortSnapshot {
   uint8_t rawStatus08 = 0; ///< Register 0x08 sample; unavailable until STATUS_08_VALID.
   uint8_t rawStatus09 = 0; ///< Final register 0x09 sample; unavailable until STATUS_09_VALID.
@@ -134,17 +137,17 @@ struct PortSnapshot {
   Attachment attachment = Attachment::UNKNOWN; ///< Attachment, qualified by its field bit.
   PortRole localRole = PortRole::UNKNOWN; ///< Local role, separate from peer role.
   PortRole peerRole = PortRole::UNKNOWN; ///< Peer role; accessory does not imply a normal role.
-  Orientation orientation = Orientation::UNKNOWN; ///< Direction; detached can be NOT_APPLICABLE.
+  Orientation orientation = Orientation::UNKNOWN; ///< Chip CC1/CC2; detached N/A, accessory unknown.
   DetectedCurrent detectedCurrent = DetectedCurrent::UNKNOWN; ///< Remote indication, not load/PD.
   SourceCurrent advertisedCurrent = SourceCurrent::DEFAULT; ///< Invalid placeholder until flagged.
   Accessory accessory = Accessory::UNKNOWN; ///< Paired-observation accessory interpretation.
-  bool activeCable = false; ///< Unusable placeholder until ACTIVE_CABLE validity is set.
+  bool activeCable = false; ///< Raw 08 bit0; usable only with ACTIVE_CABLE validity, not VCONN proof.
   bool interruptPending = false; ///< Sampled latch level only; not its value after an ACK.
-  uint64_t sequence = 0; ///< Saturating publication count; zero means no published observation.
+  uint64_t sequence = 0; ///< Saturating publication count, initially zero; saturated counts repeat.
   uint64_t observedUptimeMs = 0; ///< Owner time before first required read; not publication time.
   bool observedTimeValid = false; ///< Acquisition-boundary timestamp is known in the owner domain.
   uint32_t configGeneration = 0; ///< Relevant verified configuration generation at acquisition.
-  ConfigurationState configurationState = ConfigurationState::UNCONFIGURED; ///< Trust provenance.
+  ConfigurationState configurationState = ConfigurationState::UNCONFIGURED; ///< Trust before first read; not later current trust.
   SnapshotCoherence coherence = SnapshotCoherence::SEQUENTIAL; ///< Bounded acquisition evidence.
 };
 
@@ -353,7 +356,7 @@ struct DriverDiagnostics {
 /// @details Only poll invokes transport. Borrowed context must live until end returns. No ISR use,
 /// concurrent access or callback reentry. One active token becomes one immutable retained result.
 /// Apply changes requested settings; reset and base recovery are separate explicit write requests.
-/// Initialization, profile observation, verification and reconciliation perform reads only.
+/// Initialization, profile/port observation, verification and reconciliation perform reads only.
 /// Cached copies remain historical unless their validity and current trust allow use.
 /// This object cannot be copied/moved.
 class TUSB32x {
@@ -433,6 +436,17 @@ class TUSB32x {
   /// Full proof may establish KNOWN actual with CONFIGURATION_MISMATCH against retained desired;
   /// unresolved proof returns CONFIGURATION_UNKNOWN. Old failed results are never rewritten.
   Status startReconcile(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit one read-only port observation; admission performs no callbacks.
+  /// @param[in] timing Owner millisecond admission time and immutable deadline.
+  /// @param[out] token New token on IN_PROGRESS; unchanged on rejection.
+  /// @return IN_PROGRESS or normal timing/binding/slot errors; initialization is not required.
+  /// @details Poll reads 09/08/09 once (three callbacks, three TX and three RX bytes).
+  /// Publish only after the final fresh owner-time check. Failed/incomplete work preserves
+  /// the old snapshot. Matching E0 bookends do not prove atomicity; changed bookends clear
+  /// dependent field validity. Acquisition time/configuration provenance precede the first read.
+  /// No ACK/reset, GPIO or power policy. Contradictory controls can invalidate current
+  /// configuration trust without replacing the historical port observation.
+  Status startRefreshPort(const OperationTiming& timing, OperationToken& token);
   /// @brief Admit one explicit reset; admission copies timing and performs no I2C.
   /// @param timing Immutable owner deadline and admission time in milliseconds.
   /// @param token Receives a new token only on IN_PROGRESS; preserved on rejection.
@@ -486,7 +500,7 @@ class TUSB32x {
   /// @return Current active/terminal slot, or IDLE after take.
   OperationProgress progress() const { return _progress; }
   /// @brief Copy historical port evidence without callbacks or age sampling.
-  /// @return Initially invalidated snapshot; this stage performs no port observation.
+  /// @return Last complete observation; inspect validity, coherence, invalidation and age.
   PortSnapshot portSnapshot() const { return _port; }
   /// @brief Copy desired/observed/verified configuration without callbacks.
   /// @return Historical values qualified by field flags and current trust.
@@ -504,6 +518,7 @@ class TUSB32x {
     WAIT, BASE_PRECHECK, APPLY_WRITE, APPLY_WAIT,
     RESET_PRECHECK, RESET_WRITE, RECOVERY_PRECHECK, RECOVERY_DISABLE,
     RECOVERY_ENABLE, RECOVERY_VERIFY, PROCEDURE_WAIT,
+    PORT_FIRST09, PORT08, PORT_LAST09,
     IDENTITY, REVISION, CONFIG08, CONFIG09, CONFIG0A, CONFIG45, DONE
   };
   /// @brief One composed write in a fixed profile plan of at most six entries.
@@ -526,6 +541,7 @@ class TUSB32x {
   ConfigurationSnapshot _configuration{};
   ConfigurationSnapshot _observing{};
   PortSnapshot _port{};
+  PortSnapshot _observingPort{}; ///< Private first09/08 staging and pre-read acquisition provenance.
   TransportStats _stats{};
   DriverDiagnostics _diagnostics{};
   Phase _phase = Phase::IDENTITY;

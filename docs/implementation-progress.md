@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 14; later prompts remain separate.
+Current authorization: implement prompt 15; later prompts remain separate.
 
 ## Prompt status
 
@@ -24,7 +24,7 @@ Current authorization: independently audit completed prompt 14; later prompts re
 | [12: profile-observation](prompts/12-profile-observation.md) | COMPLETE |
 | [13: profile-application](prompts/13-profile-application.md) | COMPLETE |
 | [14: reset-recovery](prompts/14-reset-recovery.md) | COMPLETE |
-| [15: port-snapshots](prompts/15-port-snapshots.md) | NOT STARTED |
+| [15: port-snapshots](prompts/15-port-snapshots.md) | COMPLETE |
 | [16: interrupt-service](prompts/16-interrupt-service.md) | NOT STARTED |
 | [17: diagnostics-health](prompts/17-diagnostics-health.md) | NOT STARTED |
 | [18: protocol-conformance](prompts/18-protocol-conformance.md) | NOT STARTED |
@@ -1169,3 +1169,38 @@ package consumption without maintainer tools. Commands and evidence limits are i
 firmware remain unqualified; installed sanitizer runtimes remain unavailable.
 Lead commits/syncs the checked audit on this same branch and verifies equal
 upstream commits and a clean worktree. Final commit evidence is in the handoff.
+
+## Prompt 15: complete port observations (2026-10-26)
+
+Started clean and synchronized at `caba75b21bab02e5bdc7bff47c611f797b2ef3dc`
+on the existing execution branch. Completed prompt 15 only; IRQ remains prompt16.
+Re-read full prompt, COMMON, baseline and exact archived TI status/applicability
+pages. Current BME280/LDC1614/INA228 evidence and adopted/rejected behavior are in
+[execution-15-peers](audit/execution-15-peers.md). No sibling changes or remote CI.
+
+Implemented `startRefreshPort` and complete cached publication in the existing
+engine. Fixed09/08/09 reads use pure codecs; only complete fresh-time publication
+replaces history. Final09 and E0 bookends give independently qualified fields;
+no retry, ACK/reset, GPIO or power policy. Acquisition time/configuration provenance
+precede the first read; sequence saturates. Negative current control evidence can
+revoke configuration trust while incomplete refresh preserves the old port record.
+Conservative accessory applicability and raw322 fault limits remain explicit.
+
+A general coding agent owned disjoint tests, another owned peer/docs work, and a
+strong reasoning reviewer checked TI/production/edge cases independently. Lead
+reviewed actual changes, fixed a strict flag-OR warning, checked fixture corrections
+and ran the independent all-bookend probe. Added an explicit independent CC/VBUS
+fixture and corrected overly broad322 debug wording; no remaining behavior defect.
+
+PASS: strict Debug/Release seven CTests each; 494,257 port checks; unchanged prior
+owner/profile/reset/protocol/codec suites; independent13,031,431 checks over458,752
+observations; Doxygen22 owner methods; native PlatformIO; source-equal36-file
+package/tool-independent consumer; links/provenance/version checks. Exact commands
+and separate firmware/hardware/tooling limits are in
+[validation](validation.md#prompt-15-complete-port-observations-2026-10-26).
+
+Updated source/public Doxygen, applicability/procedure/API/architecture/variant/
+feature guides, metadata descriptions, README/CHANGELOG and contributor/test/agent
+instructions. No version bump, new production file or future callable API.
+Lead commits and syncs this checked unit on the same execution branch, verifies
+upstream equality and a clean worktree, and reports the final commit in handoff.

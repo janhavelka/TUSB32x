@@ -3,12 +3,22 @@
 This checkout contains audited implementation contracts, portable C++17 values
 and a cooperative owner engine with read-only initialization, profile observation,
 explicit profile application, desired verification, read-only reconciliation,
-explicit reset and original TUSB320/I dead-battery recovery.
+explicit reset, original TUSB320/I dead-battery recovery and complete port refresh.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
+
+- Read-only `startRefreshPort` through the existing owner engine and cached
+  `portSnapshot` publication. Fixed 09/08/09 reads preserve final raw status,
+  variant-aware role/current/accessory applicability, per-field validity,
+  bookend coherence and original acquisition/configuration provenance. Failed
+  partial reads retain the previous complete snapshot; complete publications
+  advance a saturating sequence. Invalidation preserves historical observations.
+  Added the registered port regression suite. IRQ acknowledgement/service remain
+  planned; attached-current tracking, connector mapping and electrical behavior
+  require separate physical qualification.
 
 - Independent prompt-14 audit and regressions for fresh reset controls differing
   from cached proof, post-reset identity/revision contradictions and clipped

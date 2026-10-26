@@ -235,6 +235,50 @@ its shared code. Charge-through current is distinct from ordinary USB default;
 default is not unconditional 500/900 mA permission. An active-cable flag does not
 measure VCONN. CC1/CC2 remain chip pin names; board mapping stays external.
 
+### Complete port interpretation (implemented prompt 15)
+
+`detail::decodePort` reuses `decodeRegister` for field codes, then qualifies them
+with final attachment and the fixed bookend comparison. The following is the
+library's conservative applicability policy, not a claim that every combination
+can occur electrically. Invalid interpretations keep their raw bytes. UNKNOWN
+has no validity flag; NOT_APPLICABLE is a valid interpretation, not usable power.
+
+| Final attachment / accessory code | Local / peer role | Orientation | Detected current | Accessory / active-cable validity |
+| --- | --- | --- | --- | --- |
+| Detached | NOT_APPLICABLE / NOT_APPLICABLE | NOT_APPLICABLE | NOT_APPLICABLE | Accessory NOT_APPLICABLE only for code0, otherwise UNKNOWN; cable invalid |
+| Normal source | SOURCE / SINK | Final CC1/CC2 | NOT_APPLICABLE | Accessory NONE and cable valid only for code0; contradictory/reserved accessory UNKNOWN |
+| Normal sink | SINK / SOURCE | Final CC1/CC2 | Codes0/1/3 valid only with accessory0; charge-through code2 and contradictory accessory context UNKNOWN | Accessory NONE only for code0; cable invalid |
+| Accessory audio4 | NOT_APPLICABLE / NOT_APPLICABLE | UNKNOWN | NOT_APPLICABLE | AUDIO valid; cable invalid |
+| Accessory charge-through5 | NOT_APPLICABLE / NOT_APPLICABLE | UNKNOWN | Only code2 gives CHARGE_THROUGH_500_MA; other codes UNKNOWN | CHARGE_THROUGH valid; cable invalid |
+| Accessory debug6 | NOT_APPLICABLE / NOT_APPLICABLE | UNKNOWN | NOT_APPLICABLE | B DEBUG; L/A/V DEBUG_LOCAL_DFP; cable invalid |
+| Accessory debug7 | NOT_APPLICABLE / NOT_APPLICABLE | UNKNOWN | UNKNOWN | B reserved/UNKNOWN; L/A/V DEBUG_LOCAL_UFP; cable invalid |
+| Accessory code0 or reserved1-3 | NOT_APPLICABLE / NOT_APPLICABLE | UNKNOWN | UNKNOWN | UNKNOWN; cable invalid |
+
+All four final attachment codes and IRQ bit4 are independently valid. Local
+advertisement codes0/1/2 are valid independently of attachment; reserved3 keeps
+an invalid typed placeholder. `activeCable` retains raw08 bit0 even without its
+validity flag. Source-only cable applicability with accessory0 is conservative
+library policy; it does not add a reserved silicon code. Extended UFP-debug
+current is withheld as unresolved paired applicability, not declared inapplicable.
+Debug-local context remains in `Accessory`, not an inferred ordinary peer role.
+
+Rechecked printed TI pages on 2026-10-26: B SLLSEN9F Table7-1 and section7.3.1.2 p11,
+Table7-7 pp17-18; L SLLSEP2D / A SLLSEQ8D Tables8-9 pp17-18 and accessory
+sections7.2.3.1-2 pp11-12; V SLLSEO5D Tables6-8/9 pp18-19, section6.3.4.2 p12 and
+section6.3.8 p13. B identifies active-cable detection in DFP context and waits for
+VBUS as well as CC before Attached.SNK. Both-CC accessory detection does not
+qualify connector orientation. V debug6/7 identifies local DFP/UFP, excludes
+charge-through debug support in DRP or UFP mode and has separate autonomous VCONN conditions.
+A raw cable flag cannot establish those conditions or prove powered VCONN.
+
+Compare first/final09 with `0xE0`. A changed bookend clears current/accessory/
+cable flags and makes current/accessory UNKNOWN even if a detached interpretation
+would otherwise be NOT_APPLICABLE. Final09 role/direction/IRQ and08 advertisement
+remain independently decodable. Matching bookends do not prove atomicity or that
+08 stayed unchanged between reads. Physical current tracking after attachment
+remains limited by the documented base-reset recommendation and unresolved
+extended wording; refresh never performs that reset or an IRQ acknowledgement.
+
 ### TUSB322I mode comparison
 
 Decode mode 00 and mode 11 to the same `PortMode::DRP`. The canonical standalone

@@ -1,7 +1,7 @@
 # Transport and silicon procedure contract
 
-Initially specified in prompt 4 on 2026-10-23; implemented through reset/recovery
-in prompt 14 on 2026-10-26. Port/IRQ procedures below remain planned. Host checks
+Initially specified in prompt 4 on 2026-10-23; implemented through complete port observations
+in prompt 15 on 2026-10-26. IRQ procedures below remain planned. Host checks
 prove software behavior, not adapter timing or physical hardware qualification.
 Read the [variant matrix](variant-matrix.md), [register map](register-map.md),
 [encoding vectors](register-vectors.md) and [owner baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
@@ -147,9 +147,9 @@ These are library-selected, acyclic plans. They intentionally use one common
 proof path, fixed storage and scalar controls instead of a generic register
 cache or retries until stable.
 
-Implemented through prompt 13: `startInitialize`, `startReadProfile`,
-`startApplyProfile`, `startVerifyProfile` and `startReconcile`. Reset/recovery,
-port and IRQ plans below remain their later prompts' work.
+Implemented through prompt 15: `startInitialize`, `startReadProfile`,
+`startApplyProfile`, `startVerifyProfile`, `startReconcile`, `startReset`,
+`startRecoverDeadBattery` and `startRefreshPort`. IRQ plans remain prompt 16 work.
 In `src/TUSB32xOperations.cpp`, `startOperation`
 shares admission, `acceptRead` stages each byte and `publishConfiguration`
 commits the complete P. `observeControl` invalidates contradicted proof before
@@ -384,6 +384,38 @@ it merely because another operation kind completed. An actual failed callback or
 missing reset postcondition still fails reset with its original error or the
 specified mismatch/unknown status.
 
+## Complete port refresh (implemented prompt 15)
+
+`startRefreshPort` uses the existing admission, token, deadline and retained
+result slot. A valid binding suffices; no initialization or known configuration
+is required. `poll` executes S as three separate scalar reads:09,08,09. Each
+callback sets its own pointer and returns before the next owner turn. There are
+at most three callbacks, three TX and three RX payload bytes, with zero writes,
+retries, ACKs or resets. Larger budgets remain ceilings; zero budget makes no
+callback. Completion requires the existing fresh owner-time/deadline check.
+
+The first09 callback captures owner time, verified configuration generation and
+configuration state before invoking transport. `detail::decodePort` uses the
+[complete interpretation matrix](register-map.md#complete-port-interpretation-implemented-prompt-15).
+Only final complete publication assigns `_port`, advances its saturating sequence
+and clears invalidated. Failed reads, cancel and deadline preserve the entire
+old snapshot. End/external invalidation and possible port-affecting writes retain
+its history but mark it invalidated. Reset/recovery never publish transient data.
+`portSnapshot` copies cached evidence with no callbacks, clock reads or policy.
+
+A successfully read contradictory control still invalidates current configuration
+trust immediately through `observeControl`, including when a later refresh read
+fails. During refresh this does not alter the old port snapshot's invalidated
+flag: it remains a historical publication with its original provenance. A new
+complete snapshot records pre-first-read configuration provenance, not the later
+current configuration state; consult `configurationSnapshot` for current trust.
+Neither refresh success nor an unrelated read promotes configuration proof.
+
+The acquisition timestamp is a conservative boundary, not a precise electrical
+sample. Bookend equality is not atomic capture. Sequence counts publications,
+not IRQ edges, and repeats at UINT64_MAX. Tokens correlate operations; age,
+connector wiring, VBUS readiness and USB policy remain external decisions.
+
 ## IRQ observation, acknowledgement and service
 
 B Table 7-7 p18 describes CSR changes broadly; L/A Table 9 p18 specifically names
@@ -394,7 +426,7 @@ to permit subsequent notification; it does not establish an inter-clear 5 ms del
 B Table 7-6 p16 defines its write-one-clear action and zero-write no-effect;
 Table 7-7 p18 identifies the RCU interrupt field.
 
-| Planned operation | Exact B/L/A plan | Evidence and limit |
+| Operation (ACK/service planned) | Exact B/L/A plan | Evidence and limit |
 | --- | --- | --- |
 | Refresh | S, no write | Historical sampled IRQ; no implied ACK |
 | ACK-only | R09, then W09 using the variant's ACK formula below | Fresh actual duty/accessory bits, never desired. Callback acceptance is not a sampled-clear guarantee; no recheck in this API |
@@ -446,7 +478,7 @@ three (or two if held disabled). V has one ordinary 0A write or three/two mode
 writes;08/09 changes stay gated and 45 is absent. Add F once, never per write.
 The same role waits apply before final F when a profile stays disabled.
 Only L/A receives the 6-tick mode wait; V gets no invented 5 ms requirement.
-The implemented apply/verify/reset/recovery paths meet these ceilings. Each `poll` is a direct
+The implemented apply/verify/reset/recovery/refresh paths meet these ceilings. Each `poll` is a direct
 bounded pass: validate time, consume at most one pending completion, process
 at most one wait boundary, evaluate completion, select a callback and invoke
 it at most once. There is no transition-draining loop. Admission compares eight

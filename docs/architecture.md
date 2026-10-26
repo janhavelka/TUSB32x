@@ -10,7 +10,8 @@ operation/retained result and read-only initialization. Prompt 12 adds profile
 observation and read-only reconciliation through that engine. Prompt 13 adds
 explicit differences-only apply and desired-profile verification using the same
 proof and write composer. Prompt 14 adds explicit reset and original TUSB320/I
-dead-battery recovery without a second engine or scheduler. The
+dead-battery recovery without a second engine or scheduler. Prompt 15 adds fixed
+read-only port refresh and cached publication through that same engine. The
 [API inventory](api-contracts.md) separates delivered methods from future calls; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
@@ -20,16 +21,16 @@ dead-battery recovery without a second engine or scheduler. The
 | --- | --- |
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
-| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, token/result and cached methods are callable |
+| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, port refresh, token/result and cached methods are callable |
 | include/TUSB32x/CommandTable.h | RegisterDecode value and callable pure decodeRegister; raw evidence and independent field validity |
 | include/TUSB32x/Version.h | Generated stable constexpr version values; no Git, timestamp or firmware identity |
 | src/TUSB32x.cpp | Bounded pure binding/profile validation |
-| src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization/profile/apply/verify/reconcile/reset/recovery engine with private phases, immutable deadlines, tokens and retained results |
-| src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic, including the bounded exhaustion fixture boundary |
+| src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization/profile/apply/verify/reconcile/reset/recovery/port engine with private phases, immutable deadlines, tokens and retained results |
+| src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic and saturating publication sequence |
 | src/TUSB32xProtocol.h/.cpp | Private mapped terminal callbacks, single accounting boundary, possible-write evidence and pure exact identity/revision comparisons |
-| src/TUSB32xCodecs.h/.cpp | Public pure decoder definition, private typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
+| src/TUSB32xCodecs.h/.cpp | Public pure decoder, private complete-port interpretation, typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
 | CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external maintainer tools for core consumption |
-| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp, test/test_operations.cpp, test/test_profile_observation.cpp, test/test_profile_application.cpp and test/test_reset_recovery.cpp | Registered active validator/protocol/codec/owner suites and compile-only standalone-header/future-signature fixtures |
+| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp, test/test_operations.cpp, test/test_profile_observation.cpp, test/test_profile_application.cpp, test/test_reset_recovery.cpp and test/test_port.cpp | Registered active validator/protocol/codec/owner suites and compile-only standalone-header/future-signature fixtures |
 | examples/host/basic/ | Standalone multi-file consumer of real values, validators and public decoder; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/PlannedApi.h and planned_api.cpp | Explicitly compile-only future signatures, never linked or delivered |
@@ -68,13 +69,13 @@ The current split keeps pure codecs/composition in `TUSB32xCodecs.cpp` and the
 terminal callback/accounting boundary in `TUSB32xProtocol.cpp`, sharing one
 closed variant-capability table. Validators remain in `TUSB32x.cpp`;
 binding/cache and the single owner engine share `TUSB32xOperations.cpp`.
-Later files cover
-port observation (`TUSB32xPort.cpp`) and passive diagnostics
-(`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
+Port publication also stays adjacent to that engine; no separate port scheduler
+is needed. A later file may cover passive diagnostics (`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
 and Doxygen. The current units implement validators, private transport/identity
 and pure codecs/composition, plus lifecycle/token/result handling and read-only
 initialization, profile observation, explicit apply, desired-profile verification
-and read-only reconciliation, explicit reset and base dead-battery recovery.
+and read-only reconciliation, explicit reset, base dead-battery recovery and
+complete read-only port refresh.
 Other operation families remain later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
@@ -162,6 +163,22 @@ callbacks do not publish transient port observations. An interruption retains
 the sequence obligation beyond result take/rebind; clear controls and read-only
 reconciliation cannot certify the historical wait. A new explicit request can
 attempt recovery again. Neither operation adds a power monitor or board policy.
+
+Port refresh stages 09/08/09 in private candidate storage and publishes final09
+only after all three reads and the fresh completion/deadline check. It has no
+identity/configuration promotion, reset, ACK or retry. It captures owner time,
+verified generation and configuration state before its first read. Bookends are
+compared under E0; matching is evidence of matching bookends, while changed values
+invalidate cross-register fields without discarding raw data. Both remain
+sequential hardware observations. Failure preserves the old complete snapshot;
+publication increments its saturating sequence and clears invalidated.
+
+End, external invalidation and possible port-affecting writes set invalidated
+without rewriting the historical fields/time/provenance. Configuration readback
+cannot clear it, and uninvalidated data can still be old. Getter/result delivery
+is bus-silent; no new GPIO/ISR/event queue or policy layer is introduced. The
+application checks field validity, coherence and age, and separately qualifies
+connector mapping, attached-current tracking and electrical operation.
 
 Desired input, raw observations, verified actual settings, port interpretation,
 IRQ evidence and operation outcome are separate values. Every incomplete or

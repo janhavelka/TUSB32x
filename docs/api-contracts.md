@@ -1,6 +1,6 @@
 # Portable values, decoding and owner API
 
-Prompts 5-14, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-15, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, two pure validators,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
@@ -10,7 +10,8 @@ Prompt 11 implements the non-copyable device facade, lifecycle/token/result
 handling, cached evidence and read-only initialization. Prompt 12 adds
 `startReadProfile` and `startReconcile`; prompt 13 adds `startApplyProfile` and
 `startVerifyProfile`; prompt 14 adds explicit `startReset` and original-part
-`startRecoverDeadBattery`. Other operation families
+`startRecoverDeadBattery`; prompt 15 adds complete read-only `startRefreshPort`
+and cached port publication. Other operation families
 below remain planned. Later prompts publish their callable declarations with
 real implementations; the complete design inventory is not a promise that all
 listed signatures are delivered now.
@@ -66,7 +67,8 @@ means acquisition, not current authorization: `DriverDiagnostics.initialized`
 and configuration/effect evidence determine current usability. Result IRQ facts
 describe that operation only; an operation that performs no IRQ work leaves its
 IRQ member empty. Cached diagnostic IRQ evidence can retain the previous record.
-The publication and invalidation tables below govern the later engine.
+The publication and invalidation tables below govern the delivered owner subset
+and explicitly planned later operation families.
 
 ACK `acknowledgeConfirmed` means a terminal write returned OK. It is never proof
 of a sampled-clear latch. `pendingAfterValid` and `pendingAfter` record the
@@ -155,8 +157,9 @@ Library-generated statuses use detail zero unless a later documented method
 assigns another meaning. Backend detail is never narrowed or reinterpreted.
 There is no detached or OFFLINE error: detach is normal, health is a projection.
 Operation-status propagation, callback normalization and counters are implemented
-for initialization, profile observation, apply, verification and reconciliation.
-Write/effect behavior for other operation families remains specified future work.
+for initialization, profile observation, apply, verification, reconciliation,
+reset/base recovery and port refresh. IRQ and raw-diagnostic behavior remains
+specified future work.
 
 ## Borrowed transport and owner boundary
 
@@ -203,10 +206,11 @@ none is ISR-safe.
 | startVerifyProfile | Retained desired input required; run read-only F and compare without adopting or replaying desired. Complete mismatching proof can establish KNOWN actual controls; B5/L/A6/V5 callback ceilings. |
 | startReset | Current validated identity required; UNKNOWN actual configuration allowed when a fresh 0A read supplies a safe command image. Send one command, wait 96 elapsed owner ticks, then run F once; B7/L/A8/V7 callbacks. Never compare or replay desired. |
 | startRecoverDeadBattery | Original 320/I only, current validated identity and caller-established stable VDD/readiness. Read 45, literal 04, wait 31 ticks, literal 00, read 45; at most 4 callbacks, 6 TX/2 RX. Own interrupted recovery permits a new explicit attempt; a different unresolved mode/reset transition rejects locally. |
+| startRefreshPort | Binding only, including UNKNOWN configuration; read 09/08/09 once, at most 3 callbacks and 3 TX/3 RX bytes. Complete-only cached publication; no identity/configuration promotion, reset, ACK or write. |
 | poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
 | cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
 | resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
-| progress, configurationSnapshot, portSnapshot, transportStats, diagnostics, clearTransportStats | Fixed cached copies or clearing all-callback totals; no bus, clock sampling, retry or trust repair. Port remains invalid until the later refresh operation exists. Clearing totals does not clear managed evidence or retained results. |
+| progress, configurationSnapshot, portSnapshot, transportStats, diagnostics, clearTransportStats | Fixed cached copies or clearing all-callback totals; no bus, clock sampling, retry or trust repair. Port retains historical data with explicit invalidation, age and field validity. Clearing totals does not clear managed evidence or retained results. |
 
 The next successful admission cannot replace an active operation or retained
 terminal result. Tokens never reset through end/bind/forget and never wrap.
@@ -344,8 +348,8 @@ This sketch contains both the delivered subset above and future operations.
 Only the delivered subset is declared in the public class. The compile-only
 fixture checks the complete future inventory separately. Profile observation and
 read-only reconciliation are delivered in prompt 12; application and desired-profile
-verification are delivered in prompt 13; reset and recovery in 14. Port belongs
-to 15; IRQ to 16; raw access and health helpers to 17.
+verification are delivered in prompt 13; reset and recovery in 14; port refresh
+and publication in 15. IRQ belongs to 16; raw access and health helpers to 17.
 No begin/init/unbind aliases or successful placeholder methods are provided.
 
 ```cpp
@@ -402,8 +406,8 @@ does not replay, and reset never reapplies a desired profile. The tables below
 finish the baseline's precedence, result retention and interruption rules.
 
 Pure binding/profile validators are implemented in prompt 7, decoding in 10,
-and the delivered owner subset in 11–14. Remaining driver methods are published
-with their owning work in prompts 15–17; health projection is prompt 17.
+and the delivered owner subset in 11–15. Remaining driver methods are published
+with their owning work in prompts 16–17; health projection is prompt 17.
 No unavailable function may appear in a runnable quick start before that work.
 The health validator requires offlineThreshold >= 1. Invalid policy returns
 INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it
@@ -812,6 +816,36 @@ transaction or evidence of any number of completed physical bytes.
 
 ## Port publication and IRQ evidence
 
+`startRefreshPort(const OperationTiming&, OperationToken&)` and
+`portSnapshot() const` are implemented. Admission needs a binding only and follows
+the existing active/result/token/deadline rules. The refresh reads 09/08/09 with
+one callback per nonzero-budget poll, at most three callbacks, three requested TX
+bytes and three RX bytes. No refresh path writes, resets or acknowledges IRQ.
+The getter returns a fixed cached copy even while unbound, with no callback or
+clock sampling. ACK/service behavior below remains planned for prompt 16.
+
+Attachment is relative to the local port and does not equal requested mode.
+Normal source/sink observations have separate opposite local/peer roles;
+accessory status does not invent a normal peer role. Detached orientation and
+current can be valid NOT_APPLICABLE values. Reserved accessory/advertisement
+encodings retain raw bytes with invalid affected fields. The paired status and
+selected variant establish applicability; a single decoded byte cannot.
+The [register guide](register-map.md#complete-port-interpretation-implemented-prompt-15) defines the complete
+applicability matrix. Ordinary sink detection accepts codes 0/1/3 only with
+accessory code 0; charge-through accepts detected-current code 2. Extended
+local-UFP debug current remains UNKNOWN under conservative library policy.
+Accessory attachment does not establish orientation or active-cable usability.
+A contrary persistent 08/09 field can immediately invalidate current configuration
+trust, even when a later read fails and the cached port remains unchanged.
+Published port provenance still describes configuration before its first read.
+Advertisement remains a configuration category, separate from local-sink current
+detection. Neither is measured load, a PD contract or board power permission;
+DEFAULT is not unconditional 500 mA. Refresh cannot resolve TI's attached-current
+tracking uncertainty and never introduces the base-part reset recommendation as
+an implicit read side effect. CC and VBUS remain separate hardware facts;
+connector orientation and electrical behavior need exact-part/board qualification.
+Raw active-cable evidence does not establish usable current or powered VCONN.
+
 | Observation/event | Publication and retained evidence |
 | --- | --- |
 | Default | invalidated=true, no raw or decoded validity, sequence/time absent |
@@ -822,6 +856,12 @@ transaction or evidence of any number of completed physical bytes.
 | Required read fails, cancellation or expiry before complete publication | Preserve all old raw/typed data, sequence, acquisition time and provenance; no partial replacement |
 | End, external invalidation, possible port-affecting write | Set invalidated=true; preserve historical fields/time; ACK alone does not invalidate the port observation |
 | Detached complete sample | NOT_APPLICABLE interpretations can be valid; not an error or OFFLINE signal |
+
+`observedUptimeMs` with `observedTimeValid` identifies the owner boundary before
+the first required read, conservatively including acquisition duration in age;
+it is never replaced by a later publication timestamp. Captured configuration
+provenance does not promote trust. Sequence counts complete publications from
+zero and saturates at UINT64_MAX; it does not count electrical edges.
 
 A complete raw publication can clear invalidated even with changed bookends.
 Consumers still check each field, coherence and age. Only a later complete

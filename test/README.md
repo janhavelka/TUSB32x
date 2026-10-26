@@ -1,18 +1,20 @@
-# Native contract, validator, transport, codec, owner and version checks
+# Native contract, validator, transport, codec, owner, port and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
 Prompt 9 adds private terminal transport and exact identity/revision checks.
 Prompt 10 adds public supplied-byte decoding, private encoding/comparison and
 safe composition tests. Prompt 11 adds the delivered owner facade and read-only
-initialization, lifecycle, result ownership and fresh-time behavior. Port
-acquisition, other mutating families and health projection remain planned. Prompt 12 adds
+initialization, lifecycle, result ownership and fresh-time behavior. Other
+operation families and health projection remain planned. Prompt 12 adds
 read-only profile observation/reconciliation and its conservative reset-settling
 wait. Prompt 13 adds explicit profile application/verification, literal role
 sequences, ambiguous-write effects and independent sub-ms timing fixtures;
 software owner-time tests do not prove physical hardware timing.
 Prompt 14 adds explicit reset and original TUSB320/TUSB320I recovery, literal
 command/procedure scripts, retained sequence history and physical-clock wait checks.
+Prompt 15 adds complete port acquisitions, applicability, coherence and historical
+freshness through the same public owner engine.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -42,7 +44,8 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   Literal frames verify ACK/settings/reset at the transport boundary. Mode and
   recovery checks prove composition prerequisites, not executed/timed procedures.
   The public decoder is also linked by the standalone consumer without private includes.
-- `tusb32x_operations`: every public owner method is compiled, linked and called.
+- `tusb32x_operations`: lifecycle/profile/reset/recovery owner methods are compiled,
+  linked and called.
   Exact read-only initialization scripts cover all seven variants, 5/6-callback
   ceilings and absence of writes. Each callback boundary exercises backend
   failures, cancellation, end, invalidation, owner expiry and failed
@@ -151,6 +154,37 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   A newer successful reset preserves that older unresolved recovery history.
   Later reset success also preserves earlier ambiguous command acceptance,
   while its complete waited F can resolve an interrupted mode transition.
+- `tusb32x_port`: linked public `startRefreshPort` and cached `portSnapshot`,
+  with literal 09/08/09 scripts on all seven variants. Independent expected
+  tables cover 14,336 complete acquisitions across all 256 register08 values,
+  all four attachment states and both directions, including reserved
+  advertisement/accessory codes. Another 1,792 observations cover every final09
+  byte, IRQ levels, raw fault/reserved/control preservation and low-bit changes
+  excluded from E0 coherence comparison. Every unequal pair of attachment/direction
+  bookends clears cross-register validity while preserving complete raw evidence
+  and independently valid final09 fields. No production decoder supplies expected
+  values. Current indication, local/peer role, detached inapplicability,
+  charge-through and variant-specific debug meanings remain separate.
+  An explicit CC/VBUS fixture varies both independently: only the combined
+  condition reports sink attachment. Current/cable bits alone imply no attach;
+  this fixture assumption does not qualify physical Type-C behavior.
+  Each required read injects all six terminal backend errors. Every callback and
+  final fresh-time boundary exercises cancellation, end, external invalidation
+  and owner expiry, preserving the old complete snapshot, acquisition time,
+  sequence, configuration provenance and prior invalidated state. No failed
+  partial receive fabricates a detach. Delayed publication retains the first
+  read's owner timestamp; rollover, backward time, clipped timeout, budgets0/1/
+  larger and retained result ownership are checked. A private arithmetic fixture
+  tests sequence saturation without a public state seed.
+  Public earlier operations prove that read-only configuration verification,
+  reconciliation and no-op apply never refresh port data. Possible apply/reset/
+  recovery writes invalidate before callback entry, including ambiguous errors;
+  reset/recovery transient reads preserve historical port data. Admission and
+  pre-write cancellation retain valid port evidence. Complete port refresh can
+  clear port invalidation while configuration uncertainty remains. Successful
+  contrary08/09 evidence downgrades configuration immediately without changing
+  an older port image when a later read fails, is cancelled or expires; a complete
+  observation retains configuration provenance from before its first read.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -231,6 +265,6 @@ structs; no warning alone would not prove their visibility. The retained evidenc
 and exact command are in [validation](../docs/validation.md).
 
 These checks prove current portable values, pure validators, private register
-transport/identity/codecs, owner lifecycle/profile behavior, linkage and planned
+transport/identity/codecs, owner lifecycle/profile/port behavior, linkage and planned
 signature syntax. Later operation families, health projection, framework builds, complete
 package qualification and physical hardware tests remain separate work.

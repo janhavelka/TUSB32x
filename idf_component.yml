@@ -1,5 +1,5 @@
 version: "0.1.0-dev.1"
-description: "Portable TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, reset and original-device recovery."
+description: "Portable TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, reset, original-device recovery and complete port observations."
 license: "MIT"
 maintainers:
   - "Jan Havelka <info@thymos.cz>"

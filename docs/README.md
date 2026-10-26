@@ -2,7 +2,8 @@
 
 - [API contracts](api-contracts.md): implemented values, validators, decoder and
   read-only initialization, profile observation, explicit apply, desired
-  verification, read-only reconciliation, explicit reset and base recovery, with future
+  verification, read-only reconciliation, explicit reset, base recovery and complete
+  read-only port refresh, with future
   device methods explicitly labeled.
 - [Architecture](architecture.md): public/core/example responsibilities and the
   application-owned transport boundary.

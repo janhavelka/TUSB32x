@@ -1,5 +1,5 @@
 /// @file TUSB32xOperations.cpp
-/// @brief Bus-silent lifecycle, explicit writes/reset/recovery and bounded shared proof.
+/// @brief Bus-silent lifecycle, explicit writes, bounded shared proof and complete port publication.
 #include "TUSB32x/TUSB32x.h"
 
 #include "TUSB32x/CommandTable.h"
@@ -203,6 +203,10 @@ Status TUSB32x::startReset(const OperationTiming& timing, OperationToken& token)
   return startOperation(OperationKind::RESET, timing, token);
 }
 
+Status TUSB32x::startRefreshPort(const OperationTiming& timing, OperationToken& token) {
+  return startOperation(OperationKind::REFRESH_PORT, timing, token);
+}
+
 Status TUSB32x::startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token) {
   return startOperation(OperationKind::RECOVER_DEAD_BATTERY, timing, token);
 }
@@ -277,6 +281,7 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
     _progress.waiting = true;
   }
   _observing = {};
+  _observingPort = {};
   _pending = false;
   _pendingStatus = Status::Ok();
   _writeCount = count;
@@ -286,6 +291,8 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
     _waitMode = _diagnostics.modeTransitionUnresolved;
   } else if (kind == OperationKind::RECOVER_DEAD_BATTERY) {
     _phase = Phase::RECOVERY_PRECHECK;
+  } else if (kind == OperationKind::REFRESH_PORT) {
+    _phase = Phase::PORT_FIRST09;
   }
   if (candidate != nullptr) {
     for (uint8_t i = 0; i < count; ++i) _writes[i] = writes[i];
@@ -662,7 +669,26 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
   if (_pending) {
     _pending = false;
     if (!_pendingStatus.ok()) return finish(_pendingStatus, true, nowMs);
-    if (_phase == Phase::BASE_PRECHECK) {
+    if (_phase == Phase::PORT_FIRST09) {
+      _observingPort.rawStatus09 = _received[0];
+      _phase = Phase::PORT08;
+    } else if (_phase == Phase::PORT08) {
+      _observingPort.rawStatus08 = _received[0];
+      _phase = Phase::PORT_LAST09;
+    } else if (_phase == Phase::PORT_LAST09) {
+      PortSnapshot complete{};
+      const Status decoded = detail::decodePort(_config.variant, _observingPort.rawStatus09,
+          _observingPort.rawStatus08, _received[0], complete);
+      if (!decoded.ok()) return finish(decoded, true, nowMs);
+      complete.sequence = detail::nextSequence(_port.sequence);
+      complete.observedUptimeMs = _observingPort.observedUptimeMs;
+      complete.observedTimeValid = true;
+      complete.configGeneration = _observingPort.configGeneration;
+      complete.configurationState = _observingPort.configurationState;
+      complete.invalidated = false;
+      _port = complete;
+      return finish(Status::Ok(), true, nowMs);
+    } else if (_phase == Phase::BASE_PRECHECK) {
       // TI SLLSEN9F 7.4.1-2 p14: detached before any base mode write.
       // The owner/fixture must prevent attachment racing this advisory sample.
       if ((_received[0] & 0xC0U) != 0 || _configuration.state != ConfigurationState::KNOWN)
@@ -790,10 +816,17 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
     return error(Err::IN_PROGRESS);
   }
   const uint8_t reg = _phase == Phase::IDENTITY ? 0 : _phase == Phase::REVISION ? 0xA0 :
-      _phase == Phase::CONFIG08 ? 8 :
-      (_phase == Phase::CONFIG09 || _phase == Phase::BASE_PRECHECK) ? 9 :
+      (_phase == Phase::CONFIG08 || _phase == Phase::PORT08) ? 8 :
+      (_phase == Phase::CONFIG09 || _phase == Phase::BASE_PRECHECK ||
+       _phase == Phase::PORT_FIRST09 || _phase == Phase::PORT_LAST09) ? 9 :
       (_phase == Phase::CONFIG0A || _phase == Phase::RESET_PRECHECK) ? 10 : 0x45;
   if (_phase == Phase::CONFIG08) _observing.observedUptimeMs = nowMs;
+  if (_phase == Phase::PORT_FIRST09) {
+    // Conservative acquisition boundary before the first required callback.
+    _observingPort.observedUptimeMs = nowMs;
+    _observingPort.configGeneration = _configuration.verifiedGeneration;
+    _observingPort.configurationState = _configuration.state;
+  }
   const detail::ProtocolContext context{_config, _stats, _diagnostics};
   const auto transfer = detail::readRegisters(context, detail::TrafficSource::MANAGED, reg,
       _received, _phase == Phase::IDENTITY ? 8U : 1U, _progress.deadlineMs - nowMs);
@@ -808,7 +841,11 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
   } else if (_phase == Phase::REVISION) {
     _pendingStatus = detail::checkRevision(_config.variant, _received[0]);
   } else {
+    const bool invalidated = _port.invalidated;
     observeControl(reg, _received[0]);
+    // Negative control evidence changes current configuration trust immediately.
+    // Refresh still preserves the entire historical port snapshot until complete.
+    if (_progress.kind == OperationKind::REFRESH_PORT) _port.invalidated = invalidated;
   }
   if (!_pendingStatus.ok()) {
     // Complete adverse identity evidence must survive cancel/expiry before the

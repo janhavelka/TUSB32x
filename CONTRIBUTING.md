@@ -11,8 +11,9 @@ validators and public pure register decoding, plus private transport/identity,
 field encoders, settings comparison and qualified write composition. The owner
 facade implements lifecycle, token/result ownership, read-only initialization,
 profile observation, explicit apply, desired-profile verification, read-only
-reconciliation, explicit reset and original TUSB320/I dead-battery recovery.
-Port/IRQ and later operation families remain planned.
+reconciliation, explicit reset, original TUSB320/I dead-battery recovery and
+complete read-only port refresh. IRQ acknowledgement/service and later operation
+families remain planned.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
@@ -30,7 +31,7 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Five runtime CTest suites are registered on all hosts, plus
+active in Release. Six runtime CTest suites are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
 The protocol suite includes independent field tables, reserved-code validity,
@@ -48,6 +49,12 @@ Reset tests must assert the actual 08 command bit, one attempt, fresh 96-tick
 wait and variant postconditions. Base recovery tests use literal read/04/wait/00/read
 traces, a fresh 31-tick wait and retained interrupted history. Clear controls
 alone do not establish a completed recovery sequence.
+The port suite tests public refresh/cached access with independent status
+expectations. Preserve exact 09/08/09 traces, complete-only publication, original
+acquisition time, saturating publication sequence and captured configuration
+provenance. Exercise failures/cancellation/deadlines at each read and changed
+bookends without retries. Configuration verification cannot freshen an old port
+snapshot; raw completeness does not establish field applicability or atomicity.
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,
 Doxygen, PlatformIO, framework headers or sibling paths. Use available host

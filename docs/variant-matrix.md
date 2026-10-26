@@ -13,7 +13,8 @@ seven I2C variants, subject to the gates below. Full identity/control/effect pro
 establish KNOWN actual settings;
 this does not grant write permission or exact-part identification from a shared
 signature. Original TUSB320/I dead-battery recovery is also implemented;
-later device operations and CLI names below remain planned contracts.
+read-only port refresh is implemented for all seven variants. Later device
+operations and CLI names below remain planned contracts.
 Apply changes only differing fields, verifies the complete final image and
 retains independent termination/effect evidence after interruption. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding
@@ -34,6 +35,26 @@ qualification, clock margin and readback are library policy beyond B §7.4.3 p14
 LI/HI, LAI/HAI and 322I reject recovery before traffic; their own dead-battery
 descriptions do not prescribe that workaround. Interrupted sequence history
 survives result take and reconciliation even when later controls read clear.
+
+## Port observation boundary
+
+`startRefreshPort` reads 09/08/09 once and publishes complete raw evidence with
+variant-aware per-field applicability and matching/changed bookend coherence.
+It observes the sampled IRQ level without ACK. TUSB322I bit 3 remains raw fault
+evidence under V_FAULT_CLEAR; no typed clear/ACK or non-destructive-read claim is
+added. Source advertisement, local-sink detection and accessory current are
+separate categories. Base accessory code 7 remains reserved; extended code 6/7
+means debug local DFP/UFP, not the peer role. Charge-through means audio
+charged-through and is distinct from ordinary default current.
+
+A successful refresh does not qualify attached-current tracking. B §7.3.1.2 p11
+recommends explicit reset to update detection; refresh never resets. L/A/V
+once-per-attach wording and the comparison guide's active-tracking claim remain
+unresolved. A new register timestamp cannot settle that conflict. CC alone does
+not establish Attached.SNK without the device's VBUS conditions. CC1/CC2 denote
+chip inputs; physical connector mapping, current tracking and electrical behavior
+need identified-part/board traces. Active-cable status is not powered-VCONN proof
+or permission to draw current. See ATTACHED_CURRENT and the electrical gates below.
 
 ## Evidence and current sources
 

@@ -430,3 +430,25 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   [execution-14-peers](audit/execution-14-peers.md). Fixed public tests and an
   independent exhaustive reset-byte probe cover these policies. Host evidence
   does not qualify board readiness, physical wait accuracy or autonomous VCONN.
+
+## Prompt 15: complete port observations (2026-10-26)
+
+- Reuse one engine/transport and pure register decoder. Three small private phases
+  stage09/08/09; one private `decodePort` applies the documented context matrix.
+  Only complete fresh publication replaces cached data. No retry-until-stable,
+  IRQ ACK, reset, event bus, framework dependency or second state machine.
+- Capture time and configuration provenance before the first read. Final09 owns
+  attachment/direction/IRQ; E0 comparison qualifies cross-register fields only.
+  Sequence saturates, counts publications and does not establish edge identity.
+- Preserve raw evidence for reserved/contradictory contexts. Detached and accessory
+  roles are NOT_APPLICABLE; accessory direction and extended UFP-debug current
+  remain UNKNOWN under conservative library applicability policy. See the exact
+  [matrix and TI references](register-map.md#complete-port-interpretation-implemented-prompt-15).
+- Negative control evidence may invalidate current configuration during an
+  incomplete refresh; it cannot replace or invalidate the historical port record.
+  New publication records acquisition-time trust, not later trust. Other explicit
+  invalidation/write/lifecycle rules remain intact. Refresh never repairs trust.
+- [Current peers](audit/execution-15-peers.md) support separate trust/health and
+  complete publication. Reject sensor completion timestamps, chip-side atomicity,
+  guessed Linux detached roles and unqualified VCONN/orientation projections.
+  Source review and host tests do not qualify electrical behavior.

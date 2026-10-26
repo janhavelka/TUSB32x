@@ -1,5 +1,5 @@
 /// @file TUSB32xCodecs.cpp
-/// @brief Pure TI field codecs and one actual-state-qualified mixed-register write composer.
+/// @brief Pure TI field/port interpretation and one actual-state-qualified write composer.
 #include "TUSB32xCodecs.h"
 
 #include "TUSB32xProtocol.h"
@@ -209,6 +209,90 @@ Status decodeRegister(Variant variant, uint8_t reg, uint8_t value, RegisterDecod
 }
 
 namespace detail {
+
+Status decodePort(Variant variant, uint8_t first09, uint8_t status08, uint8_t last09,
+                  PortSnapshot& out) {
+  RegisterDecode status{}, attachment{};
+  Status result = decodeRegister(variant, 0x08, status08, status);
+  if (!result.ok()) return result;
+  result = decodeRegister(variant, 0x09, last09, attachment);
+  if (!result.ok()) return result;
+  PortSnapshot decoded{};
+  decoded.rawStatus08 = status08;
+  decoded.rawStatus09 = last09;
+  decoded.rawValidMask = STATUS_08_VALID | STATUS_09_VALID;
+  decoded.attachment = attachment.attachment;
+  decoded.interruptPending = attachment.interruptPending;
+  decoded.activeCable = status.activeCable; // Raw flag retained even without usable context.
+  decoded.validFields = field(PortField::ATTACHMENT) | field(PortField::INTERRUPT_PENDING) |
+      field(PortField::LOCAL_ROLE) | field(PortField::PEER_ROLE);
+  decoded.localRole = PortRole::NOT_APPLICABLE;
+  decoded.peerRole = PortRole::NOT_APPLICABLE;
+  if ((status.profileValidFields & field(ProfileField::SOURCE_CURRENT)) != 0) {
+    decoded.advertisedCurrent = status.profileCodes.sourceCurrent;
+    decoded.validFields |= field(PortField::ADVERTISED_CURRENT);
+  }
+  // TI B Table7-7 pp17-18; L/A Tables8-9 pp17-18; V Tables6-8/9 pp18-19.
+  // Applicability is conservative library policy: contradictory/reserved accessory
+  // combinations remain unknown. No normal power roles are inferred for accessories.
+  const bool noAccessory = status.accessory == Accessory::NONE;
+  switch (decoded.attachment) {
+    case Attachment::DETACHED:
+      decoded.orientation = Orientation::NOT_APPLICABLE;
+      decoded.detectedCurrent = DetectedCurrent::NOT_APPLICABLE;
+      decoded.validFields |= field(PortField::ORIENTATION);
+      if (noAccessory) decoded.accessory = Accessory::NOT_APPLICABLE;
+      break;
+    case Attachment::LOCAL_SOURCE:
+    case Attachment::LOCAL_SINK: {
+      const bool source = decoded.attachment == Attachment::LOCAL_SOURCE;
+      decoded.localRole = source ? PortRole::SOURCE : PortRole::SINK;
+      decoded.peerRole = source ? PortRole::SINK : PortRole::SOURCE;
+      decoded.orientation = attachment.orientation;
+      decoded.validFields |= field(PortField::ORIENTATION);
+      if (noAccessory) decoded.accessory = Accessory::NONE;
+      if (source) {
+        decoded.detectedCurrent = DetectedCurrent::NOT_APPLICABLE;
+        if (noAccessory) decoded.validFields |= field(PortField::ACTIVE_CABLE);
+      } else if (noAccessory && status.detectedCurrent != DetectedCurrent::CHARGE_THROUGH_500_MA) {
+        decoded.detectedCurrent = status.detectedCurrent;
+      }
+      break;
+    }
+    case Attachment::ACCESSORY:
+      if (!noAccessory) decoded.accessory = status.accessory;
+      switch (decoded.accessory) {
+        case Accessory::AUDIO:
+        case Accessory::DEBUG:
+        case Accessory::DEBUG_LOCAL_DFP:
+          decoded.detectedCurrent = DetectedCurrent::NOT_APPLICABLE;
+          break;
+        case Accessory::CHARGE_THROUGH:
+          if (status.detectedCurrent == DetectedCurrent::CHARGE_THROUGH_500_MA)
+            decoded.detectedCurrent = status.detectedCurrent;
+          break;
+        default: break;
+      }
+      // Both-CC accessory detection does not prove usable direction. UFP debug
+      // current applicability is withheld pending stronger evidence; preserve raw codes.
+      break;
+    default: break; // Every two-bit attachment code is currently documented.
+  }
+  if (decoded.accessory != Accessory::UNKNOWN) decoded.validFields |= field(PortField::ACCESSORY);
+  if (decoded.detectedCurrent != DetectedCurrent::UNKNOWN)
+    decoded.validFields |= field(PortField::DETECTED_CURRENT);
+  decoded.coherence = ((first09 ^ last09) & 0xE0U) == 0 ?
+      SnapshotCoherence::BOOKENDS_MATCH : SnapshotCoherence::CHANGED_DURING_READ;
+  if (decoded.coherence == SnapshotCoherence::CHANGED_DURING_READ) {
+    const uint16_t dependent = field(PortField::DETECTED_CURRENT) | field(PortField::ACCESSORY) |
+        field(PortField::ACTIVE_CABLE);
+    decoded.validFields &= static_cast<uint16_t>(~dependent);
+    decoded.detectedCurrent = DetectedCurrent::UNKNOWN;
+    decoded.accessory = Accessory::UNKNOWN;
+  }
+  out = decoded;
+  return Status::Ok();
+}
 
 Status encodeProfileRegister(Variant variant, uint8_t reg, const DeviceProfile& profile,
                              uint8_t& out) {

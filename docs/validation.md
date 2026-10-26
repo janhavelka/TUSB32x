@@ -1752,3 +1752,67 @@ build artifacts, never delivered production. Added checked-in tests reuse the
 fixed fixture and are registered in the existing operations suite; no new runner
 or state-machine abstraction. Reviewers separately built fresh Debug and isolated
 Doxygen trees. Their checks support the audit; final results above are lead-run.
+
+## Prompt 15 complete port observations (2026-10-26)
+
+Started at synchronized `caba75b21bab02e5bdc7bff47c611f797b2ef3dc` on
+`promptset/tusb32x-implementation-20261023`. Read full prompt 15, COMMON, owner/
+port/time baseline and actual existing source/tests. Three parallel agents owned
+focused tests, current peer/documentation work and independent TI/code review.
+Lead owns engine/codecs, integrates reviewed changes and handles Git.
+
+Exact printed TI pages were reopened: B SLLSEN9F Table7-1/section7.3.1.2 p11,
+Table7-7 pp17-18; L SLLSEP2D and A SLLSEQ8D Tables8-9 pp17-18 and accessory
+sections7.2.3.1-2 pp11-12; V SLLSEO5D Tables6-8/9 pp18-19, sections6.3.4.2 p12
+and6.3.8 p13. The [matrix](register-map.md#complete-port-interpretation-implemented-prompt-15)
+separates TI field codes from conservative applicability policy. Eight archived
+vendor hash checks passed. Current BME280/LDC1614/INA228 revisions, declarations,
+source/tests/examples/CLI/runners/workflow definitions and instructions are in
+[execution-15-peers](audit/execution-15-peers.md); siblings remained read-only.
+
+Tools: GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2 and the installed VS Code PlatformIO Core/native1.2.1 environment.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict Debug/Release | PASS | Seven CTests each; Release assertions active; independent public headers and future compile-only contracts build |
+| Port suite | PASS | 494,257 checks: seven variants, every08 code/context, all final09 bytes, changed bookends, literal CC/VBUS fixture, raw/typed validity, complete-only publication, acquisition/provenance, saturation, every read fault/interruption/final-time boundary and public invalidation/write/reset/recovery paths |
+| Independent public probe | PASS | 13,031,431 checks / 458,752 observations, all65,536 first/final09 pairs on each variant; exact3 callbacks, budget0/255, final09 evidence, E0 coherence, original acquisition time, no writes |
+| Previous regressions | PASS | 35,454 profile observation; 89,140 apply/verify; 88,779 reset/recovery; 20,490 owner; 161,670 protocol; 8,602,548 codec checks, plus values/validators/version/launcher |
+| Doxygen and documents | PASS | No warnings; 17 public structs and22 implemented owner methods visible with briefs; planned methods absent; links/anchors, UTF-8/LF/whitespace, vendor hashes and no-op version sync |
+| Native PlatformIO | PASS | Native consumer compiles/links/runs; fake callbacks invoked zero times |
+| Package consumption | PASS | 36 source-equal exported files, matching IDF selection, relative links; extracted renamed tests-OFF C++17 consumer beneath unrelated Git builds/runs with no Python/Git/Doxygen/PlatformIO on child PATH |
+| Separate evidence | NOT RUN | Physical attachment/orientation/current tracking/VCONN/IRQ and framework firmware; installed MinGW sanitizer runtimes remain unavailable from same-day checks. MSVC/Clang/clang-format are absent |
+
+Lead commands (existing native Ninja Multi-Config tree):
+
+```powershell
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Debug/tusb32x_port.exe
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude build/p15-review/probe.cpp build/native/Release/libTUSB32x.a -o build/p15-review/lead-probe.exe
+& build/p15-review/lead-probe.exe
+doxygen Doxyfile
+python build/p15-doxygen.py
+python build/p10-docs.py
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p15.tar.gz
+python build/p15-package.py
+git diff --check
+```
+
+Session-only probe and documentation/archive scripts under ignored `build/` were
+read and run by the lead; permanent tests are registered in `test/CMakeLists.txt`.
+Review found one strict integer-promotion warning and two incorrect fixture
+assumptions: token999 can be issued, and terminal polling preserves the previous
+turn counter. Removed a redundant flag OR and corrected those fixture assumptions
+without changing token/result behavior. Initial failures are superseded by the
+passing checks above. Final source review found no remaining behavior defect.
+Corrected a source citation's character encoding and qualified V charge-through
+debug exclusion to the documented DRP/UFP modes. No physical-support claim,
+automatic IRQ/reset behavior, future method stub or framework dependency was added.

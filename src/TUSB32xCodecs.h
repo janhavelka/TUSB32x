@@ -10,6 +10,17 @@
 namespace TUSB32x {
 namespace detail {
 
+/// @brief Interpret one complete 09/08/09 observation using supplied bytes only.
+/// @param[in] variant Exact part; malformed variants return INVALID_PARAM.
+/// @param[in] first09 First attachment/direction bookend.
+/// @param[in] status08 Advertisement/current/accessory/cable sample.
+/// @param[in] last09 Final published attachment/direction/IRQ sample.
+/// @param[out] out Decoded fields/raw validity/coherence; unchanged on error. Owner provenance,
+/// sequence and freshness remain default until the operation publishes the complete observation.
+/// @return OK even when reserved/incoherent fields lack validity; no callbacks or policy actions.
+Status decodePort(Variant variant, uint8_t first09, uint8_t status08, uint8_t last09,
+                  PortSnapshot& out);
+
 /// @brief One explicit purpose within the verified owner procedure; never a raw byte command.
 enum class WriteIntent : uint8_t {
   SETTINGS,          ///< Ordinary requested fields, with no actual mode change.

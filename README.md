@@ -9,8 +9,9 @@ and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
 binding/lifecycle, token-checked polling/cancellation/result delivery, cached
 evidence, read-only initialization, profile observation, explicit profile apply,
 desired-profile verification, read-only reconciliation, explicit reset and
-original TUSB320/I dead-battery recovery. Port refresh, IRQ operations, public
-raw diagnostics and firmware adapters remain planned.
+original TUSB320/I dead-battery recovery and complete read-only port refresh.
+IRQ acknowledgement/service, public raw diagnostics and firmware adapters
+remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -111,6 +112,22 @@ alone cannot prove the required sequence ran. Other variants reject recovery
 without traffic. Neither operation retries, replays desired settings or publishes
 transient recovery port observations. See the [procedure guide](docs/device-behavior.md).
 
+`startRefreshPort` needs a binding and reads 09/08/09 once, within three callbacks,
+three requested TX bytes and three RX bytes. `portSnapshot` returns a cached copy
+without traffic. Only complete observations publish; failed or cancelled reads
+retain the previous snapshot. Matching attachment/direction bookends provide
+`BOOKENDS_MATCH`, not atomic sampling; changed bookends keep raw data and invalidate
+fields that depend on both registers. Check per-field validity, invalidation,
+coherence and age before using a field. Time identifies the owner boundary before
+the first read; sequence counts publications and saturates.
+
+Source advertisement and local-sink detected current are separate categories;
+neither measures load or establishes USB PD or board power permission. A fresh
+register read cannot prove physical current tracking after attachment. Connector
+orientation mapping and electrical behavior need separate exact-board evidence.
+Refresh observes the IRQ latch without acknowledging it; TUSB322I fault bit 3
+remains raw evidence with unresolved access/clear semantics.
+
 One terminal result blocks replacement until `takeResult` delivers it. Result
 delivery returns OK even when the copied operation failed. See the
 [implemented owner API](docs/api-contracts.md#implemented-owner-api) for timing,
@@ -118,8 +135,8 @@ output preservation and evidence lifetime.
 
 Tests ON require Python 3.10+. For single-config generators also select
 `-DCMAKE_BUILD_TYPE=Debug` at configure time. The registered checks cover C++
-contracts, validators, transport/codecs, owner operations and isolated generator
-fixtures. Run `doxygen Doxyfile`
+contracts, validators, transport/codecs, owner operations, port publication and
+isolated generator fixtures. Run `doxygen Doxyfile`
 for strict current API documentation. On Windows use the existing VS Code Core
 through `scripts/pio.cmd`; do not install another Core.
 
