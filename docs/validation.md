@@ -1082,3 +1082,72 @@ decoder/composer, owner scheduling, reset/recovery/IRQ engine, firmware or hardw
 qualification is claimed. Unresolved TUSB322I write gates remain enforced. Final
 commit/upstream equality and clean-state evidence belong in the handoff and next
 progress update.
+
+## Prompt 9 independent audit, 2026-10-26
+
+Started at clean synchronized `84dd5c269318f50b377243843bdc9306590fe517` on the
+existing `promptset/tusb32x-implementation-20261023` branch, zero ahead/behind
+after fetch. Reread original prompt 9 completely and reviewed actual production,
+tests and diff from `d7fbd59a3604d1af70dc9c751b44fa55742fb878`. Three fresh parallel
+read-only reviewers independently checked requirements/scope/simplicity,
+correctness/TI/edge semantics and tests/current peers. Lead verified the actual
+code/evidence/results. No confirmed gap or bug was found; no production, test,
+API, package/source-list or silicon change was needed.
+
+Fresh tools: CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0 MinGW-W64 UCRT MCF SEH,
+Python 3.12.10, Doxygen 1.13.2 and existing managed PlatformIO Core 6.1.19 with
+native 1.2.1. New strict builds used build/p9-independent-audit; independent
+reviewer builds used build/p9-reaudit-requirements, -correctness and -tests.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh strict Debug/Release | PASS | Clean configure and compilation of both real core units, all public-header/planned fixtures, 5/5 genuine CTests each |
+| Registered protocol | PASS | 161,461 active checks; independent reviewer native builds and direct optimized NDEBUG execution also pass |
+| Supplemental edge checks | PASS | 542 ignored-only checks: maximum 11-byte partial reads at every fill boundary, raw/managed origins, output sentinels, extreme budgets/details and additional fake rejection guards |
+| Intentional defect injection | PASS | Existing suite rejects all seven isolated mutants: failed-read publication, illegal status passthrough, raw/managed leakage, false no-effect write evidence, wrapping counters, early timeout narrowing and bypassed 322I write gate |
+| TI and pinned source bytes | PASS | Current B/L/A/V downloads match archive; all eight archived hashes intact; exact pinned Go/Rust/Renode bytes verified and relevant bodies reread; four identity tables visually inspected |
+| Version/Doxygen | PASS | check and byte/mtime no-op; strict Doxyfile, 17 public structs, real public helpers/four version values and private protocol functions visible |
+| Native PlatformIO | PASS | Clean native compile/link/run with both actual core CPP units; version and zero fake attempts printed |
+| Actual package/consumer | PASS | 32 unique regular source-equal files; IDF selection matches, relative shipped links resolve, excluded content absent; renamed extraction under unrelated Git compiles/runs strict Release tests OFF with no maintainer tools on child PATH and C++17 propagated from C++11 |
+| Component registration | PASS, host only | Fresh two-source registration fixture compiles/links/runs actual library and consumer, without an SDK or firmware claim |
+| Documentation/source consistency | PASS | Original/full scoped diff whitespace, local paths/anchors/own-source links, UTF-8/LF/final newline and unchanged vendor terms/hashes |
+
+Lead commands:
+
+```powershell
+cmake -S . -B build/p9-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p9-independent-audit --config Debug
+ctest --test-dir build/p9-independent-audit -C Debug --output-on-failure
+cmake --build build/p9-independent-audit --config Release
+ctest --test-dir build/p9-independent-audit -C Release --output-on-failure
+python scripts/generate_version.py check
+doxygen Doxyfile
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd run -d examples/host/basic -e native -t clean
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p9.tar.gz
+python build/p9-package.py
+cmake -S build/p9-component-fixture -B build/p9-component-fixture/independent-audit -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/p9-component-fixture/independent-audit
+& build/p9-component-fixture/independent-audit/registration_consumer.exe
+& build/p9-reaudit-tests/protocol-direct-ndebug.exe
+& build/p9-reaudit-tests/supplemental.exe
+python build/p9-docs.py
+'int main() { return 0; }' | & g++ -x c++ '-fsanitize=address,undefined' -o build/p9-independent-sanitizer.exe -
+```
+
+Lead inspected the supplemental source and each mutant diff/failure log, then
+ran the direct/supplemental executables. Mutant copies/expected failing logs are
+isolated under build/p9-reaudit-tests, never compiled into the library or shipped.
+These session artifacts are review evidence, not new maintained guards or API.
+The package script validates actual archive selection and creates a fresh renamed
+tests-OFF extraction beneath an unrelated Git parent with child PATH restricted
+to Windows system directories. It proves portable linkage only.
+
+The final sanitizer probe fails because this MinGW lacks -lasan/-lubsan; ASan/
+UBSan remain BLOCKED. MSVC/Clang/clang-format are absent from PATH. Hardware
+framing/aggregate SDK timing, real IDF archive tooling, framework firmware and
+later package/omission qualification remain NOT RUN. No sibling was edited or
+remote CI dispatched/polled. Audit records and Unreleased are the only changes;
+final commit, clean state and upstream equality are in the handoff/next progress
+update without a self-referencing commit-hash update.

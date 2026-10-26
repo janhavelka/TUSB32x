@@ -130,3 +130,32 @@ test files; the lead owns production/shared declarations, integration and Git.
 The strong reviewer inspected exact production/test sources and independently
 ran registered strict Release protocol checks. Final commands/results and
 limits are in [validation](../validation.md).
+
+## Independent prompt 9 re-audit, 2026-10-26
+
+Fresh read-only inspection reopened the same named guidance, public headers,
+transport implementations, fault tests/fakes, example adapters/CLI, HIL runners,
+native registration and workflow source. All three peers remain clean on main:
+
+| Peer | HEAD |
+| --- | --- |
+| PCA9555 | 498178e4d9e4acb6fab7d8b816ad5021efe8806a |
+| ADS1115 | 235af3e8c722661a89a44766a4ccd903a654f6fe |
+| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
+
+Existing choices remain sound: adopt exact fixed buffers/framing, backend detail,
+conservative effects and independent fault injection. Reject PCA's richer
+completed-count/GPIO-pair semantics, ADS's permissive callback codes/accounting
+exclusions, LDC sensor/destructive-read assumptions and consumer-time Python.
+No peer timeout parameter, callback or ACK probe proves TUSB framing, identity
+or an aggregate SDK bound. No sibling was edited, fetched or built; no remote
+workflow was dispatched or queried.
+
+Lead and strong reviewer independently revisited archived TI address/framing/
+map/identity/revision tables. Current B/L/A/V official downloads match their
+archived hashes; all eight PDFs and the three cited pinned public source hashes
+remain intact. Lead visually inspected the four identity tables and reread the
+Go fixed-address, Rust revision06/retry and Renode pointer/multi-byte examples.
+No conflict or gate change was found. Repeated native/package/documentation and
+supplemental edge/intentional-defect checks are recorded in validation; the
+private production boundary and test suite required no correction.

@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 9 completely; prompt 10 remains separate.
+Current authorization: independently audit completed prompt 9; prompt 10 remains separate.
 
 ## Prompt status
 
@@ -683,3 +683,43 @@ remain NOT RUN/later scope. No remote CI was dispatched or polled and no sibling
 was changed. The lead commits/synchronizes this complete checked unit on the
 same branch, verifies upstream equality and clean task state, and reports the
 final commit in the handoff/next progress update without a self-reference loop.
+
+## Prompt 9 independent re-audit
+
+Completed 2026-10-26, starting at synchronized prompt 9 implementation commit
+`84dd5c269318f50b377243843bdc9306590fe517` on the same execution branch/base.
+Initial worktree/index were clean and fetch confirmed equal upstream, zero
+ahead/behind. Reread the original prompt in full and inspected its actual diff
+from `d7fbd59a3604d1af70dc9c751b44fa55742fb878`, current code/tests and applicable
+contracts. No later prompt was started.
+
+Three fresh read-only reviewers ran in parallel: gpt-6.1-sol/high checked
+requirements, documentation, scope, build/package lists and simplicity;
+gpt-6-astra/high checked implementation, TI rules, bounds, normalization,
+possible-write and accounting semantics; gpt-6.1-sol/high checked test quality,
+edge cases, Release behavior and current peer sources. Each inspected actual
+files/diff and ran independent native checks. The lead verified the code,
+evidence and results. Peer HEADs/clean states and adopted/rejected choices were
+refreshed in [execution-9-peers](audit/execution-9-peers.md).
+
+No confirmed functional defect, unmet original requirement, necessary test gap
+or unnecessary abstraction was found. Production, tests, public API, source/
+package lists and silicon rules remain unchanged. Only audit evidence and the
+Unreleased audit note are updated.
+
+PASS: fresh strict Debug/Release 5/5 CTests and 161,461 active protocol checks;
+independent reviewer builds, direct optimized NDEBUG checks, 542 supplemental
+edge checks and detection of all seven isolated intentional production mutants;
+current TI downloads/archived hashes and exact pinned Go/Rust/Renode bytes;
+strict Doxygen/public-private visibility, version check/no-op, clean native
+PlatformIO, real 32-file package and renamed extracted tests-OFF consumer under
+unrelated Git without maintainer tools on child PATH; fresh host-only component
+registration, local links/anchors and scoped diff/whitespace. Detailed commands,
+tool versions, evidence and limits are in [validation](validation.md).
+
+The fresh sanitizer probe still fails for missing -lasan/-lubsan; unavailable
+MSVC/Clang/clang-format and later SDK/hardware/firmware/IDF archive qualification
+remain explicit limits. No sibling was changed and no remote CI was dispatched
+or polled. Lead commits/synchronizes this checked audit on the existing branch
+and verifies equality/clean state; final commit is reported in the handoff and
+next progress update without a self-referencing hash edit.
