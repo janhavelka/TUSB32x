@@ -4,9 +4,10 @@
 
 This repository will provide a general-purpose, framework-neutral C++17 library
 for the verified TUSB320 family, starting with TUSB320LAI. It currently contains
-passive public values, Status helpers, their checks, the audit, TI references and
-implementation prompts. Test commands are in [test/README.md](test/README.md).
-The device facade and build/validators remain planned. Do not describe planned
+passive public values, Status helpers, pure binding/profile validators, a CMake
+library target and host consumer, alongside the audit, TI references and prompts.
+Test commands are in [test/README.md](test/README.md).
+The device facade and package/version tools remain planned. Do not describe planned
 interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -86,6 +87,12 @@ to each numbered implementation prompt and to completed maintenance work here.
   progress update; do not create a self-referencing commit-hash update loop.
 
 ## CI and local verification
+
+- The implemented native checks are `cmake -S . -B build/native
+  -DTUSB32X_BUILD_TESTS=ON`, `cmake --build build/native --config Debug` and
+  `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
+  `examples/host/basic` separately with tests OFF; see its README. CMake requires
+  only a C++17 toolchain. Compile-only planned contracts are never behavioral tests.
 
 - **Initial promptset exception requested by the user:** remote CI belongs to
   prompt 34 only. Prompts 1–33 and 35–38 do not dispatch, poll, wait for or require

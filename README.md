@@ -1,7 +1,7 @@
 # TUSB32x library development
 
-This repository provides portable C++17 value types and Status helpers alongside
-the audited implementation contracts. The device driver is still planned.
+This repository provides a portable C++17 library target with value types,
+Status helpers and pure binding/profile validators. The device driver is still planned.
 The requested starting device is **TI TUSB320LAI**. The
 planned library covers the verified I2C-capable TUSB320 variants through explicit
 capabilities; the name is not a claim of compatibility with every TUSB32x product.
@@ -38,7 +38,7 @@ callbacks and decoder-result types. The [API guide](docs/api-contracts.md)
 separates these implemented values from future callable methods; the
 [architecture](docs/architecture.md) keeps transport and scheduling application-owned.
 [Reusable checks](test/README.md) cover independent headers, constexpr behavior
-and linked consumers. Validators, decoder logic, driver methods and build/package
+and linked consumers. Decoder logic, driver methods and package/version
 metadata remain future work; no runnable device example is available yet.
 
 Prompt 6 finishes the [owner/state contracts](docs/api-contracts.md): exact
@@ -47,6 +47,28 @@ snapshot publication and passive health. [Compile-only examples](test/contract/o
 show observation, explicit apply, cancellation and two devices on an external
 owner. Independent integer-time vectors compile successfully; runtime engine,
 adapter and hardware behavior still require their later implementation tests.
+
+Prompt 7 adds the `TUSB32x` CMake target and callable `validateDriverConfig` /
+`validateProfile` functions in [Config.h](include/TUSB32x/Config.h). They check
+values without invoking transport, allocating or changing hardware. A valid
+profile does not authorize gated writes; TUSB322I apply restrictions remain
+specified for later implementation in the [API guide](docs/api-contracts.md).
+
+Build and run the native checks with CMake 3.16 or newer and a C++17 compiler:
+
+```text
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+```
+
+For single-configuration generators, select Debug at configure time with
+`-DCMAKE_BUILD_TYPE=Debug`. Tests default OFF. Applications can use
+`add_subdirectory(path/to/TUSB32x)` and `target_link_libraries(app PRIVATE TUSB32x)`;
+the target supplies its public include directory and C++17 requirement. The
+[standalone host consumer](examples/host/basic/README.md) builds and runs without
+Git, Python, Doxygen, framework headers or sibling include paths. Install/export
+packaging and full owner examples remain later work.
 
 [Chip evidence](docs/prompts/CHIP_EVIDENCE.md) supplies concrete register, address,
 timing, electrical and failure-case findings from TI documents and public code,
@@ -86,4 +108,4 @@ builds, CI, or hardware tests passed during this task.
 
 The implementation agent must keep native host, Arduino, native ESP-IDF, package,
 CI, and physical hardware evidence separate. The current checks establish only
-the passive C++ contract; they do not qualify a physical device or framework adapter.
+portable values, validators and linkage; they do not qualify a physical device or framework adapter.

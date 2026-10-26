@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 6; do not start prompt 7.
+Current authorization: implement prompt 7 completely; prompt 8 remains a separate unit.
 
 ## Prompt status
 
@@ -16,7 +16,7 @@ Current authorization: independently audit completed prompt 6; do not start prom
 | [4: silicon-procedures](prompts/4-silicon-procedures.md) | COMPLETE |
 | [5: value-api-contracts](prompts/5-value-api-contracts.md) | COMPLETE |
 | [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | COMPLETE |
-| [7: host-build](prompts/7-host-build.md) | NOT STARTED |
+| [7: host-build](prompts/7-host-build.md) | COMPLETE |
 | [8: metadata-versioning](prompts/8-metadata-versioning.md) | NOT STARTED |
 | [9: transport-identity](prompts/9-transport-identity.md) | NOT STARTED |
 | [10: register-codecs](prompts/10-register-codecs.md) | NOT STARTED |
@@ -420,3 +420,65 @@ source hashes, local links and scoped whitespace. Detailed commands and evidence
 are in validation. Runtime driver behavior, adapters, firmware/packages and
 hardware remain NOT RUN. Prompt 7 remains NOT STARTED. The lead commits/syncs
 this audit record and reports exact final equality in the handoff.
+
+## Prompt 7 execution record
+
+Completed 2026-10-26 on the same execution branch/base. Starting commit
+cdbb36cda836ef1cb7c4d66864d93c5ec2b31418 is the completed independent prompt6
+review. Before editing, status/index were clean and fetch confirmed equality
+with the same-name origin upstream, zero ahead/behind. No new branch was created.
+
+Re-audited six current peers in [execution-7-peers](audit/execution-7-peers.md):
+full revisions, clean states, AGENTS, actual declarations/implementations,
+examples/CLI, Python runners, CMake registration and workflow sources. The lead
+checked the returned source choices against actual TMP/24C/ADS/LDC files.
+Adopted explicit PUBLIC C++17/includes, tests OFF, private strict warnings,
+active Release checks and real multiple-TU runtime linkage. Rejected LDC's
+configure-time Python/version dependency, sensor-specific restrictions and
+build-only consumer success as behavioral proof. All siblings stayed read-only.
+
+Added one small static TUSB32x target, Config.h declarations and real pure
+validateDriverConfig/validateProfile definitions in src/TUSB32x.cpp. Kept passive
+values/Status unchanged; removed those two functions' planned-only redeclarations.
+Invalid values return INVALID_CONFIG, unavailable valid settings return
+UNSUPPORTED_FEATURE. Null user context and positive uint32 timeout extremes are
+valid. Debounce/absent controls use the verified variant maps. TUSB322I readable
+profile settings remain semantically valid independently of later changed-field
+write gates; no existing gate or silicon procedure changed. Four fresh TI PDFs
+match their archives byte-for-byte; all eight archived hashes remain valid.
+
+Delegation used gpt-6.1-sol/high for disjoint peer-audit report ownership and
+test/test_validators.cpp plus examples/host/basic ownership. Signatures/rules were
+fixed before parallel authoring. A fresh gpt-6-astra/high reviewer checked the
+integrated code/build/consumer/contracts read-only and found no functional/build
+defect; its stale coverage-disclaimer finding was fixed. The lead owns all
+integration, documentation, source review, test registration and Git operations.
+No agent switched branches or mutated Git/siblings.
+
+PASS: strict Debug and Release builds with four isolated public-header TUs and
+three compile-only planned fixtures; exactly two real CTest suites execute in
+each configuration; 76,452 validator cases with zero counting callbacks;
+existing Status/constexpr/int32/multi-TU checks; direct strict NDEBUG validator
+execution by the test agent; tests-OFF standalone Release consumer; clean renamed
+source copy under unrelated Git metadata, no maintainer tools on child PATH,
+C++17 propagation from an explicit C++11 consumer baseline; strict source/example
+Doxygen and XML visibility of17 structs/validators; local links/anchors, source
+hashes, scoped whitespace and independent diff review. Exact versions/commands
+and evidence are in [validation](validation.md).
+
+ASan/UBSan BLOCKED: installed MinGW cannot link -lasan/-lubsan; WSL is not
+installed. MSVC/Clang NOT RUN (not available on PATH). Driver behavior, framework
+firmware, package export/archive consumption and physical qualification remain
+NOT RUN. No unavailable tool was installed and no missing behavior was stubbed.
+No remote CI was dispatched or polled. Prompt8 remains NOT STARTED: this user
+request names prompt7, and COMMON scopes execution to the requested unit.
+
+Updated source Doxygen, README, CHANGELOG Unreleased, AGENTS, CONTRIBUTING,
+architecture, API/feature coverage, test/consumer guidance, decisions and progress.
+Register/procedure/variant guides were reviewed and left unchanged because no
+silicon capability, map or sequence changed. Package/CLI/HIL guides and workflows
+remain later responsibilities, with no empty placeholder files created.
+The lead commits this coherent checked unit, fetches/pushes the existing upstream
+and verifies commit equality and clean task state. The resulting completed commit
+and final synchronization evidence are in the handoff and next progress update;
+this entry does not create a self-referencing commit-hash update loop.

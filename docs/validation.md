@@ -621,3 +621,129 @@ adapter samples freshly, meets its timeout, or that a future engine obeys the
 contract. Original procedure ceilings and TI sources are unchanged; no physical
 qualification, runtime state machine, firmware or package result is claimed.
 Prompt 7 remains NOT STARTED. This review changes documentation only.
+
+## Prompt 7: portable host foundation, 2026-10-26
+
+Started from cdbb36cda836ef1cb7c4d66864d93c5ec2b31418 on the recorded execution
+branch. The worktree/index were clean and fetch confirmed same-name upstream
+commit equality, zero ahead/behind. Prompts 1?6 and their checks were revisited.
+The [focused audit](audit/execution-7-peers.md) records current full revisions,
+clean states, actual declarations/code/tests/examples/runners/workflows and
+adopted/rejected conventions for all six requested peers. No sibling was changed,
+fetched or built. TUSB32x had no workflow definitions at the starting revision;
+remote CI remains confined to prompt 34.
+
+Tool versions actually executed: CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0
+(MinGW-W64 x86_64 UCRT MCF SEH), Doxygen 1.13.2, Python 3.12.10. Python and
+Doxygen are maintainer checks, not library build dependencies. MSVC and Clang
+were not available on PATH and were NOT RUN.
+
+| Check | Result | Evidence and limit |
+| --- | --- | --- |
+| Native Debug | PASS | Explicit-source C++17 static library, four independent header TUs and three planned-contract object fixtures compile; both registered CTest suites execute |
+| Native Release | PASS | Same build/checks; exactly two discovered/executed tests, strict private warnings and -UNDEBUG on runtime suites |
+| Validator behavior | PASS | 76,452 cases: seven known variants, every underlying address/invalid variant byte, missing callbacks, null/non-null context, timeout 0/1/20/UINT32_MAX, full legal-enum profile grid, malformed field bytes, invalid-before-unsupported precedence, unchanged inputs and retained status text; zero callback attempts |
+| Passive contracts | PASS | Existing all23 error names/order, full int32 backend detail, constexpr/explicit bool, default validity and multiple-TU ODR/link checks; callbacks are not executed |
+| NDEBUG fixtures | PASS | Test agent independently compiles/runs validators using strict GCC with -DNDEBUG; explicit checks stay active |
+| Ordinary consumer | PASS | Separate Ninja Release configure/build/run with tests default OFF; two application TUs link actual validators and report OK/OK/zero fake callbacks |
+| Clean isolated consumer | PASS | Only root CMake, four headers, one source and consumer copied to a renamed tree under unrelated parent Git metadata; no own .git, tests or docs; Git/Python/Doxygen/PlatformIO absent from build PATH; strict Release build/run succeeds |
+| Public standard propagation | PASS | Isolated consumer configured with CMAKE_CXX_STANDARD=11; all three effective compile commands use C++17 inherited from TUSB32x, without consumer include paths or feature overrides |
+| Source Doxygen | PASS | Fatal undocumented/enum/parameter/incomplete/error warnings, EXTRACT_ALL=NO; 17 public structs plus both validators/errorName visible in generated XML; includes production/example sources |
+| Exact TI sources | PASS | All eight archived PDF sizes/hashes match provenance; four fresh official PDFs byte-identical to archives; relevant p15 address tables and B/L/A/V profile fields reopened, no rule/gate changed |
+| Documentation/review | PASS | Full scoped code/docs review and independent reviewer; stale coverage disclaimer corrected, real validators removed from planned-only declarations/inventory; Markdown links/anchors, UTF-8 and whitespace checked |
+| ASan/UBSan | BLOCKED | Minimal GCC link probe fails: cannot find -lasan and -lubsan. Installed MinGW supplies neither runtime; WSL is not installed. No sanitizer pass claim |
+| Driver, firmware, packages, hardware | NOT RUN | No device facade/transport/operations or adapters implemented; no install/export/archive qualification or physical fixture in this stage |
+
+Exact registered commands, from the repository root in PowerShell:
+
+```powershell
+$env:CMAKE_GENERATOR = 'Ninja Multi-Config'
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Release -N
+& build/native/test/Release/tusb32x_validators.exe
+```
+
+CTest discovers exactly tusb32x_compile_contracts and tusb32x_validators. Each
+has a 30-second limit. The compile-only fixtures have no CTest entry and no
+unimplemented facade definition. Test/example fake callbacks fail if invoked;
+no successful fake device or hardware initialization is advertised.
+
+The test agent also ran strict direct compilation/link/execution with
+`g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror
+-DNDEBUG -I include test/test_validators.cpp src/TUSB32x.cpp -o <TEMP>/...`.
+The standalone ordinary commands were:
+
+```powershell
+cmake -S examples/host/basic -B "$env:TEMP/tusb32x-p7-host-basic" -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build "$env:TEMP/tusb32x-p7-host-basic"
+& "$env:TEMP/tusb32x-p7-host-basic/tusb32x_host_basic.exe"
+```
+
+Its cache confirms TUSB32X_BUILD_TESTS:BOOL=OFF. The stronger isolated consumer
+check is reproducible with this Python session command (`python -` from the
+root). Python prepares/launches the check; no child build process can find it:
+
+```python
+from pathlib import Path
+import json, os, shutil, subprocess
+root = Path.cwd()
+parent = (root / 'build/isolated-parent').resolve()
+source = parent / 'renamed-library'
+parent.mkdir(parents=True, exist_ok=True)
+subprocess.run(['git', 'init', '--quiet', str(parent)], check=True, timeout=20)
+files = [Path('CMakeLists.txt'), *Path('include/TUSB32x').glob('*.h'),
+         Path('src/TUSB32x.cpp'), *Path('examples/host/basic').glob('*')]
+for relative in files:
+    if relative.is_file():
+        destination = source / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / relative, destination)
+assert not (source / '.git').exists()
+cmake, ninja, cxx = map(shutil.which, ['cmake', 'ninja', 'g++'])
+env = dict(os.environ)
+windows = Path(os.environ['SystemRoot'])
+env['PATH'] = str(windows / 'System32') + ';' + str(windows)
+for tool in ['git', 'python', 'doxygen', 'pio']:
+    assert shutil.which(tool, path=env['PATH']) is None
+build = parent / 'consumer-build'
+subprocess.run([cmake, '-S', str(source / 'examples/host/basic'), '-B', str(build),
+    '-G', 'Ninja', f'-DCMAKE_MAKE_PROGRAM={ninja}', f'-DCMAKE_CXX_COMPILER={cxx}',
+    '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_CXX_STANDARD=11',
+    '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
+    '-DCMAKE_CXX_FLAGS=-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror'],
+    env=env, check=True, timeout=60)
+subprocess.run([cmake, '--build', str(build)], env=env, check=True, timeout=60)
+subprocess.run([str(build / 'tusb32x_host_basic.exe')], env=env, check=True, timeout=60)
+assert 'TUSB32X_BUILD_TESTS:BOOL=OFF' in (build / 'CMakeCache.txt').read_text()
+commands = json.loads((build / 'compile_commands.json').read_text())
+assert len(commands) == 3
+assert all('-std=c++17' in c['command'] or '-std=gnu++17' in c['command']
+           for c in commands)
+```
+
+Doxygen used `doxygen -` with the exact prompt5 configuration above, changing
+OUTPUT_DIRECTORY to build/prompt7-doxygen and INPUT to
+`include/TUSB32x src examples/host/basic`. Generation is bounded to 60 seconds;
+XML index parsing requires exactly17 TUSB32x structs and members
+validateDriverConfig, validateProfile and errorName. The first attempt found an
+undocumented example main; its brief/exit semantics were added and generation
+then passed without suppressing warnings. The reusable guard/negative fixtures
+remain later work.
+
+Sanitizer availability was tested with the exact PowerShell command:
+
+```powershell
+'int main() { return 0; }' | & g++ -x c++ '-fsanitize=address,undefined' -o build/sanitizer-probe.exe -
+```
+
+The linker exits1 with missing -lasan/-lubsan; no SDK/tool installation was made.
+Independent review found no functional/build defect; its coverage documentation
+finding was fixed. Source, examples and all affected working/API/coverage guides
+were reviewed together. No callback normalization, state engine, write permission
+or hardware result is claimed by validator success. All generated artifacts stay
+under ignored build/ or TEMP. Final commit/sync evidence is reported in the
+handoff and next progress update, without a self-referencing hash edit.

@@ -135,6 +135,29 @@ struct DeviceProfile {
   bool disableRdRp = false; ///< Independent 0x45 Rd/Rp disable control; absent on 322I.
 };
 
+/// @brief Check a complete binding value without I2C, allocation or mutation.
+/// @param[in] config Candidate binding, borrowed only for this call. Both callbacks and an explicit
+/// variant/address pair are required; i2cUser may be null and i2cTimeoutMs must be positive milliseconds.
+/// @retval OK All binding fields are valid; no device identity or backend timing is proved.
+/// @retval INVALID_CONFIG Missing callback, zero timeout, unknown variant or mismatched/invalid address.
+/// @note Bounded value checks only: zero callbacks, no waits, no retained references or bus ownership.
+/// Hardware wiring, exact part selection and callback bounds remain application responsibilities.
+/// All returned messages have static lifetime and detail is zero.
+Status validateDriverConfig(const DriverConfig& config);
+
+/// @brief Check profile value/variant semantics without I2C, allocation or mutation.
+/// @param[in] variant Explicit exact part; UNSPECIFIED and unknown values are invalid.
+/// @param[in] profile Candidate settings, borrowed only for this call and left unchanged.
+/// @retval OK All settings are semantically supported; this does not grant permission to write them.
+/// @retval INVALID_CONFIG Invalid variant or profile enum, checked before capability restrictions.
+/// @retval UNSUPPORTED_FEATURE Valid setting unavailable on this part, including a debounce from
+/// another map, nonneutral absent controls or FOLLOW_PORT_PIN on TUSB322I.
+/// @note Zero callbacks and waits; no retained references, observed state or hardware effects.
+/// Neutral placeholders for absent controls are accepted. TUSB322I advertisement/duty/accessory values
+/// remain valid; later apply checks proved actual values and separately rejects gated field changes.
+/// All returned messages have static lifetime and detail is zero.
+Status validateProfile(Variant variant, const DeviceProfile& profile);
+
 /// @brief Decoded attachment; UNKNOWN never means a valid detached observation.
 enum class Attachment : uint8_t {
   UNKNOWN,      ///< Unavailable, reserved or not decoded.

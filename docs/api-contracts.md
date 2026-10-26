@@ -1,11 +1,12 @@
-# Portable values and planned API
+# Portable values, validators and planned API
 
-Prompts 5–6, updated 2026-10-25. The four headers under `include/TUSB32x/` provide
-complete passive values and constexpr Status/token helpers. They require C++17
-and standard headers only. No device facade, validator, decoder, bus access or
-operation engine is implemented yet. This distinction also applies to every
-signature below. Admission, publication and lifetime rules are specified here;
-later prompts publish callable declarations with their real implementations.
+Prompts 5–7, updated 2026-10-26. The four headers under `include/TUSB32x/` provide
+complete passive values, constexpr Status/token helpers and two pure validators.
+They require C++17 and standard headers only. The validators link through target
+`TUSB32x`; no device facade, decoder, bus access or operation engine is implemented
+yet. Other signatures below remain planned. Admission, publication and lifetime
+rules are specified here; later prompts publish those callable declarations with
+their real implementations.
 
 The [baseline](prompts/ENGINEERING_BASELINE.md), [register map](register-map.md)
 and [procedure guide](device-behavior.md) remain the state and silicon contracts.
@@ -68,6 +69,37 @@ Independent `recoverySequenceUnresolved`, `modeTransitionUnresolved` and
 controls still require proof, even after a later read-only result has effect NONE.
 One latest-operation kind/effect cannot erase an older interrupted recovery.
 Reset COMPLETED describes settling/readback, not proof of ambiguous acceptance.
+
+## Implemented validators
+
+`validateDriverConfig(const DriverConfig&)` and
+`validateProfile(Variant, const DeviceProfile&)` are declared in Config.h and
+defined in src/TUSB32x.cpp. Both perform bounded value checks with zero callbacks,
+allocation, waits, retained references or input/device mutation. Returned status
+messages have static lifetime and detail is zero. Success establishes only value
+validity, not physical identity, observed state, backend bounds or write permission.
+
+Binding validation requires both callbacks, a selected known variant, positive
+uint32 millisecond timeout and a matching seven-bit strap address: 0x60/0x61 for
+TUSB320/TUSB320I, 0x47/0x67 for LI/HI/LAI/HAI/322I. A null user context is valid.
+Any invalid binding returns INVALID_CONFIG.
+
+Profile validation checks every enum first; invalid/UNSPECIFIED variants and
+unknown enum values return INVALID_CONFIG. A valid setting absent on the selected
+part returns UNSUPPORTED_FEATURE. Base parts accept neutral NORMAL preference,
+false accessory-disable and false disableTerm placeholders; nonneutral values
+are unsupported. Base debounce is 116/133/151/168 ms; other parts support
+118/134/152/168 ms. TUSB322I rejects FOLLOW_PORT_PIN and true disableRdRp.
+All other declared enum values and independent disable combinations are valid
+where the controls exist. No new role/preference/duty cross-field policy is added.
+
+TUSB322I advertisement/duty/accessory values remain semantically valid even while
+their writes are gated. Later apply admission must compare proved actual settings
+and reject gated changes; an unchanged gated field must permit independent
+supported changes. Validation neither observes those fields nor authorizes any
+transition, including return to DRP. See the [register map](register-map.md).
+The [validator suite](../test/test_validators.cpp) exercises capabilities, all
+invalid underlying bytes, input preservation and counting callbacks that stay zero.
 
 ## Status and error boundaries
 
@@ -153,8 +185,6 @@ and one engine are planned. No begin/init/unbind aliases or implementation stubs
 
 ```cpp
 namespace TUSB32x {
-Status validateDriverConfig(const DriverConfig& config);
-Status validateProfile(Variant variant, const DeviceProfile& profile);
 Status validateHealthPolicy(const HealthPolicy& policy);
 Status projectHealth(const ManagedTransportEvidence& evidence,
                      const HealthPolicy& policy, HealthSnapshot& out);

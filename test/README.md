@@ -1,9 +1,37 @@
-# Passive API contract checks
+# Native contract and validator checks
 
-Prompts 5–6 provide real value/Status checks, syntax-only planned methods and
-owner examples, and compile-time specification arithmetic. There is no library
-build or behavioral driver suite yet.
-Prompt 7 will register these reusable fixtures in CMake/CTest.
+Prompts 5–7 provide real value/Status and validator checks, syntax-only planned
+methods/owner examples, compile-time specification arithmetic and a library build.
+The device facade and behavioral driver suites remain planned.
+
+Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
+
+```text
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+```
+
+Set `-DCMAKE_BUILD_TYPE=Debug` at configure time for a single-configuration
+generator (for example Ninja). Repeat in `build/release` with Release selected
+at configure/build/test time. Tests default OFF. Strict GNU/Clang/MSVC warnings
+are private; suite checks stay active with NDEBUG, and test targets also undefine
+NDEBUG in Release. CTest must discover and run these two suites:
+
+- `tusb32x_compile_contracts`: executed passive/Status checks across two TUs.
+- `tusb32x_validators`: variant/address/callback/timeout checks, exhaustive valid
+  profile combinations, invalid enum bytes, input preservation and zero counting
+  callbacks; unavailable valid fields return UNSUPPORTED_FEATURE.
+
+The build separately compiles each public header as the only include and the
+three planned-contract fixtures as objects. They are compile checks, with no
+behavioral CTest entry or stub driver definitions. The
+[ordinary multi-file consumer](../examples/host/basic/README.md) must also build
+and run separately with tests OFF. It links real validators and needs no Python,
+Git, Doxygen, PlatformIO, framework headers or sibling include paths.
+
+The older direct compiler commands below remain useful for focused passive-only
+checks; CMake/CTest above is the full registered native check.
 
 Run from the repository root with a C++17 compiler. These PowerShell commands
 use the available GCC and put generated files outside the source tree:
@@ -57,6 +85,6 @@ GENERATE_XML=YES and GENERATE_LATEX=NO. Inspect generated XML for all 17 public
 structs; no warning alone would not prove their visibility. The retained evidence
 and exact command are in [validation](../docs/validation.md).
 
-These checks prove the current portable values and planned signature syntax.
-Protocol, callbacks, owner behavior, health projection, framework builds,
+These checks prove current portable values, pure validators, linkage and planned
+signature syntax. Protocol, transport execution, owner behavior, health projection, framework builds,
 package consumption and physical hardware tests remain future work.

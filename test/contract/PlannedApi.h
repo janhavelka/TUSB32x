@@ -15,9 +15,7 @@
 
 namespace TUSB32x {
 
-// Binding/profile validators: prompt 7. Health validation/projection: 17. Decoder: 10.
-Status validateDriverConfig(const DriverConfig& config);
-Status validateProfile(Variant variant, const DeviceProfile& profile);
+// Binding/profile validators are supplied by Config.h. Health validation/projection: 17. Decoder: 10.
 Status validateHealthPolicy(const HealthPolicy& policy);
 Status projectHealth(const ManagedTransportEvidence& evidence,
                      const HealthPolicy& policy, HealthSnapshot& out);

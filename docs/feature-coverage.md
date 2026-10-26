@@ -1,7 +1,7 @@
 # Feature, source and verification coverage
 
-Prompts 2–5, 2026-10-23. This matrix defines the capability boundary; passive
-values/Status and their host checks exist, but no driver, CLI or hardware
+Prompts 2–7, updated 2026-10-26. This matrix defines the capability boundary; passive
+values/Status, pure validators, native builds and host checks exist, but no driver, CLI or hardware
 qualification exists yet. **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
@@ -30,7 +30,7 @@ below supplements the feature rows without turning a future test into a PASS.
 | Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
 | Register access/defaults and safe byte composition — Specified; implementation Planned | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; actual suites due9/10/18/21/22 |
-| Explicit variant/address selection — Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | Every legal pair; cross-family pair, UNSPECIFIED and invalid enum rejection with zero callbacks; no scan; prompts 5/9/11/20 |
+| Explicit variant/address validation — Implemented; binding/CLI Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | PASS every legal pair, all address/variant bytes and zero callbacks in7; binding/transport/CLI remain9/11/20 |
 | Eight-byte identity — Planned | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / init, probe, capabilities | Independently fixed vectors; reverse order, wrong NUL, same-address unrelated device, partial/failed transfer, no inference of enable/model; 9/12/18/22 |
 | Revision acceptance — Planned; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize, readRegisterSync / init, reg, diag | Base never probes A0; unknown/06 returns CHIP_ID_MISMATCH without write permission; raw value retained; mismatch cannot create KNOWN; 9/12/18/22 |
 | Read-only initialization and profile evidence — Planned | All seven I2C variants with per-feature gates | TI fact: documented identity/control maps B pp16–19, L/A pp16–20, V pp17–20. Policy: no automatic writes | startInitialize, startReadProfile, startVerifyProfile, startReconcile / init, profile read, verify, reconcile | Read-only transcripts, distinct observed/desired/verified state, missing fields not defaults; 3/6/12/18 |
@@ -82,7 +82,7 @@ results. Later rows become implemented/tested only when their real suites and
 relevant physical checks run. Gated rows remain explicit without blocking
 independent, verified capabilities.
 
-## Prompt 5 implemented values and planned API mapping
+## Prompts 5–7 implemented values, validators and planned API mapping
 
 These entries distinguish executable passive-value checks from future device
 behavior. Exact fields and planned signatures are in [API contracts](api-contracts.md).
@@ -90,15 +90,16 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Feature / state | API or value | Source / provenance | Actual check; remaining owner |
 | --- | --- | --- | --- |
 | Status — Implemented | Err, Status, errorName | Engineering baseline; LDC/LSM representation and TMP constexpr/explicit-bool mechanism in current peer audit | PASS 23 names/order, int32 extremes, invalid code names, constant evaluation, explicit conversion and multiple TUs; callback normalization remains9 |
-| Transport/settings — Passive values implemented | I2cWriteFn, I2cWriteReadFn, DriverConfig, DeviceProfile | Callback baseline plus exact variant/register tables B pp16-19, L/A pp16-20, V pp17-20 | PASS signatures/defaults/standalone headers; variant/profile validators7, actual callback path9 |
+| Transport/settings — Values and validators implemented | I2cWriteFn, I2cWriteReadFn, DriverConfig, DeviceProfile, validateDriverConfig, validateProfile | Callback baseline plus exact variant/register tables B pp16-19, L/A pp16-20, V pp17-20 | PASS signatures/defaults/standalone headers, exhaustive capability and invalid-byte validation, zero counting callbacks; actual callback path9 |
 | Configuration/port — Passive values implemented | ConfigurationSnapshot, ProfileField, PortSnapshot, PortField | Baseline and register/device guides; explicit raw/typed validity | PASS defaults, mask values and independent raw copy; publication/lifetime6, observations12/15 |
 | Operation/diagnostics — Passive values implemented | OperationToken/Timing/Result/Progress, identity/IRQ values, DriverDiagnostics | Owner baseline and prompt4 retained effect rules | PASS fixed values/default invalidity and token domain; admission/time6/11, retained IRQ16, diagnostics17 |
 | Health — Passive values implemented | DriverState, ManagedTransportEvidence, HealthPolicy/Snapshot | Baseline policy; no TI health claim | PASS default values only; validation/projection/counters behavior17 |
 | Decoder — Result implemented, function Planned | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS passive defaults and planned signature syntax; independent decode/error/output-preservation vectors10, CLI formatting22 |
-| Facade/validators — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only, no calls linked; build/validators7, callable engine9-17 |
+| Facade — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only; callable engine9-17 |
+| Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
 | Source docs — Present | Four public headers with file/type/member/enum/function Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen and visibility of17 public structs; reusable guard/package integration8/33 |
 
-No pass above represents a successful I2C transaction, driver validator,
+No pass above represents a successful I2C transaction,
 silicon decoder, framework build, CI run or physical qualification.
 
 ## Prompt 6 completed owner contracts

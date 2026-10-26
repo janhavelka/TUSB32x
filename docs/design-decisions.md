@@ -158,3 +158,38 @@ The initialization refinement and ordinary-write flag are deliberate gap fixes
 found while completing the contract, not evidence that peer conventions establish
 TI behavior. Runtime transitions, actual adapter bounds and physical qualification
 remain future checks. Owner examples and arithmetic stay outside delivered headers.
+
+## Prompt 7: portable target and pure validators
+
+Completed 2026-10-26. The [current peer audit](audit/execution-7-peers.md)
+reopened all six requested libraries and their build/test/consumer inputs.
+
+- Keep one explicit `TUSB32x` static CMake target with PUBLIC C++17/include
+  requirements, private supported compiler warnings and tests OFF by default.
+  Reject LDC1614's configure-time Python/version check for ordinary consumers.
+  There is no version or framework component claim at this stage.
+- Put both real validators in Config.h and the small existing-responsibility
+  source unit src/TUSB32x.cpp. Remove their compile-only redeclarations. Preserve
+  all passive types and leave unavailable facade/health/decoder methods planned.
+- Invalid binding/profile enums return INVALID_CONFIG before any capability
+  restriction. Valid but unavailable settings return UNSUPPORTED_FEATURE. Null
+  context, positive uint32 timeout extremes and independent disable controls
+  remain valid where documented; no sensor timeout cap or role policy is imported.
+- Separate profile semantics from actual-state write gates. All legal readable
+  TUSB322I advertisement/duty/accessory values pass pure validation; future apply
+  compares proved actual fields and rejects only gated changes. Validation cannot
+  prove device state, authorize return-to-DRP or close any existing silicon gate.
+- Reuse the existing active passive checks as tusb32x_compile_contracts, add the
+  exhaustive tusb32x_validators runtime suite, and compile independent headers and
+  planned fixtures as objects only. A standalone multi-file consumer links/runs
+  actual API with deliberately failing fake callbacks; it is not a driver stub
+  or an extra passing behavioral test.
+
+The lead rechecked the actual TI source bytes: four fresh official datasheets
+match their archived revisions exactly, and all eight archived hashes remain
+valid. Relevant address tables p15 and profile fields B pp17?19, L/A pp17?20,
+V pp17?20 agree with the existing contract; no silicon rule or gate changed.
+Debug/Release checks, a clean renamed tests-OFF consumer under unrelated Git
+metadata with maintainer tools absent from PATH, and strict Doxygen visibility
+passed. Sanitizers are unavailable in the installed MinGW distribution; no
+firmware, package export, remote CI or hardware qualification is inferred.

@@ -1,6 +1,7 @@
 # Library architecture
 
-Prompt 5 provides portable values and implemented constexpr Status/token helpers.
+Prompts 5–7 provide portable values, constexpr Status/token helpers, pure validators
+and a real C++17 CMake library target.
 There is no device facade or operation engine yet. The
 [API inventory](api-contracts.md) labels all future calls explicitly; the
 [engineering baseline](prompts/ENGINEERING_BASELINE.md) fixes their names.
@@ -10,9 +11,13 @@ There is no device facade or operation engine yet. The
 | File | Responsibility |
 | --- | --- |
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
-| include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings and semantic enums |
+| include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
 | include/TUSB32x/TUSB32x.h | Fixed operation, snapshot, result, diagnostic and health values; no callable facade yet |
 | include/TUSB32x/CommandTable.h | Passive RegisterDecode value; decoder and register tables arrive with implementation in prompt 10 |
+| src/TUSB32x.cpp | Bounded pure binding/profile validation; no driver instance or transport path yet |
+| CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external tools |
+| test/CMakeLists.txt and test/test_validators.cpp | Two genuine CTest suites, exhaustive validator cases and compile-only standalone-header/signature fixtures |
+| examples/host/basic/ | Standalone multi-file consumer of the real values and validators; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/PlannedApi.h and planned_api.cpp | Explicitly compile-only future signatures, never linked or delivered |
 | test/contract/owner_examples.cpp | Compile-only passive observation, explicit apply/cancel and two devices sharing an external fake owner; no driver definitions |
@@ -47,8 +52,17 @@ The future source split is binding/validation/cache (`TUSB32x.cpp`), transport
 and composition (`TUSB32xProtocol.cpp`), operations (`TUSB32xOperations.cpp`),
 port observation (`TUSB32xPort.cpp`) and passive diagnostics
 (`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
-and Doxygen. Build metadata/validators belong to prompt 7; package/version
-metadata belongs to prompt 8. This stage does not claim a consumable built package.
+and Doxygen. The current source unit implements only the two validators;
+package/version metadata belongs to prompt 8. This stage proves source-tree
+consumption, without an install/export package claim.
+
+`TUSB32x` has no transitive link dependency. Core warnings are private and its
+public include directory/C++17 feature propagate to consumers. Tests are optional;
+their build also compiles each public header independently and the planned API
+fixtures without registering those build-only objects as passing runtime tests.
+`validateProfile` accepts readable TUSB322I settings independently of later
+changed-field write gates; it cannot prove observed configuration or a legal
+transition. The standalone consumer uses only actual callable API.
 
 Managed I2C advances only in poll. Admission, cancellation, teardown and cached
 copies remain bus-silent. Synchronous raw diagnostics have an explicit separate

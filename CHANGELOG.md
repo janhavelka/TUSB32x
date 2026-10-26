@@ -5,6 +5,15 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ## Unreleased
 
+### Added
+
+- Portable C++17 CMake target `TUSB32x`, pure binding/profile validators with
+  distinct invalid/unsupported results, registered native contract/validator
+  checks and a standalone multi-file host consumer. Tests default OFF; ordinary
+  linkage needs no Git, Python, Doxygen, framework or sibling dependency.
+- Native build/consumer instructions and contributing guidance. Device operations,
+  metadata/version tooling, firmware and hardware qualification remain planned.
+
 ### Changed
 
 - Independently audited prompt 6's contracts, values and fixtures against the
