@@ -5,7 +5,8 @@ order. It produces a general-purpose C++17 library for the verified TUSB320 fami
 starting with TUSB320LAI. The repository currently contains audited planning
 artifacts, passive C++17 values/Status helpers, a native library with pure
 validators, private transport/identity, pure register codecs/composition and
-deterministic metadata/version tools; the device driver remains planned.
+deterministic metadata/version tools. The owner facade now implements lifecycle,
+token/result ownership and read-only initialization; later operations remain planned.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

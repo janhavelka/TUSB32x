@@ -1289,3 +1289,67 @@ hardware behavior inferred from the fake. Audit evidence and Unreleased are the
 only tracked changes. Lead reviews/commits/synchronizes these on the existing
 execution branch and reports final equality/clean state in the handoff, recording
 the completed commit in the next progress update without a hash-edit loop.
+
+
+## Prompt 11 owner engine (2026-10-26)
+
+Started at synchronized `fe1f7caf732b723734d1b87ee50252b09d6928fe` on the existing
+execution branch. The lead inspected the actual code and all agent diffs. Current
+peer evidence is [execution-11-peers](audit/execution-11-peers.md). A separate
+strong reviewer checked time, tokens and retained evidence. Its two confirmed
+findings were fixed and covered by runtime regressions: termination must remain
+independent of unrelated reserved settings, and matching identity evidence must
+wait for fresh time before publication. Complete adverse evidence remains immediate.
+
+Tools: GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2; existing managed PlatformIO Core 6.1.19/native 1.2.1. Strict GNU
+warnings and Release-active checks remain enabled. No framework dependency,
+allocation, clock, retry, sleep or write is added by initialization.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict native Debug and Release | PASS | Final lead runs: 6/6 CTests each, including compile contracts, validators, protocol/codecs, operations, 18 version fixtures and Windows launcher fixtures |
+| Owner behavior and public linkage | PASS | 20,138 checks per run; all 15 new methods called, all seven variants, exact no-write F plans, rejected outputs, result/token precedence, atomic binding, failure/reinit/end/invalidate at every read boundary, null-context callback changes and two independent devices |
+| Owner time | PASS | Budgets 0/1/255, clipped timeouts, pending completion without fresh poll, exact deadline/late success, immediate original backend failure/detail, equal/backward/half-range and wrapping time, bounded token exhaustion helper |
+| Evidence regressions | PASS | Reserved settings with independent disable proof; matching identity/revision stays staged through cancel/end/invalidate/expiry; adverse raw signature survives deadline expiry; pending reset remains unresolved through same-target rebind/take |
+| Previous protocol regressions | PASS | 161,670 protocol checks and 8,602,548 codec checks; fixed literal expectations, access gates, mixed-access composition and accounting |
+| Headers and planned contracts | PASS | Five independently included real headers, compile-only future fixture/examples, no unimplemented delivered declarations or test-only seed API |
+| Ordinary extracted consumer | PASS | Real 36-file source-equal archive; matching IDF allowlist, no vendor/audit/test/build content, relative guide links resolve; tests OFF in renamed tree beneath unrelated Git; child PATH excludes Python/Git/Doxygen/PIO and C++17 propagates to C++11-requesting consumer |
+| PlatformIO native | PASS | Actual native source filter compiles Operations and links/runs ordinary consumer; no SDK firmware claim |
+| Documentation/version | PASS | Strict Doxygen, XML exposes all 15 owner methods and excludes later jobs; existing real decoder/17 public structs remain visible; version check/no-op sync, local links/anchors, UTF-8/LF and diff whitespace |
+| Sanitizers/other compilers | NOT RUN | Earlier same-day independent audit established installed MinGW lacks ASan/UBSan runtimes; MSVC/Clang/clang-format unavailable; no changed tool installation or sanitizer pass claimed |
+| Later work | NOT RUN | Apply/reset/IRQ/port/raw/health operations, SDK adapter/firmware and physical hardware remain later prompts. Remote CI intentionally not dispatched/polled |
+
+Commands run from the repository root (the p10/p11 Python files below are
+session-only inspection scripts under ignored build, not delivered guards):
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+doxygen Doxyfile
+python build/p10-doxygen.py
+python scripts/generate_version.py check
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p11.tar.gz
+python build/p11-package.py
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+git diff --check
+```
+
+The package inspection configures/builds/runs the real extracted host consumer
+with explicit available compiler/CMake/Ninja paths and strict warnings. The
+lead additionally inspected generated Doxygen XML for the real facade and all
+15 method names. No absent later method is represented as implemented.
+
+An early concurrent full-suite run detected a real checkout-change guard failure
+when the lead edited metadata while the version fixtures ran. The 18 fixture
+cases themselves passed. After edits stopped, the final lead Debug and Release
+full runs passed that guard and every other suite. Initial package link checks
+also exposed repository-only references, corrected before the successful repack.
+No check was suppressed, weakened or relabeled to obtain these passes.

@@ -1,11 +1,20 @@
 # Changelog
 
-This checkout contains audited implementation contracts and passive C++17 values.
+This checkout contains audited implementation contracts, portable C++17 values
+and a cooperative owner engine with read-only initialization.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
+
+- Non-copyable owner facade with atomic bus-silent binding/lifecycle,
+  nonreused uint64 operation tokens, one retained terminal result and exact
+  snapshot/take delivery. Added read-only identity/configuration initialization,
+  bounded token-checked polling, callback deadline clipping and fresh owner-time
+  completion. Cancellation, end and external invalidation preserve results and
+  historical evidence. Added registered owner-operation and public-link checks;
+  profile writes, reset/recovery, port/IRQ jobs and public raw access remain planned.
 
 - Public pure `decodeRegister` with raw/field validity and unchanged output on
   errors; private typed encoders, semantic settings comparison and one qualified

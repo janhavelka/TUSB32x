@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 10; prompt 11 remains separate.
+Current authorization: implement prompt 11 completely; prompt 12 remains separate.
 
 ## Prompt status
 
@@ -20,7 +20,7 @@ Current authorization: independently audit completed prompt 10; prompt 11 remain
 | [8: metadata-versioning](prompts/8-metadata-versioning.md) | COMPLETE |
 | [9: transport-identity](prompts/9-transport-identity.md) | COMPLETE |
 | [10: register-codecs](prompts/10-register-codecs.md) | COMPLETE |
-| [11: owner-engine](prompts/11-owner-engine.md) | NOT STARTED |
+| [11: owner-engine](prompts/11-owner-engine.md) | COMPLETE |
 | [12: profile-observation](prompts/12-profile-observation.md) | NOT STARTED |
 | [13: profile-application](prompts/13-profile-application.md) | NOT STARTED |
 | [14: reset-recovery](prompts/14-reset-recovery.md) | NOT STARTED |
@@ -836,3 +836,57 @@ port interpretation, firmware and hardware remain NOT RUN. No sibling was edited
 or remote CI dispatched/polled. Lead commits and synchronizes this checked audit
 on the existing branch, verifies equality and clean state, and reports the final
 commit in the handoff/next progress update without a self-referencing hash edit.
+
+
+## Prompt 11: owner engine (2026-10-26)
+
+Started clean at `fe1f7caf732b723734d1b87ee50252b09d6928fe`, synchronized with
+origin on the recorded execution branch. That commit completes the independent
+prompt-10 audit. Re-read prompt 11, root/parent rules, COMMON, the baseline and
+API/procedure contracts. Current peer paths, HEADs, dirty state, source/tests,
+examples, runners and registration are in [execution-11-peers](audit/execution-11-peers.md).
+Siblings remained read-only; no peer builds, fetches or remote CI checks.
+
+Implemented the real non-copyable facade with atomic binding, local end/external
+invalidation/forgetting, token-checked initialization/poll/cancel, exact retained
+result delivery, cached evidence and all-source statistics clearing. The single
+engine shares the existing terminal transport and pure decoder, has named private
+phases, fixed storage, no retry/replay or initialization writes, and one callback
+per owner turn. Tokens never reset or wrap; unresolved target association includes
+both callbacks even with null context. Late successful reads need fresh owner
+time before publication; actual callback errors retain their original detail.
+
+Complete raw identity/profile proof establishes initialized usability independently
+of configuration trust. Raw/history validity is not current authorization.
+Termination uses its own disable-control proof. Existing effects and pending reset
+history survive teardown/rebinding/result consumption. Later operations are not
+published or replaced by stubs. The compile-only future fixture now derives a
+separately named planned type from the delivered facade.
+
+Delegation: gpt-6.1-sol/high owned current peer research and general docs; another
+owned operation tests/registration and future fixture migration. gpt-6-astra/high
+independently reviewed time, tokens, association, evidence and scope read-only.
+The lead owned production/build/package changes, integrated and inspected all
+returned diffs, and ran final checks. Review found and fixed two gaps before
+completion: unrelated reserved profile fields had erased independent termination
+proof, and matching identity segments had published before fresh time validation.
+Regression cases cover both plus contradiction-at-deadline priority.
+
+Updated public Doxygen, API/ownership/architecture/feature documentation, README,
+CHANGELOG, contributor/test/agent guidance and package source selections. Strict
+package verification found and corrected local links to repository-only audit/
+validation pages. Preserved the old behavioral-check anchor. No version bump.
+Register encodings, variant gates and hardware procedures are unchanged.
+
+PASS: Debug and Release 6/6 registered CTests each; 20,138 operations checks,
+161,670 protocol checks and 8,602,548 codec checks. Strict header/future fixture
+compilation, public method linkage, Doxygen and visibility of all 15 delivered
+owner methods, no-op version sync, local links/anchors, native PlatformIO and
+36-file extracted package consumption also pass. Detailed commands and limits
+are in [validation](validation.md#prompt-11-owner-engine-2026-10-26).
+
+No firmware/hardware or later-operation qualification is claimed. The installed
+MinGW sanitizer runtimes remain unavailable; no sanitizer pass is claimed. Lead
+commits/pushes the complete checked unit on this same branch and verifies upstream
+equality and a clean worktree before handoff. The final commit belongs in the
+handoff and next progress update, avoiding a self-referencing hash-edit loop.

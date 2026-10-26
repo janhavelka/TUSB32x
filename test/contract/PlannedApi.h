@@ -2,9 +2,9 @@
  * @file PlannedApi.h
  * @brief Compile-only sketch of future callable contracts; never a delivered header.
  *
- * No method here has an implementation. Compile its consumer without linking it.
- * Replace this sketch with real public API checks as the owning prompts implement
- * each method. Do not include this directory in library include paths or packages.
+ * Methods declared here remain unimplemented; inherited owner methods are real.
+ * Compile future consumers without linking them. Runtime suites separately call
+ * the delivered facade. Do not expose this directory to consumers or packages.
  */
 #pragma once
 
@@ -20,22 +20,12 @@ Status validateHealthPolicy(const HealthPolicy& policy);
 Status projectHealth(const ManagedTransportEvidence& evidence,
                      const HealthPolicy& policy, HealthSnapshot& out);
 
-// Planned facade only. There are deliberately no successful or unsupported stubs.
-class TUSB32x {
+namespace planned {
+
+// Future families inherit the delivered owner API. This distinct fixture type
+// cannot redefine the public facade or claim implementations for future jobs.
+class Driver : public ::TUSB32x::TUSB32x {
  public:
-  TUSB32x();
-  ~TUSB32x();
-  TUSB32x(const TUSB32x&) = delete;
-  TUSB32x& operator=(const TUSB32x&) = delete;
-  TUSB32x(TUSB32x&&) = delete;
-  TUSB32x& operator=(TUSB32x&&) = delete;
-
-  Status bind(const DriverConfig& config);
-  Status end();
-  Status invalidateDeviceState(const Status& reason);
-  Status forgetDeviceEvidence();
-
-  Status startInitialize(const OperationTiming& timing, OperationToken& token);
   Status startReadProfile(const OperationTiming& timing, OperationToken& token);
   Status startApplyProfile(const DeviceProfile& profile,
                           const OperationTiming& timing, OperationToken& token);
@@ -46,20 +36,10 @@ class TUSB32x {
   Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);
   Status startReset(const OperationTiming& timing, OperationToken& token);
   Status startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token);
-  Status poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers = 1);
-  Status cancel(OperationToken token);
-  Status resultSnapshot(OperationToken token, OperationResult& out) const;
-  Status takeResult(OperationToken token, OperationResult& out);
-
-  OperationProgress progress() const;
-  PortSnapshot portSnapshot() const;
-  ConfigurationSnapshot configurationSnapshot() const;
-  TransportStats transportStats() const;
-  DriverDiagnostics diagnostics() const;
-  void clearTransportStats();
-
   Status readRegisterSync(uint8_t reg, uint8_t& out);
   Status writeRegisterSync(uint8_t reg, uint8_t value);
 };
+
+}  // namespace planned
 
 }  // namespace TUSB32x

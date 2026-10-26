@@ -1,5 +1,5 @@
 version: "0.1.0-dev.1"
-description: "Portable TUSB32x values, local validators and pure decoding; device operations are in development."
+description: "Portable TUSB32x owner lifecycle, read-only initialization, validators and pure decoding."
 license: "MIT"
 maintainers:
   - "Jan Havelka <info@thymos.cz>"
@@ -19,6 +19,8 @@ files:
     - "src/TUSB32xCodecs.cpp"
     - "src/TUSB32xCodecs.h"
     - "CMakeLists.txt"
+    - "src/TUSB32xOperations.cpp"
+    - "src/TUSB32xOwnerTime.h"
     - "library.json"
     - "idf_component.yml"
     - "LICENSE"

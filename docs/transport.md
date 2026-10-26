@@ -1,10 +1,10 @@
 # Private register transport and identity checks
 
 Prompt 9 implements src/TUSB32xProtocol.h/.cpp as a private library boundary.
-It has no public device facade, raw diagnostic API or operation scheduler.
-Its helpers are exercised by the registered tusb32x_protocol suite. Public
-consumers still use values, Status helpers and validators; managed operations
-will use this same callback path in later prompts.
+Its helpers are exercised by the registered tusb32x_protocol suite. The public
+owner facade added in prompt 11 uses this same callback path for read-only
+initialization. The transport boundary itself owns no lifecycle or scheduler;
+public raw diagnostic methods remain planned.
 
 ## Framing and work bounds
 

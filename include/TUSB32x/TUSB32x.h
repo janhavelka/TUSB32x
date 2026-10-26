@@ -1,7 +1,6 @@
 /// @file TUSB32x.h
-/// @brief Passive operation, observation and diagnostic values for the planned owner-driven driver.
-/// @details These fixed aggregates perform no I2C and contain no driver facade or callable driver
-/// declarations. Field validity and provenance qualify copied historical evidence independently.
+/// @brief Cooperative read-only owner driver and fixed operation, observation and diagnostic values.
+/// @details The facade borrows terminal application transport; passive aggregates perform no I2C. Field validity and provenance qualify copied historical evidence independently.
 #pragma once
 
 #include <cstdint>
@@ -345,6 +344,113 @@ struct DriverDiagnostics {
   ManagedTransportEvidence managedTransport{}; ///< Explicitly filtered production callback history.
   IdentitySnapshot identity{}; ///< Copied identity/revision evidence, available after result take.
   InterruptSnapshot interrupt{}; ///< Last IRQ operation's historical evidence, not current latch state.
+};
+
+
+/// @brief Serialized application-owned cooperative driver; no allocation or implicit I2C.
+/// @details Only poll invokes transport. Borrowed context must live until end returns. No ISR use,
+/// concurrent access or callback reentry. One active token becomes one immutable retained result.
+/// Initialization only reads; later operation families are not yet exposed. Cached copies remain
+/// historical unless their validity and current trust allow use. This object cannot be copied/moved.
+class TUSB32x {
+ public:
+  /// @brief Construct empty unbound evidence without callbacks.
+  TUSB32x() = default;
+  /// @brief Release locally without callbacks; consume results before destruction if needed.
+  ~TUSB32x() = default;
+  TUSB32x(const TUSB32x&) = delete;
+  TUSB32x& operator=(const TUSB32x&) = delete;
+  TUSB32x(TUSB32x&&) = delete;
+  TUSB32x& operator=(TUSB32x&&) = delete;
+  /// @brief Validate then atomically copy a binding; zero callbacks and fixed work.
+  /// @param[in] config Borrowed callbacks/context and copied exact variant/address/timeout.
+  /// @return INVALID_CONFIG/UNSUPPORTED_FEATURE from validation, then BUSY, RESULT_PENDING or
+  /// CONFIGURATION_UNKNOWN for unresolved target replacement; OK otherwise. Errors change nothing.
+  Status bind(const DriverConfig& config);
+  /// @brief Cancel locally, unbind and invalidate usability; retain result/effects, zero callbacks.
+  /// @return OK even when already unbound; active result becomes CANCELLED with unknown time.
+  Status end();
+  /// @brief Notify external change, preserving history and binding; no callbacks.
+  /// @param[in] reason Static-message cause; OK normalizes to CONFIGURATION_UNKNOWN. Active result
+  /// has CANCELLED with this message/detail; the cause code remains caller-owned.
+  /// @return INVALID_PARAM for IN_PROGRESS/unknown code without changes; otherwise OK.
+  Status invalidateDeviceState(const Status& reason);
+  /// @brief Discard target evidence locally; tokens and instance transport history remain.
+  /// @return BUSY, RESULT_PENDING, INVALID_CONFIG if bound, or OK, in that order. Zero callbacks.
+  Status forgetDeviceEvidence();
+  /// @brief Admit read-only identity/configuration observation, without applying defaults.
+  /// @param[in] timing Owner milliseconds with unsigned deadline-now strictly in (0,2^63).
+  /// @param[out] token New nonzero instance token on IN_PROGRESS; unchanged on rejection.
+  /// @return INVALID_PARAM, NOT_BOUND, BUSY, RESULT_PENDING, TOKEN_EXHAUSTED in that order,
+  /// or IN_PROGRESS. Admission clears initialization usability; no callbacks or writes.
+  Status startInitialize(const OperationTiming& timing, OperationToken& token);
+  /// @brief Advance one bounded read-only owner turn; no sleep or retry.
+  /// @param[in] token Exact represented token; zero is INVALID_PARAM, absent is RESULT_NOT_AVAILABLE,
+  /// different is TOKEN_MISMATCH, checked before time. Terminal calls return frozen status unchanged.
+  /// @param[in] nowMs Fresh owner sample after preceding callback, same uint64 millisecond domain.
+  /// Backward/half-range deltas reject without changes; equal fresh ticks are valid.
+  /// @param[in] maxTransfers Callback ceiling; zero permits local transitions only. Basic callbacks
+  /// always stop the turn after one invocation, even with a larger ceiling. Failed attempts count.
+  /// @return IN_PROGRESS or terminal outcome. Deadline expires before new traffic/pending success;
+  /// callback failure stays primary with unknown time. Complete initialization uses 5 base/322 or
+  /// 6 extended callbacks, no writes. Timeout includes lock/all phases and clips to remaining time.
+  Status poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers = 1);
+  /// @brief Cancel matching active work locally; no rollback, I2C or fabricated completion time.
+  /// @param[in] token Exact token with the same zero/absent/mismatch precedence as poll.
+  /// @return OK for matching active/terminal work; active result has CANCELLED, terminal unchanged.
+  Status cancel(OperationToken token);
+  /// @brief Copy the immutable retained result without consuming it; zero callbacks.
+  /// @param[in] token Exact token; zero/absent/mismatch precedence as poll; active is unavailable.
+  /// @param[out] out Copy on OK, otherwise unchanged.
+  /// @return OK for delivery even when out.status failed; otherwise token/unavailable error.
+  Status resultSnapshot(OperationToken token, OperationResult& out) const;
+  /// @brief Deliver and consume the exact retained result; no callbacks or evidence repair.
+  /// @param[in] token Exact token with the same precedence as resultSnapshot.
+  /// @param[out] out Copy on OK, otherwise unchanged; repeated take is RESULT_NOT_AVAILABLE.
+  /// @return OK on delivery regardless of operation outcome, otherwise token/unavailable error.
+  Status takeResult(OperationToken token, OperationResult& out);
+  /// @brief Copy cached progress with fixed work and zero callbacks.
+  /// @return Current active/terminal slot, or IDLE after take.
+  OperationProgress progress() const { return _progress; }
+  /// @brief Copy historical port evidence without callbacks or age sampling.
+  /// @return Initially invalidated snapshot; this stage performs no port observation.
+  PortSnapshot portSnapshot() const { return _port; }
+  /// @brief Copy desired/observed/verified configuration without callbacks.
+  /// @return Historical values qualified by field flags and current trust.
+  ConfigurationSnapshot configurationSnapshot() const { return _configuration; }
+  /// @brief Copy saturating all-callback totals without callbacks.
+  /// @return Instance transport history; not physical transaction counts.
+  TransportStats transportStats() const { return _stats; }
+  /// @brief Copy cached lifecycle, identity and retained effect evidence without callbacks.
+  /// @return Independent target facts and instance transport/operation history.
+  DriverDiagnostics diagnostics() const { return _diagnostics; }
+  /// @brief Clear only all-callback totals/lastStatus; no callbacks or managed-streak/effect changes.
+  void clearTransportStats() { _stats = {}; }
+ private:
+  enum class InitPhase : uint8_t { IDENTITY, REVISION, CONFIG08, CONFIG09, CONFIG0A, CONFIG45, DONE };
+  DriverConfig _config{};
+  bool _hasAssociation = false;
+  uint64_t _lastToken = 0;
+  uint64_t _lastTime = 0;
+  OperationProgress _progress{};
+  OperationResult _result{};
+  ConfigurationSnapshot _configuration{};
+  ConfigurationSnapshot _observing{};
+  PortSnapshot _port{};
+  TransportStats _stats{};
+  DriverDiagnostics _diagnostics{};
+  InitPhase _phase = InitPhase::IDENTITY;
+  bool _pending = false;
+  uint8_t _received[8]{};
+  Status _pendingStatus{};
+  Status checkToken(OperationToken token) const;
+  Status finish(Status status, bool timeValid = false, uint64_t nowMs = 0);
+  void invalidateUsability();
+  void clearTarget();
+  bool unresolved() const;
+  void publishIdentityRead();
+  void acceptRead();
+  Status publishConfiguration();
 };
 
 }  // namespace TUSB32x

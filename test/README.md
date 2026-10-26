@@ -1,11 +1,12 @@
-# Native contract, validator, transport, codec and version checks
+# Native contract, validator, transport, codec, owner and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
 Prompt 9 adds private terminal transport and exact identity/revision checks.
 Prompt 10 adds public supplied-byte decoding, private encoding/comparison and
-safe composition tests; it executes no owner procedure or wait.
-The device facade and behavioral driver suites remain planned.
+safe composition tests. Prompt 11 adds the delivered owner facade and read-only
+initialization, lifecycle, result ownership and fresh-time behavior. Mutating
+operations, port acquisition, health projection and hardware waits remain planned.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -35,6 +36,18 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   Literal frames verify ACK/settings/reset at the transport boundary. Mode and
   recovery checks prove composition prerequisites, not executed/timed procedures.
   The public decoder is also linked by the standalone consumer without private includes.
+- `tusb32x_operations`: every public owner method is compiled, linked and called.
+  Exact read-only initialization scripts cover all seven variants, 5/6-callback
+  ceilings and absence of writes. Each callback boundary exercises backend
+  failures, cancellation, end, invalidation, owner expiry and failed
+  reinitialization. Tests cover atomic binding, copied inputs, token precedence,
+  unchanged outputs, retained results, exact take, association changes including
+  null contexts/both callbacks, independent instances on one serialized fake bus,
+  separate configuration/termination/reset facts and transport-statistics clearing.
+  Budgets 0/1/larger, fresh pending completion, late success versus original backend
+  failure, timestamp validity, rollover, backward/half-range rejection and clipped
+  callback timeouts are executed. A bounded private token-arithmetic fixture
+  reaches exhaustion without a public seed API or an exhaustion loop.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -44,8 +57,8 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   No PlatformIO installation is needed for these fixtures.
 
 The build separately compiles each public header as the only include and the
-three planned-contract fixtures as objects. They are compile checks, with no
-behavioral CTest entry or stub driver definitions. The
+three contract fixtures as objects. Their future signatures and owner examples
+are compile checks, with no behavioral CTest entry or stub driver definitions. The
 [ordinary multi-file consumer](../examples/host/basic/README.md) must also build
 and run separately with tests OFF. It links real validators/decoder and needs no Python,
 Git, Doxygen, PlatformIO, framework headers or sibling include paths.
@@ -81,10 +94,12 @@ int32 backend details, callback shapes, exact addresses and fixed passive values
 Runtime checks remain active with NDEBUG. Defaults preserve raw and interpreted
 validity separately. No driver/decoder function is linked or simulated.
 
-The compile-only fixture declares future signatures outside `include/`. It is
+The compile-only fixture declares future signatures outside `include/` in
+`TUSB32x::planned::Driver`, which inherits the delivered public facade. It neither
+redefines that facade nor redeclares implemented methods. Future declarations are
 never packaged, linked into the core or used to claim operation behavior. As real
-methods arrive, migrate their checks to the delivered API and remove corresponding
-sketch declarations. Do not create definitions merely to make this sketch link.
+methods arrive, migrate their checks to the delivered API and remove the sketch
+declarations. Do not create definitions merely to make this sketch link.
 
 `owner_examples.cpp` type-checks passive observation, explicit apply, cancellation
 after a possible write and two devices on one external fake owner. Each owner
@@ -93,13 +108,15 @@ result. The fake callbacks return I2C_ERROR; nothing pretends to initialize real
 hardware. `time_arithmetic.cpp` evaluates 60 independent static assertions for
 unsigned half-range comparisons, equality, rollover, deadline/callback caps,
 wait margins and checked 32-bit clock extension. These validate specification
-arithmetic and example syntax, not the unimplemented engine or adapter timing.
+arithmetic and example syntax; runtime owner behavior is exercised separately by
+`tusb32x_operations`. Neither proves adapter timing or hardware waits.
 Future transition/fault requirements O01–O25 are in the
 [API guide](../docs/api-contracts.md#required-future-behavioral-checks).
 
 Run current version/documentation checks with `python scripts/generate_version.py check`
 and `doxygen Doxyfile`; output stays under build/doxygen. Inspect XML/HTML for all
-17 public structs, both validators, decodeRegister and four generated version constants.
+17 public structs, the owner class and methods, both validators, decodeRegister and
+four generated version constants.
 The complete omission checker and negative fixtures remain prompt 33 work.
 
 For source documentation, prompt 5 also ran Doxygen directly with a temporary
@@ -111,5 +128,6 @@ structs; no warning alone would not prove their visibility. The retained evidenc
 and exact command are in [validation](../docs/validation.md).
 
 These checks prove current portable values, pure validators, private register
-transport/identity, linkage and planned signature syntax. Owner behavior, health projection, framework builds,
-full package qualification and physical hardware tests remain future work.
+transport/identity/codecs, read-only owner behavior, linkage and planned signature
+syntax. Later operation families, health projection, framework builds, complete
+package qualification and physical hardware tests remain separate work.

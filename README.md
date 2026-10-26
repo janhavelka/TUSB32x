@@ -4,8 +4,11 @@ TUSB32x is a framework-neutral C++17 library in development, starting with
 TI TUSB320LAI. It currently provides passive public values, constexpr Status
 helpers, pure binding/profile validators, public supplied-byte register decoding
 and stable package version constants.
-The library also contains tested [private transport/identity helpers](docs/transport.md).
-The public device facade, managed operations and firmware adapters remain planned.
+The library also contains [private transport/identity helpers](docs/transport.md)
+and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
+binding/lifecycle, token-checked polling/cancellation/result delivery, cached
+evidence and read-only initialization. Profile changes, port refresh, reset,
+IRQ operations, public raw diagnostics and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -61,9 +64,20 @@ cmake --build build/native --config Debug
 ctest --test-dir build/native -C Debug --output-on-failure
 ```
 
+Initialization reads identity and persistent settings without writing defaults,
+resetting, acknowledging IRQ or replaying a desired profile. The application
+serializes calls, supplies a uint64 millisecond clock and keeps each accepted
+token with its driver instance. `poll` performs at most one terminal callback;
+the next poll supplies fresh time before accepting successful completion.
+One terminal result blocks replacement until `takeResult` delivers it. Result
+delivery returns OK even when the copied operation failed. See the
+[implemented owner API](docs/api-contracts.md#implemented-owner-api) for timing,
+output preservation and evidence lifetime.
+
 Tests ON require Python 3.10+. For single-config generators also select
 `-DCMAKE_BUILD_TYPE=Debug` at configure time. The registered checks cover C++
-contracts, validators, transport/codecs and isolated generator fixtures. Run `doxygen Doxyfile`
+contracts, validators, transport/codecs, owner operations and isolated generator
+fixtures. Run `doxygen Doxyfile`
 for strict current API documentation. On Windows use the existing VS Code Core
 through `scripts/pio.cmd`; do not install another Core.
 

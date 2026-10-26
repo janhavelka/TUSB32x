@@ -3,14 +3,17 @@
 
 #include <type_traits>
 
-using Driver = TUSB32x::TUSB32x;
+using Driver = TUSB32x::planned::Driver;
+using ImplementedDriver = TUSB32x::TUSB32x;
 using Start = TUSB32x::Status (Driver::*)(const TUSB32x::OperationTiming&,
                                        TUSB32x::OperationToken&);
 static_assert(!std::is_copy_constructible_v<Driver>);
 static_assert(!std::is_copy_assignable_v<Driver>);
 static_assert(!std::is_move_constructible_v<Driver>);
 static_assert(!std::is_move_assignable_v<Driver>);
-static_assert(std::is_same_v<decltype(&Driver::startInitialize), Start>);
+static_assert(std::is_same_v<decltype(&ImplementedDriver::startInitialize),
+              TUSB32x::Status (ImplementedDriver::*)(const TUSB32x::OperationTiming&,
+                                                   TUSB32x::OperationToken&)>);
 static_assert(std::is_same_v<decltype(&Driver::startReadProfile), Start>);
 static_assert(std::is_same_v<decltype(&Driver::startVerifyProfile), Start>);
 static_assert(std::is_same_v<decltype(&Driver::startReconcile), Start>);

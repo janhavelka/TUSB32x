@@ -10,7 +10,9 @@ IDF component registration, public pure register decoding, private codecs/write
 composition and register transport/identity checks,
 alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
-The device facade and framework firmware remain planned. Do not describe planned
+It also provides a non-copyable owner facade with bus-silent lifecycle,
+instance-local tokens, retained results and read-only initialization. Other
+operation families and framework firmware remain planned. Do not describe planned
 interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -96,7 +98,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the three C++ suites (including `tusb32x_protocol`) plus
+  and run the four C++ suites (including `tusb32x_protocol` and
+  `tusb32x_operations`) plus
   `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only planned
   contracts are never behavioral tests.

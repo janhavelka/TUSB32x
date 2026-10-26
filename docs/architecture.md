@@ -5,8 +5,9 @@ a C++17 CMake library target and deterministic package metadata/version tooling.
 Prompt 9 adds [private register transport and identity checks](transport.md).
 Prompt 10 adds public pure register decoding and private field encoding,
 semantic comparison and qualified byte composition.
-There is no device facade or operation engine yet. The
-[API inventory](api-contracts.md) labels all future calls explicitly; the
+Prompt 11 adds the non-copyable owner facade, bus-silent lifecycle, one active
+operation/retained result and read-only initialization. The
+[API inventory](api-contracts.md) separates delivered methods from future calls; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
 ## Current files
@@ -15,14 +16,16 @@ There is no device facade or operation engine yet. The
 | --- | --- |
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
-| include/TUSB32x/TUSB32x.h | Fixed operation, snapshot, result, diagnostic and health values; no callable facade yet |
+| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; only lifecycle, initialize, token/result and cached methods are callable |
 | include/TUSB32x/CommandTable.h | RegisterDecode value and callable pure decodeRegister; raw evidence and independent field validity |
 | include/TUSB32x/Version.h | Generated stable constexpr version values; no Git, timestamp or firmware identity |
-| src/TUSB32x.cpp | Bounded pure binding/profile validation; no driver instance |
+| src/TUSB32x.cpp | Bounded pure binding/profile validation |
+| src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization engine with private phases, immutable deadlines, tokens and retained results |
+| src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic, including the bounded exhaustion fixture boundary |
 | src/TUSB32xProtocol.h/.cpp | Private mapped terminal callbacks, single accounting boundary, possible-write evidence and pure exact identity/revision comparisons |
 | src/TUSB32xCodecs.h/.cpp | Public pure decoder definition, private typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
 | CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external maintainer tools for core consumption |
-| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp and test/test_codecs.cpp | Registered active C++ suites, independent exhaustive validator/protocol/codec checks and compile-only standalone-header/signature fixtures |
+| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp and test/test_operations.cpp | Registered active validator/protocol/codec/owner suites and compile-only standalone-header/future-signature fixtures |
 | examples/host/basic/ | Standalone multi-file consumer of real values, validators and public decoder; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/PlannedApi.h and planned_api.cpp | Explicitly compile-only future signatures, never linked or delivered |
@@ -40,7 +43,7 @@ CommandTable includes the public value inventory for the shared decoder result;
 TUSB32x does not include CommandTable. No private source header, sibling include,
 framework header, global bus or hidden service is required.
 
-## External owner and later implementation
+## External owner and operation engine
 
 The application owns the physical bus, pins, lock, routing, monotonic clock,
 scheduling, VBUS/power policy, IRQ handoff and recovery decisions. It supplies
@@ -50,7 +53,7 @@ IDF and FieldCore-like applications share this boundary. FieldCore is not a
 dependency. Different physical targets may share one serialized application bus;
 each target has one coordinated configuration owner.
 
-One future non-copyable/non-movable facade contains fixed storage for binding,
+One non-copyable/non-movable facade contains fixed storage for binding,
 one operation, one retained terminal result and cached evidence. It uses one
 transport path, one deliberate register composer and one owner-driven engine.
 There is no factory, generic scheduler, registry, inheritance hierarchy or Pimpl.
@@ -59,12 +62,14 @@ when implemented, not as empty placeholders.
 
 The current split keeps pure codecs/composition in `TUSB32xCodecs.cpp` and the
 terminal callback/accounting boundary in `TUSB32xProtocol.cpp`, sharing one
-closed variant-capability table. Later files cover binding/cache (`TUSB32x.cpp`),
-operations (`TUSB32xOperations.cpp`),
+closed variant-capability table. Validators remain in `TUSB32x.cpp`;
+binding/cache and the single owner engine share `TUSB32xOperations.cpp`.
+Later files cover
 port observation (`TUSB32xPort.cpp`) and passive diagnostics
 (`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
 and Doxygen. The current units implement validators, private transport/identity
-and pure codecs/composition; the owner engine remains later work.
+and pure codecs/composition, plus lifecycle/token/result handling and read-only
+initialization. Other operation families remain later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
 exports remain outside the current implementation.
@@ -91,10 +96,21 @@ reentry or platform delays are hidden in core. The owner supplies a fresh time
 after each Status-only callback. Silicon waits and uncertainty follow the
 [device procedure guide](device-behavior.md). Prompt 6 completes the precise
 [admission, state and lifetime tables](api-contracts.md#method-admission-and-output-preservation)
-before the engine exists. Each poll uses a bounded direct pass and at most one
-Status-only callback; zero budget still permits time-only transitions. Current
+implemented by prompt 11 for its delivered subset. Each poll uses a bounded
+direct pass and at most one Status-only callback; zero budget still permits
+time-only transitions. Current
 identity readiness is separate from configuration trust so explicit recovery
 remains possible after rebind and read-only initialization.
+
+An initialization reads the exact identity/revision and applicable persistent
+controls once. It never writes, adopts a desired profile or establishes that an
+interrupted silicon procedure completed. A successful callback yields to the
+owner before the next callback or time-sensitive completion. Failure retains
+its normalized transport status/detail immediately; fresh late success becomes
+owner TIMEOUT. A frozen terminal result survives end/invalidation and repeated
+snapshot delivery until exact take. Different-target binding cannot discard
+unresolved effects; explicit forgetting requires unbound, inactive, result-free
+state. The target association includes both callbacks even with null context.
 
 Desired input, raw observations, verified actual settings, port interpretation,
 IRQ evidence and operation outcome are separate values. Every incomplete or

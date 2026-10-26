@@ -1,9 +1,10 @@
 # Feature, source and verification coverage
 
-Prompts 2-10, updated 2026-10-26. This matrix defines the capability boundary; passive
-values/Status, pure validators/decoding/composition, private transport/identity, native builds and host
-checks exist, but no device facade, CLI or hardware
-qualification exists yet. **Planned** means the
+Prompts 2-11, updated 2026-10-26. This matrix defines the capability boundary;
+values/Status, pure validators/decoding/composition, private transport/identity,
+the owner facade with read-only initialization, native builds and host checks
+exist. CLI, other operation families and hardware qualification remain planned.
+**Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
 **Outside API** means board/application responsibility or an excluded device.
@@ -11,8 +12,8 @@ These are documentation labels, not new runtime health/status values.
 
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
-listed there; V names TUSB322I alone. Silicon/operation tests below remain future
-evidence; the implemented-values table records the subset delivered in prompts 5-10.
+listed there; V names TUSB322I alone. Later operation tests below remain future
+evidence; the implemented-values table records the subset delivered in prompts 5-11.
 Actual checks are in
 [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md). Planned commands follow [CLI_CONTRACT](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CLI_CONTRACT.md).
 
@@ -33,10 +34,10 @@ below supplements the feature rows without turning a future test into a PASS.
 | Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
 | Register access/defaults and safe byte composition — Pure helpers implemented; owner Planned | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; PASS private access/transport9 and pure codecs/composition10; owner/CLI conformance remains18/21/22 |
-| Explicit variant/address validation — Implemented; binding/CLI Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | PASS every legal pair, all address/variant bytes and zero callbacks in7; binding/transport/CLI remain9/11/20 |
-| Eight-byte identity — Planned | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / init, probe, capabilities | Independently fixed vectors; reverse order, wrong NUL, same-address unrelated device, partial/failed transfer, no inference of enable/model; 9/12/18/22 |
-| Revision acceptance — Planned; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize, readRegisterSync / init, reg, diag | Base never probes A0; unknown/06 returns CHIP_ID_MISMATCH without write permission; raw value retained; mismatch cannot create KNOWN; 9/12/18/22 |
-| Read-only initialization and profile evidence — Planned | All seven I2C variants with per-feature gates | TI fact: documented identity/control maps B pp16–19, L/A pp16–20, V pp17–20. Policy: no automatic writes | startInitialize, startReadProfile, startVerifyProfile, startReconcile / init, profile read, verify, reconcile | Read-only transcripts, distinct observed/desired/verified state, missing fields not defaults; 3/6/12/18 |
+| Explicit variant/address validation and binding — Implemented; CLI Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | Every legal pair, address/variant rejection and zero validator callbacks7; atomic owner binding and target association11; CLI20 |
+| Eight-byte identity — Implemented through initialization | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / future init, probe, capabilities | Independent fixed/private transport vectors9 and read-only engine11; failure/mismatch retains raw evidence without inferred model; broader conformance18, CLI22 |
+| Revision acceptance — Implemented through initialization; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize; future readRegisterSync / init, reg, diag | Private comparisons9 and read-only engine11; B omits A0, unknown revision retains raw/mismatch evidence and cannot create KNOWN; conformance18, CLI22 |
+| Read-only initialization — Implemented; profile operations Planned | All seven I2C variants with per-feature gates | TI fact: documented identity/control maps B pp16–19, L/A pp16–20, V pp17–20. Policy: no automatic writes | startInitialize; future startReadProfile/startVerifyProfile/startReconcile / init, profile read, verify, reconcile | Read-only initialize transcripts and owner evidence11; desired never adopted; missing fields retain validity; independent profile operations12, conformance18 |
 | Port attachment, role and orientation — Planned | B/L/A/V | TI fact: B §7.3/Table 7-7 pp10–13,17–18; L/A §7.2/Tables 8–9 pp10–12,17–18; V §6.3/Tables 6-8–9 pp9–13,17–19 | startRefreshPort, portSnapshot / read, sample, freshness | Local/peer distinction, CC1/CC2 raw polarity, detached validity, CC/VBUS separately controlled, sequential-coherence changes; 3/15/18/30 |
 | Current detection category — Planned; physical freshness gated | B/L/A/V | TI fact/conflict ATTACHED_CURRENT: B §7.3.1.2 p11; L/A §7.2.1.2 p10; V §§6.3.2.2–3 pp10–11; G Figure 2-1 p8 | startRefreshPort / read, sample | Default is not unconditional 500/900 mA; charge-through category separate; no hidden reset on read; controlled attached advertisement-change fixture before fresh-measurement claim; 15/18/30 |
 | Current advertisement — Planned B/L/A; gated change on V | B/L/A/V | TI fact: B §7.3.2 p12/Table 7-7 p17, L/A §7.2.2 p11/Table 8 p17; conflict V_ADVERTISEMENT, V Figure 6-3/Table 6-8 p17 | DeviceProfile.sourceCurrent, startApplyProfile / current, apply | Reserved setting rejection, preserve other fields, no-op uses no writes; ≥3.5 V local-source prerequisite documented; V unchanged proved field permits other closed operations, changed field rejects; 3/13/18/30 |
@@ -98,20 +99,22 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Operation/diagnostics — Passive values implemented | OperationToken/Timing/Result/Progress, identity/IRQ values, DriverDiagnostics | Owner baseline and prompt4 retained effect rules | PASS fixed values/default invalidity and token domain; admission/time6/11, retained IRQ16, diagnostics17 |
 | Health — Passive values and private evidence accounting implemented | DriverState, ManagedTransportEvidence, HealthPolicy/Snapshot | Baseline policy; no TI health claim | PASS defaults and private managed/raw totals/streak/timestamp separation9; public validation/projection/views17 |
 | Decoder — Implemented | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS exhaustive mapped bytes/variants, reserved validity, invalid inputs and complete output preservation10; public linkage without private includes; CLI formatting22 |
-| Facade — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only; callable engine9-17 |
+| Owner facade — Implemented subset; later jobs Planned | Lifecycle, startInitialize, tokened poll/cancel/snapshot/take, cached getters and totals clear | Baseline and current execution-11 peer audit | Registered tusb32x_operations and delivered public-link checks; other jobs12-17, conformance18-19 |
 | Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
 | Source docs — Present | Five public headers with file/type/member/enum/function and generated version Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen, visibility of17 public structs and four version constants; complete omission guard33 |
 | Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, duplicate-declaration rejection, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
 | Component/native tool configuration — Implemented; firmware Planned | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration fixture, launcher argument/exit fixtures and native linkage; native-IDF firmware25-26, full packages32 |
 
-No pass above represents a physical I2C transaction, executed owner procedure,
-framework firmware build, CI run or physical qualification.
+Host checks exercise the read-only owner procedure through terminal fake
+callbacks. No pass above represents a physical I2C transaction, framework
+firmware build, remote CI run or physical qualification.
 
 ## Prompt 6 completed owner contracts
 
-All rows below are specified, with real checks limited to passive values and
-compile-only fixtures. [Method/state rules](api-contracts.md#method-admission-and-output-preservation)
-and future vectors O01–O25 are normative for their later implementation stages.
+The table below retains prompt 6's specification provenance. Prompt 11 now
+implements its lifecycle, token/result and initialization time subset in the
+registered owner suite. [Method/state rules](api-contracts.md#method-admission-and-output-preservation)
+and vectors O01–O25 remain normative for later write/port/diagnostic stages.
 Peer provenance is [execution-6-peers](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-6-peers.md); register and
 procedure sources remain the exact TI revisions already listed above.
 

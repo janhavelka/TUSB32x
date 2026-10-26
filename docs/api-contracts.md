@@ -1,15 +1,16 @@
-# Portable values, validators, decoding and planned device API
+# Portable values, decoding and owner API
 
-Prompts 5-10, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-11, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, two pure validators,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
 `TUSB32x`. Prompt 9 implements [private register transport/identity](transport.md),
 without publishing bus-access methods. Prompt 10 adds pure codecs/composition.
-No device facade or operation engine is implemented yet. Other signatures below
-remain planned. Admission,
-publication and lifetime rules are specified here; later prompts publish those callable declarations with
-their real implementations.
+Prompt 11 implements the non-copyable device facade, lifecycle/token/result
+handling, cached evidence and read-only initialization. Other operation families
+below remain planned. Later prompts publish their callable declarations with
+real implementations; the complete design inventory is not a promise that all
+listed signatures are delivered now.
 
 The [baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md), [register map](register-map.md)
 and [procedure guide](device-behavior.md) remain the state and silicon contracts.
@@ -150,8 +151,9 @@ do not roll back effects of previously attempted hardware writes.
 Library-generated statuses use detail zero unless a later documented method
 assigns another meaning. Backend detail is never narrowed or reinterpreted.
 There is no detached or OFFLINE error: detach is normal, health is a projection.
-Actual operation-status propagation, callback normalization and counters are
-future tested code, not behavior claimed by these passive structs.
+Operation-status propagation, callback normalization and counters are implemented
+for read-only initialization. Later write/effect behavior remains specified
+future work; passive default values do not prove it.
 
 ## Borrowed transport and owner boundary
 
@@ -173,19 +175,55 @@ serializes all calls and supplies clock, scheduler, pins, route, lock and power
 policy. Null context is permitted when callbacks need none. The pinned backend's
 own cleanup/bounds need adapter evidence; these pointer types cannot prove it.
 
-Callbacks may return only OK or I2C_* errors. Future wrappers normalize any other
+Callbacks may return only OK or I2C_* errors. The transport wrapper normalizes any other
 code to I2C_ERROR, preserve full detail and retain conservative write uncertainty.
 Status carries no completion time: the next freshly sampled owner timestamp
 anchors hardware waits and time-sensitive success. Owner intervals are strictly
 between zero and 2^63 ms; the separate 1 ms hardware margin never extends the
 immutable deadline. See the procedure guide for actual transfer ceilings.
 
-## Planned callable inventory
+## Implemented owner API
 
-This exact inventory is **not public callable code yet**. The fixture declares
-it solely to compile-check names, argument types and non-copyable/non-movable
-ownership. Construction/destruction do not perform hardware work; one facade
-and one engine are planned. No begin/init/unbind aliases or implementation stubs.
+`<TUSB32x/TUSB32x.h>` delivers `TUSB32x::TUSB32x`, linked through target
+`TUSB32x`. It is non-copyable and non-movable, uses fixed storage and borrows
+the callbacks/context from a copied accepted DriverConfig. Construction and
+destruction perform no hardware work. All calls require one serialized owner;
+none is ISR-safe.
+
+| Delivered methods | Behavior and bound |
+| --- | --- |
+| bind, end, invalidateDeviceState, forgetDeviceEvidence | Bus-silent atomic binding and evidence lifecycle. Invalid replacement preserves the old binding. End cancels active work into its retained result; it never rolls back hardware effects. Forget requires unbound, inactive, result-free state. |
+| startInitialize | Copies timing and admits one nonzero uint64 instance-local token; IN_PROGRESS means admitted. Reads exact identity/revision and persistent controls only, with B5/L/A6/V5 callback ceilings. No profile adoption, reset, ACK or writes. |
+| poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
+| cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
+| resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
+| progress, configurationSnapshot, portSnapshot, transportStats, diagnostics, clearTransportStats | Fixed cached copies or clearing all-callback totals; no bus, clock sampling, retry or trust repair. Port remains invalid until the later refresh operation exists. Clearing totals does not clear managed evidence or retained results. |
+
+The next successful admission cannot replace an active operation or retained
+terminal result. Tokens never reset through end/bind/forget and never wrap.
+Accepted reinitialization clears current initialized/identity usability before
+reads; failure cannot retain the earlier initialized state. Historical complete
+configuration remains distinguishable from current trust. A new target never
+inherits old identity/configuration/port evidence. Retained association includes
+variant, address, context and both callbacks, even with a null context.
+
+After an OK callback, the next valid poll supplies fresh time before another
+callback or successful completion. Equal ticks are valid and establish no
+elapsed wait. Backward or half-range-ambiguous time is rejected unchanged.
+A late pending success becomes owner TIMEOUT; an actual callback failure and
+its full detail remain primary even if a later timestamp is late. Starts,
+lifecycle/cache/result methods and cancellation are bus-silent. See the exact
+precedence/lifetime/time tables below and the repository-only
+[validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
+
+## Complete design inventory
+
+This sketch contains both the delivered subset above and future operations.
+Only the delivered subset is declared in the public class. The compile-only
+fixture checks the complete future inventory separately. Profile observation/
+verification/reconciliation belong to prompt 12; application to 13; reset and
+recovery to 14; port to 15; IRQ to 16; raw access and health helpers to 17.
+No begin/init/unbind aliases or successful placeholder methods are provided.
 
 ```cpp
 namespace TUSB32x {
@@ -240,8 +278,9 @@ retains desired input separately; initialization observes only, reconciliation
 does not replay, and reset never reapplies a desired profile. The tables below
 finish the baseline's precedence, result retention and interruption rules.
 
-Pure binding/profile validators are implemented in prompt 7. Driver methods are
-published with their owning work in prompts 9–17; health projection is prompt 17.
+Pure binding/profile validators are implemented in prompt 7, decoding in 10,
+and the delivered owner subset in 11. Remaining driver methods are published
+with their owning work in prompts 12–17; health projection is prompt 17.
 No unavailable function may appear in a runnable quick start before that work.
 The health validator requires offlineThreshold >= 1. Invalid policy returns
 INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it
@@ -290,8 +329,9 @@ authorizes a write or removes an unresolved silicon/board prerequisite.
 
 ## Method admission and output preservation
 
-These are normative contracts for future code, not executed driver behavior.
-The [current peer review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-6-peers.md) records the implementations
+These tables are implemented for the delivered owner subset; rows naming later
+operations remain normative future contracts. The
+[current peer review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-11-peers.md) records the implementations
 and tests compared. The baseline's precedence is unchanged. Evaluate the
 following rows in order; stop at the first applicable rejection. Rejections
 preserve all caller outputs and instance state, including token allocation,
@@ -718,9 +758,14 @@ health. `clearTransportStats` clears only all-callback totals/lastStatus. It can
 reset the managed streak/totals, last failure, trust, token, result or effects.
 New targets reset current target readiness, but instance transport history remains.
 
-## Required future behavioral checks
+<a id="required-future-behavioral-checks"></a>
 
-These are acceptance vectors for later engine tests, **not passed runtime tests**.
+## Behavioral acceptance vectors
+
+These acceptance vectors cover the entire planned engine. Prompt 11's
+`tusb32x_operations` suite exercises initialization, lifecycle, token/result and
+time behavior. Write, reset/recovery, port/IRQ and raw/health cases remain future
+acceptance requirements, not passed runtime tests.
 Combine the rejection ordering above with every write/failure boundary in the
 procedure guide; test callback counts, outputs, state and original status together.
 
@@ -759,6 +804,8 @@ isolation, check constant evaluation/explicit conversion, and link two real
 Status consumers. Planned signatures and the
 [owner examples](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/owner_examples.cpp) are syntax-checked only;
 the arithmetic fixture evaluates specification expressions at compile time. These
-checks establish the passive C++ contract, not protocol, owner-state transitions,
-framework compatibility or hardware qualification. Prompt 7 registers reusable
-checks in the real build. Results and tool versions are in [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
+checks establish their passive/compile-only contracts. Separate runtime suites
+exercise validators, private transport/codecs and owner initialization, and
+public link tests call every delivered method. None proves later operations,
+linked framework firmware or physical qualification. Results and tool versions
+are in [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).

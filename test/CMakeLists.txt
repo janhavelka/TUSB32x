@@ -4,8 +4,10 @@ add_executable(tusb32x_compile_contracts
 add_executable(tusb32x_validators test_validators.cpp)
 add_executable(tusb32x_protocol test_protocol.cpp test_codecs.cpp)
 target_include_directories(tusb32x_protocol PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
+add_executable(tusb32x_operations test_operations.cpp)
+target_include_directories(tusb32x_operations PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
-foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol)
+foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol tusb32x_operations)
   target_link_libraries(${suite} PRIVATE TUSB32x)
   tusb32x_strict_warnings(${suite})
   if(MSVC)

@@ -318,3 +318,23 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   mask08/value1 and regmap val&mask semantics confirm the ineffective call;
   the Rust Try.SRC04 constant remains reserved. Tests assert real reset08,
   Try.SRC06, ACK preservation, strict local rejection and zero pure callbacks.
+
+
+## Prompt 11 implementation decisions (2026-10-26)
+
+- Keep lifecycle and the first cooperative engine together in
+  `src/TUSB32xOperations.cpp`; pure validators remain in `TUSB32x.cpp`. Reuse the
+  existing protocol/decoder instead of another transport or register image.
+  `TUSB32xOwnerTime.h` holds bounded token arithmetic for direct exhaustion
+  verification without exposing a public seed hook.
+- One acyclic poll pass handles time validation, pending completion and at most
+  one terminal callback. Larger budgets remain ceilings; zero budget permits
+  only local work. Matching identity segments publish after fresh time and the
+  deadline check; complete contradictory segments invalidate immediately.
+- Derive termination from applicable disable controls and transient evidence,
+  independently of unrelated reserved advertisement/preference values. Full
+  configuration proof still requires every applicable profile field.
+- Register the real owner suite; move future-only signatures to the explicitly
+  named compile-only planned fixture. The production facade declares only
+  implemented methods. Update all CMake/PlatformIO/IDF/package source lists in
+  the same change so extracted consumers receive the real implementation.
