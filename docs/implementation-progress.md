@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 15; later prompts remain separate.
+Current authorization: independently audit completed prompt 15; later prompts remain separate.
 
 ## Prompt status
 
@@ -1204,3 +1204,36 @@ feature guides, metadata descriptions, README/CHANGELOG and contributor/test/age
 instructions. No version bump, new production file or future callable API.
 Lead commits and syncs this checked unit on the same execution branch, verifies
 upstream equality and a clean worktree, and reports the final commit in handoff.
+
+## Prompt 15 independent audit (2026-10-26)
+
+Started clean and synchronized at `c9b43d23f88af70139947d9399e92edcba283d51`
+on the existing execution branch. Re-read full original prompt 15 and actual
+`caba75b..c9b43d2` diff. Three fresh-context parallel reviewers inspected engine/
+time/evidence (gpt-6-astra/high), test coverage and mutation probes
+(gpt-6.1-sol/high), and requirements/TI/current peers/documentation/simplicity
+(gpt-6.1-sol/high). Prompt 16 was not executed.
+
+No production defect was found. Added a missing regression for a persistent
+control contradiction first observed in final09. It verifies immediate UNKNOWN
+configuration through fresh completion, cancellation, expiry and rejected backward
+time, while historical port evidence and acquisition provenance remain intact.
+An isolated mutant skipping final09 control observation passed all 494,257 old
+port checks; the added cases reject it with 63 failures. The real engine passes
+495,667 port checks. Lead inspected the mutation and reproduced both outcomes.
+
+Corrected stale documentation that deferred implemented port/owner support or
+claimed no read-only operation clears port invalidation. Clarified that current
+refresh publishes IRQ only in PortSnapshot; InterruptSnapshot ACK/service history
+belongs to prompt 16. Dated the inherited official-download claim explicitly.
+No new runtime API, refactor, dependency or silicon policy was needed.
+
+Reopened peer/TI sources confirm the existing BME280/LDC1614/INA228 revisions,
+clean states and selected conventions in [execution-15-peers](audit/execution-15-peers.md).
+PASS: fresh strict Debug/Release seven CTests each, affected/prior suites, separate
+1,326-check public probe, Doxygen visibility, links/provenance/version checks and
+extracted source-equal package consumption without maintainer tools. Exact commands
+and remaining hardware/tooling limits are in
+[validation](validation.md#prompt-15-independent-audit-2026-10-26).
+Lead commits and syncs this checked audit on the same branch and verifies upstream
+equality/clean state; final commit evidence is in the handoff.

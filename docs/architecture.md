@@ -126,7 +126,8 @@ the same F identity/control proof as initialization, qualifies retained effects
 and can restore initialized, KNOWN actual configuration without writes. A pending
 reset first receives its conservative 96-tick wait, then one F pass. A reset first
 discovered during that pass remains pending for a later explicit reconciliation.
-No read-only path replaces desired settings or clears port invalidation.
+These configuration-observation and proof paths never replace desired settings
+or clear port invalidation. Only a complete fresh port publication clears it.
 
 Apply requires current identity and KNOWN actual settings before admission. It
 validates the entire candidate and variant gates before retaining desired input

@@ -185,6 +185,8 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   contrary08/09 evidence downgrades configuration immediately without changing
   an older port image when a later read fails, is cancelled or expires; a complete
   observation retains configuration provenance from before its first read.
+  A contradiction first seen in final09 revokes trust before fresh publication,
+  cancellation or expiry; rejected backward-time polling preserves that evidence.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot

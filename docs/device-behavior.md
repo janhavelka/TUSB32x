@@ -23,8 +23,8 @@ TUSB320LAI/TUSB320HAI and **V** TUSB322I. No other variant is implied.
 | N: SLAAE24, May 2021 | Not a substitute for exact part framing | Startup §4.1 p5; IRQ clear §8 p9 | Application examples, not new family deadlines |
 
 Sources and original terms are retained in [provenance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/source/provenance.json).
-Current official B/L/A/V downloads still matched the archived bytes during this
-prompt. No applicable separate erratum was found in the inspected product lists
+Official B/L/A/V downloads matched the archived bytes during the prompt 4 source
+audit. No applicable separate erratum was found in the inspected product lists
 and targeted TI search; this is not proof that none exists. Unresolved claims
 below remain gated. TI facts, the selected library procedure and future hardware
 evidence are distinct. [Peer evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-4-peers.md) supplies
@@ -48,8 +48,9 @@ their safe control image; apply requires known actual controls at admission.
 ## Transport framing and callback contract
 
 Prompt 9 implements the [private terminal transport](transport.md) and its host
-protocol checks. The owner procedures below remain specified for later prompts;
-no facade, SDK adapter or physical framing/timing qualification exists yet.
+protocol checks. The facade and owner procedures through port refresh are
+implemented in prompts 11-15. IRQ operations and SDK adapters remain planned;
+physical framing/timing qualification is separate and has not been performed.
 
 Every logical read selects a one-byte pointer, including repeated reads of the
 same register. Select **STOP-separated pointer/write then read** for the standard

@@ -10,6 +10,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent prompt-15 audit and regression for configuration contradictions
+  first observed in the final port read, including cancellation, deadline and
+  backward-time rejection. Clarified implemented port support, configuration-only
+  proof limits and the planned IRQ acknowledgement/service evidence boundary.
+
 - Read-only `startRefreshPort` through the existing owner engine and cached
   `portSnapshot` publication. Fixed 09/08/09 reads preserve final raw status,
   variant-aware role/current/accessory applicability, per-field validity,

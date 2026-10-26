@@ -1816,3 +1816,61 @@ passing checks above. Final source review found no remaining behavior defect.
 Corrected a source citation's character encoding and qualified V charge-through
 debug exclusion to the documented DRP/UFP modes. No physical-support claim,
 automatic IRQ/reset behavior, future method stub or framework dependency was added.
+
+## Prompt 15 independent audit (2026-10-26)
+
+Fresh audit started at synchronized `c9b43d23f88af70139947d9399e92edcba283d51`
+on the same execution branch. Re-read full prompt 15, baseline port/time/lifetime
+contracts, actual implementation diff and source/tests rather than prior summaries.
+Three independent reviewers checked production semantics, requirements/TI/current
+peers and regression coverage. No production defect was confirmed. Test/docs
+corrections remain within the original port-observation scope.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh strict Debug/Release | PASS | Seven CTests each; active Release checks and standalone public-header/contract compilation |
+| Port regressions | PASS | 495,667 checks including final09-only persistent-control contradiction, immediate trust revocation, complete publication versus cancellation/expiry and rejected backward-time preservation |
+| Mutation evidence | PASS | Skipping final09 observeControl passes all 494,257 original port checks; corrected suite rejects the mutant with 63 failed assertions; unchanged real engine passes |
+| Extra independent probe | PASS | 1,326 checks across all seven variants for final09 contradiction, backward-time rejection and success/cancel/deadline outcomes |
+| Previous suites | PASS | 35,454 profile observation, 89,140 apply/verify, 88,779 reset/recovery, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; values/validators/version/launcher pass |
+| Source evidence | PASS | Archived B/L/A/V status/applicability pages reread, all eight TI hashes checked; peer main/clean states and revisions match execution-15 report; relevant instructions/source/tests/examples/runners/workflow definitions reopened |
+| Documentation/package | PASS | Strict Doxygen: 17 public structs and22 implemented owner methods, future methods absent; local links/anchors, UTF-8/LF/whitespace, version; source-equal36-file package and renamed tests-OFF consumer under unrelated Git without maintainer tools |
+| Separate evidence | NOT RUN | Hardware and framework firmware; installed MinGW sanitizer runtimes remain unavailable from same-day checks, MSVC/Clang absent. Native PlatformIO was not repeated for test/docs-only changes; extracted consumption was rechecked |
+
+Tool versions remain GCC15.1 MinGW-W64, CMake/CTest4.0.1, Ninja1.12.1,
+Python3.12.10 and Doxygen1.13.2. Lead commands:
+
+```powershell
+cmake -S . -B build/p15-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p15-independent-audit --config Debug
+ctest --test-dir build/p15-independent-audit -C Debug --output-on-failure
+cmake --build build/p15-independent-audit --config Release
+ctest --test-dir build/p15-independent-audit -C Release --output-on-failure
+& build/p15-independent-audit/test/Debug/tusb32x_port.exe
+& build/p15-independent-audit/test/Release/tusb32x_operations.exe
+& build/p15-independent-audit/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude -Isrc build/p15-audit-engine/probe.cpp build/p15-independent-audit/Debug/libTUSB32x.a -o build/p15-audit-engine/lead-probe.exe
+& build/p15-audit-engine/lead-probe.exe
+& build/p15-audit-tests/skip_final_control.exe
+& build/p15-audit-tests/skip_final_control_regressed.exe
+doxygen Doxyfile
+python build/p15-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p15.tar.gz
+python build/p15-package.py
+git diff --check
+```
+
+The mutant's new-suite run intentionally exits1 with63 assertions failing; its
+old-suite run exits0. The only engine mutation is `if (_phase != Phase::PORT_LAST09)`
+around `observeControl`. Source is retained under ignored
+`build/p15-audit-tests/operations_skip_final_control.cpp`; old/new test copies and
+executables are session evidence, never delivered code. The permanent regression
+uses the existing public fixture and registered port suite. The independent
+probe similarly uses public operations with no private state seeding.
+
+Documentation now separates read-only configuration proof from fresh port
+publication, states delivered owner/port support, and labels the InterruptSnapshot
+ACK/service table as planned prompt16. Source/API/silicon behavior is unchanged.
+No hardware qualification or remote CI evidence is inferred from these host checks.

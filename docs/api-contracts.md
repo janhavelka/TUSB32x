@@ -868,7 +868,12 @@ Consumers still check each field, coherence and age. Only a later complete
 publication can clear invalidated; unrelated successful I2C cannot. At sequence
 saturation the token, not sequence, correlates operation delivery.
 
-| IRQ step | InterruptSnapshot facts |
+The following `InterruptSnapshot` contract belongs to the planned ACK/service
+operations in prompt 16. The delivered refresh records sampled IRQ only in
+`PortSnapshot.interruptPending`; it leaves its `OperationResult.interrupt` empty
+and does not publish diagnostic IRQ history.
+
+| Planned ACK/service step | InterruptSnapshot facts |
 | --- | --- |
 | Fresh pre-ACK R09 or completed S, processed after the fresh-poll deadline check | observationValid=true and sampled pendingBefore; no implied acknowledgement |
 | About to invoke ACK write | acknowledgeAttempted=true before callback |
@@ -877,7 +882,7 @@ saturation the token, not sequence, correlates operation delivery.
 | Service recheck succeeds and next fresh poll passes deadline | pendingAfterValid=true with sampled pendingAfter; pending=true still allows successful bounded service |
 | Recheck failure or interruption | No pendingAfter validity from guessed data; preserve complete published port S and earlier ACK facts |
 
-Refresh produces only sampled IRQ evidence. ACK-only has no recheck. Service
+Refresh produces only the sampled port field described above. ACK-only has no recheck. Service
 publishes S before attempting ACK, then rechecks exactly once. Never restart S,
 automatically service reassertion or model this as a lossless event queue.
 OperationResult.interrupt starts empty for each operation; diagnostic IRQ history

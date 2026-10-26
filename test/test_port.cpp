@@ -616,13 +616,16 @@ void earlierOperationsAndWrites() {
 
 void negativeConfigurationEvidence() {
   for (const auto& part : PARTS) {
-    for (unsigned changedRead = 0; changedRead < 2; ++changedRead) {
-      for (unsigned termination = 0; termination < 4; ++termination) {
+    for (unsigned changedRead = 0; changedRead < 3; ++changedRead) {
+      // A contrary final09 has no subsequent read that could fail. It must
+      // revoke configuration trust before fresh publication, cancel or expiry.
+      for (unsigned termination = changedRead == 2 ? 1U : 0U; termination < 4; ++termination) {
         Fixture f(part);
         f.initialize();
         const auto historical = f.refresh();
         CHECK(historical.configurationState == t::ConfigurationState::KNOWN);
-        f.port(changedRead == 0 ? 0x96 : 0x94, changedRead == 1 ? 0x50 : 0x90, 0x94);
+        f.port(changedRead == 0 ? 0x96 : 0x94, changedRead == 1 ? 0x50 : 0x90,
+               changedRead == 2 ? 0x96 : 0x94);
         if (termination == 0) {
           f.fake.script[changedRead + 1].status =
               t::Status::Error(t::Err::I2C_TIMEOUT, "after contrary control", -4545);
@@ -632,7 +635,12 @@ void negativeConfigurationEvidence() {
         // Negative control evidence survives before completion-time publication.
         CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::UNKNOWN);
         CHECK(sameHistory(f.device.portSnapshot(), historical) && !f.device.portSnapshot().invalidated);
-        CHECK(f.poll(token, 200, 0).inProgress());
+        const auto beforeInvalid = f.device.progress();
+        const auto callsBeforeInvalid = f.fake.calls;
+        CHECK(f.device.poll(token, 199, 0).is(t::Err::INVALID_PARAM));
+        CHECK(f.fake.calls == callsBeforeInvalid &&
+              f.device.progress().lastPollTransfers == beforeInvalid.lastPollTransfers);
+        if (changedRead != 2) CHECK(f.poll(token, 200, 0).inProgress());
         CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::UNKNOWN);
         CHECK(sameHistory(f.device.portSnapshot(), historical) && !f.device.portSnapshot().invalidated);
         if (termination == 0) CHECK(f.finish(token, 200).is(t::Err::I2C_TIMEOUT));
