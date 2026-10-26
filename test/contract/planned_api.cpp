@@ -17,7 +17,10 @@ static_assert(std::is_same_v<decltype(&ImplementedDriver::startInitialize),
               TUSB32x::Status (ImplementedDriver::*)(const TUSB32x::OperationTiming&,
                                                    TUSB32x::OperationToken&)>);
 static_assert(std::is_same_v<decltype(&Driver::startReadProfile), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&Driver::startVerifyProfile), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startVerifyProfile), ImplementedStart>);
+static_assert(std::is_same_v<decltype(&ImplementedDriver::startApplyProfile),
+              TUSB32x::Status (ImplementedDriver::*)(const TUSB32x::DeviceProfile&,
+                  const TUSB32x::OperationTiming&, TUSB32x::OperationToken&)>);
 static_assert(std::is_same_v<decltype(&Driver::startReconcile), ImplementedStart>);
 static_assert(std::is_same_v<decltype(&Driver::startRefreshPort), Start>);
 static_assert(std::is_same_v<decltype(&Driver::startAcknowledgeInterrupt), Start>);

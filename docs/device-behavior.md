@@ -146,13 +146,14 @@ These are library-selected, acyclic plans. They intentionally use one common
 proof path, fixed storage and scalar controls instead of a generic register
 cache or retries until stable.
 
-Implemented through prompt 12: `startInitialize`, `startReadProfile` and
-`startReconcile`. Apply/verify, reset/recovery, port and IRQ plans below remain
-their later prompts' work. In `src/TUSB32xOperations.cpp`, `startObservation`
+Implemented through prompt 13: `startInitialize`, `startReadProfile`,
+`startApplyProfile`, `startVerifyProfile` and `startReconcile`. Reset/recovery,
+port and IRQ plans below remain their later prompts' work.
+In `src/TUSB32xOperations.cpp`, `startOperation`
 shares admission, `acceptRead` stages each byte and `publishConfiguration`
 commits the complete P. `observeControl` invalidates contradicted proof before
 the next owner turn; `compareObservedProfile` shares semantic actual/desired
-comparison for later verification. It uses the pure codec comparison, including
+comparison for apply, verification and reconciliation. It uses the pure codec comparison, including
 TUSB322I DRP00/DRP11 equivalence, rather than byte equality.
 
 | Plan | Ordered callbacks | Purpose |
@@ -177,7 +178,7 @@ unrelated read cannot supply missing effect proof.
 | P with a reserved applicable field | Publish complete raw bytes and only valid typed fields; CONFIGURATION_UNKNOWN, no new full trust. Independent termination controls may still be proved. |
 | Failed/partial P or F | Preserve the last complete profile/raw/time and verified generation. Complete adverse identity/control evidence still invalidates the affected current usability immediately. |
 | Matching I plus complete raw P | Establish initialized usability; reserved settings or unresolved effects may still keep configuration UNKNOWN. |
-| F with all applicable typed fields and settled effect evidence | Publish KNOWN actual verified profile and saturating verified generation. Retained desired, if any, stays unchanged; comparison mismatch returns CONFIGURATION_MISMATCH while actual remains KNOWN. Public desired input/tests arrive with apply in prompt 13. |
+| F with all applicable typed fields and settled effect evidence | Publish KNOWN actual verified profile and saturating verified generation. Retained desired, if any, stays unchanged; apply/verify/reconcile comparison mismatch returns CONFIGURATION_MISMATCH while actual remains KNOWN. |
 | All applicable disable controls observed and effects settled | Publish independent ENABLED or DISABLED termination, even without full configuration trust. A later contrary disable bit invalidates this proof immediately, including when a subsequent read fails or the operation is cancelled. |
 | Reset pending before reconciliation | First fresh poll anchors 96 ticks, then one F. Complete F with reset clear establishes reset COMPLETED; unrelated reserved profile fields can still prevent KNOWN. Newly asserted reset remains MAY_BE_PENDING. |
 | Interrupted base recovery | Neither clear45, elapsed time nor F can prove the missing historical sequence. Keep that obligation; only explicit recovery or local forgetting addresses it. |
@@ -230,6 +231,29 @@ Complete publication may clear invalidated but does not promise atomicity,
 attachment stability or fresh physical current detection.
 
 ## Apply: ordinary controls and role changes
+
+Implemented by `planProfile`, `beginApplyProof` and the existing `poll` path in
+`src/TUSB32xOperations.cpp`. A fixed six-entry private write plan is composed
+and validated before admission; it is not a queue of operations. `poll` executes
+each entry once, then uses the existing F publication/comparison helpers.
+The plan's composer flags describe preceding planned steps; runtime ordering,
+the base detached precheck and fresh completion time establish those facts
+before the dependent write. Every mode write, including the single base mode
+write, records unresolved mode proof until F completes. Base/322 reconciliation
+adds no mode wait; L/A reconciliation waits six ticks before F.
+
+Admission changes only desired input/generation and clears the old desired
+mismatch flag. Configuration becomes APPLYING immediately before the first
+possible write; cancellation before that point retains the old actual proof.
+Every failed write is INDETERMINATE even when the callback reports NACK or BUSY;
+the callback cannot prove the phase or absence of effect. Successful writes are
+PARTIAL until matching complete F makes the apply CONFIRMED. Complete mismatch
+publishes KNOWN actual controls but leaves the operation PARTIAL (NONE for a
+no-op) and desired unchanged. A later read-only operation has effect NONE; it
+cannot rewrite the consumed result or erase unresolved sequence history.
+`DriverDiagnostics.hardwareEffect` stays paired with the previous terminal
+kind/status during active work; `finish` publishes the new terminal effect.
+Live configuration/mode uncertainty is held in its separate flags.
 
 Admission validates the whole candidate, identity, known actual controls and
 resolved transition evidence before replacing desired. Reject a gated requested
@@ -411,6 +435,13 @@ three (or two if held disabled). V has one ordinary 0A write or three/two mode
 writes;08/09 changes stay gated and 45 is absent. Add F once, never per write.
 The same role waits apply before final F when a profile stays disabled.
 Only L/A receives the 6-tick mode wait; V gets no invented 5 ms requirement.
+The implemented apply/verify paths meet these ceilings. Each `poll` is a direct
+bounded pass: validate time, consume at most one pending completion, process
+at most one wait boundary, evaluate completion, select a callback and invoke
+it at most once. There is no transition-draining loop. Admission compares eight
+profile fields and composes at most six writes; F compares at most four scalar
+controls. Zero-budget polls can advance local proof/time state but never call
+transport. The default or larger budget still yields after one callback.
 Raw writes still reject every multi-step mode/reset/termination/recovery shortcut,
 missing safe actual image or variant gate before their one callback.
 

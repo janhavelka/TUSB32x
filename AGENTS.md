@@ -12,9 +12,9 @@ alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
 It also provides a non-copyable owner facade with bus-silent lifecycle,
 instance-local tokens, retained results, read-only initialization, profile
-observation and read-only reconciliation. Desired-profile apply/verification, other
-operation families and framework firmware remain planned. Do not describe planned
-interfaces, commands or builds as implemented or tested.
+observation, explicit desired-profile apply/verification and read-only
+reconciliation. Other operation families and framework firmware remain planned.
+Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
 edit guidance or review the audit does not itself start driver implementation.

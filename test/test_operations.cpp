@@ -14,6 +14,7 @@
 #include <type_traits>
 
 int runProfileObservationChecks();
+int runProfileApplicationChecks();
 
 namespace {
 
@@ -1047,6 +1048,7 @@ int main() {
   twoInstancesAndStatistics();
   tokenBoundaryArithmetic();
   failures += runProfileObservationChecks();
+  failures += runProfileApplicationChecks();
   if (failures != 0) {
     std::printf("FAIL %d of %zu owner checks\n", failures, checks);
     return 1;

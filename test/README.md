@@ -5,10 +5,12 @@ methods/owner examples, compile-time specification arithmetic and a library buil
 Prompt 9 adds private terminal transport and exact identity/revision checks.
 Prompt 10 adds public supplied-byte decoding, private encoding/comparison and
 safe composition tests. Prompt 11 adds the delivered owner facade and read-only
-initialization, lifecycle, result ownership and fresh-time behavior. Mutating
-operations, port acquisition and health projection remain planned. Prompt 12 adds
+initialization, lifecycle, result ownership and fresh-time behavior. Port
+acquisition, other mutating families and health projection remain planned. Prompt 12 adds
 read-only profile observation/reconciliation and its conservative reset-settling
-wait; software owner-time tests do not prove physical hardware timing.
+wait. Prompt 13 adds explicit profile application/verification, literal role
+sequences, ambiguous-write effects and independent sub-ms timing fixtures;
+software owner-time tests do not prove physical hardware timing.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -80,8 +82,37 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   reconciliation waits 96 ticks from its first fresh sample and performs one F.
   Wait rollover, cancellation/expiry and each incomplete post-wait F boundary
   cannot claim reset completion. Read-only results retain
-  HardwareEffect::NONE and port invalidation. Desired-mismatch recovery requires
-  prompt 13's explicit apply; no desired setter or private state seed is used.
+  HardwareEffect::NONE and port invalidation.
+  `test_profile_application.cpp` adds linked public apply/verify coverage for all
+  seven variants. Literal scripts check no-op F without writes, whole-candidate
+  rejection and desired-copy/generation preservation, nonzero actual fields,
+  base detached precheck before any write, attached current-only updates,
+  independent early/late 45 controls and separate disable/mode/enable writes.
+  Initial and requested-final disabled states are covered. TUSB322I changes to
+  advertisement/duty/accessory and direct return to DRP reject locally; DRP00
+  equivalence and independent raw fault evidence remain observable.
+  Six terminal backend errors are injected at every write and following F read
+  of a complete six-write plan, both before acceptance and after possible
+  acceptance. Every callback/final-time boundary exercises cancel, end, external
+  invalidation and expiry, retaining the first error/detail, desired input,
+  hardware effects, old complete observation and exact callback accounting.
+  Callback entry checks configuration/port invalidation before mutation.
+  An independent microsecond clock floors owner samples: mode completion at
+  108.1/108.9 cannot enable at 113, a fresh108 sample permits114, and a fresh110
+  sample permits116. Requested-disabled L/A also waits before F; TUSB322I adds
+  no 5ms wait. Exact deadline equality prevents enable, and a late final read
+  cannot publish success. Budgets0/1/larger retain the one-callback ceiling.
+  Complete mismatching F publishes KNOWN actual settings independently of desired
+  and returns CONFIGURATION_MISMATCH. Read-only verify/reconcile never write;
+  reconciliation after an ambiguous mode write can establish different actual
+  controls and a later explicit apply makes progress. No desired setter, private
+  state seed, automatic rollback, cleanup or replay is used.
+  Interrupted original-part mode writes retain transition uncertainty after both
+  successful and failed callbacks. Complete read-only F clears it, with no added
+  mode wait; differing actual controls can still be KNOWN with mismatch.
+  Active apply retains the previous terminal diagnostic effect/kind/status while
+  separate flags expose live configuration uncertainty; termination updates the
+  diagnostic history with the new result.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -162,6 +193,6 @@ structs; no warning alone would not prove their visibility. The retained evidenc
 and exact command are in [validation](../docs/validation.md).
 
 These checks prove current portable values, pure validators, private register
-transport/identity/codecs, read-only owner behavior, linkage and planned signature
-syntax. Later operation families, health projection, framework builds, complete
+transport/identity/codecs, owner lifecycle/profile behavior, linkage and planned
+signature syntax. Later operation families, health projection, framework builds, complete
 package qualification and physical hardware tests remain separate work.

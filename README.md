@@ -7,8 +7,8 @@ and stable package version constants.
 The library also contains [private transport/identity helpers](docs/transport.md)
 and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
 binding/lifecycle, token-checked polling/cancellation/result delivery, cached
-evidence, read-only initialization, profile observation and read-only
-reconciliation. Profile changes, desired-profile verification, port refresh, reset,
+evidence, read-only initialization, profile observation, explicit profile apply,
+desired-profile verification and read-only reconciliation. Port refresh, reset,
 IRQ operations, public raw diagnostics and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
@@ -25,7 +25,8 @@ variant-specific field validity without a binding or device access. Reserved
 codes remain raw evidence. Single-byte direction/current codes need complete
 port context before use; CC indications are not measured current or permission
 to draw power. The private codecs also compare settings and compose qualified
-write bytes. They do not execute mode, reset, recovery or IRQ operations.
+write bytes. The owner engine executes supported profile changes; reset,
+recovery and IRQ operations remain planned.
 
 ## Consume the library
 
@@ -76,6 +77,23 @@ applicable controls once and can establish initialized, KNOWN actual settings
 after external invalidation. It performs no repair or replay writes; unresolved
 reset or sequence evidence keeps trust UNKNOWN. Readable TUSB322I controls do
 not grant permission to write gated fields.
+
+`startApplyProfile` validates a complete candidate against proved actual controls,
+retains desired input at admission and writes only changed fields. A no-op still
+runs complete identity/control verification and has no write effect. Base mode
+changes require an unattached precheck; current-only changes do not inherit that
+restriction. Extended 320 mode changes use separate disable/mode/enable writes
+and the TI 5 ms wait plus a separate one-tick owner-clock margin. TUSB322I uses
+its own DFP/UFP sequence; advertisement, all 09 writes and direct return to DRP
+remain gated.
+
+`startVerifyProfile` reads the full proof and compares retained desired settings.
+A complete differing actual image can be KNOWN while the result reports
+CONFIGURATION_MISMATCH. Cancellation or failure never rolls back hardware:
+desired input, historical values and unresolved effects survive. Reconcile can
+observe an interrupted apply, after its required wait, so a later explicit apply
+can proceed from proved actual settings. It never replays the old request.
+
 One terminal result blocks replacement until `takeResult` delivers it. Result
 delivery returns OK even when the copied operation failed. See the
 [implemented owner API](docs/api-contracts.md#implemented-owner-api) for timing,

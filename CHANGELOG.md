@@ -1,13 +1,24 @@
 # Changelog
 
 This checkout contains audited implementation contracts, portable C++17 values
-and a cooperative owner engine with read-only initialization, profile observation
-and reconciliation.
+and a cooperative owner engine with read-only initialization, profile observation,
+explicit profile application, desired verification and read-only reconciliation.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
+
+- Linked `startApplyProfile` and read-only `startVerifyProfile` through the
+  existing owner engine and complete identity/control proof. Apply retains a
+  validated desired candidate at admission, changes only differing fields and
+  verifies no-op requests without writes. Per-variant role sequences preserve
+  actual controls, independent termination settings and fresh-time wait anchors.
+  Failed/cancelled operations retain effects and backend detail without cleanup,
+  rollback or replay. Complete mismatching verification can establish KNOWN
+  actual settings while desired stays unchanged. TUSB322I advertisement/09 writes
+  and direct return to DRP remain gated. Added exact-byte and write-boundary
+  operation regressions; hardware qualification remains separate.
 
 - Independent prompt-12 audit and public-operation regression vectors covering
   every valid profile setting after complete observation/reconciliation. The
@@ -19,7 +30,7 @@ Entries below distinguish those artifacts from planned device-driver functionali
   proves actual identity/configuration and termination/reset evidence, including
   a bounded wait for retained reset uncertainty; it never replays writes or adopts
   desired settings. TUSB322I readable controls remain independent of write gates.
-  Apply and desired-profile verification remain prompt 13 work.
+  Apply and desired-profile verification were added separately in prompt 13.
 
 - Non-copyable owner facade with atomic bus-silent binding/lifecycle,
   nonreused uint64 operation tokens, one retained terminal result and exact

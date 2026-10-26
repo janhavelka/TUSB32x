@@ -1,18 +1,20 @@
 # Variant capabilities and board prerequisites
 
 Prompt 2 evidence review: 2026-10-23. TUSB320LAI is the primary acceptance target.
-This is a source-backed specification, not implemented or physically qualified
-support. Register encodings are now specified in the
+This source-backed capability specification distinguishes implemented software
+from physical qualification. Register encodings are specified in the
 [register guide](register-map.md); prompt 4 completed the
 [device procedures](device-behavior.md).
 Public values, validators and supplied-byte `decodeRegister` now exist, with
 private transport/identity and pure codec/composition checks through prompt 10.
 The owner now implements initialization, profile observation and read-only
-reconciliation for all seven I2C variants, including documented readable TUSB322I
-controls. Full identity/control/effect proof can establish KNOWN actual settings;
+reconciliation, explicit apply and desired verification for all seven I2C
+variants, subject to the gates below. Full identity/control/effect proof can
+establish KNOWN actual settings;
 this does not grant write permission or exact-part identification from a shared
-signature. Apply/desired verification, other device operations and CLI names
-below remain planned contracts. Pure decoding
+signature. Other device operations and CLI names below remain planned contracts.
+Apply changes only differing fields, verifies the complete final image and
+retains independent termination/effect evidence after interruption. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding
 or comparison. Existing equivalent DRP00/11 is preserved during unrelated
 changes; a real non-reset return to DRP remains unavailable.

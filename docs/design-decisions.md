@@ -371,3 +371,34 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   desired-dependent admission/publication; reject INA3221's profile-replaying
   reconciliation. Exact revisions, source/test symbols and other differences
   are in [execution-12-peers](audit/execution-12-peers.md).
+
+## Prompt 13: explicit profile application and verification (2026-10-26)
+
+- Extend the same engine with a fixed plan of at most six composed writes and
+  shared F proof. Validate the whole candidate and every changed-field gate
+  before adopting desired or consuming a token. Preserve old actual proof on
+  admission/pre-write cancellation; clear the previous desired-mismatch flag
+  when accepting new desired input. No public desired setter or second engine.
+- Actual controls determine preserved bits. Base mode change runs one detached
+  precheck before any write; current-only changes remain allowed attached.
+  L/A uses distinct disable/mode/enable writes and six elapsed ticks from the
+  fresh post-mode callback sample. Holding final termination disabled still
+  waits before F. TUSB322I uses its own sequence without that added wait;
+  advertisement/09/direct-DRP changes remain gated, unchanged values do not.
+- Record possible effect before each write and keep the first backend error.
+  Successful callbacks mean PARTIAL, matching complete F means CONFIRMED, and
+  no-op F remains NONE. Failed callbacks are INDETERMINATE regardless of error
+  name. All mode writes retain mode-proof uncertainty, including base's single
+  write. Reconcile/verify require full F before clearing it; base/322 add no
+  mode wait. Diagnostic effect/kind/status remain terminal history while live
+  configuration/mode flags expose active uncertainty.
+- Verify shares reconciliation's prior-effect wait and full identity/control
+  proof. Complete actual mismatch is KNOWN actual with CONFIGURATION_MISMATCH;
+  desired stays unchanged and the old job is never recertified. A new explicit
+  apply can progress from that actual image. Historical reset acceptance alone
+  does not forbid apply after current reset settling and configuration are proved.
+- Exact TI references and current peer revisions/accepted/rejected rules are in
+  [execution-13-peers](audit/execution-13-peers.md). Public failure/cancellation,
+  independent fractional-clock and literal-vector tests cover these decisions.
+  No retry, cleanup, framework dependency, new package source or hardware
+  qualification is introduced.

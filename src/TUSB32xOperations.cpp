@@ -1,5 +1,5 @@
 /// @file TUSB32xOperations.cpp
-/// @brief Bus-silent lifecycle and bounded identity/profile observation engine.
+/// @brief Bus-silent lifecycle, explicit profile writes and bounded shared observation proof.
 #include "TUSB32x/TUSB32x.h"
 
 #include "TUSB32x/CommandTable.h"
@@ -99,6 +99,10 @@ Status TUSB32x::checkToken(OperationToken token) const {
 }
 
 Status TUSB32x::finish(Status status, bool timeValid, uint64_t nowMs) {
+  if (_configuration.state == ConfigurationState::APPLYING) invalidateConfiguration();
+  if (status.ok() && _progress.kind == OperationKind::APPLY_PROFILE &&
+      _result.hardwareEffect == HardwareEffect::PARTIAL)
+    _result.hardwareEffect = HardwareEffect::CONFIRMED;
   _progress.state = status.ok() ? OperationState::SUCCEEDED :
       status.is(Err::CANCELLED) ? OperationState::CANCELLED :
       status.is(Err::TIMEOUT) ? OperationState::TIMED_OUT : OperationState::FAILED;
@@ -173,24 +177,60 @@ Status TUSB32x::takeResult(OperationToken token, OperationResult& out) {
 }
 
 Status TUSB32x::startInitialize(const OperationTiming& timing, OperationToken& token) {
-  return startObservation(OperationKind::INITIALIZE, timing, token);
+  return startOperation(OperationKind::INITIALIZE, timing, token);
 }
 
 Status TUSB32x::startReadProfile(const OperationTiming& timing, OperationToken& token) {
-  return startObservation(OperationKind::READ_PROFILE, timing, token);
+  return startOperation(OperationKind::READ_PROFILE, timing, token);
 }
 
 Status TUSB32x::startReconcile(const OperationTiming& timing, OperationToken& token) {
-  return startObservation(OperationKind::RECONCILE, timing, token);
+  return startOperation(OperationKind::RECONCILE, timing, token);
 }
 
-Status TUSB32x::startObservation(OperationKind kind, const OperationTiming& timing,
-                               OperationToken& token) {
+Status TUSB32x::startApplyProfile(const DeviceProfile& profile, const OperationTiming& timing,
+                                OperationToken& token) {
+  return startOperation(OperationKind::APPLY_PROFILE, timing, token, &profile);
+}
+
+Status TUSB32x::startVerifyProfile(const OperationTiming& timing, OperationToken& token) {
+  return startOperation(OperationKind::VERIFY_PROFILE, timing, token);
+}
+
+Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing,
+                               OperationToken& token, const DeviceProfile* candidate) {
   const uint64_t interval = timing.deadlineMs - timing.nowMs;
   if (interval == 0 || interval >= detail::HALF_RANGE) return error(Err::INVALID_PARAM);
+  if (candidate != nullptr) {
+    // Before binding only enum shape is meaningful; no variant may be guessed.
+    // The complete public validator then checks the bound variant's capabilities.
+    if (candidate->portMode > PortMode::DRP || candidate->sourceCurrent > SourceCurrent::MA_3000 ||
+        candidate->sourcePreference > SourcePreference::TRY_SRC ||
+        candidate->drpDutyCycle > DrpDutyCycle::PERCENT_60 || candidate->ccDebounce > CcDebounce::MS_168)
+      return error(Err::INVALID_CONFIG);
+    if (_diagnostics.bound) {
+      const Status valid = validateProfile(_config.variant, *candidate);
+      if (!valid.ok()) return valid;
+    }
+  }
   if (!_diagnostics.bound) return error(Err::NOT_BOUND);
   if (_progress.state == OperationState::ACTIVE) return error(Err::BUSY);
   if (_progress.resultPending) return error(Err::RESULT_PENDING);
+  ProfileWrite writes[6]{};
+  uint8_t count = 0;
+  bool baseMode = false;
+  if (kind == OperationKind::VERIFY_PROFILE && !_configuration.hasDesiredProfile)
+    return error(Err::CONFIGURATION_UNKNOWN);
+  if (candidate != nullptr) {
+    if (!_diagnostics.initialized) return error(Err::NOT_INITIALIZED);
+    if (_configuration.state != ConfigurationState::KNOWN || !_configuration.hasVerifiedProfile ||
+        _diagnostics.configurationWriteUnresolved || _diagnostics.modeTransitionUnresolved ||
+        _diagnostics.recoverySequenceUnresolved ||
+        _configuration.resetState == ResetState::MAY_BE_PENDING)
+      return error(Err::CONFIGURATION_UNKNOWN);
+    const Status planned = planProfile(*candidate, writes, count, baseMode);
+    if (!planned.ok()) return planned;
+  }
   uint64_t next = 0;
   if (!detail::nextToken(_lastToken, next)) return error(Err::TOKEN_EXHAUSTED);
   _lastToken = next;
@@ -206,29 +246,150 @@ Status TUSB32x::startObservation(OperationKind kind, const OperationTiming& timi
   _result.kind = _progress.kind;
   _result.startedUptimeMs = timing.nowMs;
   _lastTime = timing.nowMs;
-  _waitReset = kind == OperationKind::RECONCILE &&
+  const bool proof = kind == OperationKind::RECONCILE || kind == OperationKind::VERIFY_PROFILE;
+  _waitReset = proof &&
       _configuration.resetState == ResetState::MAY_BE_PENDING;
-  _waitMode = kind == OperationKind::RECONCILE && _diagnostics.modeTransitionUnresolved;
-  _phase = kind == OperationKind::READ_PROFILE ? ReadPhase::CONFIG08 : ReadPhase::IDENTITY;
+  _waitMode = proof && _diagnostics.modeTransitionUnresolved;
+  _phase = kind == OperationKind::READ_PROFILE ? Phase::CONFIG08 : Phase::IDENTITY;
   if (_waitReset || _waitMode) {
-    _phase = ReadPhase::WAIT;
+    _phase = Phase::WAIT;
     _progress.phase = OperationPhase::WAITING;
     _progress.waiting = true;
   }
   _observing = {};
   _pending = false;
   _pendingStatus = Status::Ok();
+  _writeCount = count;
+  _writeIndex = 0;
+  if (candidate != nullptr) {
+    for (uint8_t i = 0; i < count; ++i) _writes[i] = writes[i];
+    _configuration.desiredProfile = *candidate;
+    _configuration.hasDesiredProfile = true;
+    increment(_configuration.desiredGeneration);
+    _configuration.mismatchValid = false;
+    _phase = baseMode ? Phase::BASE_PRECHECK :
+        count != 0 ? Phase::APPLY_WRITE : Phase::IDENTITY;
+    _progress.phase = baseMode || count == 0 ? OperationPhase::READING : OperationPhase::WRITING;
+  }
   token = _progress.token;
   return error(Err::IN_PROGRESS);
 }
 
+Status TUSB32x::planProfile(const DeviceProfile& candidate, ProfileWrite (&writes)[6],
+                          uint8_t& count, bool& baseMode) const {
+  const auto& info = *detail::findVariant(_config.variant);
+  const uint8_t required = info.hasRdRp ? 0x0F : 0x07;
+  if ((_configuration.rawConfigValidMask & required) != required)
+    return error(Err::CONFIGURATION_UNKNOWN);
+  const auto& actual = _configuration.verifiedProfile;
+  const auto field = [](ProfileField value) { return static_cast<uint16_t>(value); };
+  const uint16_t fields08 = candidate.sourceCurrent != actual.sourceCurrent ?
+      field(ProfileField::SOURCE_CURRENT) : 0;
+  const uint16_t fields09 = static_cast<uint16_t>(
+      (candidate.drpDutyCycle != actual.drpDutyCycle ? field(ProfileField::DRP_DUTY_CYCLE) : 0U) |
+      (candidate.disableUfpAccessory != actual.disableUfpAccessory ?
+          field(ProfileField::DISABLE_UFP_ACCESSORY) : 0U));
+  const uint16_t fields0A = static_cast<uint16_t>(
+      (candidate.portMode != actual.portMode ? field(ProfileField::PORT_MODE) : 0U) |
+      (candidate.sourcePreference != actual.sourcePreference ? field(ProfileField::SOURCE_PREFERENCE) : 0U) |
+      (candidate.ccDebounce != actual.ccDebounce ? field(ProfileField::CC_DEBOUNCE) : 0U) |
+      (candidate.disableTerm != actual.disableTerm ? field(ProfileField::DISABLE_TERM) : 0U));
+  const bool modeChanges = candidate.portMode != actual.portMode;
+  const bool rdRpChanges = candidate.disableRdRp != actual.disableRdRp;
+  if (_config.variant == Variant::TUSB322I &&
+      (fields08 != 0 || fields09 != 0 || (modeChanges && candidate.portMode == PortMode::DRP)))
+    return error(Err::UNSUPPORTED_FEATURE);
+  if (rdRpChanges && (_configuration.rawConfig45 & 0x03U) != 0)
+    return error(Err::CONFIGURATION_UNKNOWN);
+
+  uint8_t image08 = _configuration.rawConfig08;
+  uint8_t image09 = _configuration.rawConfig09;
+  uint8_t image0A = _configuration.rawConfig0A;
+  uint8_t image45 = _configuration.rawConfig45;
+  // Validate the entire finite plan before admission. Stage flags here describe
+  // preceding planned steps, not observed completion. poll must execute them in
+  // order, with fresh time and the base detached precheck before any write.
+  const auto append = [&](uint8_t reg, detail::WriteIntent intent, uint16_t fields,
+                          uint8_t& image, bool modeStep = false, bool waitAfter = false) {
+    detail::WriteRequest request{};
+    request.variant = _config.variant;
+    request.reg = reg;
+    request.intent = intent;
+    request.desired = candidate;
+    request.fields = fields;
+    detail::WriteEvidence evidence{};
+    evidence.actual = image;
+    evidence.actualValid = true;
+    evidence.effectsResolved = true;
+    evidence.detached = true;
+    evidence.disableWritten = intent == detail::WriteIntent::MODE_CHANGE ||
+        intent == detail::WriteIntent::MODE_ENABLE;
+    evidence.modeWritten = intent == detail::WriteIntent::MODE_ENABLE;
+    evidence.minimumWaitElapsed = intent == detail::WriteIntent::MODE_ENABLE;
+    uint8_t value = 0;
+    const Status status = detail::composeWrite(request, evidence, value);
+    if (!status.ok()) return status;
+    if (count >= 6) return error(Err::INVALID_CONFIG);
+    writes[count++] = {reg, value, modeStep, waitAfter};
+    image = value;
+    return Status::Ok();
+  };
+  baseMode = modeChanges && !info.hasExtendedControls;
+  Status status{};
+  if (baseMode) {
+    status = append(0x0A, detail::WriteIntent::BASE_MODE_CHANGE, fields0A, image0A, true);
+    if (!status.ok()) return status;
+  }
+  if (rdRpChanges && candidate.disableRdRp) {
+    status = append(0x45, detail::WriteIntent::SETTINGS, field(ProfileField::DISABLE_RD_RP), image45);
+    if (!status.ok()) return status;
+  }
+  if (fields08 != 0) {
+    status = append(0x08, detail::WriteIntent::SETTINGS, fields08, image08);
+    if (!status.ok()) return status;
+  }
+  if (fields09 != 0) {
+    status = append(0x09, detail::WriteIntent::SETTINGS, fields09, image09);
+    if (!status.ok()) return status;
+  }
+  if (modeChanges && info.hasExtendedControls) {
+    // TI SLLSEP2D/SLLSEQ8D 7.3.2 p14; SLLSEO5D 6.3.2.1-2 pp10-11.
+    // Even initially disabled/unattached parts require the separate stage writes.
+    status = append(0x0A, detail::WriteIntent::MODE_DISABLE, 0, image0A, true);
+    if (!status.ok()) return status;
+    status = append(0x0A, detail::WriteIntent::MODE_CHANGE, fields0A, image0A,
+                    true, info.hasRdRp);
+    if (!status.ok()) return status;
+    if (!candidate.disableTerm) {
+      status = append(0x0A, detail::WriteIntent::MODE_ENABLE, 0, image0A, true);
+      if (!status.ok()) return status;
+    }
+  } else if (!baseMode && fields0A != 0) {
+    status = append(0x0A, detail::WriteIntent::SETTINGS, fields0A, image0A);
+    if (!status.ok()) return status;
+  }
+  if (rdRpChanges && !candidate.disableRdRp) {
+    status = append(0x45, detail::WriteIntent::SETTINGS, field(ProfileField::DISABLE_RD_RP), image45);
+    if (!status.ok()) return status;
+  }
+  return Status::Ok();
+}
+
+void TUSB32x::beginApplyProof() {
+  _phase = Phase::IDENTITY;
+  _progress.phase = OperationPhase::READING;
+  // All separate mode steps and any required wait have completed. The following
+  // F still must prove current controls before this obligation can be discharged.
+  _waitMode = _diagnostics.modeTransitionUnresolved;
+}
+
 void TUSB32x::publishIdentityRead() {
   auto& identity = _diagnostics.identity;
-  if (_phase == ReadPhase::IDENTITY) {
+  if (_phase == Phase::IDENTITY) {
     std::memcpy(identity.rawIdentity, _received, sizeof(identity.rawIdentity));
-    // A matching signature during reconciliation does not erase an older complete
+    // A matching signature during non-initializing proof does not erase an older complete
     // revision if the following read fails. Contradiction still invalidates it now.
-    if (_progress.kind != OperationKind::RECONCILE || !identity.identityMatches ||
+    if (_progress.kind == OperationKind::INITIALIZE || !identity.identityMatches ||
         !_pendingStatus.ok()) {
       identity.revisionValid = false;
       identity.revisionMatches = false;
@@ -248,18 +409,18 @@ void TUSB32x::acceptRead() {
   // Read identity then each applicable persistent-control byte once; no writes,
   // reset-bit completion assumption, IRQ consumption or dead-battery recovery.
   const auto& info = *detail::findVariant(_config.variant);
-  if (_phase == ReadPhase::IDENTITY) {
+  if (_phase == Phase::IDENTITY) {
     publishIdentityRead();
-    _phase = info.hasRevision ? ReadPhase::REVISION : ReadPhase::CONFIG08;
+    _phase = info.hasRevision ? Phase::REVISION : Phase::CONFIG08;
     return;
   }
-  if (_phase == ReadPhase::REVISION) {
+  if (_phase == Phase::REVISION) {
     publishIdentityRead();
-    _phase = ReadPhase::CONFIG08;
+    _phase = Phase::CONFIG08;
     return;
   }
-  const uint8_t reg = _phase == ReadPhase::CONFIG08 ? 8 : _phase == ReadPhase::CONFIG09 ? 9 :
-      _phase == ReadPhase::CONFIG0A ? 10 : 0x45;
+  const uint8_t reg = _phase == Phase::CONFIG08 ? 8 : _phase == Phase::CONFIG09 ? 9 :
+      _phase == Phase::CONFIG0A ? 10 : 0x45;
   RegisterDecode decoded{};
   // Exact variant/map already validated; decoding retains reserved raw evidence.
   const Status status = decodeRegister(_config.variant, reg, _received[0], decoded);
@@ -270,13 +431,13 @@ void TUSB32x::acceptRead() {
     _observing.rawConfig08 = _received[0];
     _observing.rawConfigValidMask |= CONFIG_08_VALID;
     profile.sourceCurrent = decoded.profileCodes.sourceCurrent;
-    _phase = ReadPhase::CONFIG09;
+    _phase = Phase::CONFIG09;
   } else if (reg == 9) {
     _observing.rawConfig09 = _received[0];
     _observing.rawConfigValidMask |= CONFIG_09_VALID;
     profile.drpDutyCycle = decoded.profileCodes.drpDutyCycle;
     profile.disableUfpAccessory = decoded.profileCodes.disableUfpAccessory;
-    _phase = ReadPhase::CONFIG0A;
+    _phase = Phase::CONFIG0A;
   } else if (reg == 10) {
     _observing.rawConfig0A = _received[0];
     _observing.rawConfigValidMask |= CONFIG_0A_VALID;
@@ -284,12 +445,12 @@ void TUSB32x::acceptRead() {
     profile.sourcePreference = decoded.profileCodes.sourcePreference;
     profile.ccDebounce = decoded.profileCodes.ccDebounce;
     profile.disableTerm = decoded.profileCodes.disableTerm;
-    _phase = info.hasRdRp ? ReadPhase::CONFIG45 : ReadPhase::DONE;
+    _phase = info.hasRdRp ? Phase::CONFIG45 : Phase::DONE;
   } else {
     _observing.rawConfig45 = _received[0];
     _observing.rawConfigValidMask |= CONFIG_45_VALID;
     profile.disableRdRp = decoded.profileCodes.disableRdRp;
-    _phase = ReadPhase::DONE;
+    _phase = Phase::DONE;
   }
 }
 
@@ -423,7 +584,9 @@ Status TUSB32x::publishConfiguration() {
   _diagnostics.configurationState = _configuration.state;
   _diagnostics.terminationState = _configuration.terminationState;
   if (_configuration.state != ConfigurationState::KNOWN) return error(Err::CONFIGURATION_UNKNOWN);
-  if (_progress.kind == OperationKind::RECONCILE && _configuration.hasDesiredProfile)
+  if ((_progress.kind == OperationKind::RECONCILE ||
+       _progress.kind == OperationKind::VERIFY_PROFILE ||
+       _progress.kind == OperationKind::APPLY_PROFILE) && _configuration.hasDesiredProfile)
     return compareObservedProfile(_configuration.desiredProfile);
   return Status::Ok();
 }
@@ -441,7 +604,7 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
   // pre-callback timestamp. TI reset max95 ms / extended mode min5 ms, plus
   // OWNER_CLOCK_MARGIN_MS: SLLSEN9F 6.7; SLLSEP2D/SLLSEQ8D 6.7,7.3.2;
   // SLLSEO5D 5.7. No extra 5 ms wait is specified for 322I mode changes.
-  if (_phase == ReadPhase::WAIT) {
+  if (_phase == Phase::WAIT) {
     if (!_progress.readyAtValid) {
       const auto& info = *detail::findVariant(_config.variant);
       const uint64_t ticks = _waitReset ? 95 + OWNER_CLOCK_MARGIN_MS :
@@ -453,33 +616,86 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
     _progress.waiting = false;
     _progress.readyAtValid = false;
     _progress.phase = OperationPhase::READING;
-    _phase = ReadPhase::IDENTITY;
+    _phase = Phase::IDENTITY;
   }
   // Direct acyclic pass: validate, wait, consume pending bytes, finish or invoke one callback.
   if (_pending) {
     _pending = false;
     if (!_pendingStatus.ok()) return finish(_pendingStatus, true, nowMs);
-    acceptRead();
-    if (!_pendingStatus.ok()) return finish(_pendingStatus, true, nowMs);
-    if (_phase == ReadPhase::DONE) return finish(publishConfiguration(), true, nowMs);
+    if (_phase == Phase::BASE_PRECHECK) {
+      // TI SLLSEN9F 7.4.1-2 p14: detached before any base mode write.
+      // The owner/fixture must prevent attachment racing this advisory sample.
+      if ((_received[0] & 0xC0U) != 0 || _configuration.state != ConfigurationState::KNOWN)
+        return finish(error(Err::CONFIGURATION_UNKNOWN), true, nowMs);
+      _phase = Phase::APPLY_WRITE;
+      _progress.phase = OperationPhase::WRITING;
+    } else if (_phase == Phase::APPLY_WRITE) {
+      const bool wait = _writes[_writeIndex++].waitAfter;
+      if (wait) {
+        _phase = Phase::APPLY_WAIT;
+        _progress.phase = OperationPhase::WAITING;
+        _progress.waiting = true;
+        _progress.readyAtValid = true;
+        _progress.readyAtMs = nowMs + 5 + OWNER_CLOCK_MARGIN_MS;
+      } else if (_writeIndex == _writeCount) {
+        beginApplyProof();
+      }
+    } else {
+      acceptRead();
+      if (!_pendingStatus.ok()) return finish(_pendingStatus, true, nowMs);
+      if (_phase == Phase::DONE) return finish(publishConfiguration(), true, nowMs);
+    }
+  }
+  if (_phase == Phase::APPLY_WAIT) {
+    if (nowMs - _progress.readyAtMs >= detail::HALF_RANGE) return error(Err::IN_PROGRESS);
+    _progress.waiting = false;
+    _progress.readyAtValid = false;
+    if (_writeIndex == _writeCount) beginApplyProof();
+    else {
+      _phase = Phase::APPLY_WRITE;
+      _progress.phase = OperationPhase::WRITING;
+    }
   }
   if (maxTransfers == 0) return error(Err::IN_PROGRESS);
-  const uint8_t reg = _phase == ReadPhase::IDENTITY ? 0 : _phase == ReadPhase::REVISION ? 0xA0 :
-      _phase == ReadPhase::CONFIG08 ? 8 : _phase == ReadPhase::CONFIG09 ? 9 :
-      _phase == ReadPhase::CONFIG0A ? 10 : 0x45;
-  if (_phase == ReadPhase::CONFIG08) _observing.observedUptimeMs = nowMs;
+  if (_phase == Phase::APPLY_WRITE) {
+    const auto& write = _writes[_writeIndex];
+    // A terminal callback may apply data before returning an error. Publish the
+    // possibility before invoking it; callback success alone is not final proof.
+    invalidateConfiguration();
+    _configuration.state = ConfigurationState::APPLYING;
+    _diagnostics.configurationState = ConfigurationState::APPLYING;
+    _diagnostics.configurationWriteUnresolved = true;
+    if (write.modeStep) _diagnostics.modeTransitionUnresolved = true;
+    _result.hardwareEffect = HardwareEffect::INDETERMINATE;
+    const detail::ProtocolContext context{_config, _stats, _diagnostics};
+    const auto transfer = detail::writeRegister(context, detail::TrafficSource::MANAGED,
+        write.reg, write.value, _progress.deadlineMs - nowMs);
+    if (transfer.callbackInvoked) {
+      ++_progress.transfers;
+      _progress.lastPollTransfers = 1;
+    }
+    if (!transfer.status.ok()) return finish(transfer.status);
+    _result.hardwareEffect = HardwareEffect::PARTIAL;
+    _pending = true;
+    return error(Err::IN_PROGRESS);
+  }
+  const uint8_t reg = _phase == Phase::IDENTITY ? 0 : _phase == Phase::REVISION ? 0xA0 :
+      _phase == Phase::CONFIG08 ? 8 :
+      (_phase == Phase::CONFIG09 || _phase == Phase::BASE_PRECHECK) ? 9 :
+      _phase == Phase::CONFIG0A ? 10 : 0x45;
+  if (_phase == Phase::CONFIG08) _observing.observedUptimeMs = nowMs;
   const detail::ProtocolContext context{_config, _stats, _diagnostics};
   const auto transfer = detail::readRegisters(context, detail::TrafficSource::MANAGED, reg,
-      _received, _phase == ReadPhase::IDENTITY ? 8U : 1U, _progress.deadlineMs - nowMs);
+      _received, _phase == Phase::IDENTITY ? 8U : 1U, _progress.deadlineMs - nowMs);
   if (transfer.callbackInvoked) {
     ++_progress.transfers;
     _progress.lastPollTransfers = 1;
   }
   if (!transfer.status.ok()) return finish(transfer.status);
   _pending = true;
-  if (_phase == ReadPhase::IDENTITY) {
+  if (_phase == Phase::IDENTITY) {
     _pendingStatus = detail::checkIdentity(_config.variant, _received, 8);
-  } else if (_phase == ReadPhase::REVISION) {
+  } else if (_phase == Phase::REVISION) {
     _pendingStatus = detail::checkRevision(_config.variant, _received[0]);
   } else {
     observeControl(reg, _received[0]);

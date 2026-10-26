@@ -1,7 +1,8 @@
 # Documentation
 
 - [API contracts](api-contracts.md): implemented values, validators, decoder and
-  read-only initialization, profile observation and reconciliation, with future
+  read-only initialization, profile observation, explicit apply, desired
+  verification and read-only reconciliation, with future
   device methods explicitly labeled.
 - [Architecture](architecture.md): public/core/example responsibilities and the
   application-owned transport boundary.
@@ -12,7 +13,8 @@
 - [Variants](variant-matrix.md), [register map](register-map.md) and
   [register vectors](register-vectors.md): source-backed capability and encoding
   specifications; they do not claim driver or hardware qualification.
-- [Device behavior](device-behavior.md): specified later procedures and evidence.
+- [Device behavior](device-behavior.md): implemented profile procedures, specified
+  later operations, work bounds and silicon evidence.
 - [Feature coverage](feature-coverage.md): implemented, planned and gated work.
 - [Examples](../examples/README.md): the current portable consumer.
 

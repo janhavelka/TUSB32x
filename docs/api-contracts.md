@@ -1,6 +1,6 @@
 # Portable values, decoding and owner API
 
-Prompts 5-12, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-13, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, two pure validators,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
@@ -8,7 +8,8 @@ They require C++17 and standard headers only. The validators link through target
 without publishing bus-access methods. Prompt 10 adds pure codecs/composition.
 Prompt 11 implements the non-copyable device facade, lifecycle/token/result
 handling, cached evidence and read-only initialization. Prompt 12 adds
-`startReadProfile` and `startReconcile`. Other operation families
+`startReadProfile` and `startReconcile`; prompt 13 adds `startApplyProfile` and
+`startVerifyProfile`. Other operation families
 below remain planned. Later prompts publish their callable declarations with
 real implementations; the complete design inventory is not a promise that all
 listed signatures are delivered now.
@@ -100,8 +101,8 @@ All other declared enum values and independent disable combinations are valid
 where the controls exist. No new role/preference/duty cross-field policy is added.
 
 TUSB322I advertisement/duty/accessory values remain semantically valid even while
-their writes are gated. Later apply admission must compare proved actual settings
-and reject gated changes; an unchanged gated field must permit independent
+their writes are gated. Apply admission compares proved actual settings
+and rejects gated changes; an unchanged gated field permits independent
 supported changes. Validation neither observes those fields nor authorizes any
 transition, including return to DRP. See the [register map](register-map.md).
 The [validator suite](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/test_validators.cpp) exercises capabilities, all
@@ -153,8 +154,8 @@ Library-generated statuses use detail zero unless a later documented method
 assigns another meaning. Backend detail is never narrowed or reinterpreted.
 There is no detached or OFFLINE error: detach is normal, health is a projection.
 Operation-status propagation, callback normalization and counters are implemented
-for initialization, profile observation and reconciliation. Later write/effect
-behavior remains specified future work; passive default values do not prove it.
+for initialization, profile observation, apply, verification and reconciliation.
+Write/effect behavior for other operation families remains specified future work.
 
 ## Borrowed transport and owner boundary
 
@@ -197,6 +198,8 @@ none is ISR-safe.
 | startInitialize | Copies timing and admits one nonzero uint64 instance-local token; IN_PROGRESS means admitted. Reads exact identity/revision and persistent controls only, with B5/L/A6/V5 callback ceilings. No profile adoption, reset, ACK or writes. |
 | startReadProfile | Binding only; reads P without identity, desired adoption or trust promotion. Complete contradiction invalidates old current trust. B/L/A4 and V3 callback ceilings; partial failed acquisition preserves the prior complete observation. |
 | startReconcile | Binding only; read-only F can establish initialization and KNOWN actual controls after invalidation. Retained reset evidence may require a 96-tick wait before the single F pass. B5/L/A6/V5 callback ceilings; no replay or cleanup writes. |
+| startApplyProfile | Current identity, KNOWN actual controls and resolved transition proof required. Validate complete input/gates before copying desired and advancing its generation; changed fields only, followed by F. At most B10/L/A12/V8 callbacks; no-op F performs no writes. |
+| startVerifyProfile | Retained desired input required; run read-only F and compare without adopting or replaying desired. Complete mismatching proof can establish KNOWN actual controls; B5/L/A6/V5 callback ceilings. |
 | poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
 | cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
 | resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
@@ -241,10 +244,53 @@ pending without an owner-time anchor, the first fresh poll starts a 96-tick wait
 before F; reset first discovered in F finishes CONFIGURATION_UNKNOWN without
 a second pass. Neither operation repairs port invalidation.
 
-Desired comparison is prepared internally; prompt 13 supplies retained desired
-through explicit apply and owns the public desired-mismatch/recovery test. No
-desired setter or write operation is delivered by prompt 12. The
-[procedure guide](device-behavior.md#fixed-observations-and-shared-proof) documents
+`startApplyProfile` retains its whole validated candidate and advances the
+saturating desired generation once at admission. Rejected input, gated changes
+and failed admission preserve desired and outputs. Admission, cancellation or
+expiry before the first mutating callback preserves still-proved actual and port
+evidence. Unknown actual controls require read-only observation/reconciliation
+before applying; a valid candidate alone is insufficient proof for safe writes.
+The entire bounded plan is composed and checked before desired input changes.
+
+Only differing persistent fields are written. Base MODE_SELECT changes read
+attachment before any writes and reject attached state; unchanged mode with a
+current-only change is allowed. Cable attachment can race that precheck, so the
+application still owns electrical/power policy. Extended 320 mode changes use
+separate disable/mode/enable steps while preserving non-mode controls. The TI
+5 ms wait becomes six elapsed owner ticks after fresh completion time; a mode
+write completion sample of 108 enables no earlier than 114, or 116 when the
+first fresh sample is 110. The separate one-tick margin never extends deadline.
+Requested final disableTerm/disableRdRp settings remain effective and distinct.
+
+TUSB322I DFP/UFP uses its own disable/mode/enable procedure without adding a
+5 ms wait. Actual advertisement changes, every 09 write and a direct mode
+change to DRP are rejected before traffic. Unchanged proved gated controls and
+semantic DRP00/11 equivalence permit independently supported changes. Role changes
+can have autonomous VCONN effects; board power and USB policy stay with the owner.
+
+Before any possible port-affecting write, current configuration and port usability
+are invalidated, retaining historical values. Effect evidence is set before the
+callback because error return does not prove that the data was rejected. The
+first backend error/detail survives; no retry, rollback or cleanup follows
+failure, cancellation, expiry or end. No-op apply runs full F with effect NONE;
+a completed changed-image procedure needs final proof for CONFIRMED.
+
+The maximum apply callback/TX/RX buffer-byte ceilings are 10/14/13 for B,
+12/18/13 for L/A and 8/11/12 for V. Requested final disableTerm reduces a mode
+change ceiling to 11/16/13 on L/A or 7/9/12 on V by omitting the final enable.
+These are worst-case changed-field plans, bounded by six writes; unchanged
+fields reduce work. F-only no-op/verify costs 5/5/12 on B, 6/6/13 on L/A and
+5/5/12 on V. Waits add no callbacks. Byte counts are requested buffer lengths,
+including pointers, excluding address/ACK framing; they are not physical traffic.
+
+Apply and `startVerifyProfile` share F identity/control/effect proof. Verify needs
+retained desired input and has no writes. Complete proof of a different actual
+image publishes KNOWN actual settings and CONFIGURATION_MISMATCH while keeping
+desired unchanged. Unresolved transition/reset history keeps trust UNKNOWN even
+when some bytes match. After an interrupted apply, read-only reconciliation can
+wait and prove a different actual image, allowing a new explicit apply. It never
+claims the earlier operation succeeded or discards its retained effect evidence.
+The [procedure guide](device-behavior.md#fixed-observations-and-shared-proof) documents
 the proof and independent termination controls.
 
 ## Complete design inventory
@@ -253,7 +299,7 @@ This sketch contains both the delivered subset above and future operations.
 Only the delivered subset is declared in the public class. The compile-only
 fixture checks the complete future inventory separately. Profile observation and
 read-only reconciliation are delivered in prompt 12; application and desired-profile
-verification belong to prompt 13; reset and
+verification are delivered in prompt 13; reset and
 recovery to 14; port to 15; IRQ to 16; raw access and health helpers to 17.
 No begin/init/unbind aliases or successful placeholder methods are provided.
 
@@ -311,8 +357,8 @@ does not replay, and reset never reapplies a desired profile. The tables below
 finish the baseline's precedence, result retention and interruption rules.
 
 Pure binding/profile validators are implemented in prompt 7, decoding in 10,
-and the delivered owner subset in 11–12. Remaining driver methods are published
-with their owning work in prompts 13–17; health projection is prompt 17.
+and the delivered owner subset in 11–13. Remaining driver methods are published
+with their owning work in prompts 14–17; health projection is prompt 17.
 No unavailable function may appear in a runnable quick start before that work.
 The health validator requires offlineThreshold >= 1. Invalid policy returns
 INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it
@@ -796,7 +842,9 @@ New targets reset current target readiness, but instance transport history remai
 
 These acceptance vectors cover the entire planned engine. Prompt 11's
 `tusb32x_operations` suite exercises initialization, lifecycle, token/result and
-time behavior. Write, reset/recovery, port/IRQ and raw/health cases remain future
+time behavior. Prompts 12-13 add profile observation, read-only proof, apply,
+desired verification and their write/effect boundaries. Reset/recovery, port/IRQ
+and raw/health cases remain future
 acceptance requirements, not passed runtime tests.
 Combine the rejection ordering above with every write/failure boundary in the
 procedure guide; test callback counts, outputs, state and original status together.
@@ -837,7 +885,8 @@ Status consumers. Planned signatures and the
 [owner examples](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/owner_examples.cpp) are syntax-checked only;
 the arithmetic fixture evaluates specification expressions at compile time. These
 checks establish their passive/compile-only contracts. Separate runtime suites
-exercise validators, private transport/codecs and owner initialization, and
+exercise validators, private transport/codecs, initialization and profile
+observation/apply/verify/reconciliation, and
 public link tests call every delivered method. None proves later operations,
 linked framework firmware or physical qualification. Results and tool versions
 are in [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).

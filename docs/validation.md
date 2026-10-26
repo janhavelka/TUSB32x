@@ -1527,3 +1527,65 @@ introduced. The compact permanent vectors cover the assembly gap without adding
 the exhaustive exploratory loops to every test run. All required checks passed
 without weakening assertions or changing silicon expectations. No hardware
 qualification or future-operation test pass is inferred.
+
+## Prompt 13 profile application (2026-10-26)
+
+Implemented explicit apply and read-only desired verification through the same
+owner engine, safe composer and F proof. Re-audited current peer source and exact
+TI procedures; [execution-13-peers](audit/execution-13-peers.md) records revisions
+and four fresh official downloads matching archived bytes. Lead reviewed the
+production/test diff and independent probe, then ran the integrated checks below.
+GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2 and the managed PlatformIO native platform 1.2.1 were used.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict native Debug/Release | PASS | 6/6 registered CTests each; active Release assertions, independent public headers and promoted real method linkage |
+| Apply/verify suite | PASS | 87,978 checks: all seven variants, exact literal sequences, preserved controls, final disabled state, no-op, attached base current-only behavior, input/gate rejection, desired copy/generations, complete mismatch and later explicit progress |
+| Error/lifetime boundaries | PASS | Every write and F read fails with six transport errors; both applied-then-error and no application; first detail/message survives, no cleanup/replay; cancel/end/invalidate/deadline and final fresh-time boundaries preserve appropriate proof/effects |
+| Time/work bounds | PASS | Independent microsecond completion at 108.1/108.9 ms, fresh samples at 108/110, no early enable at 113; final disabled wait, 322 no added wait, uint64 rollover, zero/one/larger budgets and failed-attempt accounting |
+| Existing owner/protocol regressions | PASS | 35,454 profile-observation, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; values/validators/version/launcher also pass |
+| Independent exhaustive probe | PASS | 46,592 public old/new valid 0A pairs across seven variants, independent semantic tables and literal write sequences; final proof/effect, preservation, unchanged mode, DRP equivalence/gate and exact per-variant wait |
+| Review corrections | PASS | Base mode-write uncertainty retained until full reconciliation with no added base wait; active writes preserve previous terminal diagnostic effect/kind/status. Both new regressions demonstrated failure before the fix and success after |
+| Documentation/version/provenance | PASS | Strict Doxygen and visibility of 17 namespace-level public structs, decoder/validators and all 19 delivered owner methods; future methods absent. Link/anchor, UTF-8/LF/whitespace, eight vendor hashes and no-op version sync |
+| Package/consumer | PASS | Actual 36-file source-equal archive, matching IDF allowlist, relative guide links, renamed tests-OFF consumer beneath unrelated Git; child PATH lacks Python/Git/Doxygen/PIO; PUBLIC C++17 propagates despite consumer requesting C++11 |
+| Native PlatformIO | PASS | Managed Core builds real sources and runs the ordinary host consumer; fake callback count remains zero, no firmware/hardware inference |
+| Remaining limits | NOT RUN | Arduino/native-IDF firmware and physical hardware; recorded same-day MinGW ASan/UBSan runtimes unavailable, no MSVC/Clang/clang-format. Remote CI remains prompt 34. Port-freshness publication and reset/recovery history tests require their later implemented operations |
+
+Commands from repository root:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -Wall -Wextra -Werror -Iinclude build/p13-review/profile_probe.cpp build/native/Release/libTUSB32x.a -o build/p13-review/profile_probe-final.exe
+& build/p13-review/profile_probe-final.exe
+doxygen Doxyfile
+python build/p13-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p13.tar.gz
+python build/p13-package.py
+git diff --check
+```
+
+Ignored build scripts/probes are session aids, not newly delivered guards.
+The Doxygen check extends the previous owner method list and counts public
+namespace-level structs; a private nested plan record in the XML index is not
+an additional public value. Initial old-script count failure was corrected
+without suppressing Doxygen warnings or dropping public visibility checks.
+The package check compares every exported byte with source before building the
+ordinary consumer in a restricted child environment.
+
+Early test iteration corrected literal callback timeout expectations at a tight
+deadline (14/13 ms, rather than the normal 20 ms cap) and avoided a GCC aggregate
+assignment ICE by resetting fixed fake segments explicitly. No production timeout
+rule or test assertion was weakened. The two actual effect-recording defects
+found during review were fixed and tested before the final passing matrix.
+Host timing tests prove owner arithmetic and ordering, not physical I2C timing,
+termination behavior, the base cable-race prerequisite or electrical compliance.

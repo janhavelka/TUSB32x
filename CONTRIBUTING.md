@@ -10,8 +10,8 @@ The implemented library contains portable values, Status helpers and pure
 validators and public pure register decoding, plus private transport/identity,
 field encoders, settings comparison and qualified write composition. The owner
 facade implements lifecycle, token/result ownership, read-only initialization,
-profile observation and read-only reconciliation. Apply and desired-profile
-verification belong to prompt 13.
+profile observation, explicit apply, desired-profile verification and read-only
+reconciliation. Reset/recovery and later operation families remain planned.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
@@ -35,9 +35,13 @@ are build checks. See [test/README.md](test/README.md).
 The protocol suite includes independent field tables, reserved-code validity,
 actual-versus-staged controls and procedure-proof rejections. Keep expected
 bytes independent of production codecs. Pure composition proves no timed job.
-The operations suite tests initialization, profile observation and read-only
-reconciliation through the real engine, time boundaries,
-failure at each read, retained results and two devices sharing an external owner.
+The operations suite tests initialization, profile observation, explicit apply,
+desired verification and read-only reconciliation through the real engine.
+Keep literal per-variant write traces, preserved control fields, no-op behavior,
+fresh wait anchors, cancellation/deadline boundaries and applied-then-error
+faults independent of production arithmetic and codecs. Retain result and shared
+owner coverage. A complete mismatching image may prove actual KNOWN state;
+reconciliation never replays desired settings.
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,
 Doxygen, PlatformIO, framework headers or sibling paths. Use available host

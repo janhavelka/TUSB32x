@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 12; prompt 13 remains separate.
+Current authorization: implement prompt 13; later prompts remain separate.
 
 ## Prompt status
 
@@ -22,7 +22,7 @@ Current authorization: independently audit completed prompt 12; prompt 13 remain
 | [10: register-codecs](prompts/10-register-codecs.md) | COMPLETE |
 | [11: owner-engine](prompts/11-owner-engine.md) | COMPLETE |
 | [12: profile-observation](prompts/12-profile-observation.md) | COMPLETE |
-| [13: profile-application](prompts/13-profile-application.md) | NOT STARTED |
+| [13: profile-application](prompts/13-profile-application.md) | COMPLETE |
 | [14: reset-recovery](prompts/14-reset-recovery.md) | NOT STARTED |
 | [15: port-snapshots](prompts/15-port-snapshots.md) | NOT STARTED |
 | [16: interrupt-service](prompts/16-interrupt-service.md) | NOT STARTED |
@@ -1015,3 +1015,50 @@ counts and limits are in
 [validation](validation.md#prompt-12-independent-audit-2026-10-26).
 Lead commits and synchronizes this checked audit on the same branch, verifies
 upstream equality and a clean worktree, and reports the commit in the handoff.
+
+## Prompt 13: explicit profile application and verification (2026-10-26)
+
+Started clean and synchronized at `724b7668aa47a6d927e6e5521e84143fe0295a2b`,
+the completed prompt-12 independent audit, on the same execution branch.
+Reread prompt 13 and the profile/effect/clock contracts. Current ADS1115,
+LSM6DS3TR, INA3221 and PCA9555 source, tests, examples, runners, instructions and
+registration were re-audited; exact revisions and choices are in
+[execution-13-peers](audit/execution-13-peers.md). Fresh official TI downloads
+matched the four archived datasheets byte-for-byte. No sibling was changed,
+fetched or built; no remote CI gate was added.
+
+Implemented `startApplyProfile` and `startVerifyProfile` in the existing engine.
+Admission validates and composes at most six writes before retaining desired
+input. Actual controls supply preserved fields; only changes are written, with
+separate per-variant mode procedures and complete F readback. Extended 320 waits
+six elapsed ticks from fresh post-mode time; base/322 inherit no added wait.
+Unchanged gated 322 controls permit other qualified writes. No-op apply and
+verify are read-only. Complete mismatch proves KNOWN actual independently of
+desired and permits later explicit application after reconciliation.
+
+Two gpt-6.1-sol/high agents owned disjoint tests and peer/general documentation;
+a gpt-6-astra/high reviewer checked timing, uncertain effects, proof and
+simplicity independently. Lead integrated shared source and reviewed the actual
+diff and test/probe code. Review caught two gaps: interrupted base mode writes
+must retain mode proof, and active apply must not overwrite terminal diagnostic
+effect/kind/status. Both regressions failed before correction and pass afterward.
+No retry, cleanup, rollback, extra engine or public test hook was introduced.
+
+PASS: all six CTests in Debug and Release; 87,978 application/verification,
+35,454 profile-observation and 20,490 owner checks; prior protocol/codec suites.
+Independent literal-byte public probe: 46,592 valid old/new mode/control pairs
+across seven variants. Doxygen, native PlatformIO, source-equal 36-file archive,
+tests-OFF tool-independent consumer, links/provenance and version checks passed.
+Exact commands, correction history and limits are in
+[validation](validation.md#prompt-13-profile-application-2026-10-26).
+
+Updated API/member Doxygen, architecture/ownership/procedure/feature/variant
+guides, metadata descriptions, README/CHANGELOG and contributor/test guidance.
+Only the two implemented methods leave planned fixtures. No version bump,
+future operation declaration or firmware/hardware qualification was added.
+Physical timing, cable interlock and electrical/VCONN qualification remain
+external; installed MinGW sanitizer runtimes are unavailable as already probed.
+
+Lead commits and synchronizes this complete checked feature on the same branch,
+then verifies upstream equality and clean task state. Commit evidence belongs
+in the final handoff and next progress update, avoiding a self-referencing edit.
