@@ -64,6 +64,10 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   controls, reset evidence and semantic TUSB322I DRP00/11 equivalence. RO/W1C bits
   do not create persistent mismatches. Matching signature followed by failed
   revision acquisition preserves earlier valid identity/configuration evidence.
+  Four literal full-profile vectors per variant and operation check publication
+  of every valid current, duty, mode, preference, debounce and disable value,
+  complete raw-byte preservation and absent-control validity. Profile observation
+  creates no desired image, verified generation or configuration trust.
   Every required read exercises all six terminal transport errors; cancellation,
   end and expiry cover every read and the final fresh-time boundary. Partial
   acquisitions preserve the complete old observation, and immediate adverse

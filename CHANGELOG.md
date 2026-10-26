@@ -9,6 +9,10 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent prompt-12 audit and public-operation regression vectors covering
+  every valid profile setting after complete observation/reconciliation. The
+  audit found no runtime defect; production behavior and API are unchanged.
+
 - Linked `startReadProfile` and read-only `startReconcile` through the existing
   token/result engine. Profile observation preserves raw/typed validity and can
   disprove old trust without promoting new controls. Complete reconciliation

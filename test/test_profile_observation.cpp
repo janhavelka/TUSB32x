@@ -281,6 +281,84 @@ void observationAndGenerations() {
   CHECK(!image.mismatchValid && equivalent.fake.complete());
 }
 
+void completeProfilePublication() {
+  struct Vector {
+    uint8_t byte08;
+    uint8_t byte09;
+    uint8_t byte0A;
+    uint8_t byte45;
+    t::SourceCurrent current;
+    t::DrpDutyCycle duty;
+    t::PortMode mode;
+    t::SourcePreference preference;
+    t::CcDebounce baseDebounce;
+    t::CcDebounce extendedDebounce;
+    bool accessory;
+    bool term;
+    bool rdRp;
+  };
+  // Literal received bytes and semantic expectations from register-map.md's TI
+  // tables. Exercise every valid small field value through the public engine;
+  // neither decoding nor encoding helpers supply this publication oracle.
+  constexpr Vector VECTORS[] = {
+      {0x3F, 0xF8, 0x00, 0xFB, t::SourceCurrent::DEFAULT, t::DrpDutyCycle::PERCENT_30,
+       t::PortMode::FOLLOW_PORT_PIN, t::SourcePreference::NORMAL,
+       t::CcDebounce::MS_133, t::CcDebounce::MS_168, false, false, false},
+      {0x7F, 0xFB, 0x53, 0xFF, t::SourceCurrent::MA_1500, t::DrpDutyCycle::PERCENT_40,
+       t::PortMode::UFP, t::SourcePreference::TRY_SNK,
+       t::CcDebounce::MS_116, t::CcDebounce::MS_118, true, true, true},
+      {0xBF, 0xFC, 0xA6, 0xFF, t::SourceCurrent::MA_3000, t::DrpDutyCycle::PERCENT_50,
+       t::PortMode::DFP, t::SourcePreference::TRY_SRC,
+       t::CcDebounce::MS_151, t::CcDebounce::MS_134, false, false, true},
+      {0x3F, 0xFF, 0xF1, 0xFB, t::SourceCurrent::DEFAULT, t::DrpDutyCycle::PERCENT_60,
+       t::PortMode::DRP, t::SourcePreference::NORMAL,
+       t::CcDebounce::MS_168, t::CcDebounce::MS_152, true, true, false},
+  };
+  for (const auto method : STARTS) {
+    for (const auto& part : PARTS) {
+      for (const auto& vector : VECTORS) {
+        Fixture f(part);
+        f.script(method, vector.byte08, vector.byte09, vector.byte0A, vector.byte45);
+        const auto token = f.start(method);
+        CHECK(f.finish(token, f.reads(method)).ok());
+        const auto result = f.take(token);
+        const auto& image = result.configuration;
+        t::DeviceProfile expected{};
+        expected.sourceCurrent = vector.current;
+        expected.drpDutyCycle = vector.duty;
+        expected.portMode = part.is322 && vector.mode == t::PortMode::FOLLOW_PORT_PIN ?
+            t::PortMode::DRP : vector.mode;
+        expected.sourcePreference = part.base ? t::SourcePreference::NORMAL : vector.preference;
+        expected.ccDebounce = part.base ? vector.baseDebounce : vector.extendedDebounce;
+        expected.disableUfpAccessory = !part.base && vector.accessory;
+        expected.disableTerm = !part.base && vector.term;
+        expected.disableRdRp = !part.is322 && vector.rdRp;
+        CHECK(sameProfile(image.observedProfile, expected));
+        CHECK(image.hasObservedProfile && !image.hasDesiredProfile && image.desiredGeneration == 0);
+        CHECK(image.observedValidFields == (part.base ? 0x9B : part.is322 ? 0x7F : 0xFF));
+        CHECK(image.rawConfig08 == vector.byte08 && image.rawConfig09 == vector.byte09);
+        CHECK(image.rawConfig0A == vector.byte0A);
+        CHECK(image.rawConfig45 == (part.is322 ? 0 : vector.byte45));
+        CHECK(image.rawConfigValidMask == (part.is322 ? 7 : 15));
+        CHECK(image.terminationState == (expected.disableTerm || expected.disableRdRp ?
+            t::TerminationState::DISABLED : t::TerminationState::ENABLED));
+        CHECK(image.resetState == t::ResetState::NONE);
+        if (method == &Driver::startReadProfile) {
+          CHECK(image.state == t::ConfigurationState::UNCONFIGURED);
+          CHECK(!image.hasVerifiedProfile && image.verifiedGeneration == 0);
+          CHECK(!f.device.diagnostics().initialized);
+        } else {
+          CHECK(image.state == t::ConfigurationState::KNOWN);
+          CHECK(image.hasVerifiedProfile && image.verifiedGeneration == 1);
+          CHECK(sameProfile(image.verifiedProfile, expected));
+          CHECK(f.device.diagnostics().initialized);
+        }
+        CHECK(result.transfers == f.reads(method) && f.fake.complete());
+      }
+    }
+  }
+}
+
 void reservedAndTerminationProof() {
   for (const auto method : STARTS) {
     for (const auto& part : PARTS) {
@@ -769,6 +847,7 @@ void ownerTimeBoundaries() {
 int runProfileObservationChecks() {
   admissionAndExactPlans();
   observationAndGenerations();
+  completeProfilePublication();
   reservedAndTerminationProof();
   everyReadFailureAndInterruption();
   immediateAdverseEvidence();

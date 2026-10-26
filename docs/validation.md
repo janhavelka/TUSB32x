@@ -1469,3 +1469,61 @@ uses an explicit `Fake{}` value. A later independent probe exposed stale
 termination proof; its regression failed before correction. Both were fixed
 before final passing runs, without weakening checks or changing expected silicon
 bytes. No host result above is physical timing or electrical evidence.
+
+## Prompt 12 independent audit (2026-10-26)
+
+Re-read original prompt 12 in full and reviewed actual `9211324..db66500`
+changes plus current source/tests. Started clean and synchronized at
+`db6650064690883a57c60ac6b349edffe495df61`. Three fresh independent reviewers
+and the lead found no runtime defect, unsupported API or scope expansion.
+The confirmed test gap was complete profile assembly: the pure decoder suite
+covered every field encoding, but the operation suite did not directly check
+every nondefault field after publication. Added 56 public P/F cases using four
+literal vectors per variant/operation and independent semantic expectations.
+Production code, API, register gates and metadata are unchanged.
+
+Tool versions remain GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1,
+Python 3.12.10 and Doxygen 1.13.2. The lead used a fresh Ninja Multi-Config
+build/p12-independent-audit tree; reviewers used separate p12-fresh-* trees.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Final native Debug/Release | PASS | 6/6 registered CTests each after the added cases; strict warnings, active Release checks and independent public headers |
+| Profile and owner suites | PASS | 35,454 profile checks plus 20,490 owner checks per configuration; every valid field value, raw preservation, absent-field validity, independent termination and unchanged P generation/trust |
+| Existing regressions | PASS | 161,670 protocol and 8,602,548 codec checks, plus value/validator/version/launcher suites |
+| Independent byte probe | PASS | 6,912 scenarios: every byte value in every applicable configuration register for all seven variants, full proof/P status, reserved validity, termination/reset separation, bounded callbacks and zero writes |
+| Independent full-profile probe | PASS | 43,008 complete valid P/F plans, 833,280 checks; all setting combinations, nonpersistent bits, exact semantic publication and TUSB322I DRP00 normalization; no production decoder as oracle |
+| Package/public boundary | PASS | Reviewer verified the prior source-equal 36-file archive and linked/called both new methods through extracted public sources. Lead repacked final files and checked archive equality, package links and IDF selection, then built/ran tests-OFF consumer beneath unrelated Git with maintainer tools absent from child PATH |
+| Doxygen and documentation | PASS | Strict generation and all 17 owner methods visible, future callable methods absent; links/anchors, UTF-8/LF, whitespace, eight vendor hashes and version/no-op sync |
+| Current peers | PASS | ADS1115, LSM6DS3TR and INA3221 revisions/main/clean state and reviewed conventions unchanged; no sibling writes/fetch/build or remote CI inspection |
+| Remaining evidence | NOT RUN | Desired mismatch and actual interrupted write histories belong to prompts 13-14. Firmware/hardware remain separate. Recorded same-day sanitizer probe lacks MinGW ASan/UBSan; no sanitizer pass claimed. Native PlatformIO/component registration were not repeated for this test/documentation-only change |
+
+Lead commands from repository root:
+
+```powershell
+cmake -S . -B build/p12-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p12-independent-audit --config Debug
+ctest --test-dir build/p12-independent-audit -C Debug --output-on-failure
+cmake --build build/p12-independent-audit --config Release
+ctest --test-dir build/p12-independent-audit -C Release --output-on-failure
+& build/p12-independent-audit/test/Release/tusb32x_operations.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude build/p12-fresh-proof/probe.cpp build/p12-independent-audit/Release/libTUSB32x.a -o build/p12-independent-audit/proof-probe.exe
+& build/p12-independent-audit/proof-probe.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude -Itest build/p12-fresh-tests/publication_probe.cpp build/p12-independent-audit/Release/libTUSB32x.a -o build/p12-independent-audit/publication-probe.exe
+& build/p12-independent-audit/publication-probe.exe
+doxygen Doxyfile
+python build/p12-doxygen.py
+python build/p10-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p12.tar.gz
+python build/p12-package.py
+git diff --check
+```
+
+Files beneath build are ignored session inspection/probe artifacts. Lead read
+both probe sources before recompiling/running them; no private-state hook was
+introduced. The compact permanent vectors cover the assembly gap without adding
+the exhaustive exploratory loops to every test run. All required checks passed
+without weakening assertions or changing silicon expectations. No hardware
+qualification or future-operation test pass is inferred.

@@ -153,3 +153,21 @@ Public desired input arrives only with apply in prompt 13. Desired mismatch and
 interrupted configuration/mode/recovery-write tests remain owned by prompts
 13-14; no setter, private-state injection or test-success claim is invented for
 them here. Hardware and linked framework firmware remain separate evidence.
+
+## Independent implementation recheck (2026-10-26)
+
+The follow-up audit reread original prompt 12 and the actual implementation
+diff from `9211324` to `db66500`. Current ADS1115, LSM6DS3TR and INA3221 HEADs,
+main branches and clean worktrees still match the table above. Reopened the
+profile/reconcile declarations, matching source/tests, owner examples, CLI/runner
+semantics, AGENTS and registration. The adopted/rejected rules remain unchanged:
+separate historical observations from current trust, retain terminal results,
+and keep TUSB reconciliation read-only. In particular, INA's desired replay
+remains unsuitable and LSM's desired-dependent proof is not TUSB's actual-state
+proof. No peer source was edited, fetched, built or tested.
+
+The independent audit found no runtime defect in the delivered P/F engine.
+Additional public probes and a compact retained all-setting publication table
+check the operation boundary independently of the pure decoder tests. Later
+desired-write/history tests stay with their original owning prompts; no public
+test seed or future method was added to make those cases reachable early.

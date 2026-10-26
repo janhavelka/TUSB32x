@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 12; prompt 13 remains separate.
+Current authorization: independently audit completed prompt 12; prompt 13 remains separate.
 
 ## Prompt status
 
@@ -981,3 +981,37 @@ owning later prompts, not uncompleted read-only work.
 Lead commits and synchronizes this complete checked feature on the same branch,
 then verifies local/upstream equality and clean task state. Final commit evidence
 belongs in the handoff and next progress update, not a self-referencing hash edit.
+
+## Prompt 12 independent audit (2026-10-26)
+
+Started clean at synchronized `db6650064690883a57c60ac6b349edffe495df61` on
+the existing execution branch. Reread original prompt 12 in full and reviewed
+the actual `9211324..db66500` diff, current implementation, tests and contracts.
+The selected IDE prompt 16 was not executed. Three fresh-context parallel
+reviewers checked proof/time/effects (gpt-6-astra/high), requirements/scope/
+documentation/package simplicity (gpt-6.1-sol/high), and tests/current peers
+(gpt-6.1-sol/high). Lead inspected the actual probes and source evidence and
+repeated the integrated checks.
+
+No runtime defect was found. The confirmed gap was operation-level publication
+coverage: pure decoder tests covered every encoding, but owner tests did not
+directly verify every nondefault field after the complete P/F assembly. Added
+compact literal-vector tests for all seven variants, both read-only operations,
+every valid setting value, raw/typed validity, independent termination and
+generation/trust behavior. Expected profiles come from explicit semantic tables,
+not the production decoder. No production behavior or API changed.
+
+Independent public probes exercised 6,912 single-register byte scenarios and
+43,008 complete valid-profile plans. Both passed without private-state access
+or write permission. Fresh peer checks confirm the same revisions and clean
+states recorded in [execution-12-peers](audit/execution-12-peers.md). No sibling
+was changed, fetched or built. Desired mismatch and actual interrupted write
+histories remain explicitly assigned to prompts 13-14.
+
+Updated test documentation, Unreleased, progress, peer evidence and validation.
+Reviewed the API/ownership/procedure/variant/architecture guides and source
+Doxygen; they remain accurate without incidental edits. Exact final commands,
+counts and limits are in
+[validation](validation.md#prompt-12-independent-audit-2026-10-26).
+Lead commits and synchronizes this checked audit on the same branch, verifies
+upstream equality and a clean worktree, and reports the commit in the handoff.
