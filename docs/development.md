@@ -33,7 +33,8 @@ Set accepts a full version. No Git, clock, network or subprocess is consulted.
 
 Exit 0 means success. `check` returns 1 and lists relative paths for drift without
 writing. Invalid arguments, metadata, missing/ambiguous template fields and I/O
-errors return 2. Missing version truth is an error, never an invented 0.0.0.
+errors return 2. Alternate quoting, comments or command layout cannot hide a
+second managed declaration. Missing version truth is an error, never an invented 0.0.0.
 All inputs/templates are checked before writes; an I/O failure during writes can
 leave a partial sync. Repair the failure and rerun the intended command.
 
@@ -42,7 +43,9 @@ leave a partial sync. Repair the failure and rerun the intended command.
 Plain host builds need CMake 3.16+ and a C++17 toolchain. Tests default OFF and
 consumers never discover Python, Git, Doxygen or PlatformIO. Tests ON find Python
 3.10+ for the registered tusb32x_version_sync suite alongside the two C++ suites.
-See [native checks](../test/README.md) in a source checkout.
+Windows additionally registers tusb32x_pio_launcher; its temporary CMD fixtures
+need no Core installation. Run them directly with `python tools/test_pio_launcher.py -v`.
+See [native checks](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md) in a source checkout.
 
 If `idf_component_register` exists, CMake registers the same explicit source and
 public include/C++17 requirements as a native IDF component. Otherwise it creates
@@ -62,7 +65,8 @@ scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz
 ```
 
 The launcher invokes `%USERPROFILE%\.platformio\penv\Scripts\pio.exe`, passes
-arguments and returns its exit code. A missing executable reports its exact path
+arguments and returns its exit code, including when the caller's environment
+defines an ERRORLEVEL variable. A missing executable reports its exact path
 and exits 1. It installs nothing. Managed Core 6.1.19 matches current peer workflow
 pins. The real host consumer uses `platformio/native@1.2.1`, whose
 [official manifest](https://github.com/platformio/platform-native/blob/v1.2.1/platform.json)
@@ -82,7 +86,8 @@ The PlatformIO export list contains public headers, the one real source, CMake,
 manifests, license, selected guides and the real host consumer. Reference/vendor
 artifacts, prompts, audits, progress/validation machinery, tests, scripts and
 generated build output are excluded from ordinary archives. Maintainer commands
-and repository-only evidence links in guides require the source checkout.
+require the source checkout. Links to repository-only evidence use source-host
+URLs; links between shipped guides remain relative.
 The IDF manifest excludes all files and explicitly re-includes the same consumer
 set: IDF include rules are re-inclusions, as its
 [manifest reference](https://docs.espressif.com/projects/idf-component-manager/en/latest/reference/manifest_file.html#files)

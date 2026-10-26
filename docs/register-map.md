@@ -19,7 +19,7 @@ numbers are printed PDF pages. B and L/A do not include V unless stated.
 | A | TUSB320LAI, TUSB320HAI | SLLSEQ8D, May 2017, §7.5 Tables 6–12, Figures 4–9 pp16–20 |
 | V | TUSB322I | SLLSEO5D, March 2021, §6.6 Tables 6-6–6-11, Figures 6-2–6-6 pp17–20 |
 
-These exact files and original terms are in [source provenance](reference/source/provenance.json).
+These exact files and original terms are in [source provenance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/source/provenance.json).
 The register tables were visually inspected, not inferred from public code.
 **TI facts** are the field definitions below. **Library policy** selects access
 restrictions, byte composition and validity handling. **Unresolved** identifies
@@ -154,7 +154,7 @@ none of these comparison masks grants write access or proves reset completion.
 
 ## Explicit field encodings
 
-Semantic names follow [ENGINEERING_BASELINE](prompts/ENGINEERING_BASELINE.md).
+Semantic names follow [ENGINEERING_BASELINE](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
 Enum ordinals do not encode registers. The shifted values below are field
 contributions, not stand-alone safe write bytes.
 
@@ -273,8 +273,8 @@ introduced by these contracts.
 | Public raw IRQ echo / reserved Try.SRC04 | Echoing status is not safe composition; Try.SRC is06. Public code is evidence to audit, not the encoding oracle |
 
 Public file revisions/hashes/licenses remain in the
-[pinned manifest](reference/public-implementations.json) and
-[chip evidence](prompts/CHIP_EVIDENCE.md). Future CommandTable constants and codecs
+[pinned manifest](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/public-implementations.json) and
+[chip evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CHIP_EVIDENCE.md). Future CommandTable constants and codecs
 must carry these TI revision/table/page citations and Doxygen for units, variants,
 legal values, protected fields and side effects. Implement the independent
 [vectors](register-vectors.md) in the assigned real suites; this document does

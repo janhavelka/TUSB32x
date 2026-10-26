@@ -204,3 +204,39 @@ visibility, real package-content inspection, tests-OFF consumer evidence,
 documentation, commit and synchronization. IDF archive-tool behavior and actual
 firmware links remain distinct checks. No hardware or release publication is
 authorized or claimed here.
+
+## Independent prompt 8 re-audit, 2026-10-26
+
+Reopened the relevant current guidance, manifests, generators/fixtures/guards,
+component/build definitions, example/identity code, author/license records and
+workflow source listed above. All five siblings remain clean at the same full
+revisions:
+
+| Sibling | HEAD |
+| --- | --- |
+| TMP1x2 | bafc34067530eb340e55c42dae3fad4eb795b6e9 |
+| 24Cxx | 936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e |
+| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
+| INA3221 | 41b6184b75f3c152611d4236f7ea41a5ce77bc2c |
+| OPT4001 | dab818e575fc25a0949d962bc0df600eb2ed5200 |
+
+Retained evidenced ownership, native 1.2.1/existing Core 6.1.19, IDF admission-only
+floor and explicit consumer package/source selection. Rejected the launcher's
+inherited ERRORLEVEL shadow after a temporary executable proved false success;
+clearing it locally preserves actual child status. No sibling was changed or
+built, and no remote CI was queried. Current repository has no checked-in
+workflow definitions yet; workflow implementation remains prompt 34.
+
+Lead also reopened the pinned [native platform manifest](https://github.com/platformio/platform-native/blob/v1.2.1/platform.json),
+[IDF 5.3.2 registration source](https://github.com/espressif/esp-idf/blob/v5.3.2/tools/cmake/component.cmake)
+and [file-filter guide](https://docs.espressif.com/projects/idf-component-manager/en/latest/publish/how_to_manifest_filters.html).
+Native 1.2.1 requires Core 6, explicit SRCS/INCLUDE_DIRS remain supported, and
+IDF includes still re-include files after excludes. The SDK's
+[early requirements macro](https://github.com/espressif/esp-idf/blob/v5.3.2/tools/cmake/scripts/component_get_requirements.cmake)
+returns from the component file at registration; later target properties
+are not executed in its script-only scan. This is source inspection, not an SDK
+build or dependency-support upgrade.
+
+Fresh actual archive, restricted-PATH extracted consumer, host registration and
+Doxygen checks passed. These remain portable linkage/host plumbing evidence;
+real IDF manager packaging and linked framework firmware are not claimed.

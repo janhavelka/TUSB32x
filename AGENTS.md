@@ -94,7 +94,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the two C++ suites plus `tusb32x_version_sync`. Compile-only planned
+  and run the two C++ suites plus `tusb32x_version_sync` and, on Windows,
+  `tusb32x_pio_launcher`. Compile-only planned
   contracts are never behavioral tests.
 - Version truth is `library.json`. Run `python scripts/generate_version.py sync`
   and `python scripts/generate_version.py check`; use bump/set only for intentional

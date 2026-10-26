@@ -4,7 +4,7 @@ Prompts 5-8 provide portable values, constexpr Status/token helpers, pure valida
 a C++17 CMake library target and deterministic package metadata/version tooling.
 There is no device facade or operation engine yet. The
 [API inventory](api-contracts.md) labels all future calls explicitly; the
-[engineering baseline](prompts/ENGINEERING_BASELINE.md) fixes their names.
+[engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
 ## Current files
 
@@ -27,7 +27,7 @@ There is no device facade or operation engine yet. The
 | .gitignore | Excludes local build/documentation output under build/ from commits |
 | library.json, idf_component.yml and Doxyfile | Version truth and synchronized component/documentation metadata, with explicit normal-package boundaries |
 | scripts/generate_version.py and tools/test_version_sync.py | Explicit maintainer sync/check/bump/set and isolated registered version fixtures |
-| scripts/pio.cmd and examples/host/basic/platformio.ini | Existing managed Windows Core launcher and pinned real native consumer |
+| scripts/pio.cmd, tools/test_pio_launcher.py and examples/host/basic/platformio.ini | Existing managed Windows Core launcher, isolated Windows exit/error fixtures and pinned real native consumer |
 
 Status depends only on standard integer types. Config includes Status and
 standard size/integer types. TUSB32x includes Config for copied values.

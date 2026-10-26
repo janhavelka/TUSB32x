@@ -23,8 +23,9 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Three runtime CTest suites are currently registered; compile-only
-signature/header fixtures are build checks. See [test/README.md](test/README.md).
+active in Release. Three runtime CTest suites are registered on all hosts, plus
+the Windows launcher suite on Windows; compile-only signature/header fixtures
+are build checks. See [test/README.md](test/README.md).
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,
 Doxygen, PlatformIO, framework headers or sibling paths. Use available host

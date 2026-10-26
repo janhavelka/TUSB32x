@@ -65,8 +65,17 @@ inline constexpr char VERSION[] = "{version}";
 '''.encode("utf-8")
 
 
-def _replace_single(text: str, pattern: str, value: str, field: str) -> str:
-    """Replace exactly one version field, rejecting missing or ambiguous templates."""
+def _replace_single(
+    text: str, declaration: str, pattern: str, value: str, field: str
+) -> str:
+    """Require one declaration, then replace its canonical maintained value.
+
+    Count declarations independently of quoting/comments so an alternate-form
+    override cannot hide behind the stricter replacement template.
+    """
+    count = len(re.findall(declaration, text, flags=re.MULTILINE))
+    if count != 1:
+        raise ValueError(f"Expected exactly one {field} declaration; found {count}")
     updated, count = re.subn(
         pattern, lambda match: match[1] + value + match[2], text, flags=re.MULTILINE
     )
@@ -80,19 +89,23 @@ def _outputs(root: Path, version: str) -> dict[Path, bytes]:
     core = ".".join(str(value) for value in _parse_semver(version))
     cmake = (root / "CMakeLists.txt").read_text(encoding="utf-8")
     cmake = _replace_single(
-        cmake, r'^(set\(TUSB32X_VERSION ")[^"\r\n]*("\)[ \t]*)$',
+        cmake, r'^[ \t]*(?i:set)\s*\(\s*(?:TUSB32X_VERSION|"TUSB32X_VERSION")(?=[\s)])',
+        r'^(set\(TUSB32X_VERSION ")[^"\r\n]*("\)[ \t]*)$',
         version, "CMake full version"
     )
     cmake = _replace_single(
-        cmake, r'^(project\(TUSB32x VERSION )[^\s)]+( LANGUAGES CXX\)[ \t]*)$',
+        cmake, r'^[ \t]*(?i:project)\s*\(\s*(?:TUSB32x|"TUSB32x")(?=[\s)])',
+        r'^(project\(TUSB32x VERSION )[^\s)]+( LANGUAGES CXX\)[ \t]*)$',
         core, "CMake project version"
     )
     component = _replace_single(
         (root / "idf_component.yml").read_text(encoding="utf-8"),
+        r'''^(?:version|"version"|'version')[ \t]*:''',
         r'^(version:[ \t]*")[^"\r\n]*("[ \t]*)$', version, "component version"
     )
     doxygen = _replace_single(
         (root / "Doxyfile").read_text(encoding="utf-8"),
+        r'^[ \t]*PROJECT_NUMBER[ \t]*\+?=',
         r'^(PROJECT_NUMBER[ \t]*=[ \t]*")[^"\r\n]*("[ \t]*)$', version, "Doxygen version"
     )
     return {

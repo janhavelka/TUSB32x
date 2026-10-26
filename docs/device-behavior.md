@@ -3,7 +3,7 @@
 Completed for prompt 4 on 2026-10-23. This guide specifies future implementation;
 it does not claim working driver code, adapter timing or hardware qualification.
 Read the [variant matrix](variant-matrix.md), [register map](register-map.md),
-[encoding vectors](register-vectors.md) and [owner baseline](prompts/ENGINEERING_BASELINE.md).
+[encoding vectors](register-vectors.md) and [owner baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
 The API names below are planned methods. Their admission/result details are
 completed in prompts 5–6; one operation engine implements them in prompts 11–17.
 
@@ -21,12 +21,12 @@ TUSB320LAI/TUSB320HAI and **V** TUSB322I. No other variant is implied.
 | V: SLLSEO5D, March 2021 | §6.5 pp15–16 | §§6.3.2–3 pp9–11, §6.3.8 p13, §6.4.4 p14, Tables 6-9–6-10 pp18–20 | §5.6 p6, §5.7 p7 |
 | N: SLAAE24, May 2021 | Not a substitute for exact part framing | Startup §4.1 p5; IRQ clear §8 p9 | Application examples, not new family deadlines |
 
-Sources and original terms are retained in [provenance](reference/source/provenance.json).
+Sources and original terms are retained in [provenance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/source/provenance.json).
 Current official B/L/A/V downloads still matched the archived bytes during this
 prompt. No applicable separate erratum was found in the inspected product lists
 and targeted TI search; this is not proof that none exists. Unresolved claims
 below remain gated. TI facts, the selected library procedure and future hardware
-evidence are distinct. [Peer evidence](audit/execution-4-peers.md) supplies
+evidence are distinct. [Peer evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-4-peers.md) supplies
 engineering patterns only.
 
 The application establishes valid power, enable/ADDR/PORT straps, bus electrical

@@ -16,9 +16,9 @@ implementation. **Library policy** is our selected behavior, not a silicon claim
 **Hardware result:** none. An ACK or a passing fake does not qualify a device.
 
 Printed page numbers are used throughout. These source IDs identify exact files
-in [the source archive](reference/README.md); full hashes, original terms,
+in [the source archive](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/README.md); full hashes, original terms,
 retrieval and current-download verification times are in
-[provenance.json](reference/source/provenance.json).
+[provenance.json](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/source/provenance.json).
 
 | ID | Exact source | Relevant source locations |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ byte. G1 was added without replacing an old source. Current TI product pages
 still link the revisions above. No separate applicable silicon errata was found
 in the inspected product document lists and targeted TI searches; that is a
 bounded search result, not proof of absence. See the dated
-[current-source review](reference/README.md#prompt-2-current-source-review).
+[current-source review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/README.md#prompt-2-current-source-review).
 
 ## Exact part boundary
 
@@ -201,7 +201,7 @@ No unspecified capability becomes enabled because another family member has it.
 attributed to National Instruments/Michael Auchter, not TI-authored silicon
 guidance. Its reset-mask and cleanup/error behavior, the Betrusted 06/Try.SRC
 claims and incomplete emulator behavior are counterexamples, not test oracles.
-See [focused peer/public source review](audit/execution-2-peers.md) and the
-[pinned manifest](reference/public-implementations.json). No external code was
+See [focused peer/public source review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-2-peers.md) and the
+[pinned manifest](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/public-implementations.json). No external code was
 copied into a driver. The [feature coverage](feature-coverage.md) maps each
 planned capability and gate to its implementation-stage evidence.

@@ -346,6 +346,30 @@ class VersionSyncTests(unittest.TestCase):
         self._assert_exit(2, "sync")
         self.assertEqual(before, _snapshot(self.root))
 
+    def test_alternate_duplicate_declarations_are_rejected(self):
+        """Alternate quoting, comments or layout cannot hide version overrides."""
+        overrides = (
+            ("CMakeLists.txt", 'set(TUSB32X_VERSION "9.9.9") # override'),
+            ("CMakeLists.txt", '  SET (\n TUSB32X_VERSION 9.9.9)'),
+            ("CMakeLists.txt", 'set("TUSB32X_VERSION" 9.9.9)'),
+            ("CMakeLists.txt", 'PROJECT(TUSB32x VERSION 9.9.9 LANGUAGES CXX)'),
+            ("CMakeLists.txt", 'project("TUSB32x" VERSION 9.9.9 LANGUAGES CXX)'),
+            ("idf_component.yml", "version: '9.9.9'"),
+            ("idf_component.yml", '"version": "9.9.9"'),
+            ("Doxyfile", "PROJECT_NUMBER = 9.9.9"),
+            ("Doxyfile", '  PROJECT_NUMBER = "9.9.9" # override'),
+        )
+        for name, declaration in overrides:
+            with self.subTest(path=name, declaration=declaration):
+                root = self._make_fixture()
+                path = root / name
+                with path.open("a", encoding="utf-8", newline="\n") as stream:
+                    stream.write("\n" + declaration + "\n")
+                before = _snapshot(root)
+                for arguments in (("check",), ("sync",), ("set", "8.1.2"), ("bump", "patch")):
+                    self._assert_exit(2, *arguments, root=root)
+                    self.assertEqual(before, _snapshot(root))
+
     def test_no_git_path_and_unrelated_working_directory(self):
         """An extracted copy uses its script location with no Git on PATH."""
         environment = dict(os.environ, PATH="")

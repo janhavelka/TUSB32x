@@ -16,15 +16,19 @@ Set `-DCMAKE_BUILD_TYPE=Debug` at configure time for a single-configuration
 generator (for example Ninja). Repeat in `build/release` with Release selected
 at configure/build/test time. Tests default OFF. Strict GNU/Clang/MSVC warnings
 are private; suite checks stay active with NDEBUG, and test targets also undefine
-NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these three suites:
+NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites:
 
 - `tusb32x_compile_contracts`: executed passive/Status checks across two TUs.
 - `tusb32x_validators`: variant/address/callback/timeout checks, exhaustive valid
   profile combinations, invalid enum bytes, input preservation and zero counting
   callbacks; unavailable valid fields return UNSUPPORTED_FEATURE.
-- `tusb32x_version_sync`: 17 isolated Python fixture tests for version truth,
-  drift/CLI exits, no-op bytes/mtimes, no Git or enclosing identity, and dirty
-  example independence. The suite cannot alter checkout metadata.
+- `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
+  drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
+  no Git or enclosing identity, and dirty example independence. The suite cannot
+  alter checkout metadata.
+- On Windows, `tusb32x_pio_launcher`: two temporary CMD fixtures check child
+  exit codes with inherited ERRORLEVEL shadows and missing-install diagnostics.
+  No PlatformIO installation is needed for these fixtures.
 
 The build separately compiles each public header as the only include and the
 three planned-contract fixtures as objects. They are compile checks, with no

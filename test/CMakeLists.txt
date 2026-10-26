@@ -33,3 +33,9 @@ find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 add_test(NAME tusb32x_version_sync
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_version_sync.py")
 set_tests_properties(tusb32x_version_sync PROPERTIES TIMEOUT 120)
+
+if(WIN32)
+  add_test(NAME tusb32x_pio_launcher
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_pio_launcher.py")
+  set_tests_properties(tusb32x_pio_launcher PROPERTIES TIMEOUT 30)
+endif()

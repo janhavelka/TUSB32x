@@ -13,7 +13,7 @@ Source IDs/revisions and unresolved gate IDs are defined in
 listed there; V names TUSB322I alone. Silicon/operation tests below remain future
 evidence; the implemented-values table records the subset delivered in prompts 5-8.
 Actual checks are in
-[validation](validation.md). Planned commands follow [CLI_CONTRACT](prompts/CLI_CONTRACT.md).
+[validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md). Planned commands follow [CLI_CONTRACT](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CLI_CONTRACT.md).
 
 Prompt 3 completed the [register contract](register-map.md) and
 [independent vectors](register-vectors.md): map/access/defaults, semantic
@@ -98,7 +98,7 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Facade — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only; callable engine9-17 |
 | Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
 | Source docs — Present | Five public headers with file/type/member/enum/function and generated version Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen, visibility of17 public structs and four version constants; complete omission guard33 |
-| Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
+| Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, duplicate-declaration rejection, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
 | Component/native tool configuration — Implemented; firmware Planned | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration fixture, launcher argument/exit fixtures and native linkage; native-IDF firmware25-26, full packages32 |
 
 No pass above represents a successful I2C transaction,
@@ -109,7 +109,7 @@ silicon decoder, framework build, CI run or physical qualification.
 All rows below are specified, with real checks limited to passive values and
 compile-only fixtures. [Method/state rules](api-contracts.md#method-admission-and-output-preservation)
 and future vectors O01–O25 are normative for their later implementation stages.
-Peer provenance is [execution-6-peers](audit/execution-6-peers.md); register and
+Peer provenance is [execution-6-peers](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-6-peers.md); register and
 procedure sources remain the exact TI revisions already listed above.
 
 | Feature / variant | API / CLI mapping | Completed specification and actual evidence | Future behavioral owner |

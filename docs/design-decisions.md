@@ -232,3 +232,19 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   current @janhavelka owner. Vendor terms and archived bytes remain untouched.
   Doxyfile has public inputs, fatal missing-documentation warnings and visible
   generated values; the complete omission checker remains prompt 33.
+
+### Prompt 8 independent audit corrections
+
+- Count managed declarations separately from canonical replacement syntax.
+  Alternate quoting, trailing comments and CMake command case/layout must not
+  hide a duplicate version. Keep the maintained declarations canonical and fail
+  ambiguity with exit 2 before writes; a general build-language parser is not
+  needed for these explicit fields.
+- Clear an inherited ERRORLEVEL environment variable inside the launcher's
+  existing setlocal scope before running Core. Otherwise it shadows CMD's dynamic
+  status and can report success for a failed child. Keep faithful `%*` forwarding
+  and the explicit captured exit. Register Windows-only temporary CMD regression
+  fixtures alongside the existing version suite; require no compiler or Core.
+- Retain the explicit package content set. Use source-host URLs for intentionally
+  excluded evidence and relative links between shipped guides, so archive
+  navigation works without shipping vendor or audit machinery.

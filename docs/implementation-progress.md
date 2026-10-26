@@ -4,7 +4,8 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 8 completely; prompt 9 remains separate.
+Current authorization: independently audit completed prompt 8 and fix its scope;
+prompt 9 remains separate.
 
 ## Prompt status
 
@@ -586,3 +587,47 @@ development/API/architecture/coverage, test/example guides and decision records.
 The lead commits this complete checked unit, fetches/pushes the existing upstream
 and verifies equality/clean task state. Final commit/sync evidence is in the
 handoff and next progress update without a self-referencing hash edit.
+
+## Prompt 8 independent re-audit
+
+Completed 2026-10-26, starting at `af0d2d44b812dfda006e5513e18b6c669451bb6d` on
+the same execution branch/base. Original prompt 8 was reread in full; actual
+implementation diff `93f2d31374dc16bcc95800d0e0c516c4372faa4a..af0d2d4` and current
+sources were reviewed independently. Initial worktree/index were clean; fetch
+confirmed upstream equality and zero ahead/behind. The prior prompt 8 commit
+was synchronized successfully; this audit starts no later implementation stage.
+
+Delegated three disjoint read-only reviews: gpt-6.1-sol/high checked requirements,
+documentation and scope; gpt-6-astra/high checked generator correctness, edge
+cases, fixtures and simplicity; gpt-6.1-sol/high checked packaging, component
+registration, launcher and tests-OFF portability. Each reread the applicable
+rules and actual code/diff and ran independent checks. The lead verified the
+findings, made all edits and owns Git. Current sibling revisions/clean states and
+exact source choices were refreshed in [execution-8-peers](audit/execution-8-peers.md).
+
+Confirmed and fixed three gaps: alternate-form duplicate managed declarations
+could let version check return 0 despite an effective conflicting CMake version;
+an inherited ERRORLEVEL environment variable could turn a failed launcher child
+into success; and 25 relative links in exported guides targeted excluded source
+files. Declaration counting now precedes canonical replacement, the launcher
+locally clears CMD's environment shadow, and repository-only guide links use
+existing source-host URLs. Corrected the stale changelog claim that version
+tooling was still planned. No package version, public C++ API, source list,
+dependency floor or silicon rule changed.
+
+PASS: 18 isolated generator fixtures; two new Windows launcher fixtures with
+16 status/shadow combinations and missing-install failure; Debug/Release 4/4
+registered CTests; sync/check and no-op bytes/mtimes; strict Doxygen and visibility;
+six CRT argument-forwarding comparisons; clean native PlatformIO compile/link/run;
+real 29-file archive, all relative packaged-guide links resolved; renamed extracted
+strict Release consumer beneath unrelated Git with maintainer tools absent from
+child PATH and tests OFF; host-only component-registration fixture; local links,
+Python docs/syntax/style, unchanged vendor hashes and scoped diff/whitespace.
+Exact commands and evidence are in [validation](validation.md).
+
+Real IDF archive tooling, framework firmware, hardware, full package matrix and
+complete omission guard remain later scope. Existing unavailable compiler,
+formatter and sanitizer limits remain explicit. No remote CI was dispatched or
+polled. The lead commits and synchronizes these checked corrections on the same
+branch; final commit/equality and clean-state evidence belong in the handoff and
+next progress update.

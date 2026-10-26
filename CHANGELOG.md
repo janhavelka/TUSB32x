@@ -20,9 +20,15 @@ Entries below distinguish those artifacts from planned device-driver functionali
   checks and a standalone multi-file host consumer. Tests default OFF; ordinary
   linkage needs no Git, Python, Doxygen, framework or sibling dependency.
 - Native build/consumer instructions and contributing guidance. Device operations,
-  metadata/version tooling, firmware and hardware qualification remain planned.
+  firmware and hardware qualification remain planned.
 
 ### Changed
+
+- Independently audited prompt 8 against its original requirements and source
+  diff. Reject alternate-form duplicate version declarations, preserve launcher
+  exit codes when ERRORLEVEL is inherited, and make packaged guide links usable.
+  Added generator and Windows launcher regression checks and repeated native,
+  package-consumer and documentation verification.
 
 - Independently audited prompt 7 against its original requirements, source diff
   and current peers. Repeated native, consumer and documentation checks; corrected
