@@ -376,6 +376,73 @@ void actualControlsWithoutTrust() {
   }
 }
 
+void serviceUsesFinalControlsAndBookends() {
+  // The first09 is neither the ACK control source nor the final latch sample.
+  // Change RW controls independently, then change attachment/direction and IRQ
+  // between bookends. Literal ACK frames must preserve the final actual controls.
+  for (const auto& part : PARTS) {
+    if (part.is322) continue;
+    for (unsigned vector = 0; vector < 3; ++vector) {
+      for (unsigned failure = 0; failure < 3; ++failure) {
+        Fixture f(part);
+        f.initialize();
+        f.stageDesired();
+        const auto old = f.refresh();
+        const uint8_t first = vector == 0 ? 0x94 : vector == 1 ? 0x84 : 0x74;
+        const uint8_t last = static_cast<uint8_t>((vector == 0 ? 0x90U :
+            vector == 1 ? 0x70U : 0x80U) | (part.base ? 0x06U : 0x07U));
+        const uint8_t after = vector == 2 ? 0x96 : 0x86;
+        f.script(true, first, last, after, part.base ? 0x16 : 0x17);
+        if (failure != 0) f.fake.script[failure == 1 ? 3 : 4].status =
+            t::Status::Error(t::Err::I2C_BUS, "changed-bookend service failure", -1609);
+        const auto token = f.start(true);
+        for (unsigned read = 0; read < 3; ++read) CHECK(f.poll(token, 100 + read).inProgress());
+        CHECK(samePort(f.device.portSnapshot(), old));
+        CHECK(f.poll(token, 103, 0).inProgress() && f.fake.calls == 3);
+        const auto complete = f.device.portSnapshot();
+        CHECK(complete.rawStatus09 == last && complete.rawStatus08 == 0x90);
+        CHECK(complete.rawValidMask == 3 && !complete.invalidated);
+        CHECK(complete.sequence == old.sequence + 1 && complete.observedUptimeMs == 100);
+        CHECK(complete.observedTimeValid && complete.configGeneration == old.configGeneration);
+        CHECK(complete.configurationState == t::ConfigurationState::KNOWN);
+        CHECK(complete.interruptPending == (vector != 2));
+        CHECK(complete.coherence == (vector == 0 ? t::SnapshotCoherence::BOOKENDS_MATCH
+                                                 : t::SnapshotCoherence::CHANGED_DURING_READ));
+        CHECK(complete.attachment == (vector == 1 ? t::Attachment::LOCAL_SOURCE
+                                                 : t::Attachment::LOCAL_SINK));
+        CHECK(complete.localRole == (vector == 1 ? t::PortRole::SOURCE : t::PortRole::SINK));
+        CHECK(complete.peerRole == (vector == 1 ? t::PortRole::SINK : t::PortRole::SOURCE));
+        CHECK(complete.orientation == (vector == 1 ? t::Orientation::CC2 : t::Orientation::CC1));
+        const uint16_t dependent = static_cast<uint16_t>(t::PortField::DETECTED_CURRENT) |
+            static_cast<uint16_t>(t::PortField::ACCESSORY) |
+            static_cast<uint16_t>(t::PortField::ACTIVE_CABLE);
+        if (vector != 0) {
+          CHECK((complete.validFields & dependent) == 0);
+          CHECK(complete.detectedCurrent == t::DetectedCurrent::UNKNOWN);
+          CHECK(complete.accessory == t::Accessory::UNKNOWN);
+        } else {
+          CHECK((complete.validFields & static_cast<uint16_t>(t::PortField::DETECTED_CURRENT)) != 0);
+          CHECK((complete.validFields & static_cast<uint16_t>(t::PortField::ACCESSORY)) != 0);
+        }
+        CHECK((complete.validFields & static_cast<uint16_t>(t::PortField::ADVERTISED_CURRENT)) != 0);
+        CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::UNKNOWN);
+        const auto status = f.finish(token, 104);
+        CHECK(failure == 0 ? status.ok() : status.is(t::Err::I2C_BUS));
+        CHECK(f.fake.errors == 0 && f.fake.calls == (failure == 1 ? 4U : 5U));
+        const auto result = f.take(token);
+        CHECK(samePort(result.port, complete) && samePort(f.device.portSnapshot(), complete));
+        CHECK(result.interrupt.observationValid && result.interrupt.pendingBefore == (vector != 2));
+        CHECK(result.interrupt.acknowledgeAttempted && result.interrupt.acknowledgeConfirmed == (failure != 1));
+        CHECK(result.interrupt.pendingAfterValid == (failure == 0));
+        if (failure == 0) CHECK(result.interrupt.pendingAfter == (vector == 2));
+        else CHECK(result.status.detail == -1609);
+        CHECK(result.hardwareEffect == (failure == 0 ? t::HardwareEffect::CONFIRMED :
+            failure == 1 ? t::HardwareEffect::INDETERMINATE : t::HardwareEffect::PARTIAL));
+      }
+    }
+  }
+}
+
 void everyAckByteAndStaged02() {
   // Independent literal low-bit tables: base bit0 is reserved; extended bit0
   // is the persistent accessory control. All RO/reserved high bits are omitted.
@@ -771,6 +838,7 @@ int runInterruptTests() {
   admission();
   exactWritesAndBounds();
   actualControlsWithoutTrust();
+  serviceUsesFinalControlsAndBookends();
   everyAckByteAndStaged02();
   negativeControlEvidence();
   unrelatedProfileWritesPreserveLatch();

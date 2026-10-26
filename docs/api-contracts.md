@@ -410,8 +410,8 @@ does not replay, and reset never reapplies a desired profile. The tables below
 finish the baseline's precedence, result retention and interruption rules.
 
 Pure binding/profile validators are implemented in prompt 7, decoding in 10,
-and the delivered owner subset in 11–15. Remaining driver methods are published
-with their owning work in prompts 16–17; health projection is prompt 17.
+and the delivered owner subset, including IRQ acknowledgement/service, in 11–16.
+Raw access and health helpers remain prompt 17 work.
 No unavailable function may appear in a runnable quick start before that work.
 The health validator requires offlineThreshold >= 1. Invalid policy returns
 INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it

@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent prompt-16 audit and service regressions for controls that change
+  between the two 09 reads, final-sample ACK composition, and changed-bookend
+  field validity through ACK/recheck failure. Both targeted faulty implementations
+  passed the old tests and are rejected by the new cases. Production behavior
+  remains unchanged; corrected stale API scope and the test-file inventory.
+
 - Explicit `startAcknowledgeInterrupt` and `startServiceInterrupt` through the
   existing owner engine. Fresh actual controls determine the safe W1C byte;
   staged desired controls never enter ACK. ACK-only is bounded to two callbacks,

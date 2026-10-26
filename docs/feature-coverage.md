@@ -277,3 +277,9 @@ GPIO ownership or automatic follow-up is introduced. Physical IRQ level/timing
 and wiring remain unqualified. Actual local commands/counts are in validation;
 the current peer review is
 [execution-16-peers](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-16-peers.md).
+
+The independent prompt-16 audit adds service cases with different first/final
+09 controls and IRQ levels. ACK must preserve final controls; changed attachment/
+direction bookends withhold dependent field validity. Success and ACK/recheck
+failure retain the same complete pre-ACK observation. Mutation checks demonstrate
+that the regressions reject stale-control composition and false matching bookends.

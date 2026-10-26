@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 16; later prompts remain separate.
+Current authorization: independently audit completed prompt 16; later prompts remain separate.
 
 ## Prompt status
 
@@ -1273,3 +1273,32 @@ maintainer tools. Exact commands and evidence limits are in
 Physical IRQ wiring/levels/timing and framework firmware remain unqualified.
 The lead commits and syncs this checked unit on the same branch, verifies upstream
 equality and clean state, and reports the final commit in the handoff.
+
+## Prompt 16 independent audit (2026-10-26)
+
+Started clean and synchronized at `671134de40d90a0ebb3c6e30ca7eb54a11470c4d`
+on the existing execution branch. Re-read full prompt 16 and actual
+`e964fe5..671134d` diff. Three fresh-context reviewers checked engine/time/effects
+(gpt-6-astra/high), test oracles and mutation evidence (gpt-6.1-sol/high), and
+requirements/TI/current peers/documentation/simplicity (gpt-6.1-sol/high).
+The lead verified findings against source and reran the independent probes.
+
+No production defect was confirmed. Added missing service regressions for ACK
+composition from final09 controls when bookends differ, and changed-bookend
+field validity through successful service and ACK/recheck failure. Two isolated
+faulty engine copies passed the old suite: one reused first09 controls, the other
+made service bookends always match. The new cases reject them with 240 and 144
+failures respectively. The real unchanged engine passes 71,617 IRQ checks and
+495,667 port checks. Corrected stale delivered-API scope and the test-file inventory.
+
+Reopened exact TI IRQ/fault pages and current INA228/PCA9555/LDC1614 sources
+confirm the revisions, clean states and choices in
+[execution-16-peers](audit/execution-16-peers.md). No sibling changes or remote CI.
+PASS: fresh strict Debug/Release seven CTests each, prior operation/protocol/codec
+suites, 144 independent failed-ACK lifecycle cases, Doxygen visibility, links/
+provenance/version checks and source-equal extracted package consumption.
+Commands and hardware/tooling limits are in
+[validation](validation.md#prompt-16-independent-audit-2026-10-26).
+No new API, dependency, runtime refactor or silicon-policy change was needed.
+The lead commits and syncs this checked audit on the same branch and verifies
+upstream equality/clean state; final commit evidence is in the handoff.

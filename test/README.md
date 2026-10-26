@@ -197,6 +197,10 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   because its separate raw fault bit3 has unresolved write access semantics.
   Independent literal vectors cover B4->14, B5->15 despite staged02, actual50
   versus staged30, 06->16, all256 fresh09 values and already-UNKNOWN trust.
+  Service bookends with differing RW controls require final06/07->ACK16/17,
+  including independent IRQ changes in both directions. Changed attachment/
+  direction bookends retain final raw/role evidence and withhold dependent
+  current/accessory/cable validity through successful service or ACK/recheck errors.
   Complete pre-ACK data retains acquisition time, sequence and configuration
   provenance through ACK/recheck failure; a final64 recheck cannot replace the
   complete prior sink observation. A contradiction first seen only in recheck

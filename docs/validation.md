@@ -1940,3 +1940,62 @@ Final parallel review found no remaining production/test defect. Corrected stale
 changelog wording and clarified that plain refresh preserves diagnostic IRQ history
 while leaving its own operation IRQ record empty. Fake events are explicit inputs;
 the model does not infer clear-on-read, lossless capture or electrical timing.
+
+## Prompt 16 independent audit (2026-10-26)
+
+Fresh audit started at synchronized `671134de40d90a0ebb3c6e30ca7eb54a11470c4d`
+on the same execution branch. Re-read full prompt 16, baseline IRQ/port/time/
+effect contracts, actual implementation diff and source/tests. Three independent
+reviewers inspected engine correctness, requirements/TI/peers/docs and test oracles.
+No production defect was confirmed. The lead inspected and reran the findings.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh strict Debug/Release | PASS | Seven CTests each after the regression additions; active Release checks and independent public-header/contract compilation |
+| IRQ/port regressions | PASS | 71,617 IRQ checks plus 495,667 port checks; new service vectors vary first/final controls, IRQ and E0 bookends, verify literal final06/07 ACK16/17, field validity, zero-budget publication and retained data after ACK/recheck failure |
+| Mutation evidence | PASS | Stale first09 control composition and falsely matching service bookends both pass the old 67,081 IRQ checks. New regressions reject them with 240 and 144 failed assertions; the real engine passes unchanged |
+| Independent lifecycle probe | PASS | 144 stateful public-API cases: six variants, both operations, six transport errors, before/after simulated latch clear; take/end/same-target bind/reinitialize retain IRQ uncertainty without a settings obligation or ACK replay |
+| Previous suites | PASS | 35,454 profile observation, 89,140 apply/verify, 88,779 reset/recovery, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; values/validators/version/launcher |
+| Source evidence | PASS | B pp16/18, L/A p18, V pp18–19 and SLAAE24 section8 p9 reread; eight TI hashes checked. INA228/PCA9555/LDC1614 remain main/clean at execution-16 revisions; relevant source/tests/examples/CLI/runners/instructions/workflow definitions reopened |
+| Documentation/package | PASS | Strict Doxygen with 17 public structs and24 owner methods; future methods absent; links/anchors, UTF-8/LF/whitespace/version checks; source-equal36-file archive and renamed tests-OFF consumer under unrelated Git without maintainer tools |
+| Separate evidence | NOT RUN | Physical IRQ/electrical behavior and framework firmware. Installed MinGW sanitizer runtimes remain unavailable from same-day checks; MSVC/Clang/clang-format absent. Native PlatformIO was not repeated for test/docs-only corrections; package consumption was rechecked |
+
+Tools remain GCC15.1 MinGW-W64, CMake/CTest4.0.1, Ninja1.12.1, Python3.12.10
+and Doxygen1.13.2. Lead commands:
+
+```powershell
+cmake -S . -B build/p16-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p16-independent-audit --config Debug
+ctest --test-dir build/p16-independent-audit -C Debug --output-on-failure
+cmake --build build/p16-independent-audit --config Release
+ctest --test-dir build/p16-independent-audit -C Release --output-on-failure
+& build/p16-independent-audit/test/Release/tusb32x_port.exe
+& build/p16-independent-audit/test/Release/tusb32x_operations.exe
+& build/p16-independent-audit/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude build/p16-audit-engine/history_probe.cpp build/p16-independent-audit/Debug/libTUSB32x.a -o build/p16-audit-engine/lead-probe.exe
+& build/p16-audit-engine/lead-probe.exe
+& build/p16-audit-tests/stale-controls-mutant.exe
+& build/p16-audit-tests/stale-controls-mutant-regressions.exe
+& build/p16-audit-tests/coherence-mutant-before.exe
+& build/p16-audit-tests/coherence-mutant-after.exe
+doxygen Doxyfile
+python build/p16-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p16.tar.gz
+python build/p16-package.py
+git diff --check
+```
+
+Mutant runs with the new tests intentionally exit1; old-suite runs exit0. Their
+only engine changes are in the service completion branch: substitute first09
+low control bits while preserving final IRQ evidence, or pass final09 as both
+decoder bookends. The isolated sources/executables under ignored
+`build/p16-audit-tests/` are session evidence, never delivered code. The permanent
+regression uses the existing public fixture and registered port suite. The
+lifecycle probe similarly uses public operations without private state seeding.
+
+Corrected stale API text that deferred implemented IRQ methods and added the
+IRQ test file to the architecture inventory. No runtime behavior, public API,
+silicon gate or dependency changed. Hardware qualification remains separate;
+no remote CI was requested or checked.
