@@ -3,17 +3,28 @@
 This checkout contains audited implementation contracts, portable C++17 values
 and a cooperative owner engine with read-only initialization, profile observation,
 explicit profile application, desired verification, read-only reconciliation,
-explicit reset, original TUSB320/I dead-battery recovery and complete port refresh.
+explicit reset, original TUSB320/I dead-battery recovery, complete port refresh
+and explicit IRQ acknowledgement/bounded service.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
 
+- Explicit `startAcknowledgeInterrupt` and `startServiceInterrupt` through the
+  existing owner engine. Fresh actual controls determine the safe W1C byte;
+  staged desired controls never enter ACK. ACK-only is bounded to two callbacks,
+  service to complete 09/08/09 publication, one ACK and one recheck (five).
+  Complete pre-ACK data survives later failure. Sampled-before, ACK attempt,
+  callback acceptance and sampled-after remain independent; no lossless edge
+  count or automatic reservice is implied. Current identity is required, UNKNOWN
+  configuration allowed, and TUSB322I rejects both before traffic under its
+  unresolved fault/09-write gate. GPIO/ISR and follow-up policy stay application-owned.
+
 - Independent prompt-15 audit and regression for configuration contradictions
   first observed in the final port read, including cancellation, deadline and
   backward-time rejection. Clarified implemented port support, configuration-only
-  proof limits and the planned IRQ acknowledgement/service evidence boundary.
+  proof limits and the IRQ acknowledgement/service evidence boundary.
 
 - Read-only `startRefreshPort` through the existing owner engine and cached
   `portSnapshot` publication. Fixed 09/08/09 reads preserve final raw status,
@@ -21,8 +32,8 @@ Entries below distinguish those artifacts from planned device-driver functionali
   bookend coherence and original acquisition/configuration provenance. Failed
   partial reads retain the previous complete snapshot; complete publications
   advance a saturating sequence. Invalidation preserves historical observations.
-  Added the registered port regression suite. IRQ acknowledgement/service remain
-  planned; attached-current tracking, connector mapping and electrical behavior
+  Added the registered port regression suite. Attached-current tracking,
+  connector mapping and electrical behavior
   require separate physical qualification.
 
 - Independent prompt-14 audit and regressions for fresh reset controls differing

@@ -7,7 +7,7 @@ target_include_directories(tusb32x_protocol PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}
 add_executable(tusb32x_operations test_operations.cpp test_profile_observation.cpp
   test_profile_application.cpp test_reset_recovery.cpp)
 target_include_directories(tusb32x_operations PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
-add_executable(tusb32x_port test_port.cpp)
+add_executable(tusb32x_port test_port.cpp test_interrupt.cpp)
 target_include_directories(tusb32x_port PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
 foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol tusb32x_operations tusb32x_port)

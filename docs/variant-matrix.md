@@ -13,7 +13,9 @@ seven I2C variants, subject to the gates below. Full identity/control/effect pro
 establish KNOWN actual settings;
 this does not grant write permission or exact-part identification from a shared
 signature. Original TUSB320/I dead-battery recovery is also implemented;
-read-only port refresh is implemented for all seven variants. Later device
+read-only port refresh is implemented for all seven variants. Explicit IRQ
+acknowledgement and bounded service are implemented for the six 320 variants;
+TUSB322I rejects both before traffic under V_FAULT_CLEAR. Later device
 operations and CLI names below remain planned contracts.
 Apply changes only differing fields, verifies the complete final image and
 retains independent termination/effect evidence after interruption. Pure decoding
@@ -46,6 +48,17 @@ added. Source advertisement, local-sink detection and accessory current are
 separate categories. Base accessory code 7 remains reserved; extended code 6/7
 means debug local DFP/UFP, not the peer role. Charge-through means audio
 charged-through and is distinct from ordinary default current.
+
+`startAcknowledgeInterrupt` and `startServiceInterrupt` require current validated
+identity but allow UNKNOWN configuration if fresh 09 controls establish a safe
+image. ACK preserves actual applicable RW controls and sets only IRQ W1C bit `0x10`;
+it never replays RO fields or desired staging. ACK-only uses two callbacks
+(three requested TX bytes/one RX byte); service uses the complete 09/08/09
+publication, one ACK and one 09 recheck, five callbacks (six TX/four RX bytes).
+The complete pre-ACK sample survives later failures; a recheck cannot replace it.
+Sampled-before, ACK attempt/acceptance and sampled-after remain distinct, with no
+lossless edge history or automatic follow-up. Plain refresh never ACKs. Core
+polling works without an IRQ pin; wiring/levels need separate board evidence.
 
 A successful refresh does not qualify attached-current tracking. B §7.3.1.2 p11
 recommends explicit reset to update detection; refresh never resets. L/A/V

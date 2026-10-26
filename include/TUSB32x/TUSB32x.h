@@ -228,6 +228,10 @@ struct IdentitySnapshot {
 /// @brief Sampled IRQ and write-acceptance evidence, independent of attachment and event counting.
 /// @details Coalescing latches do not guarantee lossless capture. A successful ACK callback does not
 /// prove the latch stayed clear; only a valid post-write sample describes that later sampled level.
+/// ACK-only publishes its fresh pre-write 09 sample; service publishes after complete 09/08/09.
+/// Attempt/acceptance are recorded at the callback, while read publication requires fresh owner time.
+/// Ordinary refresh reports only PortSnapshot.interruptPending, leaves its operation IRQ record
+/// empty and preserves prior diagnostic IRQ history.
 struct InterruptSnapshot {
   bool observationValid = false; ///< pendingBefore is a successfully decoded pre-ACK sample.
   bool pendingBefore = false; ///< Pre-ACK sampled latch level; invalid until observationValid.
@@ -355,7 +359,7 @@ struct DriverDiagnostics {
 /// @brief Serialized application-owned cooperative driver; no allocation or implicit I2C.
 /// @details Only poll invokes transport. Borrowed context must live until end returns. No ISR use,
 /// concurrent access or callback reentry. One active token becomes one immutable retained result.
-/// Apply changes requested settings; reset and base recovery are separate explicit write requests.
+/// Apply changes requested settings; reset, base recovery and IRQ ACK/service are explicit writes.
 /// Initialization, profile/port observation, verification and reconciliation perform reads only.
 /// Cached copies remain historical unless their validity and current trust allow use.
 /// This object cannot be copied/moved.
@@ -447,6 +451,27 @@ class TUSB32x {
   /// No ACK/reset, GPIO or power policy. Contradictory controls can invalidate current
   /// configuration trust without replacing the historical port observation.
   Status startRefreshPort(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit one explicit IRQ acknowledgement using fresh actual controls; no admission I2C.
+  /// @param[in] timing Owner admission time and immutable deadline in milliseconds.
+  /// @param[out] token New token on IN_PROGRESS; unchanged on rejection.
+  /// @return IN_PROGRESS or normal admission errors; requires current validated identity.
+  /// TUSB322I returns UNSUPPORTED_FEATURE before traffic while fault/write semantics are gated.
+  /// @details UNKNOWN configuration is allowed. Poll reads 09 and writes a safely composed
+  /// W1C byte once: at most two callbacks, three TX bytes and one RX byte. Desired settings
+  /// are ignored. No port refresh, recheck or automatic retry; the historical port remains.
+  /// Callback acceptance is distinct from sampled latch state. Failed writes may have cleared
+  /// IRQ; cancellation/end never undo effects. Contradictory reads can revoke configuration trust.
+  Status startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit one bounded port observation, IRQ ACK and sampled recheck; no admission I2C.
+  /// @param[in] timing Owner admission time and immutable deadline in milliseconds.
+  /// @param[out] token New token on IN_PROGRESS; unchanged on rejection.
+  /// @return IN_PROGRESS or the same identity/variant/admission errors as ACK-only.
+  /// @details Poll uses 09/08/09, publishes the complete port, writes ACK, then reads 09 once:
+  /// at most five callbacks, six TX bytes and four RX bytes. Fresh owner time qualifies
+  /// each pending completion. Complete pre-ACK data survives a later failure/cancel/expiry.
+  /// Recheck updates only IRQ evidence; pendingAfter=true can accompany successful service.
+  /// No GPIO/ISR, event count, lossless queue or automatic follow-up operation is provided.
+  Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);
   /// @brief Admit one explicit reset; admission copies timing and performs no I2C.
   /// @param timing Immutable owner deadline and admission time in milliseconds.
   /// @param token Receives a new token only on IN_PROGRESS; preserved on rejection.
@@ -519,6 +544,7 @@ class TUSB32x {
     RESET_PRECHECK, RESET_WRITE, RECOVERY_PRECHECK, RECOVERY_DISABLE,
     RECOVERY_ENABLE, RECOVERY_VERIFY, PROCEDURE_WAIT,
     PORT_FIRST09, PORT08, PORT_LAST09,
+    IRQ_PRECHECK, IRQ_ACK, IRQ_RECHECK,
     IDENTITY, REVISION, CONFIG08, CONFIG09, CONFIG0A, CONFIG45, DONE
   };
   /// @brief One composed write in a fixed profile plan of at most six entries.
@@ -566,6 +592,10 @@ class TUSB32x {
   Status publishConfiguration();
   Status compareObservedProfile(const DeviceProfile& expected);
   void observeControl(uint8_t reg, uint8_t value);
+  /// @brief Publish fresh pre-ACK evidence and compose 09 from actual controls, never desired.
+  /// @param[in] actual09 Complete current pre-ACK sample; caller has passed the fresh-time check.
+  /// @return Composer status; successful composition selects the single ACK write phase.
+  Status prepareInterruptAck(uint8_t actual09);
 };
 
 }  // namespace TUSB32x

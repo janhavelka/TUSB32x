@@ -696,7 +696,10 @@ void ccAndVbusEvidence() {
 
 } // namespace
 
+int runInterruptTests();
+
 int main() {
+  failures += runInterruptTests();
   admissionAndPublication();
   independentStatusEncodings();
   everyFinalStatusByte();

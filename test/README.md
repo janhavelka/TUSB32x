@@ -1,4 +1,4 @@
-# Native contract, validator, transport, codec, owner, port and version checks
+# Native contract, validator, transport, codec, owner, port, IRQ and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
@@ -15,6 +15,8 @@ Prompt 14 adds explicit reset and original TUSB320/TUSB320I recovery, literal
 command/procedure scripts, retained sequence history and physical-clock wait checks.
 Prompt 15 adds complete port acquisitions, applicability, coherence and historical
 freshness through the same public owner engine.
+Prompt 16 adds explicit ACK and finite interrupt service, sampled latch evidence,
+safe actual-control preservation and retained pre-ACK port observations.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -187,6 +189,32 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   observation retains configuration provenance from before its first read.
   A contradiction first seen in final09 revokes trust before fresh publication,
   cancellation or expiry; rejected backward-time polling preserves that evidence.
+  `test_interrupt.cpp` links both public interrupt starts. Six supported variants
+  execute exact ACK R09/W09 and service R09/R08/R09/W09/R09 plans: respectively
+  two/five callbacks, three/six TX bytes and one/four RX bytes. Every poll invokes
+  at most one callback, including larger budgets; zero budget permits fresh
+  pending-data processing but no callback. TUSB322I rejects both starts locally
+  because its separate raw fault bit3 has unresolved write access semantics.
+  Independent literal vectors cover B4->14, B5->15 despite staged02, actual50
+  versus staged30, 06->16, all256 fresh09 values and already-UNKNOWN trust.
+  Complete pre-ACK data retains acquisition time, sequence and configuration
+  provenance through ACK/recheck failure; a final64 recheck cannot replace the
+  complete prior sink observation. A contradiction first seen only in recheck
+  immediately revokes configuration trust while preserving the complete port
+  publication through success, cancellation, expiry and rejected backward time.
+  Every callback injects six terminal transport errors; failed ACKs run both
+  before and after simulated latch clearing. Truncated failed reads cannot
+  publish complete observations. Cancellation, end, external invalidation and
+  deadline equality cover every callback/final-fresh-time boundary. Tests keep
+  NONE/PARTIAL/INDETERMINATE/CONFIRMED effects, original errors/details, retained
+  results, diagnostic IRQ history and per-operation empty/partial IRQ records
+  separate. Public profile changes for every individual field, including all
+  role-stage writes, preserve a pending latch rather than accidentally ACK it.
+  An explicit coalescing fake schedules reassertion between observation and ACK,
+  during ACK, before recheck and after its sample, plus stuck-latch and no-pin
+  polling cases. It assumes non-consuming reads and explicitly scheduled events;
+  the TI RU-change/CSR wording is not treated as every-write IRQ behavior or as
+  evidence for fault clearing, physical GPIO timing or lossless edge counting.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -267,6 +295,6 @@ structs; no warning alone would not prove their visibility. The retained evidenc
 and exact command are in [validation](../docs/validation.md).
 
 These checks prove current portable values, pure validators, private register
-transport/identity/codecs, owner lifecycle/profile/port behavior, linkage and planned
+transport/identity/codecs, owner lifecycle/profile/port/IRQ behavior, linkage and planned
 signature syntax. Later operation families, health projection, framework builds, complete
 package qualification and physical hardware tests remain separate work.

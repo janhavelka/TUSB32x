@@ -5,8 +5,6 @@
 
 using Driver = TUSB32x::planned::Driver;
 using ImplementedDriver = TUSB32x::TUSB32x;
-using Start = TUSB32x::Status (Driver::*)(const TUSB32x::OperationTiming&,
-                                       TUSB32x::OperationToken&);
 using ImplementedStart = TUSB32x::Status (ImplementedDriver::*)(
     const TUSB32x::OperationTiming&, TUSB32x::OperationToken&);
 static_assert(!std::is_copy_constructible_v<Driver>);
@@ -23,8 +21,8 @@ static_assert(std::is_same_v<decltype(&ImplementedDriver::startApplyProfile),
                   const TUSB32x::OperationTiming&, TUSB32x::OperationToken&)>);
 static_assert(std::is_same_v<decltype(&Driver::startReconcile), ImplementedStart>);
 static_assert(std::is_same_v<decltype(&ImplementedDriver::startRefreshPort), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&Driver::startAcknowledgeInterrupt), Start>);
-static_assert(std::is_same_v<decltype(&Driver::startServiceInterrupt), Start>);
+static_assert(std::is_same_v<decltype(&ImplementedDriver::startAcknowledgeInterrupt), ImplementedStart>);
+static_assert(std::is_same_v<decltype(&ImplementedDriver::startServiceInterrupt), ImplementedStart>);
 static_assert(std::is_same_v<decltype(&ImplementedDriver::startReset), ImplementedStart>);
 static_assert(std::is_same_v<decltype(&ImplementedDriver::startRecoverDeadBattery), ImplementedStart>);
 

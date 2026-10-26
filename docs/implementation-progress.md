@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 15; later prompts remain separate.
+Current authorization: implement prompt 16; later prompts remain separate.
 
 ## Prompt status
 
@@ -25,7 +25,7 @@ Current authorization: independently audit completed prompt 15; later prompts re
 | [13: profile-application](prompts/13-profile-application.md) | COMPLETE |
 | [14: reset-recovery](prompts/14-reset-recovery.md) | COMPLETE |
 | [15: port-snapshots](prompts/15-port-snapshots.md) | COMPLETE |
-| [16: interrupt-service](prompts/16-interrupt-service.md) | NOT STARTED |
+| [16: interrupt-service](prompts/16-interrupt-service.md) | COMPLETE |
 | [17: diagnostics-health](prompts/17-diagnostics-health.md) | NOT STARTED |
 | [18: protocol-conformance](prompts/18-protocol-conformance.md) | NOT STARTED |
 | [19: owner-portability](prompts/19-owner-portability.md) | NOT STARTED |
@@ -1237,3 +1237,39 @@ and remaining hardware/tooling limits are in
 [validation](validation.md#prompt-15-independent-audit-2026-10-26).
 Lead commits and syncs this checked audit on the same branch and verifies upstream
 equality/clean state; final commit evidence is in the handoff.
+
+## Prompt 16: explicit interrupt acknowledgement and service (2026-10-26)
+
+Started clean and synchronized at `e964fe5d584100e9e98c3a20f09e5cd38b673f1b`
+on the existing execution branch. Completed prompt 16 only. Re-read the full
+prompt, baseline IRQ/effect/port/owner contracts and exact TI W1C/fault pages.
+Current INA228/PCA9555/LDC1614 sources, clean revisions, instructions, examples,
+CLI/runners and workflow definitions are recorded in
+[execution-16-peers](audit/execution-16-peers.md). Siblings remained read-only;
+remote CI remains prompt 34 work.
+
+Implemented `startAcknowledgeInterrupt` and `startServiceInterrupt` with the
+existing engine, protocol wrapper and safe composer. ACK uses fresh actual
+controls and two callbacks. Service shares complete port publication, performs
+one ACK and one recheck, within five callbacks. Pending-before, write attempt,
+callback acceptance and sampled-after remain independent. Complete pre-ACK data
+survives later failure; no retries, GPIO, queue or automatic follow-up is added.
+TUSB322I ACK/service remain gated by unresolved fault/09-write semantics.
+
+Parallel agents owned disjoint tests and peer/documentation work; an independent
+reasoning reviewer checked silicon, production and an exhaustive public probe.
+The lead reviewed actual code/tests/diffs and reran the probe. Review found no
+remaining production defect. Corrected fixture assumptions about incomplete
+service publication and contrary advertisement evidence, plus stale changelog
+wording. Doxygen now distinguishes each operation's IRQ record from retained
+diagnostic history. No new production file, dependency or version bump was needed.
+
+PASS: strict Debug/Release seven CTests each, 67,081 IRQ checks plus 495,667 port
+checks, previous owner/profile/reset/protocol/codec suites, independent 66,048
+checks across 3,072 IRQ operations, Doxygen visibility for 24 implemented owner
+methods, native PlatformIO and a source-equal 36-file package consumer without
+maintainer tools. Exact commands and evidence limits are in
+[validation](validation.md#prompt-16-explicit-interrupt-service-2026-10-26).
+Physical IRQ wiring/levels/timing and framework firmware remain unqualified.
+The lead commits and syncs this checked unit on the same branch, verifies upstream
+equality and clean state, and reports the final commit in the handoff.

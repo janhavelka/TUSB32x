@@ -14,8 +14,9 @@ It also provides a non-copyable owner facade with bus-silent lifecycle,
 instance-local tokens, retained results, read-only initialization, profile
 observation, explicit desired-profile apply/verification, read-only reconciliation,
 explicit reset, original TUSB320/I dead-battery recovery and complete read-only
-port refresh with cached publication. IRQ acknowledgement/service, other operation
-families and framework firmware remain planned.
+port refresh with cached publication, plus explicit interrupt acknowledgement and
+bounded observe/ACK/recheck service. Other operation families and framework
+firmware remain planned.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to

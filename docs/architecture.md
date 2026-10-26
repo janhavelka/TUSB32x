@@ -11,7 +11,8 @@ observation and read-only reconciliation through that engine. Prompt 13 adds
 explicit differences-only apply and desired-profile verification using the same
 proof and write composer. Prompt 14 adds explicit reset and original TUSB320/I
 dead-battery recovery without a second engine or scheduler. Prompt 15 adds fixed
-read-only port refresh and cached publication through that same engine. The
+read-only port refresh and cached publication through that same engine. Prompt 16
+adds explicit IRQ acknowledgement and bounded observe/ACK/recheck service. The
 [API inventory](api-contracts.md) separates delivered methods from future calls; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
@@ -21,11 +22,11 @@ read-only port refresh and cached publication through that same engine. The
 | --- | --- |
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
-| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, port refresh, token/result and cached methods are callable |
+| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, port refresh, IRQ acknowledgement/service, token/result and cached methods are callable |
 | include/TUSB32x/CommandTable.h | RegisterDecode value and callable pure decodeRegister; raw evidence and independent field validity |
 | include/TUSB32x/Version.h | Generated stable constexpr version values; no Git, timestamp or firmware identity |
 | src/TUSB32x.cpp | Bounded pure binding/profile validation |
-| src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization/profile/apply/verify/reconcile/reset/recovery/port engine with private phases, immutable deadlines, tokens and retained results |
+| src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization/profile/apply/verify/reconcile/reset/recovery/port/IRQ engine with private phases, immutable deadlines, tokens and retained results |
 | src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic and saturating publication sequence |
 | src/TUSB32xProtocol.h/.cpp | Private mapped terminal callbacks, single accounting boundary, possible-write evidence and pure exact identity/revision comparisons |
 | src/TUSB32xCodecs.h/.cpp | Public pure decoder, private complete-port interpretation, typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
@@ -75,7 +76,7 @@ and Doxygen. The current units implement validators, private transport/identity
 and pure codecs/composition, plus lifecycle/token/result handling and read-only
 initialization, profile observation, explicit apply, desired-profile verification
 and read-only reconciliation, explicit reset, base dead-battery recovery and
-complete read-only port refresh.
+complete read-only port refresh and explicit IRQ acknowledgement/service.
 Other operation families remain later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
@@ -173,6 +174,23 @@ compared under E0; matching is evidence of matching bookends, while changed valu
 invalidate cross-register fields without discarding raw data. Both remain
 sequential hardware observations. Failure preserves the old complete snapshot;
 publication increments its saturating sequence and clears invalidated.
+
+IRQ acknowledgement reads fresh actual09 and uses the existing safe composer to
+write W1C bit `0x10` while preserving only applicable RW controls. It takes at most
+two callbacks, three requested TX bytes and one RX byte. Full service shares
+the fixed port observation, publishes it before ACK, then rechecks09 once: five
+callbacks, six TX bytes and four RX bytes. Both need current identity but permit
+UNKNOWN configuration; TUSB322I rejects before traffic under its unresolved
+fault/09-write gate. Desired controls are never write inputs for ACK.
+
+ACK effects do not invalidate the complete port observation or create a settings
+proof obligation. Complete pre-ACK data survives a later ACK/recheck error.
+Operation IRQ evidence records sampled-before, attempt, callback acceptance and
+sampled-after independently; plain refresh updates only the sampled port field.
+An OK write can coincide with a reassertion, and a failed write can already have
+cleared the latch. One recheck is current sampled evidence, never lossless event
+history. A pending recheck does not cause another operation. Polling requires no
+IRQ pin; GPIO, ISR handoff and follow-up policy remain in the application.
 
 End, external invalidation and possible port-affecting writes set invalidated
 without rewriting the historical fields/time/provenance. Configuration readback

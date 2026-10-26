@@ -1,5 +1,5 @@
 /// @file TUSB32xOperations.cpp
-/// @brief Bus-silent lifecycle, explicit writes, bounded shared proof and complete port publication.
+/// @brief Bus-silent lifecycle, shared proof/port publication and explicit bounded write/IRQ operations.
 #include "TUSB32x/TUSB32x.h"
 
 #include "TUSB32x/CommandTable.h"
@@ -14,6 +14,9 @@ namespace TUSB32x {
 namespace {
 
 Status error(Err code) { return Status::Error(code, errorName(code)); }
+
+// TI SLLSEN9F Table7-7 p18; SLLSEP2D/SLLSEQ8D Table9 p18. V fault bit3 is separate.
+constexpr uint8_t IRQ_PENDING = 0x10;
 
 void increment(uint32_t& value) {
   if (value != std::numeric_limits<uint32_t>::max()) ++value;
@@ -102,7 +105,9 @@ Status TUSB32x::finish(Status status, bool timeValid, uint64_t nowMs) {
   if (_configuration.state == ConfigurationState::APPLYING) invalidateConfiguration();
   if (status.ok() && (_progress.kind == OperationKind::APPLY_PROFILE ||
       _progress.kind == OperationKind::RESET ||
-      _progress.kind == OperationKind::RECOVER_DEAD_BATTERY) &&
+      _progress.kind == OperationKind::RECOVER_DEAD_BATTERY ||
+      _progress.kind == OperationKind::ACKNOWLEDGE_INTERRUPT ||
+      _progress.kind == OperationKind::SERVICE_INTERRUPT) &&
       _result.hardwareEffect == HardwareEffect::PARTIAL)
     _result.hardwareEffect = HardwareEffect::CONFIRMED;
   _progress.state = status.ok() ? OperationState::SUCCEEDED :
@@ -207,6 +212,14 @@ Status TUSB32x::startRefreshPort(const OperationTiming& timing, OperationToken& 
   return startOperation(OperationKind::REFRESH_PORT, timing, token);
 }
 
+Status TUSB32x::startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token) {
+  return startOperation(OperationKind::ACKNOWLEDGE_INTERRUPT, timing, token);
+}
+
+Status TUSB32x::startServiceInterrupt(const OperationTiming& timing, OperationToken& token) {
+  return startOperation(OperationKind::SERVICE_INTERRUPT, timing, token);
+}
+
 Status TUSB32x::startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token) {
   return startOperation(OperationKind::RECOVER_DEAD_BATTERY, timing, token);
 }
@@ -215,6 +228,8 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
                                OperationToken& token, const DeviceProfile* candidate) {
   const uint64_t interval = timing.deadlineMs - timing.nowMs;
   if (interval == 0 || interval >= detail::HALF_RANGE) return error(Err::INVALID_PARAM);
+  const bool interrupt = kind == OperationKind::ACKNOWLEDGE_INTERRUPT ||
+      kind == OperationKind::SERVICE_INTERRUPT;
   if (candidate != nullptr) {
     // Before binding only enum shape is meaningful; no variant may be guessed.
     // The complete public validator then checks the bound variant's capabilities.
@@ -230,10 +245,13 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
   if (kind == OperationKind::RECOVER_DEAD_BATTERY && _diagnostics.bound &&
       _config.variant != Variant::TUSB320 && _config.variant != Variant::TUSB320I)
     return error(Err::UNSUPPORTED_FEATURE);
+  // SLLSEO5D Table6-9: fault RCU lacks a safe clear transaction. Gate the whole09 write.
+  if (interrupt && _diagnostics.bound && _config.variant == Variant::TUSB322I)
+    return error(Err::UNSUPPORTED_FEATURE);
   if (!_diagnostics.bound) return error(Err::NOT_BOUND);
   if (_progress.state == OperationState::ACTIVE) return error(Err::BUSY);
   if (_progress.resultPending) return error(Err::RESULT_PENDING);
-  if (kind == OperationKind::RESET || kind == OperationKind::RECOVER_DEAD_BATTERY) {
+  if (kind == OperationKind::RESET || kind == OperationKind::RECOVER_DEAD_BATTERY || interrupt) {
     if (!_diagnostics.initialized) return error(Err::NOT_INITIALIZED);
     if (kind == OperationKind::RECOVER_DEAD_BATTERY &&
         (_diagnostics.modeTransitionUnresolved ||
@@ -291,8 +309,10 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
     _waitMode = _diagnostics.modeTransitionUnresolved;
   } else if (kind == OperationKind::RECOVER_DEAD_BATTERY) {
     _phase = Phase::RECOVERY_PRECHECK;
-  } else if (kind == OperationKind::REFRESH_PORT) {
+  } else if (kind == OperationKind::REFRESH_PORT || kind == OperationKind::SERVICE_INTERRUPT) {
     _phase = Phase::PORT_FIRST09;
+  } else if (kind == OperationKind::ACKNOWLEDGE_INTERRUPT) {
+    _phase = Phase::IRQ_PRECHECK;
   }
   if (candidate != nullptr) {
     for (uint8_t i = 0; i < count; ++i) _writes[i] = writes[i];
@@ -638,6 +658,25 @@ Status TUSB32x::publishConfiguration() {
   return Status::Ok();
 }
 
+Status TUSB32x::prepareInterruptAck(uint8_t actual09) {
+  _result.interrupt.observationValid = true;
+  _result.interrupt.pendingBefore = (actual09 & IRQ_PENDING) != 0;
+  _diagnostics.interrupt = _result.interrupt;
+  detail::WriteRequest request{};
+  request.variant = _config.variant;
+  request.reg = 0x09;
+  request.intent = detail::WriteIntent::ACK_IRQ;
+  detail::WriteEvidence evidence{};
+  evidence.actual = actual09;
+  evidence.actualValid = true;
+  const Status status = detail::composeWrite(request, evidence, _commandByte);
+  if (status.ok()) {
+    _phase = Phase::IRQ_ACK;
+    _progress.phase = OperationPhase::WRITING;
+  }
+  return status;
+}
+
 Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers) {
   Status status = checkToken(token);
   if (!status.ok()) return status;
@@ -687,6 +726,21 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
       complete.configurationState = _observingPort.configurationState;
       complete.invalidated = false;
       _port = complete;
+      if (_progress.kind == OperationKind::REFRESH_PORT) return finish(Status::Ok(), true, nowMs);
+      const Status prepared = prepareInterruptAck(_received[0]);
+      if (!prepared.ok()) return finish(prepared, true, nowMs);
+    } else if (_phase == Phase::IRQ_PRECHECK) {
+      const Status prepared = prepareInterruptAck(_received[0]);
+      if (!prepared.ok()) return finish(prepared, true, nowMs);
+    } else if (_phase == Phase::IRQ_ACK) {
+      if (_progress.kind == OperationKind::ACKNOWLEDGE_INTERRUPT)
+        return finish(Status::Ok(), true, nowMs);
+      _phase = Phase::IRQ_RECHECK;
+      _progress.phase = OperationPhase::READING;
+    } else if (_phase == Phase::IRQ_RECHECK) {
+      _result.interrupt.pendingAfter = (_received[0] & IRQ_PENDING) != 0;
+      _result.interrupt.pendingAfterValid = true;
+      _diagnostics.interrupt = _result.interrupt;
       return finish(Status::Ok(), true, nowMs);
     } else if (_phase == Phase::BASE_PRECHECK) {
       // TI SLLSEN9F 7.4.1-2 p14: detached before any base mode write.
@@ -771,6 +825,26 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
         OperationPhase::READING : OperationPhase::WRITING;
   }
   if (maxTransfers == 0) return error(Err::IN_PROGRESS);
+  if (_phase == Phase::IRQ_ACK) {
+    // A pure W1C ACK preserves persistent controls and historical port evidence.
+    // TI B Table7-6 p16, Table7-7 p18; L/A Table9 p18. No IRQ inter-clear wait.
+    _result.interrupt.acknowledgeAttempted = true;
+    _diagnostics.interrupt = _result.interrupt;
+    _result.hardwareEffect = HardwareEffect::INDETERMINATE;
+    const detail::ProtocolContext context{_config, _stats, _diagnostics};
+    const auto transfer = detail::writeRegister(context, detail::TrafficSource::MANAGED,
+        0x09, _commandByte, _progress.deadlineMs - nowMs);
+    if (transfer.callbackInvoked) {
+      ++_progress.transfers;
+      _progress.lastPollTransfers = 1;
+    }
+    if (!transfer.status.ok()) return finish(transfer.status);
+    _result.interrupt.acknowledgeConfirmed = true;
+    _diagnostics.interrupt = _result.interrupt;
+    _result.hardwareEffect = HardwareEffect::PARTIAL;
+    _pending = true;
+    return error(Err::IN_PROGRESS);
+  }
   if (_phase == Phase::APPLY_WRITE || _phase == Phase::RESET_WRITE ||
       _phase == Phase::RECOVERY_DISABLE || _phase == Phase::RECOVERY_ENABLE) {
     const bool apply = _phase == Phase::APPLY_WRITE;
@@ -818,7 +892,8 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
   const uint8_t reg = _phase == Phase::IDENTITY ? 0 : _phase == Phase::REVISION ? 0xA0 :
       (_phase == Phase::CONFIG08 || _phase == Phase::PORT08) ? 8 :
       (_phase == Phase::CONFIG09 || _phase == Phase::BASE_PRECHECK ||
-       _phase == Phase::PORT_FIRST09 || _phase == Phase::PORT_LAST09) ? 9 :
+       _phase == Phase::PORT_FIRST09 || _phase == Phase::PORT_LAST09 ||
+       _phase == Phase::IRQ_PRECHECK || _phase == Phase::IRQ_RECHECK) ? 9 :
       (_phase == Phase::CONFIG0A || _phase == Phase::RESET_PRECHECK) ? 10 : 0x45;
   if (_phase == Phase::CONFIG08) _observing.observedUptimeMs = nowMs;
   if (_phase == Phase::PORT_FIRST09) {
@@ -844,8 +919,11 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
     const bool invalidated = _port.invalidated;
     observeControl(reg, _received[0]);
     // Negative control evidence changes current configuration trust immediately.
-    // Refresh still preserves the entire historical port snapshot until complete.
-    if (_progress.kind == OperationKind::REFRESH_PORT) _port.invalidated = invalidated;
+    // Port/IRQ observations preserve historical port data until a complete S is
+    // published. ACK/recheck do not invalidate that complete pre-ACK publication.
+    if (_progress.kind == OperationKind::REFRESH_PORT ||
+        _progress.kind == OperationKind::ACKNOWLEDGE_INTERRUPT ||
+        _progress.kind == OperationKind::SERVICE_INTERRUPT) _port.invalidated = invalidated;
   }
   if (!_pendingStatus.ok()) {
     // Complete adverse identity evidence must survive cancel/expiry before the

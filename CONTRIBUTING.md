@@ -12,8 +12,8 @@ field encoders, settings comparison and qualified write composition. The owner
 facade implements lifecycle, token/result ownership, read-only initialization,
 profile observation, explicit apply, desired-profile verification, read-only
 reconciliation, explicit reset, original TUSB320/I dead-battery recovery and
-complete read-only port refresh. IRQ acknowledgement/service and later operation
-families remain planned.
+complete read-only port refresh and explicit IRQ acknowledgement/bounded service.
+Later operation families remain planned.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
@@ -55,6 +55,12 @@ acquisition time, saturating publication sequence and captured configuration
 provenance. Exercise failures/cancellation/deadlines at each read and changed
 bookends without retries. Configuration verification cannot freshen an old port
 snapshot; raw completeness does not establish field applicability or atomicity.
+IRQ tests keep independent literal actual-control/W1C expectations and bounded
+R09/W09 or R09/R08/R09/W09/R09 traces. Check reassertion/coalescing, failed ACK
+before and after simulated clearing, stuck IRQ and polling without a pin.
+Preserve complete pre-ACK publication after later failure/cancellation/deadline,
+and keep sampled-before, attempted/accepted write and sampled-after facts separate.
+TUSB322I ACK/service must reject before traffic; raw bit3 is not an IRQ-ACK bit.
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,
 Doxygen, PlatformIO, framework headers or sibling paths. Use available host

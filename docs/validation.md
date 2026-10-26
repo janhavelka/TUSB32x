@@ -1874,3 +1874,69 @@ Documentation now separates read-only configuration proof from fresh port
 publication, states delivered owner/port support, and labels the InterruptSnapshot
 ACK/service table as planned prompt16. Source/API/silicon behavior is unchanged.
 No hardware qualification or remote CI evidence is inferred from these host checks.
+
+## Prompt 16 explicit interrupt service (2026-10-26)
+
+Implemented explicit ACK-only and bounded observe/ACK/recheck in the existing
+engine from synchronized `e964fe5d584100e9e98c3a20f09e5cd38b673f1b`. The lead
+reviewed full prompt 16, actual production/test changes and independent findings.
+Current peer source evidence is in [execution-16-peers](audit/execution-16-peers.md).
+No sibling mutation or remote CI dispatch/polling occurred.
+
+Re-read archived TI SLLSEN9F Table 7-6 p16 and Table 7-7 p18, SLLSEP2D/SLLSEQ8D
+Table 9 p18, and SLLSEO5D Table 6-9 p19. B/V CSR and L/A RU-change IRQ wording
+remain distinct. Explicit IRQ W1C does not resolve VCONN fault RCU clear behavior;
+TUSB322I ACK/service reject before traffic. The source reviewer checked current
+official PDFs (B F, L D, A D, V D unchanged) and refetched five pinned public
+implementation/helper sources with matching hashes. Linux ignored ACK errors/raw
+status echoes and Betrusted fixed11/retry behavior were rejected after inspecting
+actual helpers. None establishes hardware or TI-authored implementation guidance.
+
+Tools: GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2 and the installed VS Code PlatformIO Core/native 1.2.1 environment.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict Debug/Release | PASS | Seven CTests each; active Release checks, independent public headers and future compile-only contracts; new starts compile and link through real public calls |
+| IRQ suite | PASS | 67,081 checks: exact bytes for all 256 observations on six writable variants, staged02 versus actual05, desired30 versus actual50, UNKNOWN trust, every callback/interruption/fresh-time boundary, both failed-write effects, budgets, original error/detail, finite races/coalescing/stuck latch and no-pin polling |
+| Port/history | PASS | 495,667 prior checks plus new complete pre-ACK retention, final-recheck-only control contradiction, acquisition/sequence preservation, diagnostic history retention and raw322 fault/gates |
+| Setter isolation | PASS | Each supported profile field and every role-change write preserves a pending fake latch; only explicit W1C acknowledges it; expectations are literal bytes independent of the composer |
+| Independent probe | PASS | 66,048 checks over 3,072 ACK/service operations: all raw09 bytes on six variants, E0-changed bookends, budgets0/255, exact2/5 callbacks, actual controls, separate final09/recheck and effect/IRQ facts |
+| Previous suites | PASS | 35,454 profile observation, 89,140 apply/verify, 88,779 reset/recovery, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; values/validators/version/launcher pass |
+| Documentation/source | PASS | Strict Doxygen without warnings; 17 public structs and24 implemented owner methods visible, future methods absent; local links/anchors, UTF-8/LF/whitespace, eight vendor hashes and no-op version sync |
+| Native PlatformIO | PASS | Host consumer compiles, links and runs with zero fake callback attempts |
+| Package consumption | PASS | 36 source-equal exported files, IDF selection and guide links; renamed extracted tests-OFF consumer beneath unrelated Git builds/runs without Python/Git/Doxygen/PlatformIO on child PATH |
+| Separate evidence | NOT RUN | Physical IRQ wiring/levels/timing, electrical behavior and framework firmware. Installed MinGW sanitizer runtimes remain unavailable from same-day checks; MSVC/Clang/clang-format absent. Remote CI remains prompt34 |
+
+Lead commands (existing Ninja Multi-Config tree):
+
+```powershell
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Debug/tusb32x_port.exe
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude -Itest build/p16-review/irq_probe.cpp build/native/Release/libTUSB32x.a -o build/p16-review/lead-probe.exe
+& build/p16-review/lead-probe.exe
+doxygen Doxyfile
+python build/p16-doxygen.py
+python build/p10-docs.py
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p16.tar.gz
+python build/p16-package.py
+git diff --check
+```
+
+Permanent IRQ tests are in `test/test_interrupt.cpp`, registered as part of
+`tusb32x_port`. Session-only review/probe/documentation/package scripts under
+ignored `build/` were read and run by the lead. Initial fixture failures assumed
+service published IRQ after its first read and that a changed advertisement left
+configuration KNOWN. Corrected both to the frozen complete-publication and
+negative-evidence contracts; no production workaround or suppressed assertion.
+Final parallel review found no remaining production/test defect. Corrected stale
+changelog wording and clarified that plain refresh preserves diagnostic IRQ history
+while leaving its own operation IRQ record empty. Fake events are explicit inputs;
+the model does not infer clear-on-read, lossless capture or electrical timing.

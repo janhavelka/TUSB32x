@@ -361,5 +361,5 @@ Implemented codec masks carry TI revision/table/page citations, and the public
 decoder documents raw validity, error preservation and zero-I2C bounds.
 The independent [vectors](register-vectors.md) now have pure codec and transport
 checks through prompt 10. Owner procedures, timing and complete port observations
-also have registered host checks through prompt 15. IRQ operations and physical
-hardware qualification remain with their later assigned work.
+also have registered host checks through prompt 16, including bounded IRQ
+acknowledgement/service. Physical hardware qualification remains separate.

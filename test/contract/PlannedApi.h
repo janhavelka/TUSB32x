@@ -26,8 +26,6 @@ namespace planned {
 // cannot redefine the public facade or claim implementations for future jobs.
 class Driver : public ::TUSB32x::TUSB32x {
  public:
-  Status startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token);
-  Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);
   Status readRegisterSync(uint8_t reg, uint8_t& out);
   Status writeRegisterSync(uint8_t reg, uint8_t value);
 };

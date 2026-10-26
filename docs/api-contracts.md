@@ -1,6 +1,6 @@
 # Portable values, decoding and owner API
 
-Prompts 5-15, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-16, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, two pure validators,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
@@ -11,7 +11,8 @@ handling, cached evidence and read-only initialization. Prompt 12 adds
 `startReadProfile` and `startReconcile`; prompt 13 adds `startApplyProfile` and
 `startVerifyProfile`; prompt 14 adds explicit `startReset` and original-part
 `startRecoverDeadBattery`; prompt 15 adds complete read-only `startRefreshPort`
-and cached port publication. Other operation families
+and cached port publication; prompt 16 adds `startAcknowledgeInterrupt` and
+`startServiceInterrupt`. Other operation families
 below remain planned. Later prompts publish their callable declarations with
 real implementations; the complete design inventory is not a promise that all
 listed signatures are delivered now.
@@ -158,8 +159,8 @@ assigns another meaning. Backend detail is never narrowed or reinterpreted.
 There is no detached or OFFLINE error: detach is normal, health is a projection.
 Operation-status propagation, callback normalization and counters are implemented
 for initialization, profile observation, apply, verification, reconciliation,
-reset/base recovery and port refresh. IRQ and raw-diagnostic behavior remains
-specified future work.
+reset/base recovery, port refresh and IRQ acknowledgement/service. Public raw
+diagnostic behavior remains specified future work.
 
 ## Borrowed transport and owner boundary
 
@@ -207,6 +208,8 @@ none is ISR-safe.
 | startReset | Current validated identity required; UNKNOWN actual configuration allowed when a fresh 0A read supplies a safe command image. Send one command, wait 96 elapsed owner ticks, then run F once; B7/L/A8/V7 callbacks. Never compare or replay desired. |
 | startRecoverDeadBattery | Original 320/I only, current validated identity and caller-established stable VDD/readiness. Read 45, literal 04, wait 31 ticks, literal 00, read 45; at most 4 callbacks, 6 TX/2 RX. Own interrupted recovery permits a new explicit attempt; a different unresolved mode/reset transition rejects locally. |
 | startRefreshPort | Binding only, including UNKNOWN configuration; read 09/08/09 once, at most 3 callbacks and 3 TX/3 RX bytes. Complete-only cached publication; no identity/configuration promotion, reset, ACK or write. |
+| startAcknowledgeInterrupt | Current validated identity; UNKNOWN configuration allowed with a safe fresh actual09 image. B/L/A only; TUSB322I rejects before traffic. R09/W09: at most 2 callbacks, 3 TX/1 RX bytes. Explicit W1C only; no port refresh or recheck. |
+| startServiceInterrupt | Same identity/variant gate as ACK-only. R09/R08/R09 publication, W09 ACK and one R09 recheck: at most 5 callbacks, 6 TX/4 RX bytes. Preserve pre-ACK publication if later work fails; no loop until clear. |
 | poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
 | cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
 | resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
@@ -349,7 +352,8 @@ Only the delivered subset is declared in the public class. The compile-only
 fixture checks the complete future inventory separately. Profile observation and
 read-only reconciliation are delivered in prompt 12; application and desired-profile
 verification are delivered in prompt 13; reset and recovery in 14; port refresh
-and publication in 15. IRQ belongs to 16; raw access and health helpers to 17.
+and publication in 15; explicit IRQ acknowledgement/service in 16. Raw access
+and health helpers belong to 17.
 No begin/init/unbind aliases or successful placeholder methods are provided.
 
 ```cpp
@@ -822,7 +826,11 @@ the existing active/result/token/deadline rules. The refresh reads 09/08/09 with
 one callback per nonzero-budget poll, at most three callbacks, three requested TX
 bytes and three RX bytes. No refresh path writes, resets or acknowledges IRQ.
 The getter returns a fixed cached copy even while unbound, with no callback or
-clock sampling. ACK/service behavior below remains planned for prompt 16.
+clock sampling. `startAcknowledgeInterrupt(const OperationTiming&, OperationToken&)`
+and `startServiceInterrupt(const OperationTiming&, OperationToken&)` are also
+implemented. Both need current validated identity; UNKNOWN configuration does
+not block a fresh safe actual-control image. TUSB322I returns UNSUPPORTED_FEATURE
+before any traffic while V_FAULT_CLEAR gates all09 writes.
 
 Attachment is relative to the local port and does not equal requested mode.
 Normal source/sink observations have separate opposite local/peer roles;
@@ -868,12 +876,12 @@ Consumers still check each field, coherence and age. Only a later complete
 publication can clear invalidated; unrelated successful I2C cannot. At sequence
 saturation the token, not sequence, correlates operation delivery.
 
-The following `InterruptSnapshot` contract belongs to the planned ACK/service
-operations in prompt 16. The delivered refresh records sampled IRQ only in
+The following `InterruptSnapshot` contract belongs to the explicit ACK/service
+operations. Plain refresh records sampled IRQ only in
 `PortSnapshot.interruptPending`; it leaves its `OperationResult.interrupt` empty
 and does not publish diagnostic IRQ history.
 
-| Planned ACK/service step | InterruptSnapshot facts |
+| ACK/service step | InterruptSnapshot facts |
 | --- | --- |
 | Fresh pre-ACK R09 or completed S, processed after the fresh-poll deadline check | observationValid=true and sampled pendingBefore; no implied acknowledgement |
 | About to invoke ACK write | acknowledgeAttempted=true before callback |
@@ -889,8 +897,27 @@ OperationResult.interrupt starts empty for each operation; diagnostic IRQ histor
 changes only when an IRQ-observing operation publishes some evidence, including
 partial ACK/service evidence. Work that obtains no IRQ evidence leaves that
 diagnostic history unchanged. Raw reads do not create a managed IRQ record.
-322I keeps raw fault bit3 validity separate; all09 writes and ACK/service remain
-gated, and IRQ W1C is never treated as a fault acknowledgement.
+ACK-only is R09/W09 with ceilings of two callbacks, three TX bytes and one RX byte.
+Full service is R09/R08/R09/W09/R09 with ceilings of five callbacks, six TX bytes
+and four RX bytes. Counts include failed attempts and requested bytes, not proved wire
+transactions. Each callback yields for fresh owner time; zero budget sends none,
+and larger budgets still permit at most one callback per poll.
+
+ACK composes from fresh actual controls, never desired staging or live RO bits.
+Extended actual `0xB5` composes `0x15`, actual `0x06` composes `0x16` and base
+actual `0xB4` composes `0x14`; staged `0x02` cannot replace actual `0x05`, and
+desired 30% cannot replace actual 50%.
+If a safe actual image cannot be proved, fail without guessing a write image.
+ACK alone preserves port invalidation/sequence/time and configuration trust;
+contrary fresh controls still invalidate inconsistent prior configuration proof.
+Service's final recheck updates IRQ evidence only, never the complete port sample.
+ACK-only has no pending-after evidence. A pending recheck permits successful
+bounded service and exposes remaining work for explicit owner policy. Cancellation,
+expiry and failure retain all earlier observations and possible write effects.
+No repeated ACK, guessed ACK delay, GPIO/ISR service or event queue is added.
+TUSB322I keeps raw fault bit3 validity separate; all09 writes and ACK/service remain
+gated, and IRQ W1C is never treated as a fault acknowledgement. Read-only does
+not establish non-destructive fault access from TI's unresolved RCU wording.
 
 ## Transport accounting and passive health
 
@@ -939,8 +966,10 @@ These acceptance vectors cover the entire planned engine. Prompt 11's
 `tusb32x_operations` suite exercises initialization, lifecycle, token/result and
 time behavior. Prompts 12-13 add profile observation, read-only proof, apply,
 desired verification and their write/effect boundaries. Prompt 14 adds reset and
-base-recovery sequence, timing and retained-effect cases. Port/IRQ and raw/health
-cases remain future acceptance requirements, not passed runtime tests.
+base-recovery sequence, timing and retained-effect cases. Prompts 15-16 add the
+registered port suite for publication and explicit IRQ boundaries. Raw/health
+cases remain future acceptance requirements. Actual commands/results are recorded
+in validation; the complete table also guides later conformance work.
 Combine the rejection ordering above with every write/failure boundary in the
 procedure guide; test callback counts, outputs, state and original status together.
 

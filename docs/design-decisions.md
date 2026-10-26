@@ -452,3 +452,34 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   complete publication. Reject sensor completion timestamps, chip-side atomicity,
   guessed Linux detached roles and unqualified VCONN/orientation projections.
   Source review and host tests do not qualify electrical behavior.
+
+## Prompt 16: explicit ACK and bounded service (2026-10-26)
+
+- Add two fully implemented starts to the existing engine. Both require current
+  identity, permit UNKNOWN configuration with fresh safe09 controls, and reject
+  TUSB322I before traffic under the existing V_FAULT_CLEAR write gate. No GPIO,
+  dispatcher, queue, retry or implicit service operation is added.
+- ACK-only reads09 then composes/writes W1C once: two callbacks,3TX/1RX. Service
+  reuses complete09/08/09 publication then ACK and one09 recheck: five callbacks,
+  6TX/4RX. The composer preserves actual duty/accessory controls; desired staging
+  and RO status are never write images. No inter-clear wait is invented.
+- Service IRQ-before evidence requires complete S; ACK-only requires fresh09.
+  Both publish after the fresh-time/deadline check. Failed partial observation
+  preserves prior diagnostic IRQ history. New operation results start empty.
+  Attempt/acceptance update at the write callback; recheck publication needs the
+  next fresh owner turn. One callback remains the ceiling even with larger budgets.
+- A pure ACK does not invalidate port/configuration or create a mode/reset/recovery
+  obligation. Possible writes have INDETERMINATE effect until callback acceptance;
+  accepted ACK is PARTIAL until the requested operation completes, then CONFIRMED.
+  These labels never prove the latch stayed clear. Failures preserve first error,
+  accepted effects and the complete pre-ACK port without retry or cleanup.
+- Contrary control reads still revoke current configuration trust immediately;
+  ACK/service preserve historical port fields/flag as refresh does. Recheck is
+  separate IRQ evidence, not a replacement port publication or proof repair.
+  Coalescing/reassertion requires owner policy; pendingAfter=true can accompany OK.
+- TI B Table7-6 p16 and Table7-7 p18, L/A Table9 p18 and V Table6-9 p19 were
+  re-read. B/V CSR and L/A RU-change wording are distinct. V fault RCU alone
+  establishes no clear transaction; the fault remains raw bit3, independent of10.
+  Pinned Linux ignored ACK errors/raw echoes and Betrusted fixed11/unbounded retry
+  are rejected after helper inspection. Current engineering references are in
+  [execution-16-peers](audit/execution-16-peers.md). Hardware qualification is separate.

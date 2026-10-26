@@ -1,7 +1,7 @@
 # Transport and silicon procedure contract
 
-Initially specified in prompt 4 on 2026-10-23; implemented through complete port observations
-in prompt 15 on 2026-10-26. IRQ procedures below remain planned. Host checks
+Initially specified in prompt 4 on 2026-10-23; implemented through explicit interrupt acknowledgement/service
+in prompt 16 on 2026-10-26. Host checks
 prove software behavior, not adapter timing or physical hardware qualification.
 Read the [variant matrix](variant-matrix.md), [register map](register-map.md),
 [encoding vectors](register-vectors.md) and [owner baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
@@ -48,8 +48,8 @@ their safe control image; apply requires known actual controls at admission.
 ## Transport framing and callback contract
 
 Prompt 9 implements the [private terminal transport](transport.md) and its host
-protocol checks. The facade and owner procedures through port refresh are
-implemented in prompts 11-15. IRQ operations and SDK adapters remain planned;
+protocol checks. The facade and owner procedures through interrupt service are
+implemented in prompts 11-16. SDK adapters remain planned;
 physical framing/timing qualification is separate and has not been performed.
 
 Every logical read selects a one-byte pointer, including repeated reads of the
@@ -148,9 +148,10 @@ These are library-selected, acyclic plans. They intentionally use one common
 proof path, fixed storage and scalar controls instead of a generic register
 cache or retries until stable.
 
-Implemented through prompt 15: `startInitialize`, `startReadProfile`,
+Implemented through prompt 16: `startInitialize`, `startReadProfile`,
 `startApplyProfile`, `startVerifyProfile`, `startReconcile`, `startReset`,
-`startRecoverDeadBattery` and `startRefreshPort`. IRQ plans remain prompt 16 work.
+`startRecoverDeadBattery`, `startRefreshPort`, `startAcknowledgeInterrupt` and
+`startServiceInterrupt`. IRQ operations are implemented in prompt 16.
 In `src/TUSB32xOperations.cpp`, `startOperation`
 shares admission, `acceptRead` stages each byte and `publishConfiguration`
 commits the complete P. `observeControl` invalidates contradicted proof before
@@ -427,7 +428,7 @@ to permit subsequent notification; it does not establish an inter-clear 5 ms del
 B Table 7-6 p16 defines its write-one-clear action and zero-write no-effect;
 Table 7-7 p18 identifies the RCU interrupt field.
 
-| Operation (ACK/service planned) | Exact B/L/A plan | Evidence and limit |
+| Implemented operation | Exact B/L/A plan | Evidence and limit |
 | --- | --- | --- |
 | Refresh | S, no write | Historical sampled IRQ; no implied ACK |
 | ACK-only | R09, then W09 using the variant's ACK formula below | Fresh actual duty/accessory bits, never desired. Callback acceptance is not a sampled-clear guarantee; no recheck in this API |
@@ -448,6 +449,36 @@ events and sequential observations are not an edge queue. ACK failure may alread
 have cleared it. Preserve a complete published S and its acquisition time after
 ACK/recheck failure; retain original error, write acceptance and remaining-latch
 uncertainty separately. Cancellation/deadline has the same preservation rule.
+
+The implemented `prepareInterruptAck` shares the existing `composeWrite` ACK
+intent. ACK-only publishes its fresh09 sample after the owner deadline check;
+service publishes IRQ-before evidence only with its complete S. A partial first09
+does not replace older diagnostic IRQ history. Admission clears only the new
+operation's IRQ record, not the previous cached diagnostic record.
+
+| Boundary | Result and diagnostic evidence | Port/configuration evidence |
+| --- | --- | --- |
+| No complete pre-ACK observation | No new IRQ publication; operation effect NONE | Keep old port; successful contrary control reads may revoke current configuration trust |
+| Fresh complete observation, before ACK callback | observationValid and pendingBefore; no attempted/confirmed write | Service publishes complete S, ACK-only retains old port |
+| ACK callback about to run | acknowledgeAttempted; effect INDETERMINATE | Preserve port and configuration; no mode/reset/recovery obligation created |
+| ACK callback fails, before or after physical latch clear | Original backend error/detail; no acknowledgeConfirmed, no recheck; effect INDETERMINATE | Complete pre-ACK S/history retained |
+| ACK callback returns OK | acknowledgeConfirmed immediately; effect PARTIAL until operation completion | Callback acceptance does not prove sampled-clear or electrical state |
+| Later cancellation/deadline or service read failure | Retain partial IRQ evidence and PARTIAL effect; no cleanup/retry | Complete pre-ACK observation survives; end/external invalidation still marks it historical |
+| Fresh ACK-only completion or service recheck completion | Operation OK/CONFIRMED; service records pendingAfterValid/pendingAfter even if pending=true | Recheck never replaces S or repairs configuration proof |
+
+Each evidence publication also updates the cached diagnostic IRQ record. A new
+operation that obtains no IRQ evidence leaves that history untouched; successful
+plain refresh changes only its PortSnapshot IRQ field. Contradictory actual09
+controls invalidate current configuration trust immediately, including on service
+recheck, but never overwrite the pre-ACK port's acquisition provenance or change
+its invalidated flag. These facts remain separate from normal lifecycle invalidation.
+
+ACK uncertainty is retained in result/IRQ history and creates no persistent
+configuration obligation or binding block. Existing mode/reset/recovery obligations
+remain intact. No IRQ pin is required; owners may separately timestamp external
+pin evidence and signal from an ISR, but core performs no GPIO/ISR work. Fixtures
+inject events explicitly: L/A RU-change wording and B/V broad CSR wording do not
+justify assuming every write generates an event or inferring fault-clear behavior.
 
 ## Callback and requested-byte ceilings
 
@@ -479,7 +510,7 @@ three (or two if held disabled). V has one ordinary 0A write or three/two mode
 writes;08/09 changes stay gated and 45 is absent. Add F once, never per write.
 The same role waits apply before final F when a profile stays disabled.
 Only L/A receives the 6-tick mode wait; V gets no invented 5 ms requirement.
-The implemented apply/verify/reset/recovery/refresh paths meet these ceilings. Each `poll` is a direct
+The implemented apply/verify/reset/recovery/refresh/IRQ paths meet these ceilings. Each `poll` is a direct
 bounded pass: validate time, consume at most one pending completion, process
 at most one wait boundary, evaluate completion, select a callback and invoke
 it at most once. There is no transition-draining loop. Admission compares eight

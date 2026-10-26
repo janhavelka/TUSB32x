@@ -9,9 +9,9 @@ and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
 binding/lifecycle, token-checked polling/cancellation/result delivery, cached
 evidence, read-only initialization, profile observation, explicit profile apply,
 desired-profile verification, read-only reconciliation, explicit reset and
-original TUSB320/I dead-battery recovery and complete read-only port refresh.
-IRQ acknowledgement/service, public raw diagnostics and firmware adapters
-remain planned.
+original TUSB320/I dead-battery recovery, complete read-only port refresh and
+explicit interrupt acknowledgement/bounded service. Public raw diagnostics and
+firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -28,7 +28,7 @@ codes remain raw evidence. Single-byte direction/current codes need complete
 port context before use; CC indications are not measured current or permission
 to draw power. The private codecs also compare settings and compose qualified
 write bytes. The owner engine executes supported profile changes, reset and
-base-part recovery; IRQ operations remain planned.
+base-part recovery and explicit IRQ operations.
 
 ## Consume the library
 
@@ -127,6 +127,23 @@ register read cannot prove physical current tracking after attachment. Connector
 orientation mapping and electrical behavior need separate exact-board evidence.
 Refresh observes the IRQ latch without acknowledging it; TUSB322I fault bit 3
 remains raw evidence with unresolved access/clear semantics.
+
+`startAcknowledgeInterrupt` reads fresh 09 controls and writes the explicit W1C
+command once: at most two callbacks, three requested TX bytes and one RX byte.
+`startServiceInterrupt` publishes the complete 09/08/09 port observation, ACKs
+once, then reads 09 once: at most five callbacks, six TX bytes and four RX bytes.
+Both require current validated identity; UNKNOWN configuration is allowed when
+fresh controls establish a safe write image. TUSB322I rejects both before traffic
+while its fault/09-write gate remains unresolved. Actual controls are preserved;
+staged desired settings never enter the ACK byte.
+
+Service retains the complete pre-ACK snapshot if ACK or recheck later fails.
+Sampled pending-before, ACK attempt, callback acceptance and pending-after are
+independent facts; callback acceptance does not prove a cleared latch. A pending
+recheck is a valid successful bounded service result. The owner decides whether
+to request more work. Coalescing and races prevent lossless edge counting. ACK
+preserves the historical port snapshot, whose sampled IRQ field can be old.
+Polling needs no IRQ pin; GPIO/ISR handling and policy remain application-owned.
 
 One terminal result blocks replacement until `takeResult` delivers it. Result
 delivery returns OK even when the copied operation failed. See the
