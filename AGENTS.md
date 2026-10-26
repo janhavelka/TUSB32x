@@ -6,7 +6,8 @@ This repository will provide a general-purpose, framework-neutral C++17 library
 for the verified TUSB320 family, starting with TUSB320LAI. It currently contains
 passive public values, Status helpers, pure binding/profile validators, a CMake
 library target and host consumer, deterministic metadata/version tools and native
-IDF component registration, plus private register transport/identity checks,
+IDF component registration, public pure register decoding, private codecs/write
+composition and register transport/identity checks,
 alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
 The device facade and framework firmware remain planned. Do not describe planned

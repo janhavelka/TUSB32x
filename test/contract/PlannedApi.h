@@ -15,11 +15,10 @@
 
 namespace TUSB32x {
 
-// Binding/profile validators are supplied by Config.h. Health validation/projection: 17. Decoder: 10.
+// Validators and decoder are supplied by public headers. Health validation/projection: 17.
 Status validateHealthPolicy(const HealthPolicy& policy);
 Status projectHealth(const ManagedTransportEvidence& evidence,
                      const HealthPolicy& policy, HealthSnapshot& out);
-Status decodeRegister(Variant variant, uint8_t reg, uint8_t value, RegisterDecode& out);
 
 // Planned facade only. There are deliberately no successful or unsupported stubs.
 class TUSB32x {

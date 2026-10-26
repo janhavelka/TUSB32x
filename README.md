@@ -2,7 +2,8 @@
 
 TUSB32x is a framework-neutral C++17 library in development, starting with
 TI TUSB320LAI. It currently provides passive public values, constexpr Status
-helpers, pure binding/profile validators and stable package version constants.
+helpers, pure binding/profile validators, public supplied-byte register decoding
+and stable package version constants.
 The library also contains tested [private transport/identity helpers](docs/transport.md).
 The public device facade, managed operations and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
@@ -14,6 +15,13 @@ invalid inputs from unsupported settings. Both are bounded, allocation-free and
 perform zero callbacks or device mutation. TUSB322I write gates remain separate
 from profile validity. See the [API guide](docs/api-contracts.md) and
 [variant boundary](docs/variant-matrix.md).
+
+`decodeRegister` in `<TUSB32x/CommandTable.h>` preserves raw bytes and reports
+variant-specific field validity without a binding or device access. Reserved
+codes remain raw evidence. Single-byte direction/current codes need complete
+port context before use; CC indications are not measured current or permission
+to draw power. The private codecs also compare settings and compose qualified
+write bytes. They do not execute mode, reset, recovery or IRQ operations.
 
 ## Consume the library
 
@@ -55,7 +63,7 @@ ctest --test-dir build/native -C Debug --output-on-failure
 
 Tests ON require Python 3.10+. For single-config generators also select
 `-DCMAKE_BUILD_TYPE=Debug` at configure time. The registered checks cover C++
-contracts, validators and isolated generator fixtures. Run `doxygen Doxyfile`
+contracts, validators, transport/codecs and isolated generator fixtures. Run `doxygen Doxyfile`
 for strict current API documentation. On Windows use the existing VS Code Core
 through `scripts/pio.cmd`; do not install another Core.
 

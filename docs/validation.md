@@ -1151,3 +1151,73 @@ later package/omission qualification remain NOT RUN. No sibling was edited or
 remote CI dispatched/polled. Audit records and Unreleased are the only changes;
 final commit, clean state and upstream equality are in the handoff/next progress
 update without a self-referencing commit-hash update.
+
+## Prompt 10 codecs and safe composition, 2026-10-26
+
+Started clean at `dd82a796e51dcfefa77db36a921d69aec0b12346` on
+`promptset/tusb32x-implementation-20261023`; initial fetch showed equal upstream
+and zero ahead/behind. Fresh peer audit and exact TI/public source verification
+are recorded in [progress](implementation-progress.md#prompt-10-execution-record)
+and [execution-10-peers](audit/execution-10-peers.md). No copied vendor/reference
+implementation, sibling dependency, framework header or owner executor was added.
+
+Actual tools: CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0 MinGW-W64 UCRT MCF SEH,
+Python 3.12.10, Doxygen 1.13.2, existing managed PlatformIO Core 6.1.19 and
+platformio/native 1.2.1. Native CMake uses the existing Ninja Multi-Config directory;
+the isolated consumer/component builds use Ninja Release.
+
+| Check | Result | Evidence and boundary |
+| --- | --- | --- |
+| Strict host Debug/Release | PASS | 5/5 registered CTests per configuration, including compile contracts, validators, protocol/codecs, 18 version fixtures and Windows launcher fixtures; assertions/checks active |
+| Pure codec/composer suite | PASS | 8,602,548 independent checks: all seven variants/every mapped byte, typed domains/invalid casts, reserved and absent fields, full output preservation, semantic comparison, requested fields, command isolation and stage/capability rejection |
+| Protocol boundary | PASS | 161,670 checks, including manual composed [09,15]/[09,14]/[09,02] and reset frames; pure calls leave counting callbacks at zero; these are not executed owner jobs |
+| Critical vectors | PASS | Advertisement/detection90 separated, charge-through20, base0C debug/0E reserved, Try.SRC06, ACK06->16, explicit reset08, DE->56 arithmetic with reset-pending write rejection, settledD6->56, staged01/31/30 composition, 45 qualification and literal04/00, 322I DRP equivalence/gates |
+| Independent review | PASS | General reviewer separate strict Release build 5/5, public CommandTable-only consumer without src include; coding agent strict optimized NDEBUG run; strong reviewer actual-source/test/TI review and focused Release rerun |
+| Package/ordinary consumer | PASS | Real 34-file source-equal archive; IDF include selection matches, exclusions and shipped relative links checked. Fresh renamed tests-OFF strict Release consumer under unrelated Git, no Git/Python/Doxygen/PIO on child PATH, five TUs and C++17 propagated from C++11 |
+| Native PlatformIO | PASS | Clean real compile/link/run of all three explicit core CPP units and public decoder consumer, zero fake attempts |
+| Component registration | PASS, host only | Exact same three sources and public include/C++17 requirements captured, compiled, linked and executed; no native-IDF firmware claim |
+| Version/docs | PASS | sync/check and byte/mtime-stable repeated sync, strict Doxygen, 17 public structs and real public decoder/validators visible; Markdown links/anchors, UTF-8/LF/whitespace and all eight archived vendor hashes |
+| Sanitizers | BLOCKED | Fresh minimal ASan/UBSan link probe fails: installed MinGW lacks -lasan/-lubsan |
+| Other toolchains/hardware | NOT RUN | MSVC/Clang/clang-format absent on PATH; owner procedures/timing, complete port decoding, SDK adapters, firmware and physical qualification are later stages |
+
+Lead commands (all applicable commands returned success except the documented
+sanitizer probe):
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Release -R tusb32x_protocol --output-on-failure
+& build/native/test/Release/tusb32x_protocol.exe
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p10-doxygen.py
+python build/p10-evidence.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd run -d examples/host/basic -e native -t clean
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p10.tar.gz
+python build/p10-package.py
+cmake -S build/p10-component-fixture -B build/p10-component-fixture/native -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/p10-component-fixture/native
+& build/p10-component-fixture/native/registration_consumer.exe
+& build/p10-peer-review/public_consumer.exe
+python build/p10-docs.py
+'int main() { return 0; }' | & g++ -x c++ '-fsanitize=address,undefined' -o build/p10-sanitizer-probe.exe -
+git diff --check
+```
+
+The ignored build/p10-* scripts/fixtures are session evidence, not new maintained
+guards or production dependencies. They inspect actual source/archive/XML and
+create fresh temporary consumer trees; the package's child environment excludes
+maintainer tools. Current official B/L/A/V downloads match the archived exact
+revisions and hashes; pinned Linux driver/regmap and Betrusted Rust bytes match
+their provenance and the relevant helper bodies were reread. No silicon access
+conflict was resolved by tests, and pure byte/stage composition proves no elapsed
+wait, managed operation, fault clearing or hardware effects. No remote CI was
+dispatched/polled and no sibling was changed. Lead reviews/stages/commits/syncs
+this checked unit on the same branch; final equality and clean state are reported
+in the handoff, with the commit recorded in the next progress update.

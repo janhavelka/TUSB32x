@@ -9,23 +9,16 @@ namespace TUSB32x {
 namespace detail {
 namespace {
 
-struct VariantInfo {
-  Variant variant;
-  bool hasRevision;
-  bool hasRdRp;
-  uint8_t revision;
-};
-
-// TI SLLSEN9F Table 7-7 pp16-19; SLLSEP2D/SLLSEQ8D Tables 7/11/12 pp16/20;
-// SLLSEO5D Tables 6-6/6-7/6-11 pp17/20. A shared ID never identifies enable polarity.
+// TI SLLSEN9F Table 7-7 pp16-19; SLLSEP2D/SLLSEQ8D Tables 7-12 pp16-20;
+// SLLSEO5D Tables 6-6..6-11 pp17-20. A shared ID never identifies enable polarity.
 constexpr VariantInfo VARIANTS[] = {
-    {Variant::TUSB320, false, true, 0},
-    {Variant::TUSB320I, false, true, 0},
-    {Variant::TUSB320LI, true, true, 0x01},
-    {Variant::TUSB320HI, true, true, 0x01},
-    {Variant::TUSB320LAI, true, true, 0x02},
-    {Variant::TUSB320HAI, true, true, 0x02},
-    {Variant::TUSB322I, true, false, 0x02},
+    {Variant::TUSB320, false, true, false, 0},
+    {Variant::TUSB320I, false, true, false, 0},
+    {Variant::TUSB320LI, true, true, true, 0x01},
+    {Variant::TUSB320HI, true, true, true, 0x01},
+    {Variant::TUSB320LAI, true, true, true, 0x02},
+    {Variant::TUSB320HAI, true, true, true, 0x02},
+    {Variant::TUSB322I, true, false, true, 0x02},
 };
 constexpr uint8_t CONTROL_LAST = 0x0A;
 constexpr uint8_t RD_RP_REGISTER = 0x45;
@@ -33,13 +26,6 @@ constexpr uint8_t REVISION_REGISTER = 0xA0;
 constexpr size_t MAX_READ_BYTES = 11;
 constexpr uint8_t IDENTITY_320[] = {0x30, 0x32, 0x33, 0x42, 0x53, 0x55, 0x54, 0x00};
 constexpr uint8_t IDENTITY_322[] = {0x32, 0x32, 0x33, 0x42, 0x53, 0x55, 0x54, 0x00};
-
-const VariantInfo* findVariant(Variant variant) {
-  for (const auto& info : VARIANTS) {
-    if (info.variant == variant) return &info;
-  }
-  return nullptr;
-}
 
 void increment(uint32_t& value) {
   if (value != std::numeric_limits<uint32_t>::max()) ++value;
@@ -150,6 +136,13 @@ TransferResult invoke(const ProtocolContext& context, TrafficSource source, cons
 }
 
 }  // namespace
+
+const VariantInfo* findVariant(Variant variant) {
+  for (const auto& info : VARIANTS) {
+    if (info.variant == variant) return &info;
+  }
+  return nullptr;
+}
 
 TransferResult readRegisters(const ProtocolContext& context, TrafficSource source, uint8_t reg,
                              uint8_t* out, size_t length, uint64_t remainingMs) {

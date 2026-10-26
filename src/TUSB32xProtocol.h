@@ -13,6 +13,20 @@
 namespace TUSB32x {
 namespace detail {
 
+/// @brief Closed exact-part capabilities shared by transport and pure codecs.
+struct VariantInfo {
+  Variant variant; ///< Application-selected exact part, never inferred from shared identity.
+  bool hasRevision; ///< Documented A0 register is present.
+  bool hasRdRp; ///< Documented 45 register is present.
+  bool hasExtendedControls; ///< 09 accessory-disable and 0A preference/disableTerm fields exist.
+  uint8_t revision; ///< Exact accepted A0 byte; unused when hasRevision is false.
+};
+
+/// @brief Look up the seven-entry closed capability table without I2C or allocation.
+/// @param[in] variant Exact part, including an invalid/unspecified cast.
+/// @return Static table entry, or nullptr for an invalid variant; no capability inference.
+const VariantInfo* findVariant(Variant variant);
+
 /// @brief Explicit accounting origin, independent of aliases or callback outcome.
 enum class TrafficSource : uint8_t {
   MANAGED, ///< Production operation, counted in all-source and managed history.

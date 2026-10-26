@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 9; prompt 10 remains separate.
+Current authorization: implement prompt 10; prompt 11 remains separate.
 
 ## Prompt status
 
@@ -19,7 +19,7 @@ Current authorization: independently audit completed prompt 9; prompt 10 remains
 | [7: host-build](prompts/7-host-build.md) | COMPLETE |
 | [8: metadata-versioning](prompts/8-metadata-versioning.md) | COMPLETE |
 | [9: transport-identity](prompts/9-transport-identity.md) | COMPLETE |
-| [10: register-codecs](prompts/10-register-codecs.md) | NOT STARTED |
+| [10: register-codecs](prompts/10-register-codecs.md) | COMPLETE |
 | [11: owner-engine](prompts/11-owner-engine.md) | NOT STARTED |
 | [12: profile-observation](prompts/12-profile-observation.md) | NOT STARTED |
 | [13: profile-application](prompts/13-profile-application.md) | NOT STARTED |
@@ -723,3 +723,68 @@ remain explicit limits. No sibling was changed and no remote CI was dispatched
 or polled. Lead commits/synchronizes this checked audit on the existing branch
 and verifies equality/clean state; final commit is reported in the handoff and
 next progress update without a self-referencing hash edit.
+
+## Prompt 10 execution record
+
+Completed 2026-10-26 on the same execution branch/base, starting from prompt 9
+audit commit `dd82a796e51dcfefa77db36a921d69aec0b12346`. Initial worktree/index
+were clean; fetch confirmed equal upstream, zero ahead/behind. Reopened the full
+prompt, parent/current AGENTS, COMMON, maintainability/workflow, baseline settings/
+decoder/capability rules and current API/register/procedure contracts. Prompt 11
+is not started. No device facade, raw setter or operation executor was added.
+
+Fresh [execution-10-peers](audit/execution-10-peers.md) records exact clean peer
+revisions and source/header/example/CLI/runner/test/workflow paths for PCA9555,
+LDC1614 and TMP1x2. Adopted named masks, explicit variant/access gates, literal
+expected bytes and unchanged-error outputs. Rejected GPIO-pair/sensor RMW,
+zero-on-error outputs, CLI-local duplicate conversions and configure-time tools.
+No sibling was edited or built; TUSB32x still has no workflows at this stage.
+
+Lead re-downloaded B/L/A/V TI PDFs and matched archived SHA-256 hashes; reopened
+the exact register/procedure pages and visually inspected A Table 10. The strong
+reviewer independently reread B pp14,16-19, L/A pp14,17-20 and V pp9-11,17-20,
+including visual V08 access/fault ambiguity checks. Lead re-fetched/hash-checked
+the pinned TI-hosted Linux driver/regmap and Betrusted Rust source, tracing
+mask08/value1 through val&mask and the reserved Try.SRC04 constant. These remain
+counterexamples, not code or silicon authority. No capability gate changed.
+
+Delegation: gpt-6.1-sol/high owned only the peer report, then reviewed actual
+production/build/package/public linkage read-only and ran a separate strict
+Release build. A second gpt-6.1-sol/high owned only test/test_codecs.cpp after
+private signatures were frozen. gpt-6-astra/high independently reviewed TI,
+W1C/reset, variant/stage ambiguity, production/tests and the final diff read-only,
+and reran the registered Release protocol suite. Lead owns shared declarations,
+production composition, integration, documentation, review and Git.
+
+Implemented public pure decodeRegister, private typed persistent-field encoding,
+fieldwise settings comparison and one safe write composer. The codecs share the
+existing closed variant table with transport. Actual/control validity is separate
+from desired settings; absent/reserved fields retain raw evidence and clear only
+their flags. Explicit intent/stage proofs prevent ordinary mode/recovery shortcuts,
+exclude live/reserved/IRQ/reset bits and retain equivalent 322I DRP00. All 322I
+08/09 writes, absent45 and real non-reset return-to-DRP remain gated.
+
+Review resolved three contract edges: ACK/reset accept fresh safe actual bytes
+despite overall UNKNOWN; intrinsic intent/access errors precede missing actual
+proof; the 322I DRP feature gate applies to ordinary requests too. Added focused
+regressions for each, including 193 intrinsic cases under three missing-proof
+combinations. Clarified prompt 10's detached wording against the frozen decoder:
+single-byte decoding reports raw codes; complete NOT_APPLICABLE context is prompt 15.
+DE->56 and protected45 preservation are arithmetic, not permission to write an
+unresolved reset or unqualified internal image. No final reviewer blocker remains.
+
+PASS: 8,602,548 independent active codec checks plus 161,670 protocol checks;
+strict native Debug/Release 5/5 CTests, focused suite and independent strict/
+optimized NDEBUG runs; standalone public-header linkage, updated multi-TU host
+consumer with zero fake attempts, native PlatformIO, explicit three-source host
+component fixture and real 34-file archive. A fresh renamed extracted tests-OFF
+consumer beneath unrelated Git builds/runs without maintainer tools on child PATH.
+Version sync/check/no-op, strict Doxygen/public visibility, source/docs/links and
+all eight vendor hashes pass. Exact commands/tools/results are in [validation](validation.md).
+
+ASan/UBSan remain BLOCKED by missing MinGW -lasan/-lubsan; MSVC/Clang/clang-format
+are unavailable on PATH. Owner jobs, actual wait timing, complete port decoding,
+framework firmware, SDK framing/timeout and physical hardware remain later work.
+No remote CI was dispatched/polled. Lead commits/synchronizes this complete checked
+unit on the established branch and verifies upstream equality/clean state; final
+commit is reported in the handoff and next progress update without a hash loop.

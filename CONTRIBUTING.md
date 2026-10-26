@@ -7,7 +7,8 @@ Use the [engineering baseline](docs/prompts/ENGINEERING_BASELINE.md) for public
 names and [maintainability rules](docs/prompts/MAINTAINABILITY.md) for code/docs.
 
 The implemented library contains portable values, Status helpers and pure
-validators, plus a private terminal transport/identity layer. Add public callable
+validators and public pure register decoding, plus private transport/identity,
+field encoders, settings comparison and qualified write composition. Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
 hardware stubs or empty future source files. Document behavior and errors with
@@ -27,6 +28,9 @@ Clang and MSVC builds use strict private warnings; runtime suite checks remain
 active in Release. Four runtime CTest suites are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
+The protocol suite includes independent field tables, reserved-code validity,
+actual-versus-staged controls and procedure-proof rejections. Keep expected
+bytes independent of production codecs. Pure composition proves no timed job.
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,
 Doxygen, PlatformIO, framework headers or sibling paths. Use available host

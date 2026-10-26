@@ -37,8 +37,10 @@ the lead owns production composition and shared declarations. Follow
    3 and preference 2 reserved values, accessory 7 and local-source/local-sink
    interpretation. Invalid enum casts and unsupported variant/settings pairs fail
    without traffic. Keep raw evidence and typed validity separate.
-3. Detached direction/current decode to valid `NOT_APPLICABLE` interpretations,
-   never usable CC2/default-current claims. CC indication is not measured current,
+3. In complete port decoding (prompt 15), detached direction/current decode to
+   valid `NOT_APPLICABLE` interpretations, never usable CC2/default-current claims.
+   The frozen single-byte decoder above retains raw field codes without paired
+   applicability. CC indication is not measured current,
    USB PD, an unconditional 500 mA allowance or authorization to draw power.
 4. Use persistent masks: advertisement `0xC0`; base/extended `0x09` settings
    `0x06/0x07`; base/extended `0x0A` settings `0xF0/0xF7`. Ordinary settings

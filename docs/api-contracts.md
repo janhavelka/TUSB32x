@@ -1,12 +1,13 @@
-# Portable values, validators and planned API
+# Portable values, validators, decoding and planned device API
 
-Prompts 5-8, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
-complete passive values, constexpr Status/token helpers, two pure validators
-and stable package version constants.
+Prompts 5-10, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+complete passive values, constexpr Status/token helpers, two pure validators,
+public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
 `TUSB32x`. Prompt 9 implements [private register transport/identity](transport.md),
-without publishing bus-access methods. No device facade, decoder or operation
-engine is implemented yet. Other signatures below remain planned. Admission,
+without publishing bus-access methods. Prompt 10 adds pure codecs/composition.
+No device facade or operation engine is implemented yet. Other signatures below
+remain planned. Admission,
 publication and lifetime rules are specified here; later prompts publish those callable declarations with
 their real implementations.
 
@@ -20,7 +21,7 @@ without adding unresolved link promises to delivered headers.
 
 All fields are ordinary fixed-storage values. Default construction performs no
 I2C, allocation, validation, pin action or power authorization. Semantic enums
-are not register encodings; later codecs use explicit variant-specific tables.
+are not register encodings; the implemented codecs use explicit variant-specific tables.
 The header Doxygen owns the complete field/default inventory.
 
 | Header and types | Contract |
@@ -249,9 +250,10 @@ It performs no I2C, retry, clock read or evidence repair.
 
 ## Pure register decoder boundary
 
-`decodeRegister(Variant, uint8_t reg, uint8_t value, RegisterDecode&)` is planned
-for prompt 10; its passive result exists now in CommandTable.h. It interprets one
-caller-supplied byte using the exact [field tables](register-map.md#explicit-field-encodings).
+`decodeRegister(Variant, uint8_t reg, uint8_t value, RegisterDecode&)` is implemented
+and linked through target `TUSB32x`; its result and declaration are in CommandTable.h.
+It interprets one caller-supplied byte using the exact
+[field tables](register-map.md#explicit-field-encodings).
 It performs zero callbacks, changes no instance/counter/cache and requires no
 binding or constructed driver. Work is a fixed register/variant branch, no loops
 over hardware, allocation or retry. CLI prompt 22 formats this same result.

@@ -1,9 +1,9 @@
 # Development metadata and version tools
 
 `library.json` is version truth. The current `0.1.0-dev.1` marks an incomplete
-driver: values, Status helpers, local validators and private transport/identity
-helpers are implemented; device operations, adapters and firmware qualification
-remain planned. Version text
+driver: values, Status helpers, local validators, public decoding and private
+transport/identity/codecs/composition are implemented; device operations,
+adapters and firmware qualification remain planned. Version text
 identifies the package, never the firmware flashed on a board.
 
 ## Version workflow

@@ -1,6 +1,7 @@
 /// @file test_protocol.cpp
 /// @brief Independent terminal transport bytes, local allowlists, fault and identity regressions.
 #include "TUSB32xProtocol.h"
+#include "TUSB32xCodecs.h"
 #include "support/FakeTusb32xDevice.h"
 
 #include <cstddef>
@@ -722,11 +723,54 @@ void scriptedFixtureRejectsMismatches() {
   CHECK(fake.errors == 1 && fake.calls == 1 && !fake.complete());
 }
 
+// Manually connect pure composition to one terminal callback. These scripts prove
+// the actual [register,value] boundary, not execution/timing of an owner procedure.
+void composedWriteFrames() {
+  for (const auto& variant : VARIANTS) {
+    for (unsigned int kind = 0; kind < 3; ++kind) {
+      if (variant.is322 && kind != 2) continue;
+      Fixture f(variant);
+      p::WriteRequest request{};
+      request.variant = variant.variant;
+      request.reg = kind == 2 ? 0x0A : 0x09;
+      request.intent = kind == 0 ? p::WriteIntent::ACK_IRQ
+          : kind == 1 ? p::WriteIntent::SETTINGS : p::WriteIntent::RESET;
+      request.desired.drpDutyCycle = t::DrpDutyCycle::PERCENT_40;
+      if (kind == 1) {
+        request.fields = static_cast<uint16_t>(t::ProfileField::DRP_DUTY_CYCLE);
+        if (!variant.base) {
+          request.fields |= static_cast<uint16_t>(t::ProfileField::DISABLE_UFP_ACCESSORY);
+        }
+      }
+      p::WriteEvidence evidence{};
+      evidence.actualValid = true;
+      evidence.effectsResolved = kind == 1;
+      evidence.actual = kind == 2 ? (variant.base ? 0xE7 : 0xE2)
+                                 : (variant.base ? 0xB4 : 0xB5);
+      // All expected bytes are independent literals from the TI register tables.
+      const uint8_t expected = kind == 2 ? (variant.base ? 0xE8 : 0xEA)
+          : kind == 1 ? 0x02 : (variant.base ? 0x14 : 0x15);
+      t::RegisterDecode decoded{};
+      CHECK(t::decodeRegister(variant.variant, request.reg, evidence.actual, decoded).ok());
+      uint8_t value = 0xFF;
+      CHECK(p::composeWrite(request, evidence, value).ok());
+      CHECK(value == expected);
+      CHECK(f.fake.calls == 0 && f.stats.totalAttempts == 0);
+      f.fake.expectWrite(variant.low, request.reg, expected);
+      checkSuccess(f, p::writeRegister(f.context(), p::TrafficSource::MANAGED,
+                                     request.reg, value, 20), true);
+    }
+  }
+}
+
 #undef CHECK
 
 }  // namespace
 
+int runCodecTests();
+
 int main() {
+  const int codecResult = runCodecTests();
   scriptedFixtureRejectsMismatches();
   addressesAndBindings();
   accessAndRanges();
@@ -737,7 +781,8 @@ int main() {
   saturatingCountersAndLocalHistory();
   identityAndRevision();
   transportedIdentityAndRevision();
-  if (failures != 0) {
+  composedWriteFrames();
+  if (failures != 0 || codecResult != 0) {
     std::printf("FAIL %d of %zu protocol checks\n", failures, checks);
     return 1;
   }

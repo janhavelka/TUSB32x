@@ -2,7 +2,7 @@
 add_executable(tusb32x_compile_contracts
   test_compile_contracts.cpp consumer/status_other_tu.cpp)
 add_executable(tusb32x_validators test_validators.cpp)
-add_executable(tusb32x_protocol test_protocol.cpp)
+add_executable(tusb32x_protocol test_protocol.cpp test_codecs.cpp)
 target_include_directories(tusb32x_protocol PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
 foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol)

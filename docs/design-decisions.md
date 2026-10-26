@@ -282,3 +282,39 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   before/after-error write effects, saturation and exact identity/revision.
   The inspected Renode pointer/multi-byte behavior and public revision 06 are
   counterexamples, not accepted device behavior.
+
+## Prompt 10: pure codecs and qualified byte composition
+
+- Keep the public supplied-byte decoder in CommandTable.h with its fixed
+  RegisterDecode result and real linkable definition. Implement pure codecs and
+  one write composer in a small current-responsibility unit, sharing the existing
+  closed variant table with transport. No public encoder, raw setter, registry,
+  generic byte RMW API or second owner engine is introduced.
+- Keep raw field meaning separate from paired applicability. Prompt 10's detached
+  NOT_APPLICABLE wording is clarified to refer to complete port decoding in prompt 15;
+  the frozen public decoder continues to report raw CC1/CC2 and current codes.
+  Reserved codes clear their individual validity while retaining the full byte.
+- Typed encoding validates complete candidates, but represents readable 322I
+  fields without granting write access. Actual-field validity is checked from
+  decode masks, not by validating a partial profile's default placeholders.
+  Fieldwise comparison preserves equivalent 322I DRP00/11 and still compares
+  preference, debounce and disable controls. Unrelated updates retain raw00.
+- Compose only whole named requested fields from proved actual controls.
+  Dedicated intent/stage checks prevent ordinary mode changes and require owner
+  detached/disable/mode/wait/recovery proofs. Those flags do not implement a job
+  or verify their own provenance; the later serialized engine supplies them.
+  ACK/reset use safe actual images even when overall configuration is UNKNOWN,
+  ignoring staged desired values and retaining older obligations. Ordinary
+  settings require resolved effects; recovery rejects different pending mode/
+  reset but may resolve its own old recovery history with configuration UNKNOWN.
+- Keep arithmetic separate from permission: DE->56 excludes reset in field
+  encoding, but qualified composition rejects observed reset1. Nonzero 45 internal
+  bits can be preserved arithmetically but remain unqualified for ordinary or
+  recovery writes. Preserve existing conservative B internal-zero policy.
+  All 322I 08/09 writes, missing 45 and real non-reset return-to-DRP remain gated.
+  No VCONN fault-clear meaning is inferred from IRQ or its RCU label.
+- Derive test tables and expected bytes from current verified archived TI tables,
+  not production helpers or a fake silicon model. Reopened pinned Linux reset
+  mask08/value1 and regmap val&mask semantics confirm the ineffective call;
+  the Rust Try.SRC04 constant remains reserved. Tests assert real reset08,
+  Try.SRC06, ACK preservation, strict local rejection and zero pure callbacks.

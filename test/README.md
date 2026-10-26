@@ -1,8 +1,10 @@
-# Native contract, validator, transport and version checks
+# Native contract, validator, transport, codec and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
 Prompt 9 adds private terminal transport and exact identity/revision checks.
+Prompt 10 adds public supplied-byte decoding, private encoding/comparison and
+safe composition tests; it executes no owner procedure or wait.
 The device facade and behavioral driver suites remain planned.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
@@ -27,7 +29,12 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   extra-call expectations; variant/register/range gates, pointer every read,
   scratch publication, legal/illegal callback status/detail, write acceptance,
   saturating all/managed accounting, independent instances and TI-derived
-  identity/revision cases. This is private-helper behavior, not a working driver.
+  identity/revision cases. Independent codec tables cover every byte and variant,
+  all small typed domains, reserved/absent validity, complete error-output
+  preservation, settings comparison and actual-versus-staged write composition.
+  Literal frames verify ACK/settings/reset at the transport boundary. Mode and
+  recovery checks prove composition prerequisites, not executed/timed procedures.
+  The public decoder is also linked by the standalone consumer without private includes.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -40,7 +47,7 @@ The build separately compiles each public header as the only include and the
 three planned-contract fixtures as objects. They are compile checks, with no
 behavioral CTest entry or stub driver definitions. The
 [ordinary multi-file consumer](../examples/host/basic/README.md) must also build
-and run separately with tests OFF. It links real validators and needs no Python,
+and run separately with tests OFF. It links real validators/decoder and needs no Python,
 Git, Doxygen, PlatformIO, framework headers or sibling include paths.
 
 The older direct compiler commands below remain useful for focused passive-only
@@ -92,7 +99,7 @@ Future transition/fault requirements O01–O25 are in the
 
 Run current version/documentation checks with `python scripts/generate_version.py check`
 and `doxygen Doxyfile`; output stays under build/doxygen. Inspect XML/HTML for all
-17 public structs, both validators and the four generated version constants.
+17 public structs, both validators, decodeRegister and four generated version constants.
 The complete omission checker and negative fixtures remain prompt 33 work.
 
 For source documentation, prompt 5 also ran Doxygen directly with a temporary

@@ -1,7 +1,7 @@
 # Feature, source and verification coverage
 
-Prompts 2-9, updated 2026-10-26. This matrix defines the capability boundary; passive
-values/Status, pure validators, private transport/identity, native builds and host
+Prompts 2-10, updated 2026-10-26. This matrix defines the capability boundary; passive
+values/Status, pure validators/decoding/composition, private transport/identity, native builds and host
 checks exist, but no device facade, CLI or hardware
 qualification exists yet. **Planned** means the
 source boundary is established and implementation/testing is still due.
@@ -12,15 +12,17 @@ These are documentation labels, not new runtime health/status values.
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
 listed there; V names TUSB322I alone. Silicon/operation tests below remain future
-evidence; the implemented-values table records the subset delivered in prompts 5-9.
+evidence; the implemented-values table records the subset delivered in prompts 5-10.
 Actual checks are in
 [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md). Planned commands follow [CLI_CONTRACT](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CLI_CONTRACT.md).
 
 Prompt 3 completed the [register contract](register-map.md) and
 [independent vectors](register-vectors.md): map/access/defaults, semantic
 encodings, comparison/composition and negative cases. Rows below that name
-prompt 3 now have their register specification evidence; implementation and
-behavioral tests remain planned. No unresolved gate was closed by byte arithmetic.
+prompt 3 now have their register specification evidence; full device implementation and
+owner behavioral tests remain planned. Prompt 10 implements and tests the pure
+field codecs/comparison and qualified byte composer, without executing any
+procedure. No unresolved gate was closed by byte arithmetic.
 
 Prompt 4 completed the [device procedure guide](device-behavior.md). Every enabled
 plan now has exact source citations, prerequisites, wait anchors, retained effects,
@@ -30,7 +32,7 @@ below supplements the feature rows without turning a future test into a PASS.
 
 | Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
-| Register access/defaults and safe byte composition — Specified; implementation Planned | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; actual suites due9/10/18/21/22 |
+| Register access/defaults and safe byte composition — Pure helpers implemented; owner Planned | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; PASS private access/transport9 and pure codecs/composition10; owner/CLI conformance remains18/21/22 |
 | Explicit variant/address validation — Implemented; binding/CLI Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | PASS every legal pair, all address/variant bytes and zero callbacks in7; binding/transport/CLI remain9/11/20 |
 | Eight-byte identity — Planned | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / init, probe, capabilities | Independently fixed vectors; reverse order, wrong NUL, same-address unrelated device, partial/failed transfer, no inference of enable/model; 9/12/18/22 |
 | Revision acceptance — Planned; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize, readRegisterSync / init, reg, diag | Base never probes A0; unknown/06 returns CHIP_ID_MISMATCH without write permission; raw value retained; mismatch cannot create KNOWN; 9/12/18/22 |
@@ -43,7 +45,7 @@ below supplements the feature rows without turning a future test into a PASS.
 | 322 DFP/UFP selection — Planned subject to complete procedure proof | TUSB322I | TI fact: V §§6.3.2.1–2 pp10–11, Table 6-10 p20 | startApplyProfile / mode, apply | Use exact V procedure, no inherited PORT mode or invented 5 ms rule; original errors/effects survive cleanup; 4/13/18 |
 | 322 direct return to DRP — Gated | TUSB322I | Unresolved V_RETURN_DRP: V §6.3.2 p9, §6.3.2.3 p11, Table 6-10 p20 | startApplyProfile / mode drp, apply | Resolve exact non-reset transition before enabling changes; valid existing DRP codes remain readable; no implicit reset fallback; 4/13/18 |
 | Try.SNK / Try.SRC, UFP accessories, termination disable — Planned; V UFP-accessory writes gated | L/A/V; absent on B | TI fact: L/A §7.2/Tables 8–10 pp10–11,17–19; V §6.3/Tables 6-8–10 pp9–12,17–20; V_FAULT_CLEAR affects 09 bit0 writes | DeviceProfile fields / preference, ufpaccessory, termination, apply | Reject B unsupported fields; reserved Try.SRC code2 never accepted; preferences not guaranteed role; termination effects not conflated with 45; V accessory changes reject without writes until safe 09 composition is proved; 3/4/10/13/18 |
-| Duty/debounce and accessory decoding — Planned; V duty writes gated | B/L/A/V, exact per-variant encodings | TI fact: B Table 7-7 pp17–19; L/A Tables 8–10 pp17–19; V Tables 6-8–10 pp17–20; V_FAULT_CLEAR affects 09 bits2:1 writes | validateProfile, codecs, startApplyProfile, portSnapshot / duty, debounce, decode | Base and extended debounce differ; base accessory7 reserved; retain raw unknown values without fabricated semantic state; V duty changes reject without writes, while unchanged proved 09 controls permit independently supported 0A changes; derive complete cases in 3, implement 10/13/15/18 |
+| Duty/debounce and accessory decoding — Codes implemented; apply/port Planned; V duty writes gated | B/L/A/V, exact per-variant encodings | TI fact: B Table 7-7 pp17–19; L/A Tables 8–10 pp17–19; V Tables 6-8–10 pp17–20; V_FAULT_CLEAR affects 09 bits2:1 writes | validateProfile, codecs, startApplyProfile, portSnapshot / duty, debounce, decode | Base and extended debounce differ; base accessory7 reserved; retain raw unknown values without fabricated semantic state; V duty changes reject without writes, while unchanged proved 09 controls permit independently supported 0A changes; derive complete cases in 3, implement 10/13/15/18 |
 | Separate 45 Rd/Rp control — Planned B/L/A; unavailable V | Six 320 parts only | TI fact: B Table 7-7 p19; L/A Table 11 p20; V complete map pp17–20 lacks45 | DeviceProfile.disableRdRp / rd-rp, apply | Internal bits preserved, no register45 on V, clear0A disable does not prove Rd/Rp enabled; safe transition procedure due4; 3/4/10/13/18 |
 | Explicit reset — Planned, effect differences retained | B/L/A/V | TI fact: B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | Actual reset mask emitted, no repeat after uncertain write, timed completion proof; six-part PORT resampling, V returns DRP, no automatic desired replay; 4/14/18/31 |
 | Post-dead-battery Rp recovery — Planned B only | TUSB320, TUSB320I | TI fact: B §7.4.3 p14; conservative identity/readback prerequisites are library policy | startRecoverDeadBattery / recover-dead-battery | Exact base-only operation, owner-qualified VDD, transient statuses not published, timed sequence/effects tested; other variants reject before callbacks; 4/14/18/31 |
@@ -83,7 +85,7 @@ results. Later rows become implemented/tested only when their real suites and
 relevant physical checks run. Gated rows remain explicit without blocking
 independent, verified capabilities.
 
-## Prompts 5-8 implemented values, validators and planned API mapping
+## Prompts 5-10 implemented values, validators, codecs and planned API mapping
 
 These entries distinguish executable passive-value checks from future device
 behavior. Exact fields and planned signatures are in [API contracts](api-contracts.md).
@@ -95,15 +97,15 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Configuration/port — Passive values implemented | ConfigurationSnapshot, ProfileField, PortSnapshot, PortField | Baseline and register/device guides; explicit raw/typed validity | PASS defaults, mask values and independent raw copy; publication/lifetime6, observations12/15 |
 | Operation/diagnostics — Passive values implemented | OperationToken/Timing/Result/Progress, identity/IRQ values, DriverDiagnostics | Owner baseline and prompt4 retained effect rules | PASS fixed values/default invalidity and token domain; admission/time6/11, retained IRQ16, diagnostics17 |
 | Health — Passive values and private evidence accounting implemented | DriverState, ManagedTransportEvidence, HealthPolicy/Snapshot | Baseline policy; no TI health claim | PASS defaults and private managed/raw totals/streak/timestamp separation9; public validation/projection/views17 |
-| Decoder — Result implemented, function Planned | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS passive defaults and planned signature syntax; independent decode/error/output-preservation vectors10, CLI formatting22 |
+| Decoder — Implemented | RegisterDecode; decodeRegister(Variant, uint8_t, uint8_t, RegisterDecode&) | Register-map explicit field tables; variant-specific reserved/access restrictions | PASS exhaustive mapped bytes/variants, reserved validity, invalid inputs and complete output preservation10; public linkage without private includes; CLI formatting22 |
 | Facade — Planned | Exact inventory in api-contracts.md and compile-only fixture | Baseline exact signatures and completed procedure gates | PASS syntax/noncopy/nonmove checks only; callable engine9-17 |
 | Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
 | Source docs — Present | Five public headers with file/type/member/enum/function and generated version Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen, visibility of17 public structs and four version constants; complete omission guard33 |
 | Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, duplicate-declaration rejection, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
 | Component/native tool configuration — Implemented; firmware Planned | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration fixture, launcher argument/exit fixtures and native linkage; native-IDF firmware25-26, full packages32 |
 
-No pass above represents a successful I2C transaction,
-silicon decoder, framework build, CI run or physical qualification.
+No pass above represents a physical I2C transaction, executed owner procedure,
+framework firmware build, CI run or physical qualification.
 
 ## Prompt 6 completed owner contracts
 

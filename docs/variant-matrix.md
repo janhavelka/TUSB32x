@@ -5,7 +5,12 @@ This is a source-backed specification, not implemented or physically qualified
 support. Register encodings are now specified in the
 [register guide](register-map.md); prompt 4 completed the
 [device procedures](device-behavior.md).
-All API and CLI names below are planned contracts.
+Public values, validators and supplied-byte `decodeRegister` now exist, with
+private transport/identity and pure codec/composition checks through prompt 10.
+Device operations and CLI names below remain planned contracts. Pure decoding
+retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding
+or comparison. Existing equivalent DRP00/11 is preserved during unrelated
+changes; a real non-reset return to DRP remains unavailable.
 
 ## Evidence and current sources
 

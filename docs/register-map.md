@@ -3,11 +3,47 @@
 Completed for prompt 3 on 2026-10-23. This is a specification for later code and
 tests, not a complete driver. TUSB320LAI remains the primary target.
 Prompt 9 now implements its private access allowlist and identity comparisons;
-codecs, composition and owner procedures remain later work. Read the
+prompt 10 implements pure codecs/composition. Owner procedures remain later work. Read the
 [variant matrix](variant-matrix.md) for identity acceptance, board prerequisites
 and unresolved gates, and [register vectors](register-vectors.md) for independent
 expected bytes. The [device guide](device-behavior.md) now specifies procedures,
 wait anchors and completion proof from prompt 4.
+
+## Implemented pure codec boundary
+
+`decodeRegister` is public in `<TUSB32x/CommandTable.h>` and links through
+`TUSB32x`. It replaces its fixed result only on success, retaining the supplied
+variant/register/raw byte and separate field-valid masks. Reserved advertisement,
+preference and accessory codes keep only their affected flags clear. Base absent
+controls have no validity; present identity/revision bytes remain raw only.
+Single-byte CC1/CC2 and current codes establish no attachment applicability,
+current measurement, USB PD contract or permission to draw power. Complete port
+interpretation, including detached NOT_APPLICABLE, belongs to prompt 15.
+
+Private `TUSB32xCodecs` encodes typed candidates and compares persistent settings,
+including fieldwise TUSB322I DRP00/11 equivalence. Encoding a readable field does
+not authorize writing it. The one `composeWrite` selects whole named fields,
+preserves actual unrequested controls and rejects missing/invalid actual fields
+even when the request would overwrite them. Explicit ACK/reset intents ignore
+staged desired values and use the safe observed/trusted applied image. They may
+operate while overall configuration is UNKNOWN; they do not erase older effects.
+
+Ordinary settings cannot change mode. Base mode composition requires the detached
+precheck; extended stages require distinct successful disable/mode steps and
+the applicable wait proof. Recovery requires base-only stable-VDD qualification,
+internal-zero precheck, and preceding disable/wait proof before its literal00.
+These are supplied owner proofs, never a second operation engine or permission
+for a public raw setter. Ordinary45 also requires known internal03=00: this is
+the documented L/A default and conservative B policy. Preservation arithmetic
+for a nonzero internal image is not qualification to write it.
+
+An observed reset command bit1 rejects qualified composition; `DE -> 56` tests
+field arithmetic separately, while settled `D6 -> 56` is a permitted debounce
+composition. Ordinary writes emit no IRQ/reset bits. The registered protocol
+suite checks literal bytes and manual `[register,value]` callback frames; it
+executes no mode, reset, recovery, wait or IRQ job. TUSB322I08/09 writes and real
+non-reset changes to DRP remain gated; equivalent existing DRP00 is preserved
+during unrelated updates. No fault-clear API is introduced.
 
 ## Sources and notation
 
@@ -276,8 +312,9 @@ introduced by these contracts.
 
 Public file revisions/hashes/licenses remain in the
 [pinned manifest](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/public-implementations.json) and
-[chip evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CHIP_EVIDENCE.md). Future CommandTable constants and codecs
-must carry these TI revision/table/page citations and Doxygen for units, variants,
-legal values, protected fields and side effects. Implement the independent
-[vectors](register-vectors.md) in the assigned real suites; this document does
-not claim that those behavioral tests already ran.
+[chip evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CHIP_EVIDENCE.md).
+Implemented codec masks carry TI revision/table/page citations, and the public
+decoder documents raw validity, error preservation and zero-I2C bounds.
+The independent [vectors](register-vectors.md) now have pure codec and transport
+checks through prompt 10. Complete owner procedure, timing, port and hardware
+evidence remains with the later assigned suites.

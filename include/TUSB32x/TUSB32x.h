@@ -106,6 +106,8 @@ inline constexpr uint8_t STATUS_08_VALID = 1U << 0;
 inline constexpr uint8_t STATUS_09_VALID = 1U << 1;
 
 /// @brief Independent decoded PortSnapshot validity bits; inapplicable is a valid interpretation.
+/// @details RegisterDecode reuses only code-validity bits: single-byte decoding establishes
+/// documented raw field meanings, without the paired context required by PortSnapshot.
 enum class PortField : uint16_t {
   ATTACHMENT = 1U << 0,         ///< Attachment decoded from a documented successful observation.
   LOCAL_ROLE = 1U << 1,         ///< Local power role, including NOT_APPLICABLE, is established.

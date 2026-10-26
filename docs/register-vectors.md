@@ -1,8 +1,11 @@
 # Independent register vectors
 
 Prompt 3, 2026-10-23. These are literal expected values derived from the exact TI
-tables in [register-map](register-map.md), independently of future production
-helpers. They are inputs for later behavioral suites, not passed driver tests.
+tables in [register-map](register-map.md), independently of production helpers.
+Prompt 10 now tests pure field decoding, encoding, comparison and qualified
+composition in `test/test_codecs.cpp`, plus manually composed transport frames
+in `test/test_protocol.cpp`. Owner procedure, timing and hardware vectors remain
+future behavioral evidence.
 Hexadecimal bytes omit `0x`. B/L/A/V have the exact variant meanings and sources
 defined in that guide. All non-target fields and prerequisites are assumed valid
 unless the case explicitly says otherwise; no vector overrides a capability gate.
@@ -90,7 +93,10 @@ C19/C20 are not a two-write shortcut to the full base recovery sequence.
 For each C row, verify the expected byte against the exact variant masks and
 independent integer arithmetic. Also verify no bits outside the legal output
 mask are set, and no ordinary write includes IRQ/reset. These checks were run
-in prompt 3; actual callback transcripts and operation effects are future tests.
+in prompt 3. Prompt 10 adds real pure-codec and manually composed callback checks;
+operation effects and timing remain future tests. C09 is proved by field
+encoding without granting a reset-pending write; C17/C18's arithmetic is still
+unqualified and the safe composer rejects those nonzero internal images.
 
 ## Required rejection and failure vectors
 

@@ -1,7 +1,6 @@
 /// @file CommandTable.h
-/// @brief Fixed passive result contract for future pure decoding of a supplied register byte.
-/// @details The decoder and verified register-table implementation are planned for prompt 10.
-/// This header publishes no unimplemented callable declaration or register encoder.
+/// @brief Pure, variant-specific decoding of one supplied register byte and its raw evidence.
+/// @details No device, binding, transport callback or private source include is required.
 #pragma once
 
 #include <cstdint>
@@ -33,5 +32,21 @@ struct RegisterDecode {
   bool resetRequested = false; ///< Supplied 0x0A command bit, only when resetValid; not effect proof.
   bool resetValid = false; ///< Register/variant defines the supplied reset-command bit.
 };
+
+/// @brief Decode one caller-supplied byte without I2C, allocation or device/owner mutation.
+/// @param[in] variant Explicit exact part; no model or polarity is inferred from register contents.
+/// @param[in] reg Documented 00..0A, present 45 or present A0; not a target I2C address.
+/// @param[in] value Unmodified raw byte, including reserved and unknown evidence.
+/// @param[out] out Replaced on success with this byte's codes/validity; completely unchanged on error.
+/// @retval OK Raw byte retained; reserved field codes have clear validity, not an invented value.
+/// @retval INVALID_PARAM Invalid/unspecified variant, then unmapped register, in that order.
+/// @retval UNSUPPORTED_FEATURE Family register absent on this part (base A0 or TUSB322I 45).
+/// @note Work is a bounded table lookup and fixed branches, zero callbacks/waits or retained storage.
+/// Raw direction remains CC1/CC2 even for detached 09; current/accessory/cable codes also need paired
+/// port context for applicability. CC indication is neither measured current, a PD contract nor
+/// permission to draw power. A reset bit is not completion proof; IRQ decoding does not acknowledge.
+/// TUSB322I fault bit stays raw, with no typed fault-clear API or permission for gated 08/09 writes.
+/// All returned messages have static lifetime and detail zero.
+Status decodeRegister(Variant variant, uint8_t reg, uint8_t value, RegisterDecode& out);
 
 }  // namespace TUSB32x

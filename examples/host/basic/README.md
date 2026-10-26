@@ -1,13 +1,14 @@
-# Portable values and validators consumer
+# Portable values, validators and decoder consumer
 
 This ordinary C++ application constructs a TUSB320LAI binding and a candidate
-profile, then runs the two local validators. `main.cpp` and `profile.cpp` compile
-and link against the public `TUSB32x` target. That target supplies C++17 and its
+profile, then runs the two local validators and decodes supplied byte `08=90`.
+`main.cpp` and `profile.cpp` compile and link against the public `TUSB32x` target.
+That target supplies C++17 and its
 include directory; the consumer does not add either requirement itself.
 
 The callbacks are explicitly fake and return `I2C_ERROR` if called. Validation
-must leave their attempt counter at zero. There is no real device, initialization,
-register access or profile application. A valid candidate does not establish
+and decoding must leave their attempt counter at zero. There is no real device,
+initialization, register access or profile application. A valid candidate does not establish
 observed hardware settings or authorize an application power policy.
 
 From the repository root, with CMake and a C++ compiler available:
@@ -27,6 +28,7 @@ generator, or `build/host-basic/tusb32x_host_basic` with a single-config generat
 ```text
 Package version: 0.1.0-dev.1
 Binding validation: OK; profile validation: OK; fake callback attempts: 0
+Supplied 08=90 decode: OK; raw=90 (no device observation)
 ```
 
 The version is the package version from generated Version.h, not flashed firmware
@@ -42,4 +44,5 @@ version generator runs as a build side effect. See [development tools](../../../
 Tests default OFF in the library; no test option is needed for this build. CMake
 and the compiler are the only build dependencies. Python, Git, Doxygen, framework
 SDKs and sibling projects are not required. This example proves portable public
-linkage and local validation, not firmware integration or hardware qualification.
+linkage, local validation and byte decoding, not firmware integration or hardware
+qualification.

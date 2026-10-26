@@ -1,6 +1,6 @@
 # Documentation
 
-- [API contracts](api-contracts.md): implemented values and validators, with future
+- [API contracts](api-contracts.md): implemented values, validators and pure decoder, with future
   device methods explicitly labeled.
 - [Architecture](architecture.md): public/core/example responsibilities and the
   application-owned transport boundary.

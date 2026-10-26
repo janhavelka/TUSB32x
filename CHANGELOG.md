@@ -7,6 +7,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Public pure `decodeRegister` with raw/field validity and unchanged output on
+  errors; private typed encoders, semantic settings comparison and one qualified
+  write composer. Added exhaustive TI-derived codec tests and exact composed
+  transport frames. TUSB322I write gates remain; owner procedures and timing,
+  complete port applicability and public raw diagnostics are later work.
+
 - Private register transport with one terminal callback/accounting boundary,
   fixed receive scratch storage, exact variant/register/range gates, conservative
   write-acceptance evidence and pure identity/revision comparisons. Added genuine

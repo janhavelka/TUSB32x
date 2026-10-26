@@ -3,6 +3,8 @@
 Prompts 5-8 provide portable values, constexpr Status/token helpers, pure validators,
 a C++17 CMake library target and deterministic package metadata/version tooling.
 Prompt 9 adds [private register transport and identity checks](transport.md).
+Prompt 10 adds public pure register decoding and private field encoding,
+semantic comparison and qualified byte composition.
 There is no device facade or operation engine yet. The
 [API inventory](api-contracts.md) labels all future calls explicitly; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
@@ -14,13 +16,14 @@ There is no device facade or operation engine yet. The
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
 | include/TUSB32x/TUSB32x.h | Fixed operation, snapshot, result, diagnostic and health values; no callable facade yet |
-| include/TUSB32x/CommandTable.h | Passive RegisterDecode value; decoder and register tables arrive with implementation in prompt 10 |
+| include/TUSB32x/CommandTable.h | RegisterDecode value and callable pure decodeRegister; raw evidence and independent field validity |
 | include/TUSB32x/Version.h | Generated stable constexpr version values; no Git, timestamp or firmware identity |
 | src/TUSB32x.cpp | Bounded pure binding/profile validation; no driver instance |
 | src/TUSB32xProtocol.h/.cpp | Private mapped terminal callbacks, single accounting boundary, possible-write evidence and pure exact identity/revision comparisons |
+| src/TUSB32xCodecs.h/.cpp | Public pure decoder definition, private typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
 | CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external maintainer tools for core consumption |
-| test/CMakeLists.txt, test/test_validators.cpp and test/test_protocol.cpp | Registered active C++ suites, exhaustive validator/protocol checks and compile-only standalone-header/signature fixtures |
-| examples/host/basic/ | Standalone multi-file consumer of the real values and validators; explicitly failing fake callbacks |
+| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp and test/test_codecs.cpp | Registered active C++ suites, independent exhaustive validator/protocol/codec checks and compile-only standalone-header/signature fixtures |
+| examples/host/basic/ | Standalone multi-file consumer of real values, validators and public decoder; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/PlannedApi.h and planned_api.cpp | Explicitly compile-only future signatures, never linked or delivered |
 | test/contract/owner_examples.cpp | Compile-only passive observation, explicit apply/cancel and two devices sharing an external fake owner; no driver definitions |
@@ -54,12 +57,14 @@ There is no factory, generic scheduler, registry, inheritance hierarchy or Pimpl
 Small adjacent private responsibilities may share source units; files are added
 when implemented, not as empty placeholders.
 
-The future source split is binding/validation/cache (`TUSB32x.cpp`), transport
-and composition (`TUSB32xProtocol.cpp`), operations (`TUSB32xOperations.cpp`),
+The current split keeps pure codecs/composition in `TUSB32xCodecs.cpp` and the
+terminal callback/accounting boundary in `TUSB32xProtocol.cpp`, sharing one
+closed variant-capability table. Later files cover binding/cache (`TUSB32x.cpp`),
+operations (`TUSB32xOperations.cpp`),
 port observation (`TUSB32xPort.cpp`) and passive diagnostics
 (`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
-and Doxygen. The current units implement the validators and private transport/
-identity layer; the safe composer and owner engine remain later work.
+and Doxygen. The current units implement validators, private transport/identity
+and pure codecs/composition; the owner engine remains later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
 exports remain outside the current implementation.
