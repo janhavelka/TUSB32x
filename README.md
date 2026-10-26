@@ -10,8 +10,8 @@ binding/lifecycle, token-checked polling/cancellation/result delivery, cached
 evidence, read-only initialization, profile observation, explicit profile apply,
 desired-profile verification, read-only reconciliation, explicit reset and
 original TUSB320/I dead-battery recovery, complete read-only port refresh and
-explicit interrupt acknowledgement/bounded service. Public raw diagnostics and
-firmware adapters remain planned.
+explicit interrupt acknowledgement/bounded service, one-callback raw diagnostics
+and pure passive health projection. Firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -145,6 +145,13 @@ to request more work. Coalescing and races prevent lossless edge counting. ACK
 preserves the historical port snapshot, whose sampled IRQ field can be old.
 Polling needs no IRQ pin; GPIO/ISR handling and policy remain application-owned.
 
+`readRegisterSync` and `writeRegisterSync` each perform at most one callback.
+Raw writes require proved actual controls and cannot shortcut role, reset,
+termination or recovery procedures. `transportStats` counts every callback;
+`diagnostics().managedTransport` excludes raw Sync. `projectHealth` displays
+UNINIT/READY/DEGRADED/OFFLINE from copied managed evidence without controlling
+access, recovery or configuration trust. See [diagnostics](docs/diagnostics.md).
+
 One terminal result blocks replacement until `takeResult` delivers it. Result
 delivery returns OK even when the copied operation failed. See the
 [implemented owner API](docs/api-contracts.md#implemented-owner-api) for timing,
@@ -152,8 +159,8 @@ output preservation and evidence lifetime.
 
 Tests ON require Python 3.10+. For single-config generators also select
 `-DCMAKE_BUILD_TYPE=Debug` at configure time. The registered checks cover C++
-contracts, validators, transport/codecs, owner operations, port publication and
-isolated generator fixtures. Run `doxygen Doxyfile`
+contracts, validators, transport/codecs, owner operations, port publication,
+raw safety/accounting/passive health and isolated generator fixtures. Run `doxygen Doxyfile`
 for strict current API documentation. On Windows use the existing VS Code Core
 through `scripts/pio.cmd`; do not install another Core.
 

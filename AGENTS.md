@@ -15,8 +15,9 @@ instance-local tokens, retained results, read-only initialization, profile
 observation, explicit desired-profile apply/verification, read-only reconciliation,
 explicit reset, original TUSB320/I dead-battery recovery and complete read-only
 port refresh with cached publication, plus explicit interrupt acknowledgement and
-bounded observe/ACK/recheck service. Other operation families and framework
-firmware remain planned.
+bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
+diagnostics views and pure passive health projection. Framework firmware remains
+planned.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -102,10 +103,10 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the five C++ suites (including `tusb32x_protocol`,
-  `tusb32x_operations` and `tusb32x_port`) plus
+  and run the six C++ suites (including `tusb32x_protocol`,
+  `tusb32x_operations`, `tusb32x_port` and `tusb32x_diagnostics`) plus
   `tusb32x_version_sync` and, on Windows,
-  `tusb32x_pio_launcher`. Compile-only planned
+  `tusb32x_pio_launcher`. Compile-only signature/header
   contracts are never behavioral tests.
 - Version truth is `library.json`. Run `python scripts/generate_version.py sync`
   and `python scripts/generate_version.py check`; use bump/set only for intentional

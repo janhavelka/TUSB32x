@@ -1,7 +1,7 @@
 # Portable values, decoding and owner API
 
-Prompts 5-16, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
-complete passive values, constexpr Status/token helpers, two pure validators,
+Prompts 5-17, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+complete passive values, constexpr Status/token helpers, pure validators/health projection,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
 `TUSB32x`. Prompt 9 implements [private register transport/identity](transport.md),
@@ -12,16 +12,17 @@ handling, cached evidence and read-only initialization. Prompt 12 adds
 `startVerifyProfile`; prompt 14 adds explicit `startReset` and original-part
 `startRecoverDeadBattery`; prompt 15 adds complete read-only `startRefreshPort`
 and cached port publication; prompt 16 adds `startAcknowledgeInterrupt` and
-`startServiceInterrupt`. Other operation families
-below remain planned. Later prompts publish their callable declarations with
-real implementations; the complete design inventory is not a promise that all
-listed signatures are delivered now.
+`startServiceInterrupt`. Prompt 17 adds safe `readRegisterSync`/`writeRegisterSync`,
+complete diagnostics views and pure `validateHealthPolicy`/`projectHealth`.
+The callable inventory below is delivered; framework adapters and CLI remain
+later work.
 
 The [baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md), [register map](register-map.md)
 and [procedure guide](device-behavior.md) remain the state and silicon contracts.
 The [architecture](architecture.md) identifies file responsibilities. The
-[compile-only sketch](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/PlannedApi.h) checks this planned inventory
-without adding unresolved link promises to delivered headers.
+[compile-only inventory](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/planned_api.cpp) checks delivered signatures
+without claiming runtime behavior. See [diagnostics and health](diagnostics.md)
+for safe raw usage and the separate evidence views.
 
 ## Implemented value inventory
 
@@ -68,8 +69,8 @@ means acquisition, not current authorization: `DriverDiagnostics.initialized`
 and configuration/effect evidence determine current usability. Result IRQ facts
 describe that operation only; an operation that performs no IRQ work leaves its
 IRQ member empty. Cached diagnostic IRQ evidence can retain the previous record.
-The publication and invalidation tables below govern the delivered owner subset
-and explicitly planned later operation families.
+The publication and invalidation tables below govern the delivered owner and
+raw diagnostics methods.
 
 ACK `acknowledgeConfirmed` means a terminal write returned OK. It is never proof
 of a sampled-clear latch. `pendingAfterValid` and `pendingAfter` record the
@@ -160,7 +161,7 @@ There is no detached or OFFLINE error: detach is normal, health is a projection.
 Operation-status propagation, callback normalization and counters are implemented
 for initialization, profile observation, apply, verification, reconciliation,
 reset/base recovery, port refresh and IRQ acknowledgement/service. Public raw
-diagnostic behavior remains specified future work.
+diagnostic behavior is implemented in prompt 17.
 
 ## Borrowed transport and owner boundary
 
@@ -347,13 +348,12 @@ and recovery citations are in the [procedure guide](device-behavior.md).
 
 ## Complete design inventory
 
-This sketch contains both the delivered subset above and future operations.
-Only the delivered subset is declared in the public class. The compile-only
-fixture checks the complete future inventory separately. Profile observation and
+This inventory summarizes the delivered API. The compile-only fixture checks
+these real public declarations without defining a second facade. Profile observation and
 read-only reconciliation are delivered in prompt 12; application and desired-profile
 verification are delivered in prompt 13; reset and recovery in 14; port refresh
 and publication in 15; explicit IRQ acknowledgement/service in 16. Raw access
-and health helpers belong to 17.
+and health helpers are delivered in 17.
 No begin/init/unbind aliases or successful placeholder methods are provided.
 
 ```cpp
@@ -460,8 +460,8 @@ authorizes a write or removes an unresolved silicon/board prerequisite.
 
 ## Method admission and output preservation
 
-These tables are implemented for the delivered owner subset; rows naming later
-operations remain normative future contracts. The
+These tables are implemented for the delivered owner and raw methods and are
+exercised by the registered suites. The
 [current peer review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-11-peers.md) records the implementations
 and tests compared. The baseline's precedence is unchanged. Evaluate the
 following rows in order; stop at the first applicable rejection. Rejections
@@ -962,13 +962,14 @@ New targets reset current target readiness, but instance transport history remai
 
 ## Behavioral acceptance vectors
 
-These acceptance vectors cover the entire planned engine. Prompt 11's
+These acceptance vectors cover the delivered engine and diagnostics. Prompt 11's
 `tusb32x_operations` suite exercises initialization, lifecycle, token/result and
 time behavior. Prompts 12-13 add profile observation, read-only proof, apply,
 desired verification and their write/effect boundaries. Prompt 14 adds reset and
 base-recovery sequence, timing and retained-effect cases. Prompts 15-16 add the
 registered port suite for publication and explicit IRQ boundaries. Raw/health
-cases remain future acceptance requirements. Actual commands/results are recorded
+cases are exercised by the registered `tusb32x_diagnostics` suite in prompt 17.
+Actual commands/results are recorded
 in validation; the complete table also guides later conformance work.
 Combine the rejection ordering above with every write/failure boundary in the
 procedure guide; test callback counts, outputs, state and original status together.
@@ -1005,12 +1006,12 @@ procedure guide; test callback counts, outputs, state and original status togeth
 
 The [fixture instructions](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md) compile each delivered header in
 isolation, check constant evaluation/explicit conversion, and link two real
-Status consumers. Planned signatures and the
+Status consumers. Public signatures and the
 [owner examples](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/owner_examples.cpp) are syntax-checked only;
 the arithmetic fixture evaluates specification expressions at compile time. These
 checks establish their passive/compile-only contracts. Separate runtime suites
 exercise validators, private transport/codecs, initialization and profile
 observation/apply/verify/reconciliation, and
-public link tests call every delivered method. None proves later operations,
+public link tests call every delivered method. None proves
 linked framework firmware or physical qualification. Results and tool versions
 are in [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).

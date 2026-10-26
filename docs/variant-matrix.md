@@ -15,8 +15,8 @@ this does not grant write permission or exact-part identification from a shared
 signature. Original TUSB320/I dead-battery recovery is also implemented;
 read-only port refresh is implemented for all seven variants. Explicit IRQ
 acknowledgement and bounded service are implemented for the six 320 variants;
-TUSB322I rejects both before traffic under V_FAULT_CLEAR. Later device
-operations and CLI names below remain planned contracts.
+TUSB322I rejects both before traffic under V_FAULT_CLEAR. Prompt 17 adds safe raw
+Sync diagnostics and pure passive health. CLI names below remain planned contracts.
 Apply changes only differing fields, verifies the complete final image and
 retains independent termination/effect evidence after interruption. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding

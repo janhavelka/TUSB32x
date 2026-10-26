@@ -3,13 +3,26 @@
 This checkout contains audited implementation contracts, portable C++17 values
 and a cooperative owner engine with read-only initialization, profile observation,
 explicit profile application, desired verification, read-only reconciliation,
-explicit reset, original TUSB320/I dead-battery recovery, complete port refresh
-and explicit IRQ acknowledgement/bounded service.
+explicit reset, original TUSB320/I dead-battery recovery, complete port refresh,
+explicit IRQ acknowledgement/bounded service, safe raw diagnostics and passive health.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
+
+- Bounded `readRegisterSync`/`writeRegisterSync` using the existing terminal
+  callback/accounting path and safe composer. Raw writes require current actual
+  proof, reject procedure shortcuts and invalidate trust before possible effect.
+  Contradictory protected45 observations revoke its write image for both raw and
+  typed changes while leaving independent settings available. Diagnostics retain
+  managed operation and unresolved effect history after result delivery.
+- Pure `validateHealthPolicy`/`projectHealth` with positive threshold (default3),
+  UNINIT/READY/DEGRADED/OFFLINE, unchanged invalid-policy output and no admission or
+  recovery policy. All-source counts include raw callbacks; managed health excludes
+  them. Source-stat clearing preserves managed streaks, trust, effects and results.
+  Registered diagnostics tests cover public raw safety/accounting and projection.
+  Removed the now-empty future API fixture facade; signatures use real headers.
 
 - Independent prompt-16 audit and service regressions for controls that change
   between the two 09 reads, final-sample ACK composition, and changed-bookend

@@ -328,6 +328,22 @@ struct HealthSnapshot {
   uint32_t offlineThreshold = 3; ///< Effective positive threshold used for this projection.
 };
 
+/// @brief Validate an application-selected passive display threshold without I2C or allocation.
+/// @param[in] policy Borrowed value; offlineThreshold must be at least one, including UINT32_MAX.
+/// @return OK for a positive threshold, INVALID_CONFIG for zero; no mutation or retained storage.
+Status validateHealthPolicy(const HealthPolicy& policy);
+
+/// @brief Project copied managed transport evidence without I2C, clock access or policy actions.
+/// @param[in] evidence Borrowed history; initialization and the managed failure streak determine state.
+/// @param[in] policy Positive offlineThreshold; changing it only changes this display projection.
+/// @param[out] out Replaced with state, evidence and threshold on OK; unchanged on INVALID_CONFIG.
+/// @return INVALID_CONFIG for threshold zero, otherwise OK. UNINIT overrides any failure history;
+/// initialized streak zero is READY, below threshold DEGRADED, otherwise OFFLINE. Fixed work,
+/// no allocation, retries, recovery or admission decisions; READY does not establish configuration
+/// trust or port validity. All returned messages have static lifetime and detail zero.
+Status projectHealth(const ManagedTransportEvidence& evidence, const HealthPolicy& policy,
+                     HealthSnapshot& out);
+
 /// @brief Independent binding, trust, effect and diagnostic history retained by an owner instance.
 /// @details Latest-operation fields never erase unresolved recovery, mode-transition or reset
 /// acceptance evidence. Taking a result or clearing transport totals cannot repair those facts.
@@ -357,7 +373,8 @@ struct DriverDiagnostics {
 
 
 /// @brief Serialized application-owned cooperative driver; no allocation or implicit I2C.
-/// @details Only poll invokes transport. Borrowed context must live until end returns. No ISR use,
+/// @details Poll advances managed transport; explicit Sync diagnostics invoke at most one callback.
+/// Borrowed context must live until end returns. No ISR use,
 /// concurrent access or callback reentry. One active token becomes one immutable retained result.
 /// Apply changes requested settings; reset, base recovery and IRQ ACK/service are explicit writes.
 /// Initialization, profile/port observation, verification and reconciliation perform reads only.
@@ -521,6 +538,32 @@ class TUSB32x {
   /// @param[out] out Copy on OK, otherwise unchanged; repeated take is RESULT_NOT_AVAILABLE.
   /// @return OK on delivery regardless of operation outcome, otherwise token/unavailable error.
   Status takeResult(OperationToken token, OperationResult& out);
+  /// @brief Read one mapped byte using one terminal callback, without managed publication.
+  /// @param[in] reg Scalar 00..0A, present45 or presentA0; no holes, ranges or pointer reuse.
+  /// @param[out] out Replaced only on callback OK; unchanged on every local/transport error.
+  /// @return INVALID_PARAM for unmapped offsets, UNSUPPORTED_FEATURE for absent registers, then
+  /// NOT_BOUND, BUSY or RESULT_PENDING. UNKNOWN configuration is allowed. Callback errors retain
+  /// normalized I2C_* and full detail. One TX pointer/one RX byte, configured aggregate timeout in
+  /// milliseconds, no retry or time sampling. Raw counts exclude managed health history.
+  /// @note Adverse control evidence can invalidate trust/port; reset1 records MAY_BE_PENDING with
+  /// no completion anchor. Raw reads never publish identity/profile/port/IRQ or repair trust.
+  /// TUSB322I09 fault-consuming semantics are unresolved; raw access is not declared nondestructive.
+  Status readRegisterSync(uint8_t reg, uint8_t& out);
+  /// @brief Write one qualified raw image with one terminal callback and no preparatory read.
+  /// @param[in] reg Writable 08/09/0A/present45; RO/unmapped/absent/gated targets reject locally.
+  /// @param[in] value Complete legal byte, already preserving proved controls; never silently masked.
+  /// @return INVALID_PARAM for illegal images/unmapped offsets, UNSUPPORTED_FEATURE for RO/absent/
+  /// gated access or sequence shortcuts, then NOT_BOUND/BUSY/RESULT_PENDING/NOT_INITIALIZED or
+  /// CONFIGURATION_UNKNOWN for missing current safe proof. A changed mode, reset, termination or
+  /// recovery requires its typed operation. TUSB322I08/09 writes remain gated even when unchanged.
+  /// @details Requires KNOWN actual controls, current identity and relevant raw-image proof. Uses
+  /// two TX bytes and zero RX with the configured aggregate millisecond timeout. No retries or
+  /// clock access. Ordinary writes, including same-value writes, invalidate trust/port and retain
+  /// configuration-write uncertainty before invocation; success is PARTIAL, errors INDETERMINATE.
+  /// Pure IRQ ACK preserves actual09 controls and trust/port; success confirms acceptance only.
+  /// Raw callbacks count in source totals, never managed history. Managed last-operation and IRQ
+  /// records are unchanged. Callback failure detail is preserved; failure time remains unknown.
+  Status writeRegisterSync(uint8_t reg, uint8_t value);
   /// @brief Copy cached progress with fixed work and zero callbacks.
   /// @return Current active/terminal slot, or IDLE after take.
   OperationProgress progress() const { return _progress; }
@@ -570,6 +613,8 @@ class TUSB32x {
   PortSnapshot _observingPort{}; ///< Private first09/08 staging and pre-read acquisition provenance.
   TransportStats _stats{};
   DriverDiagnostics _diagnostics{};
+  /// @brief Protected45 bits are outside profile equality; only full proof renews its write image.
+  bool _rdRpWriteImageValid = false;
   Phase _phase = Phase::IDENTITY;
   bool _waitReset = false;
   bool _waitMode = false;

@@ -1,9 +1,10 @@
 # Register access and encoding contract
 
-Completed for prompt 3 on 2026-10-23. This is a specification for later code and
-tests, not a complete driver. TUSB320LAI remains the primary target.
+Specified in prompt 3 on 2026-10-23 and implemented through prompt 17.
+TUSB320LAI remains the primary target; physical qualification is separate.
 Prompt 9 now implements its private access allowlist and identity comparisons;
-prompt 10 implements pure codecs/composition. Owner procedures remain later work. Read the
+prompt 10 implements pure codecs/composition. Prompts 11–16 implement owner
+procedures; prompt 17 adds safe raw enforcement. Read the
 [variant matrix](variant-matrix.md) for identity acceptance, board prerequisites
 and unresolved gates, and [register vectors](register-vectors.md) for independent
 expected bytes. The [device guide](device-behavior.md) now specifies procedures,
@@ -328,7 +329,15 @@ cannot add a preparatory read within their one-callback bound.
    bypass procedure gates. Do not silently mask an invalid request into success.
    With its one-callback bound, raw writing cannot first fetch missing controls.
 
-| Intent | Register contract | Procedure contract for later implementation |
+Prompt 17 implements these raw boundaries in `TUSB32xDiagnostics.cpp`. A successful
+ordinary raw write, even with an unchanged byte, invalidates configuration before
+invocation and requires complete proof afterward. The managed semantic no-op rule
+above does not suppress explicitly requested raw traffic. Pure ACK preserves
+actual controls and profile/port trust. A contradictory protected45 read revokes
+that register's write permission independently of user-profile equality; both raw
+and typed writes require renewed full proof. See [diagnostics](diagnostics.md).
+
+| Intent | Register contract | Procedure contract |
 | --- | --- | --- |
 | Change advertisement, duty or debounce | Exact field/table/byte composition; V08/V09 gates apply | Owner-known controls and apply publication/error rules; no hidden ACK/reset |
 | Change base mode | Only while unattached (B Table 7-7 p19) | Device guide detached precheck and owner/fixture race prerequisite; current-only changes are distinct |

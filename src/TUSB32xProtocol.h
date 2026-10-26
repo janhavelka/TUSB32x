@@ -27,6 +27,14 @@ struct VariantInfo {
 /// @return Static table entry, or nullptr for an invalid variant; no capability inference.
 const VariantInfo* findVariant(Variant variant);
 
+/// @brief Validate scalar raw access without invoking transport or changing state.
+/// @param[in] variant Bound exact part, or UNSPECIFIED for variant-independent prebinding checks.
+/// @param[in] reg Scalar mapped register; holes are INVALID_PARAM and RO writes UNSUPPORTED_FEATURE.
+/// @param[in] write True for raw write access; false for diagnostic reads.
+/// @return OK or local access error. Absent/gated bound-part access is UNSUPPORTED_FEATURE;
+/// malformed specified variants are INVALID_CONFIG. No byte encoding or owner proof is checked.
+Status validateRegisterAccess(Variant variant, uint8_t reg, bool write);
+
 /// @brief Explicit accounting origin, independent of aliases or callback outcome.
 enum class TrafficSource : uint8_t {
   MANAGED, ///< Production operation, counted in all-source and managed history.

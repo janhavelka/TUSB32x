@@ -1,12 +1,11 @@
-# Native contract, validator, transport, codec, owner, port, IRQ and version checks
+# Native contract, validator, protocol, owner, port, diagnostics and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
 Prompt 9 adds private terminal transport and exact identity/revision checks.
 Prompt 10 adds public supplied-byte decoding, private encoding/comparison and
 safe composition tests. Prompt 11 adds the delivered owner facade and read-only
-initialization, lifecycle, result ownership and fresh-time behavior. Other
-operation families and health projection remain planned. Prompt 12 adds
+initialization, lifecycle, result ownership and fresh-time behavior. Prompt 12 adds
 read-only profile observation/reconciliation and its conservative reset-settling
 wait. Prompt 13 adds explicit profile application/verification, literal role
 sequences, ambiguous-write effects and independent sub-ms timing fixtures;
@@ -17,6 +16,9 @@ Prompt 15 adds complete port acquisitions, applicability, coherence and historic
 freshness through the same public owner engine.
 Prompt 16 adds explicit ACK and finite interrupt service, sampled latch evidence,
 safe actual-control preservation and retained pre-ACK port observations.
+Prompt 17 adds `tusb32x_diagnostics`: bounded raw access, safe-image/sequence
+rejection, pre-callback invalidation, all-source/managed accounting, retained
+effects and pure health projection. Debug and Release checks stay active.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -219,6 +221,9 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   polling cases. It assumes non-consuming reads and explicitly scheduled events;
   the TI RU-change/CSR wording is not treated as every-write IRQ behavior or as
   evidence for fault clearing, physical GPIO timing or lossless edge counting.
+- `tusb32x_diagnostics`: public raw safety, all-source/managed accounting and pure
+  health projection. See the [diagnostics cases](#raw-diagnostics-and-passive-health)
+  below for retained effects, safe images, saturation and projection boundaries.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -228,10 +233,10 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   No PlatformIO installation is needed for these fixtures.
 
 The build separately compiles each public header as the only include and the
-three contract fixtures as objects. Their future signatures and owner examples
+three contract fixtures as objects. Their delivered signatures and owner examples
 are compile checks, with no behavioral CTest entry or stub driver definitions. The
 [ordinary multi-file consumer](../examples/host/basic/README.md) must also build
-and run separately with tests OFF. It links real validators/decoder and needs no Python,
+and run separately with tests OFF. It links real validators/decoder/health and needs no Python,
 Git, Doxygen, PlatformIO, framework headers or sibling include paths.
 
 The older direct compiler commands below remain useful for focused passive-only
@@ -256,7 +261,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Passive consumer compile/link failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Passive consumer checks failed' }
 & g++ @contractFlags -fsyntax-only test/contract/planned_api.cpp `
     test/contract/owner_examples.cpp test/contract/time_arithmetic.cpp
-if ($LASTEXITCODE -ne 0) { throw 'Planned contract compilation failed' }
+if ($LASTEXITCODE -ne 0) { throw 'API contract compilation failed' }
 ```
 
 The linked executable checks all 23 error names/order across translation units,
@@ -265,12 +270,10 @@ int32 backend details, callback shapes, exact addresses and fixed passive values
 Runtime checks remain active with NDEBUG. Defaults preserve raw and interpreted
 validity separately. No driver/decoder function is linked or simulated.
 
-The compile-only fixture declares future signatures outside `include/` in
-`TUSB32x::planned::Driver`, which inherits the delivered public facade. It neither
-redefines that facade nor redeclares implemented methods. Future declarations are
-never packaged, linked into the core or used to claim operation behavior. As real
-methods arrive, migrate their checks to the delivered API and remove the sketch
-declarations. Do not create definitions merely to make this sketch link.
+The historical `planned_api.cpp` filename now checks only delivered public
+signatures. The former future-declaration header and derived fixture facade were
+removed when the final raw/health methods gained definitions. These compile-only
+checks are never registered as behavioral CTests or packaged with the library.
 
 `owner_examples.cpp` type-checks passive observation, explicit apply, cancellation
 after a possible write and two devices on one external fake owner. Each owner
@@ -286,7 +289,7 @@ Future transition/fault requirements O01–O25 are in the
 
 Run current version/documentation checks with `python scripts/generate_version.py check`
 and `doxygen Doxyfile`; output stays under build/doxygen. Inspect XML/HTML for all
-17 public structs, the owner class and methods, both validators, decodeRegister and
+17 public structs, the owner class and methods, binding/profile/health validators, projectHealth, decodeRegister and
 four generated version constants.
 The complete omission checker and negative fixtures remain prompt 33 work.
 
@@ -299,6 +302,33 @@ structs; no warning alone would not prove their visibility. The retained evidenc
 and exact command are in [validation](../docs/validation.md).
 
 These checks prove current portable values, pure validators, private register
-transport/identity/codecs, owner lifecycle/profile/port/IRQ behavior, linkage and planned
-signature syntax. Later operation families, health projection, framework builds, complete
+transport/identity/codecs, owner lifecycle/profile/port/IRQ/raw behavior, passive
+health, linkage and signature syntax. Framework builds, complete
 package qualification and physical hardware tests remain separate work.
+
+## Raw diagnostics and passive health
+
+Run the focused registered suite with:
+
+```text
+ctest --test-dir build/native -C Debug -R tusb32x_diagnostics --output-on-failure
+```
+
+`test_diagnostics.cpp` links the real public raw and health functions. It checks
+all variant/map cases, exact one-callback frames, unchanged failed-read output,
+active/result backpressure, complete safe-image requirements, same-value writes,
+possible applied-then-error effects, staged/actual disagreement and unsafe-sequence
+rejection. Protected45 observations revoke raw and typed45 writes independently
+of current-only changes; only complete proof renews permission. Reset observed
+through raw reads still requires reconciliation's fresh96-tick anchor.
+
+Both raw directions exercise every uint8 callback code with full backend detail.
+Raw callbacks contribute once to all-source totals and never managed health.
+Private protocol-context fixtures exercise saturation and unusable timestamp
+storage at arithmetic limits without exposing a public state seed. Projection
+tests cover thresholds1/3/UINT32_MAX, invalid0 unchanged output, all state rows,
+independent instances and initialized READY with UNKNOWN settings. Runtime cases
+prove OFFLINE allows explicit work and managed success clears the streak while
+raw success/failure, detach and source-stat clearing do not. Result delivery and
+clearing preserve unresolved recovery, trust, port age and active/retained slots.
+The suite is behavioral CTest evidence; it does not qualify physical adapters.

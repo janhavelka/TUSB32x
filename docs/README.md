@@ -4,13 +4,15 @@
   read-only initialization, profile observation, explicit apply, desired
   verification, read-only reconciliation, explicit reset, base recovery, complete
   read-only port refresh and explicit IRQ acknowledgement/bounded service.
-  Future device methods are explicitly labeled.
+  Raw Sync diagnostics and pure passive health are also implemented.
 - [Architecture](architecture.md): public/core/example responsibilities and the
   application-owned transport boundary.
 - [Development](development.md): version truth, generator exits, tool choices,
   component registration and package contents.
 - [Transport](transport.md): implemented private framing, access, accounting and
   identity checks, with adapter and later owner limits.
+- [Diagnostics and health](diagnostics.md): safe raw access, retained effects,
+  all-source/managed callback accounting and pure health projection.
 - [Variants](variant-matrix.md), [register map](register-map.md) and
   [register vectors](register-vectors.md): source-backed capability and encoding
   specifications; they do not claim driver or hardware qualification.

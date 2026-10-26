@@ -483,3 +483,30 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   Pinned Linux ignored ACK errors/raw echoes and Betrusted fixed11/unbounded retry
   are rejected after helper inspection. Current engineering references are in
   [execution-16-peers](audit/execution-16-peers.md). Hardware qualification is separate.
+
+## Prompt 17 raw safety and passive views (2026-10-26)
+
+- Keep the existing protocol invocation as the sole accounting source. All-source
+  stats include raw Sync; managed evidence explicitly excludes it. No callback-time
+  evidence exists in Status-only callbacks, so raw failures invalidate time validity
+  rather than borrowing owner timestamps. Clearing source totals cannot erase
+  managed health, last failure or retained hardware obligations.
+- Raw writes require initialized KNOWN actual settings and relevant complete-proof
+  images. Reuse the safe composer; never fetch controls inside a one-callback write,
+  silently normalize the byte or replay staged desired values. Reset, role,
+  termination and recovery changes require typed operations. Ordinary equal-value
+  writes still revoke trust before invocation. Pure ACK preserves actual controls
+  and records acceptance without manufacturing managed IRQ observations.
+- Protected45 bits03 are excluded from user-profile equality. A raw/partial read
+  can contradict their older complete-proof image while user settings remain KNOWN.
+  One private write-image validity bit revokes only45 permission; both raw and typed
+  apply check it. Complete F proof renews it only for documented internal-zero
+  controls. No duplicate register mirror or global independent-write ban is needed.
+- Historical ambiguous reset acceptance can coexist with settled COMPLETED/KNOWN
+  actual proof. It remains visible but does not reject independent safe writes.
+  Current pending-reset or unresolved write/sequence evidence still rejects them.
+- Health is a pure projection of caller-copied managed evidence and a positive
+  uint32 threshold. It owns no admission, clock, state repair or recovery. READY
+  may coexist with UNKNOWN trust; OFFLINE permits legal explicit operations.
+  Peer units and rejected synthetic mismatch failures are recorded in
+  [execution-17-peers](audit/execution-17-peers.md).

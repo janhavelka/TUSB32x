@@ -1,7 +1,8 @@
 # Checked-in version fields are synchronized by scripts/generate_version.py.
 cmake_minimum_required(VERSION 3.16)
 set(TUSB32X_VERSION "0.1.0-dev.1")
-set(TUSB32X_SOURCES src/TUSB32x.cpp src/TUSB32xProtocol.cpp src/TUSB32xCodecs.cpp src/TUSB32xOperations.cpp)
+set(TUSB32X_SOURCES src/TUSB32x.cpp src/TUSB32xProtocol.cpp src/TUSB32xCodecs.cpp
+  src/TUSB32xOperations.cpp src/TUSB32xDiagnostics.cpp)
 
 # Warnings are private: applications choose their own diagnostic policy.
 function(tusb32x_strict_warnings target)

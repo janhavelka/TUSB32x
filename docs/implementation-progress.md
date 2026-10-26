@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 16; later prompts remain separate.
+Current authorization: implement prompt 17 end to end; later prompts remain separate.
 
 ## Prompt status
 
@@ -26,7 +26,7 @@ Current authorization: independently audit completed prompt 16; later prompts re
 | [14: reset-recovery](prompts/14-reset-recovery.md) | COMPLETE |
 | [15: port-snapshots](prompts/15-port-snapshots.md) | COMPLETE |
 | [16: interrupt-service](prompts/16-interrupt-service.md) | COMPLETE |
-| [17: diagnostics-health](prompts/17-diagnostics-health.md) | NOT STARTED |
+| [17: diagnostics-health](prompts/17-diagnostics-health.md) | COMPLETE |
 | [18: protocol-conformance](prompts/18-protocol-conformance.md) | NOT STARTED |
 | [19: owner-portability](prompts/19-owner-portability.md) | NOT STARTED |
 | [20: cli-foundation](prompts/20-cli-foundation.md) | NOT STARTED |
@@ -1302,3 +1302,50 @@ Commands and hardware/tooling limits are in
 No new API, dependency, runtime refactor or silicon-policy change was needed.
 The lead commits and syncs this checked audit on the same branch and verifies
 upstream equality/clean state; final commit evidence is in the handoff.
+
+## Prompt 17 execution record (2026-10-26)
+
+Started at synchronized `df0fc2253cb01cfcfdb0973d14791b7d345f5a95`, the completed
+prompt16 independent audit, with clean index/worktree and zero ahead/behind after
+fetch. Same execution branch/base. Read full prompt17, parent/local AGENTS, COMMON,
+workflow/maintainability, baseline Sync/accounting/health, access/capability matrix,
+public API, current sources/tests/examples and package/build definitions. No local
+workflow exists; remote CI remains prompt34 only.
+
+Fresh current peer revisions, dirty states, exact declarations/code/test/CLI/
+runner/build/workflow paths and adopted/rejected units are in
+[execution-17-peers](audit/execution-17-peers.md). The lead spot-checked callback
+wrappers and synthetic mismatch accounting against actual sources. Reopened TI
+B SLLSEN9F Table7-7 pp17–19, L/A SLLSEP2D/SLLSEQ8D Tables8–11 pp17–20, and V
+SLLSEO5D Tables6-8–6-10 pp17–20. Current official PDF downloads match all four
+archived hashes. Unresolved V advertisement/fault access remains gated.
+
+Delegation: gpt-6.1-sol/high independently audited peers and then runtime/tests;
+another gpt-6.1-sol/high owned only `test/test_diagnostics.cpp`. gpt-6-astra/high
+reviewed raw-write/effect/variant safety read-only. Lead owns production/shared
+headers, docs/build/package integration and Git. No sibling or agent Git mutation.
+
+Implemented raw facade methods through the existing accounting boundary/composer,
+pure health functions and complete copied views. One private45 write-image validity
+bit avoids partial profile publication or blocking independent fields. Safety review
+confirmed and fixed typed45 apply ignoring revocation after raw contradiction; its
+regression failed before the fix and passes afterward. Removed the now-empty
+future facade sketch and use delivered declarations in compile-only fixtures.
+See design decisions and validation for current proof/clock/effect limits.
+
+PASS: strict Debug/Release eight CTests each, 55,218 diagnostics checks plus all
+prior suites; strict Doxygen with 17 public structs/26 owner methods and real
+health functions visible; version sync/check/no-op, local links/anchors/UTF-8/LF,
+source-equal38-file archive and independent tests-OFF consumer beneath unrelated
+Git without maintainer tools on child PATH. Standalone ordinary/native PlatformIO
+consumers and host-only five-source component registration also pass. Final review
+added runtime evidence that differing staged duty/accessory settings never enter
+raw ACK composition. No remaining confirmed production issue.
+
+Fresh sanitizer link probes fail because installed MinGW lacks libasan/libubsan;
+MSVC/Clang/clang-format remain unavailable. Physical hardware and framework firmware
+are NOT RUN; remote CI remains prompt34. Exact commands/results and limits are in
+[validation](validation.md#prompt-17-raw-diagnostics-and-passive-health-2026-10-26).
+The lead commits and syncs this complete checked unit on the same branch, verifies
+upstream equality/clean state, and reports final commit/sync in the handoff and
+next progress update. Prompt18 remains NOT STARTED.

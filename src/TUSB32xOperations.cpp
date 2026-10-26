@@ -43,6 +43,7 @@ bool TUSB32x::unresolved() const {
 }
 
 void TUSB32x::invalidateConfiguration() {
+  _rdRpWriteImageValid = false;
   _configuration.state = ConfigurationState::UNKNOWN;
   _configuration.terminationState = TerminationState::UNKNOWN;
   _diagnostics.configurationState = ConfigurationState::UNKNOWN;
@@ -51,6 +52,7 @@ void TUSB32x::invalidateConfiguration() {
 }
 
 void TUSB32x::invalidateUsability() {
+  _rdRpWriteImageValid = false;
   _diagnostics.initialized = false;
   _diagnostics.managedTransport.initialized = false;
   if (_configuration.state != ConfigurationState::UNCONFIGURED)
@@ -352,7 +354,7 @@ Status TUSB32x::planProfile(const DeviceProfile& candidate, ProfileWrite (&write
   if (_config.variant == Variant::TUSB322I &&
       (fields08 != 0 || fields09 != 0 || (modeChanges && candidate.portMode == PortMode::DRP)))
     return error(Err::UNSUPPORTED_FEATURE);
-  if (rdRpChanges && (_configuration.rawConfig45 & 0x03U) != 0)
+  if (rdRpChanges && (!_rdRpWriteImageValid || (_configuration.rawConfig45 & 0x03U) != 0))
     return error(Err::CONFIGURATION_UNKNOWN);
 
   uint8_t image08 = _configuration.rawConfig08;
@@ -508,6 +510,12 @@ void TUSB32x::acceptRead() {
 }
 
 void TUSB32x::observeControl(uint8_t reg, uint8_t value) {
+  // Protected45 controls do not participate in user-profile equality. A raw/partial
+  // observation can revoke that write image without replacing the historical P image
+  // or blocking independently proved user settings. Only a complete F renews it.
+  if (reg == 0x45 && ((value ^ _configuration.rawConfig45) & 0x07U) != 0) {
+    _rdRpWriteImageValid = false;
+  }
   if (reg == 0x0A && (value & 0x08U) != 0) {
     _configuration.resetState = ResetState::MAY_BE_PENDING;
     _diagnostics.resetState = ResetState::MAY_BE_PENDING;
@@ -638,6 +646,7 @@ Status TUSB32x::publishConfiguration() {
     _configuration.hasVerifiedProfile = true;
     increment(_configuration.verifiedGeneration);
     _diagnostics.configurationWriteUnresolved = false;
+    _rdRpWriteImageValid = info.hasRdRp && (_observing.rawConfig45 & 0x03U) == 0;
   }
   _diagnostics.configurationState = _configuration.state;
   _diagnostics.terminationState = _configuration.terminationState;

@@ -1,43 +1,41 @@
 // Compile-only signature inventory. No driver is constructed or linked here.
-#include "PlannedApi.h"
+#include <TUSB32x/CommandTable.h>
 
 #include <type_traits>
 
-using Driver = TUSB32x::planned::Driver;
-using ImplementedDriver = TUSB32x::TUSB32x;
-using ImplementedStart = TUSB32x::Status (ImplementedDriver::*)(
+using Driver = TUSB32x::TUSB32x;
+using Start = TUSB32x::Status (Driver::*)(
     const TUSB32x::OperationTiming&, TUSB32x::OperationToken&);
 static_assert(!std::is_copy_constructible_v<Driver>);
 static_assert(!std::is_copy_assignable_v<Driver>);
 static_assert(!std::is_move_constructible_v<Driver>);
 static_assert(!std::is_move_assignable_v<Driver>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startInitialize),
-              TUSB32x::Status (ImplementedDriver::*)(const TUSB32x::OperationTiming&,
-                                                   TUSB32x::OperationToken&)>);
-static_assert(std::is_same_v<decltype(&Driver::startReadProfile), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&Driver::startVerifyProfile), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startApplyProfile),
-              TUSB32x::Status (ImplementedDriver::*)(const TUSB32x::DeviceProfile&,
+static_assert(std::is_same_v<decltype(&Driver::startInitialize),
+                            Start>);
+static_assert(std::is_same_v<decltype(&Driver::startReadProfile), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startVerifyProfile), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startApplyProfile),
+              TUSB32x::Status (Driver::*)(const TUSB32x::DeviceProfile&,
                   const TUSB32x::OperationTiming&, TUSB32x::OperationToken&)>);
-static_assert(std::is_same_v<decltype(&Driver::startReconcile), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startRefreshPort), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startAcknowledgeInterrupt), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startServiceInterrupt), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startReset), ImplementedStart>);
-static_assert(std::is_same_v<decltype(&ImplementedDriver::startRecoverDeadBattery), ImplementedStart>);
+static_assert(std::is_same_v<decltype(&Driver::startReconcile), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startRefreshPort), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startAcknowledgeInterrupt), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startServiceInterrupt), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startReset), Start>);
+static_assert(std::is_same_v<decltype(&Driver::startRecoverDeadBattery), Start>);
 
-// Type-check every remaining planned method and the default poll budget. These
+// Type-check the delivered methods and the default poll budget. These
 // calls generate no runtime claims: the file is checked with -fsyntax-only.
-void checkPlannedSignatures(Driver& driver, const Driver& cached,
-                            const TUSB32x::DriverConfig& config,
-                            const TUSB32x::DeviceProfile& profile,
-                            const TUSB32x::OperationTiming& timing,
-                            TUSB32x::OperationToken& token,
-                            TUSB32x::OperationResult& result,
-                            TUSB32x::RegisterDecode& decoded,
-                            const TUSB32x::HealthPolicy& policy,
-                            const TUSB32x::ManagedTransportEvidence& evidence,
-                            TUSB32x::HealthSnapshot& health, uint8_t& byte) {
+void checkDeliveredSignatures(Driver& driver, const Driver& cached,
+                             const TUSB32x::DriverConfig& config,
+                             const TUSB32x::DeviceProfile& profile,
+                             const TUSB32x::OperationTiming& timing,
+                             TUSB32x::OperationToken& token,
+                             TUSB32x::OperationResult& result,
+                             TUSB32x::RegisterDecode& decoded,
+                             const TUSB32x::HealthPolicy& policy,
+                             const TUSB32x::ManagedTransportEvidence& evidence,
+                             TUSB32x::HealthSnapshot& health, uint8_t& byte) {
   (void)TUSB32x::validateDriverConfig(config);
   (void)TUSB32x::validateProfile(config.variant, profile);
   (void)TUSB32x::validateHealthPolicy(policy);

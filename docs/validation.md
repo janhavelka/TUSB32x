@@ -1999,3 +1999,82 @@ Corrected stale API text that deferred implemented IRQ methods and added the
 IRQ test file to the architecture inventory. No runtime behavior, public API,
 silicon gate or dependency changed. Hardware qualification remains separate;
 no remote CI was requested or checked.
+
+## Prompt 17 raw diagnostics and passive health (2026-10-26)
+
+Implemented from synchronized `df0fc2253cb01cfcfdb0973d14791b7d345f5a95` on the
+same execution branch. Re-read full prompt17 and current Sync/access/accounting/
+health contracts. Current read-only peer inspection is in
+[execution-17-peers](audit/execution-17-peers.md); source differences in counter
+units were adopted/rejected explicitly. No sibling edits or remote CI requests.
+
+The existing sole callback wrapper already supplied accounting and normalization.
+New raw methods and pure projection reuse it without a second engine or clock.
+Independent strong safety review found typed45 apply needed to honor write-image
+revocation after raw contradiction; a failing regression proved and now guards
+the correction. Independent runtime/test review found no remaining code defect.
+Final documentation review removed a duplicated changelog paragraph and stale
+planned claims. Added an actual-versus-staged raw ACK case rather than claim it
+from typed IRQ tests alone. Reviewed the complete production/test/docs/package diff.
+
+Tools: GCC15.1.0 MinGW-W64 UCRT/MCF, CMake/CTest4.0.1, Ninja1.12.1, Python3.12.10,
+Doxygen1.13.2 and installed VS Code-managed PlatformIO Core6.1.19/native1.2.1.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict Debug/Release | PASS | Eight registered CTests each; independent public-header and delivered API fixtures compile; Release runtime checks active |
+| Diagnostics | PASS | 55,218 checks: seven variants/all256 offsets, exact one-callback frames, output preservation, slot backpressure, unsafe-sequence/access rejection, safe-image absence, same-value writes, pre-callback trust/effect changes and applied-then-error writes |
+| Actual controls | PASS | All80 raw ACK variant/control/outcome cases stage differing duty/accessory with bus-silent cancellation, then preserve actual controls; protected45 contradiction blocks raw/typed45 only, independent current stays available, raw clear cannot renew proof, full reconciliation can |
+| Health/accounting | PASS | Both raw directions normalize every callback Err byte with full detail; all-source versus managed exclusion, callback/local BUSY, independent saturating totals/streak and unknown timestamps; thresholds1/3/UINT32_MAX and invalid0 unchanged output; failed init, READY with UNKNOWN settings, OFFLINE explicit work and later managed success |
+| Retained evidence | PASS | Clear leaves active/result, managed history/streak, last failure, trust/port age and unresolved recovery unchanged; result take/end/rebind retain sequence obligation; raw reset1 cannot supply a completion anchor, reconciliation waits200→296; historical settled reset ambiguity does not ban independent writes |
+| Prior regressions | PASS | 35,454 profile observation,89,140 apply/verify,88,779 reset/recovery,20,490 owner,71,617 IRQ,495,667 port,161,670 protocol and8,602,548 codec checks; compile contracts/validators/version/Windows launcher pass |
+| TI/source evidence | PASS | Fresh four official PDFs match archived B F/L D/A D/V D SHA256; exact mixed/control/procedure tables reopened; all eight archived TI hashes checked; unresolved322 advertisement/fault gates retained |
+| Documentation/version | PASS | Strict Doxygen without warnings; 17 public structs,26 owner methods and real health functions visible in XML; local links/anchors, UTF-8/LF/whitespace and deterministic repeated sync/check |
+| Ordinary/native consumer | PASS | Standalone CMake tests OFF and pinned native PlatformIO compile/link/run validators, decoder and UNINIT health with zero fake callback attempts |
+| Packaging/component | PASS | Source-equal38-file archive, matching IDF inclusion and explicit five-source lists; renamed extracted Release consumer beneath unrelated Git compiles seven TUs with C++17, no Python/Git/Doxygen/PIO on child PATH; host-only component fixture links those same five sources |
+| Sanitizers | BLOCKED | Fresh trivial GCC link probes fail: cannot find -lasan / -lubsan. No sanitizer run or result claimed; MSVC/Clang/clang-format absent |
+| Separate evidence | NOT RUN | Framework firmware, physical bus/IRQ/electrical/current behavior and adapter aggregate blocking bounds. No hardware support or later conformance/CLI/omission-guard claim; remote CI belongs to prompt34 |
+
+Lead commands (Ninja Multi-Config native tree; plain Ninja consumer):
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Release/tusb32x_diagnostics.exe
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+& build/native/test/Release/tusb32x_port.exe
+
+cmake -S examples/host/basic -B build/host-basic -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/host-basic --config Release
+& build/host-basic/tusb32x_host_basic.exe
+cmake -S build/p17-component-fixture -B build/p17-component-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/p17-component-build
+& build/p17-component-build/registration_consumer.exe
+
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+python build/p10-evidence.py
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p17.tar.gz
+python build/p17-package.py
+
+g++ -std=c++17 -fsanitize=address build/p17-sanitizer.cpp -o build/p17-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p17-sanitizer.cpp -o build/p17-ubsan.exe
+git diff --check
+```
+
+The last two compiler commands intentionally probe availability and both exit1;
+all required available checks pass. Session-only extraction, XML/source and
+component scripts under ignored `build/` were read and run by the lead. They
+are validation evidence rather than shipped tools or fake firmware. The package
+consumer script supplies absolute compiler/CMake/Ninja paths and verifies its
+child PATH excludes maintainer tools; the package remains free of sibling paths,
+reference/vendor artifacts and audit machinery. Final source lists remain explicit.

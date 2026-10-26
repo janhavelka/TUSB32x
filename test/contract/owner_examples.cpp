@@ -1,20 +1,19 @@
 /**
  * @file owner_examples.cpp
- * @brief Compile-only owner usage of planned observation, apply and cancellation contracts.
+ * @brief Compile-only owner usage of delivered observation, apply and cancellation contracts.
  *
- * Compile with -fsyntax-only; never link or execute this fixture. PlannedApi.h
- * adds future declarations in a separate type inheriting the delivered facade.
+ * Compile with -fsyntax-only; never link or execute this fixture.
  * These examples check C++ usage, not operation timing, effects or hardware;
  * runtime owner coverage lives in test_operations.cpp.
  */
-#include "PlannedApi.h"
+#include <TUSB32x/TUSB32x.h>
 
 #include <cstddef>
 #include <cstdint>
 
 namespace OwnerExamples {
 
-using Driver = TUSB32x::planned::Driver;
+using Driver = TUSB32x::TUSB32x;
 using TUSB32x::Err;
 using TUSB32x::OperationResult;
 using TUSB32x::OperationTiming;

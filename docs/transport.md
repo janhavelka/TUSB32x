@@ -4,7 +4,8 @@ Prompt 9 implements src/TUSB32xProtocol.h/.cpp as a private library boundary.
 Its helpers are exercised by the registered tusb32x_protocol suite. The public
 owner facade added in prompt 11 uses this same callback path for read-only
 initialization. The transport boundary itself owns no lifecycle or scheduler;
-public raw diagnostic methods remain planned.
+public raw diagnostic methods reuse it in prompt 17. See
+[diagnostics and health](diagnostics.md) for admission, effects and filtered health.
 
 ## Framing and work bounds
 
@@ -54,7 +55,8 @@ The private write primitive checks register access and receives an already
 composed byte. Its caller must enforce identity readiness, actual-state proof,
 safe mixed-register composition and silicon procedures. This helper grants no
 permission to bypass mode/reset/recovery prerequisites; composition is prompt 10
-and owner enforcement arrives later. No public raw-write escape exists now.
+and owner enforcement is implemented. Public raw writes share the composer
+and require current proof; they cannot execute multi-step procedures.
 
 Identity comparisons require all eight ascending bytes, including the NUL:
 `30 32 33 42 53 55 54 00` for the six 320 parts and

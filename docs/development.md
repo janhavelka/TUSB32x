@@ -83,8 +83,8 @@ prompt 33 work; a warning-free generation alone does not prove visibility.
 
 ## Package and ownership boundaries
 
-The PlatformIO export list contains public headers, both real sources and their
-private protocol header, CMake,
+The PlatformIO export list contains public headers, five real C++ sources and their
+private protocol/codec/time headers, CMake,
 manifests, license, selected guides and the real host consumer. Reference/vendor
 artifacts, prompts, audits, progress/validation machinery, tests, scripts and
 generated build output are excluded from ordinary archives. Maintainer commands

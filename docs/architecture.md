@@ -12,8 +12,9 @@ explicit differences-only apply and desired-profile verification using the same
 proof and write composer. Prompt 14 adds explicit reset and original TUSB320/I
 dead-battery recovery without a second engine or scheduler. Prompt 15 adds fixed
 read-only port refresh and cached publication through that same engine. Prompt 16
-adds explicit IRQ acknowledgement and bounded observe/ACK/recheck service. The
-[API inventory](api-contracts.md) separates delivered methods from future calls; the
+adds explicit IRQ acknowledgement and bounded observe/ACK/recheck service.
+Prompt 17 adds safe one-callback raw access and pure passive health. The
+[API inventory](api-contracts.md) describes delivered methods and their contracts; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
 ## Current files
@@ -22,19 +23,20 @@ adds explicit IRQ acknowledgement and bounded observe/ACK/recheck service. The
 | --- | --- |
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
-| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, port refresh, IRQ acknowledgement/service, token/result and cached methods are callable |
+| include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, port refresh, IRQ acknowledgement/service, raw Sync, pure health, token/result and cached methods are callable |
 | include/TUSB32x/CommandTable.h | RegisterDecode value and callable pure decodeRegister; raw evidence and independent field validity |
 | include/TUSB32x/Version.h | Generated stable constexpr version values; no Git, timestamp or firmware identity |
 | src/TUSB32x.cpp | Bounded pure binding/profile validation |
 | src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization/profile/apply/verify/reconcile/reset/recovery/port/IRQ engine with private phases, immutable deadlines, tokens and retained results |
+| src/TUSB32xDiagnostics.cpp | Safe one-callback raw facade using existing composition/transport, and pure health validation/projection |
 | src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic and saturating publication sequence |
 | src/TUSB32xProtocol.h/.cpp | Private mapped terminal callbacks, single accounting boundary, possible-write evidence and pure exact identity/revision comparisons |
 | src/TUSB32xCodecs.h/.cpp | Public pure decoder, private complete-port interpretation, typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
 | CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external maintainer tools for core consumption |
-| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp, test/test_operations.cpp, test/test_profile_observation.cpp, test/test_profile_application.cpp, test/test_reset_recovery.cpp, test/test_port.cpp and test/test_interrupt.cpp | Registered active validator/protocol/codec/owner/port/IRQ suites and compile-only standalone-header/future-signature fixtures |
-| examples/host/basic/ | Standalone multi-file consumer of real values, validators and public decoder; explicitly failing fake callbacks |
+| test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp, test/test_operations.cpp, test/test_profile_observation.cpp, test/test_profile_application.cpp, test/test_reset_recovery.cpp, test/test_port.cpp, test/test_interrupt.cpp and test/test_diagnostics.cpp | Registered validator/protocol/codec/owner/port/IRQ/diagnostics suites, plus compile-only standalone-header/signature fixtures |
+| examples/host/basic/ | Standalone multi-file consumer of real values, validators, decoder and pure health; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
-| test/contract/PlannedApi.h and planned_api.cpp | Explicitly compile-only future signatures, never linked or delivered |
+| test/contract/planned_api.cpp | Compile-only delivered API signature inventory; the former future-declaration sketch is no longer needed |
 | test/contract/owner_examples.cpp | Compile-only passive observation, explicit apply/cancel and two devices sharing an external fake owner; no driver definitions |
 | test/contract/time_arithmetic.cpp | Independent compile-time integer time vectors; not engine behavior or hardware timing proof |
 | docs/reference/ | Research sources and provenance, excluded from production compilation and future ordinary packages |
@@ -71,13 +73,15 @@ terminal callback/accounting boundary in `TUSB32xProtocol.cpp`, sharing one
 closed variant-capability table. Validators remain in `TUSB32x.cpp`;
 binding/cache and the single owner engine share `TUSB32xOperations.cpp`.
 Port publication also stays adjacent to that engine; no separate port scheduler
-is needed. A later file may cover passive diagnostics (`TUSB32xDiagnostics.cpp`). Public declarations arrive with definitions, tests
+is needed. `TUSB32xDiagnostics.cpp` supplies the raw facade and pure health
+projection, reusing existing shared helpers. Public declarations arrive with definitions, tests
 and Doxygen. The current units implement validators, private transport/identity
 and pure codecs/composition, plus lifecycle/token/result handling and read-only
 initialization, profile observation, explicit apply, desired-profile verification
 and read-only reconciliation, explicit reset, base dead-battery recovery and
 complete read-only port refresh and explicit IRQ acknowledgement/service.
-Other operation families remain later work.
+Raw diagnostics and passive health are implemented; framework adapters and CLI
+remain later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
 exports remain outside the current implementation.
@@ -91,7 +95,7 @@ tests-OFF consumers have no new tool dependency. See [development](development.m
 
 `TUSB32x` has no transitive link dependency. Core warnings are private and its
 public include directory/C++17 feature propagate to consumers. Tests are optional;
-their build also compiles each public header independently and the planned API
+their build also compiles each public header independently and the API signature
 fixtures without registering those build-only objects as passing runtime tests.
 `validateProfile` accepts readable TUSB322I settings independently of later
 changed-field write gates; it cannot prove observed configuration or a legal

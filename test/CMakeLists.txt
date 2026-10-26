@@ -9,8 +9,11 @@ add_executable(tusb32x_operations test_operations.cpp test_profile_observation.c
 target_include_directories(tusb32x_operations PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 add_executable(tusb32x_port test_port.cpp test_interrupt.cpp)
 target_include_directories(tusb32x_port PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
+add_executable(tusb32x_diagnostics test_diagnostics.cpp)
+target_include_directories(tusb32x_diagnostics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
-foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol tusb32x_operations tusb32x_port)
+foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol
+    tusb32x_operations tusb32x_port tusb32x_diagnostics)
   target_link_libraries(${suite} PRIVATE TUSB32x)
   tusb32x_strict_warnings(${suite})
   if(MSVC)
@@ -33,7 +36,7 @@ add_library(tusb32x_header_contracts OBJECT ${header_contract_sources}
   contract/planned_api.cpp contract/owner_examples.cpp contract/time_arithmetic.cpp)
 target_link_libraries(tusb32x_header_contracts PRIVATE TUSB32x)
 tusb32x_strict_warnings(tusb32x_header_contracts)
-# No CTest entry: compiling planned signatures cannot prove driver behavior.
+# No CTest entry: compiling signatures cannot prove driver behavior.
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)

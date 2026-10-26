@@ -144,6 +144,23 @@ const VariantInfo* findVariant(Variant variant) {
   return nullptr;
 }
 
+Status validateRegisterAccess(Variant variant, uint8_t reg, bool write) {
+  if (reg > CONTROL_LAST && reg != RD_RP_REGISTER && reg != REVISION_REGISTER) {
+    return Status::Error(Err::INVALID_PARAM, "Unmapped scalar register");
+  }
+  const VariantInfo* info = findVariant(variant);
+  if (variant != Variant::UNSPECIFIED) {
+    if (info == nullptr) return Status::Error(Err::INVALID_CONFIG, "Invalid bound variant");
+    const Status status = validateRange(*info, reg, 1);
+    if (!status.ok()) return status;
+  }
+  if (!write) return Status::Ok();
+  if (reg < 0x08 || reg == REVISION_REGISTER) {
+    return Status::Error(Err::UNSUPPORTED_FEATURE, "Raw target is read-only");
+  }
+  return info == nullptr ? Status::Ok() : validateWrite(*info, reg);
+}
+
 TransferResult readRegisters(const ProtocolContext& context, TrafficSource source, uint8_t reg,
                              uint8_t* out, size_t length, uint64_t remainingMs) {
   Status status = validateRequest(context, source, remainingMs);

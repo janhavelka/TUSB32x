@@ -1,7 +1,7 @@
 {
   "name": "TUSB32x",
   "version": "0.1.0-dev.1",
-  "description": "Portable C++17 TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, explicit reset, original-device recovery, complete port observations and bounded interrupt service. Other operation families remain in development.",
+  "description": "Portable C++17 TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, explicit reset, original-device recovery, complete port observations and bounded interrupt service. Bounded raw diagnostics and passive health; firmware adapters remain in development.",
   "keywords": ["tusb320", "tusb320lai", "tusb322i", "usb-type-c", "i2c"],
   "authors": [
     {"name": "Thymos Solution s.r.o", "email": "info@thymos.cz", "url": "https://www.thymos.cz"},
@@ -13,15 +13,15 @@
     "TUSB32x/TUSB32x.h", "TUSB32x/Config.h", "TUSB32x/Status.h",
     "TUSB32x/CommandTable.h", "TUSB32x/Version.h"
   ],
-  "build": {"includeDir": "include", "srcDir": "src", "srcFilter": "+<TUSB32x.cpp> +<TUSB32xProtocol.cpp> +<TUSB32xCodecs.cpp> +<TUSB32xOperations.cpp>"},
+  "build": {"includeDir": "include", "srcDir": "src", "srcFilter": "+<TUSB32x.cpp> +<TUSB32xProtocol.cpp> +<TUSB32xCodecs.cpp> +<TUSB32xOperations.cpp> +<TUSB32xDiagnostics.cpp>"},
   "export": {
     "include": [
       "include/TUSB32x/*.h", "src/TUSB32x.cpp", "src/TUSB32xProtocol.cpp",
       "src/TUSB32xProtocol.h", "src/TUSB32xCodecs.cpp", "src/TUSB32xCodecs.h", "CMakeLists.txt",
-      "src/TUSB32xOperations.cpp", "src/TUSB32xOwnerTime.h",
+      "src/TUSB32xOperations.cpp", "src/TUSB32xOwnerTime.h", "src/TUSB32xDiagnostics.cpp",
       "library.json", "idf_component.yml", "LICENSE", "README.md", "CHANGELOG.md",
       "Doxyfile", "docs/README.md", "docs/api-contracts.md", "docs/architecture.md",
-      "docs/transport.md",
+      "docs/transport.md", "docs/diagnostics.md",
       "docs/register-map.md", "docs/register-vectors.md", "docs/variant-matrix.md",
       "docs/device-behavior.md", "docs/feature-coverage.md", "docs/development.md",
       "examples/README.md", "examples/host/basic/CMakeLists.txt",
