@@ -626,7 +626,7 @@ Prompt 7 remains NOT STARTED. This review changes documentation only.
 
 Started from cdbb36cda836ef1cb7c4d66864d93c5ec2b31418 on the recorded execution
 branch. The worktree/index were clean and fetch confirmed same-name upstream
-commit equality, zero ahead/behind. Prompts 1?6 and their checks were revisited.
+commit equality, zero ahead/behind. Prompts 1-6 and their checks were revisited.
 The [focused audit](audit/execution-7-peers.md) records current full revisions,
 clean states, actual declarations/code/tests/examples/runners/workflows and
 adopted/rejected conventions for all six requested peers. No sibling was changed,
@@ -747,3 +747,78 @@ were reviewed together. No callback normalization, state engine, write permissio
 or hardware result is claimed by validator success. All generated artifacts stay
 under ignored build/ or TEMP. Final commit/sync evidence is reported in the
 handoff and next progress update, without a self-referencing hash edit.
+
+## Independent prompt 7 review, 2026-10-26
+
+Audited the complete original prompt 7 and actual cdbb36c..d221635 diff from
+clean synchronized starting commit `d22163546c927a03717322f2f47aeb0798d4b1c6`.
+Three fresh-context read-only reviewers independently checked coverage/scope,
+correctness/edge cases/simplicity, and tests/current peers. The lead confirmed
+their findings against source and exact archived TI tables. The refreshed
+[peer audit](audit/execution-7-peers.md#independent-prompt-7-review-2026-10-26)
+records unchanged full revisions, clean states, inspected paths and choices.
+
+No functional defect, missing prompt 7 deliverable, material test gap or needless
+abstraction was found. Fixed a source comment's TI table reference (SLLSEO5D
+Table 6-6 is the register inventory; Table 6-7 describes identity). Corrected
+damaged range punctuation in evidence, clarified the Ninja consumer Release
+configure flag, and updated the feature-table description. No API, validator
+logic, CMake behavior, test assertion or silicon rule changed.
+
+Tools were freshly queried and remain CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0
+MinGW-W64 UCRT MCF SEH, Doxygen 1.13.2 and Python 3.12.10. Exact lead commands:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug --clean-first
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Release --show-only=json-v1
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -DNDEBUG -O2 -I include test/test_validators.cpp src/TUSB32x.cpp -o build/p7-independent-audit/validators-ndebug.exe
+& build/p7-independent-audit/validators-ndebug.exe
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -DNDEBUG -O2 -I include test/test_compile_contracts.cpp test/consumer/status_other_tu.cpp -o build/p7-independent-audit/contracts-ndebug.exe
+& build/p7-independent-audit/contracts-ndebug.exe
+```
+
+The existing build/native generator is Ninja Multi-Config. PASS: both suites in
+Debug and Release, exactly two registered tests with 30-second limits, and both
+direct NDEBUG executables. Validators report 76,452 cases and zero callbacks;
+passive checks report all 23 error names, constexpr Status and multiple TUs.
+Four independent public-header TUs and three planned-contract object fixtures
+also compile; no build-only fixture has a behavioral CTest entry.
+
+The lead repeated the isolated consumer Python command from the prompt 7 record
+above, using parent `build/p7-independent-audit/parent`. PASS: only current root
+CMake, four public headers, the source unit and consumer files in a renamed tree;
+unrelated parent Git metadata, no own .git or test directory; child PATH contains
+only Windows system directories and cannot find Git/Python/Doxygen/PlatformIO.
+Tests default OFF. Strict Ninja Release configure/build/run succeeds. An explicit
+C++11 consumer baseline becomes C++17 in all three compile commands through the
+library target's public requirement; no framework or sibling path is needed.
+
+Doxygen was rerun with the exact prior fatal-warning configuration and INPUT,
+OUTPUT_DIRECTORY=`build/p7-independent-audit/doxygen`. PASS: no warning; XML
+contains the exact 17 expected public struct names and validateDriverConfig,
+validateProfile and errorName. All eight archived PDF sizes/SHA-256 match
+provenance. The lead reopened p15 addresses and relevant control/profile tables
+in B/L/A/V, including V p17's corrected inventory citation. Local links/anchors,
+UTF-8, range text and scoped whitespace/diff checks pass.
+
+Each reviewer additionally ran its own fresh Release build/CTest and consumer;
+the requirements reviewer also ran Debug and isolated consumption without
+maintainer tools. Artifacts are confined to ignored build/p7-audit-* and
+build/p7-independent-audit. These are executed local checks, separate from peer
+source inspection and from still-planned driver behavior.
+
+The fresh sanitizer command below fails to link -lasan/-lubsan, so ASan/UBSan
+remain BLOCKED rather than passed. No toolchain was installed:
+
+```powershell
+'int main() { return 0; }' | & g++ -x c++ '-fsanitize=address,undefined' -o build/p7-independent-audit/sanitizer-probe.exe -
+```
+
+MSVC/Clang, firmware, archive/package qualification and physical hardware remain
+NOT RUN. No remote CI was dispatched or polled, and no sibling was edited or
+built. The same execution branch is retained; final commit/sync evidence is
+reported in the handoff and next progress update.

@@ -131,3 +131,24 @@ repository, to catch accidental parent identity/developer-tool discovery.
 This audit proves inspected source choices only. Prompt 7 implementation,
 configure/build/test commands, consumer execution and tool versions are recorded
 by the lead in progress/validation; this report claims none of those outcomes.
+
+## Independent prompt 7 review, 2026-10-26
+
+Rechecked all six local revisions, branches and dirty states, then reopened the
+listed current CMake, AGENTS, workflows, declarations, validators, tests,
+examples/CLI, runners and consumer checkers. All six remain clean on main at the
+full revisions in the table above. No source changed since the prompt 7 audit.
+Historic reports supplied paths, not an exemption from this source inspection.
+
+The existing choices remain appropriate: explicit PUBLIC C++17/includes and
+tests OFF; strict private warnings; independent header and actual multi-file
+link/run checks; no configure-time Python/Git/Doxygen dependency or copied sensor
+restrictions. The current INA3221 syntax-only and OPT4001 build-only checks still
+cannot establish runtime consumer behavior. The lead verified relevant source
+bodies in TMP1x2, 24Cxx, LDC1614, ADS1115, INA3221 and OPT4001.
+
+The peer/test reviewer also independently rebuilt and ran TUSB32x checks and a
+clean tests-OFF consumer; those results are recorded in
+[validation](../validation.md#independent-prompt-7-review-2026-10-26).
+No sibling fetch, build or mutation, and no remote CI action, accompanied this
+re-audit. This source review closes no firmware or physical qualification gap.

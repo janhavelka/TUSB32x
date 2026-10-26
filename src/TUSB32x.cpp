@@ -75,7 +75,7 @@ Status validateProfile(Variant variant, const DeviceProfile& profile) {
   if (!debounceSupported) {
     return Status::Error(Err::UNSUPPORTED_FEATURE, "Debounce is unavailable on this variant");
   }
-  // SLLSEO5D Table 6-7 p17 and Table 6-10 p20: no 45 register or PORT pin.
+  // SLLSEO5D Table 6-6 p17 and Table 6-10 p20: no 45 register or PORT pin.
   if (variant == Variant::TUSB322I &&
       (profile.portMode == PortMode::FOLLOW_PORT_PIN || profile.disableRdRp)) {
     return Status::Error(Err::UNSUPPORTED_FEATURE, "Profile requests an absent TUSB322I control");

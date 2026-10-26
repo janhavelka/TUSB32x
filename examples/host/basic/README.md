@@ -17,6 +17,9 @@ cmake -S examples/host/basic -B build/host-basic
 cmake --build build/host-basic --config Release
 ```
 
+With a single-config generator such as Ninja, also pass
+`-DCMAKE_BUILD_TYPE=Release` in the configure command to select Release.
+
 Run `build/host-basic/Release/tusb32x_host_basic.exe` with a Windows multi-config
 generator, or `build/host-basic/tusb32x_host_basic` with a single-config generator
 (append `.exe` on Windows). Expected output:

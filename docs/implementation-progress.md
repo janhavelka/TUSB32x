@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 7 completely; prompt 8 remains a separate unit.
+Current authorization: completed independent prompt 7 audit; do not start prompt 8.
 
 ## Prompt status
 
@@ -482,3 +482,46 @@ The lead commits this coherent checked unit, fetches/pushes the existing upstrea
 and verifies commit equality and clean task state. The resulting completed commit
 and final synchronization evidence are in the handoff and next progress update;
 this entry does not create a self-referencing commit-hash update loop.
+
+## Independent prompt 7 review
+
+Reviewed 2026-10-26 against the complete original prompt 7 and the actual
+cdbb36c..d221635 code/documentation diff. Starting commit was
+`d22163546c927a03717322f2f47aeb0798d4b1c6`. Before editing, the existing execution
+branch and same-name upstream were equal after fetch, zero ahead/behind, and the
+worktree/index were clean. The prior completed implementation commit is now
+recorded here without a self-referencing hash update.
+
+Three fresh-context agents worked read-only in parallel: gpt-6.1-sol/high mapped
+each requirement to actual code/docs; gpt-6-astra/high checked correctness, edge
+cases, archived TI tables and simplicity; gpt-6.1-sol/high re-audited all six
+current peers and independently checked tests/consumers. All inspected the
+original prompt and actual diff rather than accepting earlier summaries. The
+lead read the source/diff and checked every reported finding against the files.
+Current peer revisions/clean states and adopted/rejected choices remain those in
+[execution-7-peers](audit/execution-7-peers.md), refreshed for this review.
+
+No functional/build/API defect, missing prompt 7 deliverable, material test gap
+or unnecessary implementation abstraction was found. Fixed one source citation:
+TUSB322I's absent 0x45 register is established by SLLSEO5D Table 6-6, not its
+identity Table 6-7 on the same page. Repaired damaged page/prompt range punctuation
+in decisions/validation, clarified Ninja Release selection in the consumer guide
+and corrected the feature guide's stale description of its implemented table.
+Validator logic, public values, build registration and tests are unchanged.
+
+PASS: strict Debug/Release builds and exactly two CTest suites; 76,452 validations
+with zero callbacks; direct strict optimized NDEBUG validator/passive executables;
+four isolated public-header TUs and three planned compile fixtures; clean renamed
+tests-OFF consumer under unrelated Git metadata without maintainer tools on child
+PATH, inheriting C++17 from a C++11 baseline; strict Doxygen and exact visibility
+of 17 public structs/real functions; archived source hashes and relevant TI
+tables; Markdown links/anchors, whitespace and full scoped diff review. All
+reviewers also independently built/tested their assigned boundary. Exact lead
+commands/results are in [validation](validation.md).
+
+ASan/UBSan remain BLOCKED: the fresh probe cannot link missing -lasan/-lubsan.
+MSVC/Clang, framework firmware, archive/package qualification and physical hardware
+remain NOT RUN. No remote CI was dispatched or polled. Prompt 8 remains NOT
+STARTED; this review starts no later implementation unit. The lead commits and
+syncs these checked corrections on the same branch; final commit/equality and
+clean-state evidence belong in the handoff and next progress update.

@@ -16,6 +16,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Changed
 
+- Independently audited prompt 7 against its original requirements, source diff
+  and current peers. Repeated native, consumer and documentation checks; corrected
+  a TI table citation, repaired damaged evidence ranges and clarified Release
+  selection for Ninja consumers.
+  The validators and build behavior needed no correction.
+
 - Independently audited prompt 6's contracts, values and fixtures against the
   original requirements and current peer code. Repeated local checks and added
   the reproducible fractional-time verification command; no code or API-contract

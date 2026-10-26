@@ -187,8 +187,8 @@ reopened all six requested libraries and their build/test/consumer inputs.
 
 The lead rechecked the actual TI source bytes: four fresh official datasheets
 match their archived revisions exactly, and all eight archived hashes remain
-valid. Relevant address tables p15 and profile fields B pp17?19, L/A pp17?20,
-V pp17?20 agree with the existing contract; no silicon rule or gate changed.
+valid. Relevant address tables p15 and profile fields B pp17-19, L/A pp17-20,
+V pp17-20 agree with the existing contract; no silicon rule or gate changed.
 Debug/Release checks, a clean renamed tests-OFF consumer under unrelated Git
 metadata with maintainer tools absent from PATH, and strict Doxygen visibility
 passed. Sanitizers are unavailable in the installed MinGW distribution; no

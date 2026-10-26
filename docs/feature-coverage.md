@@ -11,7 +11,7 @@ These are documentation labels, not new runtime health/status values.
 Source IDs/revisions and unresolved gate IDs are defined in
 [variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
 listed there; V names TUSB322I alone. Silicon/operation tests below remain future
-evidence; the final passive-value table records prompt 5's implemented subset.
+evidence; the implemented-values table records the subset delivered in prompts 5-7.
 Actual checks are in
 [validation](validation.md). Planned commands follow [CLI_CONTRACT](prompts/CLI_CONTRACT.md).
 
