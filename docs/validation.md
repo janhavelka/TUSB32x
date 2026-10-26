@@ -1699,3 +1699,56 @@ reset completion independently. Asserted reset/incomplete interpretation returns
 UNKNOWN; complete non-DRP proof returns mismatch. Permanent regressions cover both.
 Final passing results supersede these initial failures. No hardware-success stub,
 retry, automatic cleanup or public test-only state hook was introduced.
+
+## Prompt 14 independent audit (2026-10-26)
+
+Fresh audit started at synchronized `a33af83acdb5a92cc6e95bef4e0cbc747232cf07`
+on the same execution branch. Reviewed full original prompt and actual
+`a6bcccf..a33af83` implementation with three independent reviewers. No production
+behavior defect was found. Added literal public-operation coverage and corrected
+stale class Doxygen/progress status without altering runtime code or contracts.
+
+Tool versions remain GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1,
+Python 3.12.10 and Doxygen 1.13.2. Lead configured a fresh Ninja Multi-Config tree.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh strict Debug/Release | PASS | 6/6 CTests each, active Release checks, independent header/contract compilation |
+| Reset/recovery regressions | PASS | 88,779 assertions; fresh actual controls versus cached proof on all seven variants, immediate identity/revision contradiction handling and literal clipped timeout arguments added |
+| Previous regressions | PASS | 89,140 apply/verify, 35,454 observation, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; values/validators/version/launcher pass |
+| Mutation evidence | PASS | Faulty reset debounce from cached rawConfig0A passed the original 86,298 checks; added cases reject it on all seven variants with 21 failures. Real production passes |
+| Independent extra probe | PASS | 1,825 checks for fresh controls, identity/revision contradictions and zero-budget pending transitions; uses existing scripted fixture and literal bytes, no private-state injection |
+| Fresh source review | PASS | Same three peer HEADs/main/clean states; current instructions/code/tests/examples/runners/registration rechecked; archived B/L/A/V reset/recovery pages agree |
+| Documentation/package | PASS | Strict Doxygen with 17 public structs and 21 owner methods, future methods absent; links/anchors/UTF-8/LF/vendor hashes/version; 36 source-equal exported files and renamed tests-OFF consumer beneath unrelated Git without maintainer tools |
+| Separate evidence | NOT RUN | Firmware/hardware and unavailable installed MinGW sanitizer runtimes; MSVC/Clang unavailable. Native PlatformIO not repeated for test/comment/docs-only changes; extracted source consumer rechecked. Remote CI remains prompt34 |
+
+Lead commands:
+
+```powershell
+cmake -S . -B build/p14-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p14-independent-audit --config Debug
+ctest --test-dir build/p14-independent-audit -C Debug --output-on-failure
+cmake --build build/p14-independent-audit --config Release
+ctest --test-dir build/p14-independent-audit -C Release --output-on-failure
+& build/p14-independent-audit/test/Release/tusb32x_operations.exe
+& build/p14-independent-audit/test/Release/tusb32x_protocol.exe
+& build/p14-fresh-tests/stale-reset.exe original-suite
+& build/p14-fresh-tests/stale-reset.exe
+& build/p14-fresh-tests/stale-reset-regressions.exe original-suite
+& build/p14-fresh-tests/probe.exe
+doxygen Doxyfile
+python build/p14-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p14.tar.gz
+python build/p14-package.py
+git diff --check
+```
+
+The two mutant failure runs intentionally return 21; the old-suite mutant and
+real independent probe return zero. Lead read the single-line mutation and
+probe source before rerunning them. The mutation/executables are isolated ignored
+build artifacts, never delivered production. Added checked-in tests reuse the
+fixed fixture and are registered in the existing operations suite; no new runner
+or state-machine abstraction. Reviewers separately built fresh Debug and isolated
+Doxygen trees. Their checks support the audit; final results above are lead-run.

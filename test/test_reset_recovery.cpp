@@ -315,6 +315,70 @@ void literalSuccessAndDesiredRetention() {
   }
 }
 
+void freshResetControlsAndIdentityContradictions() {
+  for (const auto& part : PARTS) {
+    Fixture fresh(part);
+    fresh.initialize(0x30);
+    // The live precheck differs in debounce/mode and extended-only preference.
+    // Preserve its actual controls, including debounce, in the one reset command.
+    fresh.resetScript(part.base ? 0xE0 : 0xE2);
+    const auto token = fresh.start(false);
+    CHECK(fresh.finish(token).ok());
+    CHECK(fresh.take(token).hardwareEffect == t::HardwareEffect::CONFIRMED);
+    CHECK(fresh.bus.complete());
+
+    for (const bool revision : {false, true}) {
+      if (revision && part.base) continue;
+      Fixture f(part);
+      f.initialize();
+      f.resetScript();
+      const std::size_t badRead = revision ? 3 : 2;
+      f.bus.at(badRead).rx[0] = 0xFF;
+      const auto bad = f.start(false);
+      const auto now = f.through(bad, badRead + 1);
+      // Contradiction invalidates readiness before another fresh owner sample.
+      CHECK(!f.device.diagnostics().initialized);
+      CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::UNKNOWN);
+      CHECK(f.poll(bad, now, 0).is(t::Err::CHIP_ID_MISMATCH));
+      const auto result = f.take(bad);
+      CHECK(result.hardwareEffect == t::HardwareEffect::PARTIAL);
+      CHECK(result.completedTimeValid && result.transfers == badRead + 1);
+      CHECK(result.configuration.resetState == t::ResetState::MAY_BE_PENDING);
+      CHECK(f.bus.calls == badRead + 1 && f.bus.clean());
+    }
+  }
+}
+
+void clippedProcedureTimeouts() {
+  for (const auto& part : PARTS) {
+    Fixture f(part);
+    f.initialize();
+    f.resetScript();
+    // R0A at100, W0A at101, fresh anchor102, ready198. Remaining
+    // callback budgets are literal milliseconds until the immutable deadline205.
+    const uint32_t timeouts[] = {20, 20, 7, 6, 5, 4, 3, 2};
+    for (std::size_t i = 0; i < f.bus.count; ++i) f.bus.at(i).timeoutMs = timeouts[i];
+    const auto token = f.start(false, 100, 205);
+    CHECK(f.finish(token).ok());
+    const auto result = f.take(token);
+    CHECK(result.hardwareEffect == t::HardwareEffect::CONFIRMED && f.bus.complete());
+    CHECK(result.completedUptimeMs == (part.base || part.is322 ? 203U : 204U));
+  }
+  for (const auto& part : {PARTS[0], PARTS[1]}) {
+    Fixture f(part);
+    f.initialize();
+    f.recoveryScript();
+    // R45 at100, W04 at101, fresh anchor102, W00 at133, R45 at134.
+    f.bus.at(2).timeoutMs = 7;
+    f.bus.at(3).timeoutMs = 6;
+    const auto token = f.start(true, 100, 140);
+    CHECK(f.finish(token).ok());
+    const auto result = f.take(token);
+    CHECK(result.hardwareEffect == t::HardwareEffect::CONFIRMED && f.bus.complete());
+    CHECK(result.completedUptimeMs == 135);
+  }
+}
+
 void boundedPostconditionFailures() {
   for (const uint8_t value : {uint8_t{0}, uint8_t{0x30}, uint8_t{0x10}, uint8_t{0x20}, uint8_t{0x28}}) {
     Fixture f(PARTS[6]);
@@ -694,6 +758,8 @@ void resetAcceptanceAndOtherTransitionGate() {
 int runResetRecoveryChecks() {
   admissionAndPrechecks();
   literalSuccessAndDesiredRetention();
+  freshResetControlsAndIdentityContradictions();
+  clippedProcedureTimeouts();
   boundedPostconditionFailures();
   everyCallbackFault();
   everyInterruptionBoundary();

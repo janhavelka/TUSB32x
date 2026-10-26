@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 13; later prompts remain separate.
+Current authorization: independently audit completed prompt 14; later prompts remain separate.
 
 ## Prompt status
 
@@ -23,7 +23,7 @@ Current authorization: independently audit completed prompt 13; later prompts re
 | [11: owner-engine](prompts/11-owner-engine.md) | COMPLETE |
 | [12: profile-observation](prompts/12-profile-observation.md) | COMPLETE |
 | [13: profile-application](prompts/13-profile-application.md) | COMPLETE |
-| [14: reset-recovery](prompts/14-reset-recovery.md) | NOT STARTED |
+| [14: reset-recovery](prompts/14-reset-recovery.md) | COMPLETE |
 | [15: port-snapshots](prompts/15-port-snapshots.md) | NOT STARTED |
 | [16: interrupt-service](prompts/16-interrupt-service.md) | NOT STARTED |
 | [17: diagnostics-health](prompts/17-diagnostics-health.md) | NOT STARTED |
@@ -1133,3 +1133,39 @@ planned fixtures. No version bump or future callable declaration. Hardware,
 firmware and unavailable sanitizer runtimes remain separate evidence limits.
 Lead commits and syncs this completed checked unit on the existing branch and
 verifies upstream equality/clean state; final commit evidence is in the handoff.
+
+## Prompt 14 independent audit (2026-10-26)
+
+Started clean and synchronized at `a33af83acdb5a92cc6e95bef4e0cbc747232cf07`
+on the existing execution branch. Re-read full prompt 14 and actual
+`a6bcccf..a33af83` diff. Three fresh-context parallel reviewers checked production
+correctness/time/effects (gpt-6-astra/high), test gaps and independent probes
+(gpt-6.1-sol/high), and requirements/TI/current peers/docs/simplicity
+(gpt-6.1-sol/high). The selected IDE prompt 16 was not executed.
+
+No production behavior defect was found. Confirmed gaps were a reset regression
+that did not distinguish cached from fresh debounce controls, missing focused
+post-reset identity/revision contradiction and callback clipping cases, stale
+class Doxygen claiming operations besides apply only read, and stale top-level
+progress authorization/status. Corrected documentation and added small literal
+public-operation tests using the existing fixture. No engine refactor, new API,
+framework dependency or silicon-policy change was needed.
+
+Lead inspected and reran the mutation evidence: a faulty implementation sourcing
+reset debounce from cached proof passed the original 86,298-check suite, but the
+new cases reject it on all seven variants (21 failed assertions). The unchanged
+real engine passes 88,779 reset/recovery assertions. A separate probe passed
+1,825 additional checks, including zero-budget pending-completion processing.
+
+Current peer revisions/main/clean states and adopted/rejected rules remain as
+recorded in [execution-14-peers](audit/execution-14-peers.md); named source/tests,
+examples/runners/registration/instructions and exact archived TI pages were
+reopened. No sibling mutation or remote CI inspection occurred.
+
+PASS: fresh strict Debug/Release six CTests each, previous owner/profile/protocol/
+codec suites, Doxygen visibility, links/provenance/version checks and source-equal
+package consumption without maintainer tools. Commands and evidence limits are in
+[validation](validation.md#prompt-14-independent-audit-2026-10-26). Hardware and
+firmware remain unqualified; installed sanitizer runtimes remain unavailable.
+Lead commits/syncs the checked audit on this same branch and verifies equal
+upstream commits and a clean worktree. Final commit evidence is in the handoff.

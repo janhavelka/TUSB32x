@@ -352,7 +352,8 @@ struct DriverDiagnostics {
 /// @brief Serialized application-owned cooperative driver; no allocation or implicit I2C.
 /// @details Only poll invokes transport. Borrowed context must live until end returns. No ISR use,
 /// concurrent access or callback reentry. One active token becomes one immutable retained result.
-/// Apply changes only explicitly requested settings; other implemented operations only read.
+/// Apply changes requested settings; reset and base recovery are separate explicit write requests.
+/// Initialization, profile observation, verification and reconciliation perform reads only.
 /// Cached copies remain historical unless their validity and current trust allow use.
 /// This object cannot be copied/moved.
 class TUSB32x {

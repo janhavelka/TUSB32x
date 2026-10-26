@@ -138,3 +138,23 @@ exhaustive errata search or physical verification. No evidence closes existing
 logic, framework firmware links, remote CI and hardware qualification remain
 separate evidence classes. Lead validation/progress records contain the actual
 implementation check outcomes and commit/sync result.
+
+## Independent review of the completed implementation (2026-10-26)
+
+Reopened the full prompt and actual `a6bcccf..a33af83` diff, engine, codec,
+transport, tests and public contracts. Fresh read-only checks found the same
+three peer revisions, clean main branches and matching instructions/registration.
+ADS callback-clock tests, LSM uncertain writes and INA eleven-write ambiguity
+fixtures still support the adopted rules. Their examples/runners still require
+result ownership/correlation; INA's replaying reconcile remains deliberately
+rejected. Archived B/L/A/V reset/recovery pages were reread independently and
+agree with the implemented commands, timing and capability gates.
+
+No production correctness, scope or portability defect was found. The permanent
+reset tests did not distinguish fresh debounce bits from cached proof: an isolated
+faulty composer using cached debounce passed the original suite. Added literal
+fresh-control cases reject that mutation on all seven variants. Added focused
+post-reset identity/revision and deadline-clipping checks as well. Stale class
+Doxygen and the top-level progress status were corrected. Full results and limits
+are in the implementation progress and validation records. No sibling edits,
+remote CI checks or hardware qualification occurred.

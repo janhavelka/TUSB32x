@@ -122,11 +122,15 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   `test_reset_recovery.cpp` links both delivered public starts. Reset scripts
   exercise all seven variants with exact E8/EA command composition, a single
   command attempt, 96 elapsed ticks and one complete F. Bounds are B7/L/A8/V7
-  callbacks, 8/9/8 TX bytes and 13/14/13 RX bytes. A staged desired profile
-  survives reset with different actual controls and is never replayed or used
-  as reset's success comparison. TUSB322I semantic DRP00/11 succeeds; UFP/DFP
-  readback gives CONFIGURATION_MISMATCH. An asserted reset bit gives bounded
-  CONFIGURATION_UNKNOWN with no second command or read loop.
+  callbacks, 8/9/8 TX bytes and 13/14/13 RX bytes. Live prechecks differing
+  from cached proof on every variant supply the reset command's actual controls.
+  Contradictory post-reset identity or revision immediately invalidates readiness
+  and retains partial effects.
+  Reset and recovery callbacks also verify deadline-clipped timeout arguments.
+  A staged desired profile survives reset with different actual controls and is
+  never replayed or used as reset's success comparison. TUSB322I semantic
+  DRP00/11 succeeds; UFP/DFP readback gives CONFIGURATION_MISMATCH. An asserted
+  reset bit gives bounded CONFIGURATION_UNKNOWN with no second command or read loop.
   Reserved advertisement together with non-DRP mode cannot certify TUSB322I
   reset completion; asserted reset also takes precedence over role mismatch.
   Recovery scripts run only on original TUSB320/TUSB320I and require identity.

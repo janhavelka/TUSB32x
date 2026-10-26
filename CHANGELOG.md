@@ -10,6 +10,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent prompt-14 audit and regressions for fresh reset controls differing
+  from cached proof, post-reset identity/revision contradictions and clipped
+  callback timeouts. Corrected stale class Doxygen and execution progress labels.
+  The existing production behavior passed the additional checks unchanged.
+
 - Linked `startReset` and base-only `startRecoverDeadBattery` through the existing
   cooperative engine. Reset preserves actual controls in its one-shot command,
   waits 96 elapsed owner ticks and verifies once without desired replay. Recovery
