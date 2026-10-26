@@ -147,3 +147,14 @@ read-only reconciliation can observe partial apply after its required wait,
 allowing a later explicit apply without replaying the interrupted job. Hardware,
 linked framework firmware and remote CI results are not established by this
 review; exact local validation and commit/sync evidence belong to lead records.
+
+## Independent audit recheck (2026-10-26)
+
+From synchronized TUSB32x commit `7ea5583`, the fresh scope reviewer independently
+rechecked all four peer HEADs, main branches and clean states above. Reopened
+the named declarations, implementations, registered tests, examples, runners,
+instructions, build files and workflow definitions; selected and rejected rules
+remain supported. No sibling was changed, fetched or built. This recheck did
+not redownload TI sources or query remote CI. The lead and separate reviewers
+audited the actual prompt-13 implementation diff and its required test coverage;
+current outcomes are in the implementation progress and validation records.

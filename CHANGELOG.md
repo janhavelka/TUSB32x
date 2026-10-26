@@ -9,6 +9,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent prompt-13 audit and permanent literal-byte regressions for UFP
+  role changes and settings-only 0A updates. These close gaps demonstrated by
+  isolated faulty implementations that the earlier operation suite did not
+  detect. No production behavior or public API changed.
+
 - Linked `startApplyProfile` and read-only `startVerifyProfile` through the
   existing owner engine and complete identity/control proof. Apply retains a
   validated desired candidate at admission, changes only differing fields and

@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 13; later prompts remain separate.
+Current authorization: independently audit completed prompt 13; later prompts remain separate.
 
 ## Prompt status
 
@@ -1062,3 +1062,36 @@ external; installed MinGW sanitizer runtimes are unavailable as already probed.
 Lead commits and synchronizes this complete checked feature on the same branch,
 then verifies upstream equality and clean task state. Commit evidence belongs
 in the final handoff and next progress update, avoiding a self-referencing edit.
+
+## Prompt 13 independent audit (2026-10-26)
+
+Started clean and synchronized at `7ea5583c52407e0e755dc89e185db1eab7512238`
+on the existing execution branch. Reread the full original prompt 13 and actual
+`724b766..7ea5583` diff, current source/tests and contracts; the selected IDE
+prompt 16 was not executed. Three fresh-context parallel reviewers checked
+clock/effect/proof correctness (gpt-6-astra/high), test coverage and independent
+failure probes (gpt-6.1-sol/high), and requirements/simplicity/docs/package/current
+peers (gpt-6.1-sol/high). Lead inspected the source, probes and returned changes
+and repeated verification in a fresh build tree.
+
+No production defect was found. Confirmed regression gaps were successful UFP
+role changes and ordinary 0A updates without a mode change. The original
+permanent suite exercised DFP/DRP, while UFP was only staged and cancelled;
+settings-only 320 control writes lacked direct positive coverage. Isolated
+mutations that corrupt UFP writes or omit standalone termination-disable writes
+survived the original operation suite. Added compact independent literal cases
+to the existing application tests, preserving the existing engine and fixture.
+
+Rechecked all four peers at the same revisions and clean main branches recorded
+in [execution-13-peers](audit/execution-13-peers.md); the named code/tests/examples/
+runners/instructions/registration still support the selected conventions.
+No sibling changes, fetches or builds occurred. Public API, production code,
+TI gates, source lists and framework boundaries remain unchanged.
+
+Updated test documentation, Unreleased, peer audit evidence, progress and
+[validation](validation.md#prompt-13-independent-audit-2026-10-26). Final checks
+include fresh strict Debug/Release CTests, Doxygen visibility, documentation/
+provenance/version checks and extracted ordinary package consumption. Hardware,
+firmware and unavailable sanitizer runtimes remain separate evidence limits.
+Lead commits and syncs this checked audit on the same branch, then verifies
+upstream equality and a clean worktree; final commit evidence is in the handoff.

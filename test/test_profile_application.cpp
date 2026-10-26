@@ -343,6 +343,66 @@ void literalModePlans() {
   }
 }
 
+void ufpAndSettingsOnlyPlans() {
+  for (const auto& part : PARTS) {
+    Fixture f(part);
+    f.initialize();
+    auto desired = f.device.configurationSnapshot().verifiedProfile;
+    desired.portMode = t::PortMode::UFP;
+    if (part.base) {
+      f.bus.read(part.address, 9).rx[0] = 0x14;
+      f.bus.write(part.address, 0x0A, 0x10);
+    } else {
+      // TI's distinct disable/mode/enable writes also apply to UFP.
+      f.bus.write(part.address, 0x0A, 0x31);
+      f.bus.write(part.address, 0x0A, 0x11);
+      f.bus.write(part.address, 0x0A, 0x10);
+    }
+    f.proof(0x80, 0x14, 0x10);
+    auto token = f.apply(desired);
+    CHECK(f.finish(token).ok());
+    auto result = f.take(token);
+    CHECK(result.transfers == (part.base ? 7U : part.is322 ? 8U : 9U));
+    CHECK(result.hardwareEffect == t::HardwareEffect::CONFIRMED && f.bus.complete());
+    CHECK(result.configuration.verifiedProfile.portMode == t::PortMode::UFP);
+
+    // An ordinary 0A field change leaves mode unchanged and has one write,
+    // with no detached precheck, role procedure or hardware wait. Equal fresh
+    // owner ticks make any accidental wait fail this finite completion bound.
+    const unsigned changes = part.base ? 1U : 2U;
+    for (unsigned change = 0; change < changes; ++change) {
+      f.bus.reset();
+      uint8_t expected = 0x10;
+      if (part.base) {
+        desired.ccDebounce = t::CcDebounce::MS_116;
+        expected = 0x50;
+      } else {
+        desired.disableTerm = change == 0;
+        expected = desired.disableTerm ? 0x11 : 0x10;
+      }
+      f.bus.write(part.address, 0x0A, expected);
+      f.proof(0x80, 0x14, expected);
+      const uint64_t now = 300 + change;
+      token = f.apply(desired, now);
+      const std::size_t callbacks = part.base || part.is322 ? 6U : 7U;
+      t::Status status{};
+      for (std::size_t turn = 0; turn <= callbacks; ++turn) {
+        status = f.poll(token, now);
+        CHECK(!f.device.progress().waiting && !f.device.progress().readyAtValid);
+        if (!status.inProgress()) break;
+      }
+      CHECK(status.ok());
+      result = f.take(token);
+      CHECK(result.transfers == callbacks && f.bus.complete());
+      CHECK(result.hardwareEffect == t::HardwareEffect::CONFIRMED);
+      CHECK(sameProfile(result.configuration.verifiedProfile, desired));
+      CHECK(result.configuration.terminationState == (desired.disableTerm ?
+          t::TerminationState::DISABLED : t::TerminationState::ENABLED));
+      CHECK(!f.device.diagnostics().modeTransitionUnresolved);
+    }
+  }
+}
+
 void baseAttachmentAndWriteOrder() {
   for (const auto& part : PARTS) {
     if (part.base) {
@@ -1036,6 +1096,7 @@ int runProfileApplicationChecks() {
   noOpAndVerification();
   admissionAndValidation();
   literalModePlans();
+  ufpAndSettingsOnlyPlans();
   baseAttachmentAndWriteOrder();
   gated322Changes();
   physicalModeWait();

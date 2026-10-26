@@ -88,7 +88,11 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   rejection and desired-copy/generation preservation, nonzero actual fields,
   base detached precheck before any write, attached current-only updates,
   independent early/late 45 controls and separate disable/mode/enable writes.
-  Initial and requested-final disabled states are covered. TUSB322I changes to
+  Initial and requested-final disabled states are covered. Literal UFP role
+  writes execute on all seven variants. Ordinary 0A debounce and
+  termination-only changes execute one write plus F, finishing at equal fresh
+  owner ticks without a role sequence or wait; both termination directions are
+  checked where supported. TUSB322I changes to
   advertisement/duty/accessory and direct return to DRP reject locally; DRP00
   equivalence and independent raw fault evidence remain observable.
   Six terminal backend errors are injected at every write and following F read

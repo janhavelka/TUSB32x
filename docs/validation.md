@@ -1589,3 +1589,58 @@ rule or test assertion was weakened. The two actual effect-recording defects
 found during review were fixed and tested before the final passing matrix.
 Host timing tests prove owner arithmetic and ordering, not physical I2C timing,
 termination behavior, the base cable-race prerequisite or electrical compliance.
+
+## Prompt 13 independent audit (2026-10-26)
+
+Started clean at synchronized `7ea5583c52407e0e755dc89e185db1eab7512238` on
+the same execution branch. Reread original prompt 13 and reviewed the actual
+`724b766..7ea5583` implementation diff. Three fresh reviewers and the lead found
+no production defect or unsupported scope expansion. The confirmed gaps were
+permanent successful UFP and settings-only 0A tests. Added literal public-operation
+cases using the existing fixture, without changing production code or the API.
+
+Tool versions remain GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1,
+Python 3.12.10 and Doxygen 1.13.2. Lead used a fresh Ninja Multi-Config tree;
+reviewers used separate ignored probe/build directories.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Final Debug/Release | PASS | 6/6 CTests each after the added cases; strict warnings, active Release checks and independent public-header contracts |
+| Permanent application regressions | PASS | 89,140 apply/verify checks, including UFP literal sequences on all seven variants, base debounce-only and extended termination-only changes in both directions; exact callback totals and equal fresh ticks reject accidental waits/role sequences |
+| Existing regressions | PASS | 35,454 profile-observation, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; value/validator/version/launcher suites pass |
+| Coverage mutation probes | PASS | Isolated UFP-byte corruption and omitted standalone termination-disable writes both survived the original 87,978-check suite; added regressions reject them with 160 and 40 failed assertions respectively. Real production passes |
+| Independent state-machine probe | PASS | 46,592 valid 0A initial/target byte pairs: 44,288 completed applies and 2,304 expected 322 return-to-DRP rejections; independent register emulator, physical elapsed-time, raw-image, effect, callback-budget and bound checks |
+| Independent recovery probe | PASS | 70 variant/write-boundary cases with applied/not-applied backend errors, preserved original failure, no write in reconciliation, complete actual proof and later successful explicit reapply |
+| Peer/scope/package review | PASS | Current four peer revisions/main/clean states and source/test conventions unchanged; one engine/composer/transport, fixed six-write storage, unchanged public/variant gates; matching 36-file PlatformIO/IDF selection |
+| Doxygen and documentation | PASS | 17 public structs and 19 delivered owner methods visible, future callable methods absent; links/anchors, UTF-8/LF/whitespace, eight archived vendor hashes and no-op version sync |
+| Extracted consumer | PASS | Final source-equal 36-file archive and resolvable relative links; renamed tests-OFF ordinary consumer beneath unrelated Git builds/runs without Python/Git/Doxygen/PIO on child PATH; public C++17 propagates |
+| Limits | NOT RUN | Firmware and physical hardware. Recorded same-day MinGW ASan/UBSan runtimes remain unavailable. Native PlatformIO was not rerun for this test/documentation-only audit; core/package source lists are unchanged. Remote CI remains the separate prompt-34 checkpoint |
+
+Lead commands from repository root:
+
+```powershell
+cmake -S . -B build/p13-independent-audit -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p13-independent-audit --config Debug
+ctest --test-dir build/p13-independent-audit -C Debug --output-on-failure
+cmake --build build/p13-independent-audit --config Release
+ctest --test-dir build/p13-independent-audit -C Release --output-on-failure
+& build/p13-independent-audit/test/Release/tusb32x_operations.exe
+& build/p13-independent-audit/test/Release/tusb32x_protocol.exe
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Werror -Iinclude build/p13-fresh-proof/probe.cpp build/p13-independent-audit/Release/libTUSB32x.a -o build/p13-fresh-proof/lead-probe.exe
+& build/p13-fresh-proof/lead-probe.exe
+doxygen Doxyfile
+python build/p13-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p13.tar.gz
+python build/p13-package.py
+git diff --check
+```
+
+Lead inspected the new cases and independent probe before recompiling/running
+them. The exhaustive probe constructs candidates with public `decodeRegister`;
+its emulator and raw/time assertions are independent, but it is integration
+evidence, not an independent semantic-decoder oracle. Permanent regression bytes
+are literal and independent of production encoding. Mutation sources/executables
+and inspection scripts remain ignored under build; no faulty implementation or
+new test hook was delivered. No hardware qualification is inferred.
