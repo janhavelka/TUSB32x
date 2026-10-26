@@ -13,6 +13,8 @@
 #include <limits>
 #include <type_traits>
 
+int runProfileObservationChecks();
+
 namespace {
 
 namespace t = TUSB32x;
@@ -1044,6 +1046,7 @@ int main() {
   callbackAssociationAndNullContext();
   twoInstancesAndStatistics();
   tokenBoundaryArithmetic();
+  failures += runProfileObservationChecks();
   if (failures != 0) {
     std::printf("FAIL %d of %zu owner checks\n", failures, checks);
     return 1;

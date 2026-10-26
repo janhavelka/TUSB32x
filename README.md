@@ -7,7 +7,8 @@ and stable package version constants.
 The library also contains [private transport/identity helpers](docs/transport.md)
 and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
 binding/lifecycle, token-checked polling/cancellation/result delivery, cached
-evidence and read-only initialization. Profile changes, port refresh, reset,
+evidence, read-only initialization, profile observation and read-only
+reconciliation. Profile changes, desired-profile verification, port refresh, reset,
 IRQ operations, public raw diagnostics and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
@@ -69,6 +70,12 @@ resetting, acknowledging IRQ or replaying a desired profile. The application
 serializes calls, supplies a uint64 millisecond clock and keeps each accepted
 token with its driver instance. `poll` performs at most one terminal callback;
 the next poll supplies fresh time before accepting successful completion.
+`startReadProfile` reads persistent controls without adopting desired settings
+or promoting configuration trust. `startReconcile` reads identity and all
+applicable controls once and can establish initialized, KNOWN actual settings
+after external invalidation. It performs no repair or replay writes; unresolved
+reset or sequence evidence keeps trust UNKNOWN. Readable TUSB322I controls do
+not grant permission to write gated fields.
 One terminal result blocks replacement until `takeResult` delivers it. Result
 delivery returns OK even when the copied operation failed. See the
 [implemented owner API](docs/api-contracts.md#implemented-owner-api) for timing,

@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 11; prompt 12 remains separate.
+Current authorization: implement prompt 12; prompt 13 remains separate.
 
 ## Prompt status
 
@@ -21,7 +21,7 @@ Current authorization: independently audit completed prompt 11; prompt 12 remain
 | [9: transport-identity](prompts/9-transport-identity.md) | COMPLETE |
 | [10: register-codecs](prompts/10-register-codecs.md) | COMPLETE |
 | [11: owner-engine](prompts/11-owner-engine.md) | COMPLETE |
-| [12: profile-observation](prompts/12-profile-observation.md) | NOT STARTED |
+| [12: profile-observation](prompts/12-profile-observation.md) | COMPLETE |
 | [13: profile-application](prompts/13-profile-application.md) | NOT STARTED |
 | [14: reset-recovery](prompts/14-reset-recovery.md) | NOT STARTED |
 | [15: port-snapshots](prompts/15-port-snapshots.md) | NOT STARTED |
@@ -930,3 +930,54 @@ unavailable from the recorded installed-tool probe; not rerun for this comment/
 regression-only change. Lead commits and synchronizes the checked audit on this
 branch and reports final commit/equality/clean state in the handoff, recording
 the commit in the next progress update without a self-referencing edit loop.
+
+## Prompt 12: profile observation and read-only reconciliation (2026-10-26)
+
+Started clean at synchronized `921132461e676ea2f05f7c4e6ed88edc641a294d`, the
+completed independent prompt-11 audit. The execution branch/base remain unchanged.
+Reread prompt 12, instructions, frozen profile/generation/effect contracts and
+the TI proof matrix. Current peer declarations, implementation, tests, examples,
+CLI/runners and registration were re-audited in
+[execution-12-peers](audit/execution-12-peers.md). No sibling modifications,
+fetches, builds or remote CI inspection occurred.
+
+Implemented `startReadProfile` and `startReconcile` in the existing cooperative
+engine. Shared admission, scalar observation and semantic comparison preserve
+tokens, deadlines, one callback per turn and one retained result. P publishes
+complete raw/typed observations without trust promotion or desired adoption;
+F proves actual identity/configuration and required effects, restoring initialized
+usability after external invalidation without a write. Reserved fields and
+unresolved reset/recovery evidence remain explicit. Pending reset uses one
+conservative wait and one F, never a replay or retry. Future apply supplies desired
+input and owns its mismatch case in prompt 13; no fake setter was introduced.
+
+Delegation: gpt-6.1-sol/high agents owned peer/general documentation and focused
+tests in disjoint files. A gpt-6-astra/high reviewer independently checked proof,
+time, effects and simplicity read-only. Lead owned shared production/publication
+helpers, resolved findings, inspected returned code and tests, and ran integrated
+verification. Review caught a stale independent termination proof after a changed
+disable bit followed by cancellation/read failure; the regression failed before
+the fix and passed after. Matching identity now also preserves an older complete
+revision if the subsequent reconciliation revision read fails. Reset settling
+proof is kept separate from unrelated reserved profile fields.
+
+Updated public Doxygen and API/ownership/procedure/architecture/variant/feature
+guides, metadata descriptions, README/CHANGELOG and test/contributor/agent guidance.
+The procedure guide names actual helpers and exact callback/TX/RX ceilings.
+Two real methods leave the planned fixture; no future operation is declared in
+production. No version bump, new core file, framework dependency or chip write
+permission was added. Source provenance remains unchanged.
+
+PASS: Debug and Release 6/6 CTests each, with 34,042 new profile checks and
+20,490 existing owner checks. Strict native suites, previous protocol/codec regressions, public
+linkage, Doxygen visibility, native PlatformIO, source-equal extracted package,
+tests-OFF consumer and documentation/version checks are recorded in
+[validation](validation.md#prompt-12-profile-observation-2026-10-26).
+Hardware/framework firmware remains separate and untested. Installed MinGW
+sanitizer runtimes remain unavailable from the recorded same-day probe; no
+sanitizer pass is claimed. Public apply/mode/recovery-write cases remain their
+owning later prompts, not uncompleted read-only work.
+
+Lead commits and synchronizes this complete checked feature on the same branch,
+then verifies local/upstream equality and clean task state. Final commit evidence
+belongs in the handoff and next progress update, not a self-referencing hash edit.

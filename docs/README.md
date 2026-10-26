@@ -1,7 +1,8 @@
 # Documentation
 
 - [API contracts](api-contracts.md): implemented values, validators, decoder and
-  read-only owner engine, with future device methods explicitly labeled.
+  read-only initialization, profile observation and reconciliation, with future
+  device methods explicitly labeled.
 - [Architecture](architecture.md): public/core/example responsibilities and the
   application-owned transport boundary.
 - [Development](development.md): version truth, generator exits, tool choices,

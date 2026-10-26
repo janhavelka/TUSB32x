@@ -9,7 +9,9 @@ names and [maintainability rules](docs/prompts/MAINTAINABILITY.md) for code/docs
 The implemented library contains portable values, Status helpers and pure
 validators and public pure register decoding, plus private transport/identity,
 field encoders, settings comparison and qualified write composition. The owner
-facade implements lifecycle, token/result ownership and read-only initialization.
+facade implements lifecycle, token/result ownership, read-only initialization,
+profile observation and read-only reconciliation. Apply and desired-profile
+verification belong to prompt 13.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
@@ -33,7 +35,8 @@ are build checks. See [test/README.md](test/README.md).
 The protocol suite includes independent field tables, reserved-code validity,
 actual-versus-staged controls and procedure-proof rejections. Keep expected
 bytes independent of production codecs. Pure composition proves no timed job.
-The operations suite tests the real initialization engine, time boundaries,
+The operations suite tests initialization, profile observation and read-only
+reconciliation through the real engine, time boundaries,
 failure at each read, retained results and two devices sharing an external owner.
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)
 with tests OFF after public/build changes. Core consumers need no Python, Git,

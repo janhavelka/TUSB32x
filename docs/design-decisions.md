@@ -338,3 +338,36 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   named compile-only planned fixture. The production facade declares only
   implemented methods. Update all CMake/PlatformIO/IDF/package source lists in
   the same change so extracted consumers receive the real implementation.
+
+## Prompt 12: read-only observation and reconciliation (2026-10-26)
+
+- Extend the existing engine with two real methods and a shared admission/read
+  path. Keep P (persistent controls) separate from F (identity then P). Reuse
+  existing codecs and terminal transport; no generic verification framework,
+  alternate engine, public desired setter or write/cleanup/replay is needed.
+- Complete P publishes raw bytes, independent typed validity and the time before
+  its first read. It does not initialize, adopt desired or advance verified
+  generation. Immediate contrary evidence invalidates current proof, while a
+  later failure/cancellation preserves the previous complete observation.
+  Termination can be independently known without configuration trust, so a
+  changed applicable disable bit invalidates that proof too.
+- Reconciliation needs binding only. Complete matching identity plus raw P can
+  restore initialized usability; every applicable field and required effect
+  proof are needed for KNOWN actual settings. Advance the saturating verified
+  generation only there. Compare retained desired afterward without replacing
+  it; prompt 13 supplies desired through apply and owns that public-path test.
+- Retained pending reset uses a conservative 96-tick wait from the first fresh
+  poll, then one F. A reset newly discovered during F stays pending; do not
+  append another pass. Complete waited F with reset clear establishes reset
+  settling independently of unrelated reserved settings. Keep acceptance and
+  historical recovery evidence separate. Only interrupted L/A mode requires
+  the corresponding six-tick wait; base/322 receive no invented mode delay.
+- Matching reconciliation identity does not erase a previous complete revision
+  when its subsequent revision read fails. Complete identity contradiction
+  still invalidates immediately. No read-only operation repairs port freshness
+  or changes an already copied terminal result.
+- Fresh peers confirm separate desired/observed/applied evidence and bounded
+  result handling. Adopt LSM's read-only verification pattern but reject its
+  desired-dependent admission/publication; reject INA3221's profile-replaying
+  reconciliation. Exact revisions, source/test symbols and other differences
+  are in [execution-12-peers](audit/execution-12-peers.md).

@@ -26,11 +26,9 @@ namespace planned {
 // cannot redefine the public facade or claim implementations for future jobs.
 class Driver : public ::TUSB32x::TUSB32x {
  public:
-  Status startReadProfile(const OperationTiming& timing, OperationToken& token);
   Status startApplyProfile(const DeviceProfile& profile,
                           const OperationTiming& timing, OperationToken& token);
   Status startVerifyProfile(const OperationTiming& timing, OperationToken& token);
-  Status startReconcile(const OperationTiming& timing, OperationToken& token);
   Status startRefreshPort(const OperationTiming& timing, OperationToken& token);
   Status startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token);
   Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);

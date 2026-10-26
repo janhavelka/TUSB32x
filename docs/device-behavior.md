@@ -146,6 +146,15 @@ These are library-selected, acyclic plans. They intentionally use one common
 proof path, fixed storage and scalar controls instead of a generic register
 cache or retries until stable.
 
+Implemented through prompt 12: `startInitialize`, `startReadProfile` and
+`startReconcile`. Apply/verify, reset/recovery, port and IRQ plans below remain
+their later prompts' work. In `src/TUSB32xOperations.cpp`, `startObservation`
+shares admission, `acceptRead` stages each byte and `publishConfiguration`
+commits the complete P. `observeControl` invalidates contradicted proof before
+the next owner turn; `compareObservedProfile` shares semantic actual/desired
+comparison for later verification. It uses the pure codec comparison, including
+TUSB322I DRP00/DRP11 equivalence, rather than byte equality.
+
 | Plan | Ordered callbacks | Purpose |
 | --- | --- | --- |
 | I | R(00,8), then R(A0,1) for L/A/V only | Exact signature/revision check; configured variant remains external knowledge |
@@ -161,6 +170,26 @@ codes retain raw bytes but invalidate their typed fields. Verify/reconcile can
 publish KNOWN actual controls and CONFIGURATION_MISMATCH together when all
 identity/control/effect proof is complete; desired remains unchanged. A successful
 unrelated read cannot supply missing effect proof.
+
+| Complete evidence / implemented path | Publication and outcome |
+| --- | --- |
+| P with every applicable field valid | Publish raw bytes, typed validity and acquisition time. OK; no initialization, desired replacement or verified-generation increment. Matching old KNOWN proof remains; contrary evidence invalidates it. |
+| P with a reserved applicable field | Publish complete raw bytes and only valid typed fields; CONFIGURATION_UNKNOWN, no new full trust. Independent termination controls may still be proved. |
+| Failed/partial P or F | Preserve the last complete profile/raw/time and verified generation. Complete adverse identity/control evidence still invalidates the affected current usability immediately. |
+| Matching I plus complete raw P | Establish initialized usability; reserved settings or unresolved effects may still keep configuration UNKNOWN. |
+| F with all applicable typed fields and settled effect evidence | Publish KNOWN actual verified profile and saturating verified generation. Retained desired, if any, stays unchanged; comparison mismatch returns CONFIGURATION_MISMATCH while actual remains KNOWN. Public desired input/tests arrive with apply in prompt 13. |
+| All applicable disable controls observed and effects settled | Publish independent ENABLED or DISABLED termination, even without full configuration trust. A later contrary disable bit invalidates this proof immediately, including when a subsequent read fails or the operation is cancelled. |
+| Reset pending before reconciliation | First fresh poll anchors 96 ticks, then one F. Complete F with reset clear establishes reset COMPLETED; unrelated reserved profile fields can still prevent KNOWN. Newly asserted reset remains MAY_BE_PENDING. |
+| Interrupted base recovery | Neither clear45, elapsed time nor F can prove the missing historical sequence. Keep that obligation; only explicit recovery or local forgetting addresses it. |
+
+P costs at most 4 callbacks/4 TX/4 RX bytes for B/L/A, or 3/3/3 for V.
+F costs 5/5/12 for B, 6/6/13 for L/A, and 5/5/12 for V. Each scalar
+read sends one pointer; I reads eight identity bytes plus a revision where
+documented. Waits add no callbacks. Counts exclude address phases and do not
+claim a physical transaction count. `poll` yields after each terminal callback;
+zero budget permits only local wait/deadline/publication transitions. The next
+fresh timestamp checks the immutable deadline before accepting successful data.
+No P/F path writes, clears port invalidation, or rewrites an old result.
 The [owner contract](api-contracts.md#lifecycle-and-operation) distinguishes
 current identity readiness from KNOWN configuration: matching I and complete
 raw P can establish initialized even when an unresolved recovery sequence or

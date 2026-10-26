@@ -6,7 +6,9 @@ Prompt 9 adds private terminal transport and exact identity/revision checks.
 Prompt 10 adds public supplied-byte decoding, private encoding/comparison and
 safe composition tests. Prompt 11 adds the delivered owner facade and read-only
 initialization, lifecycle, result ownership and fresh-time behavior. Mutating
-operations, port acquisition, health projection and hardware waits remain planned.
+operations, port acquisition and health projection remain planned. Prompt 12 adds
+read-only profile observation/reconciliation and its conservative reset-settling
+wait; software owner-time tests do not prove physical hardware timing.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
@@ -50,6 +52,32 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   failure, timestamp validity, rollover, backward/half-range rejection and clipped
   callback timeouts are executed. A bounded private token-arithmetic fixture
   reaches exhaustion without a public seed API or an exhaustion loop.
+  `test_profile_observation.cpp` extends the same executable with exact P/F plans
+  for all seven variants: scalar 08/09/0A and applicable 45, plus identity/revision
+  only for reconciliation. P uses 3/4 callbacks and 3/4 received bytes; F uses
+  5/6 callbacks and 12/13 received bytes. Both permit at most one callback per
+  poll, including with larger budgets, and perform no writes. Tests exercise
+  reconciliation without/after failed initialization, external invalidation,
+  observation without desired adoption/trust promotion, repeated verified
+  generation increments, persistent contradiction, historical-image preservation,
+  reserved typed fields with complete raw evidence, both independent termination
+  controls, reset evidence and semantic TUSB322I DRP00/11 equivalence. RO/W1C bits
+  do not create persistent mismatches. Matching signature followed by failed
+  revision acquisition preserves earlier valid identity/configuration evidence.
+  Every required read exercises all six terminal transport errors; cancellation,
+  end and expiry cover every read and the final fresh-time boundary. Partial
+  acquisitions preserve the complete old observation, and immediate adverse
+  evidence survives cancellation. First error/detail, retained result delivery,
+  rollover, invalid owner time and clipped callback timeout are checked.
+  Separately established termination evidence from P is invalidated immediately
+  when a later partial P contradicts either disable control, including when an
+  unrelated reserved field prevented a complete typed profile or trust.
+  Reset first discovered during F ends UNKNOWN with no extra F; a later explicit
+  reconciliation waits 96 ticks from its first fresh sample and performs one F.
+  Wait rollover, cancellation/expiry and each incomplete post-wait F boundary
+  cannot claim reset completion. Read-only results retain
+  HardwareEffect::NONE and port invalidation. Desired-mismatch recovery requires
+  prompt 13's explicit apply; no desired setter or private state seed is used.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot

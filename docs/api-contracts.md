@@ -1,13 +1,14 @@
 # Portable values, decoding and owner API
 
-Prompts 5-11, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-12, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, two pure validators,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
 `TUSB32x`. Prompt 9 implements [private register transport/identity](transport.md),
 without publishing bus-access methods. Prompt 10 adds pure codecs/composition.
 Prompt 11 implements the non-copyable device facade, lifecycle/token/result
-handling, cached evidence and read-only initialization. Other operation families
+handling, cached evidence and read-only initialization. Prompt 12 adds
+`startReadProfile` and `startReconcile`. Other operation families
 below remain planned. Later prompts publish their callable declarations with
 real implementations; the complete design inventory is not a promise that all
 listed signatures are delivered now.
@@ -152,8 +153,8 @@ Library-generated statuses use detail zero unless a later documented method
 assigns another meaning. Backend detail is never narrowed or reinterpreted.
 There is no detached or OFFLINE error: detach is normal, health is a projection.
 Operation-status propagation, callback normalization and counters are implemented
-for read-only initialization. Later write/effect behavior remains specified
-future work; passive default values do not prove it.
+for initialization, profile observation and reconciliation. Later write/effect
+behavior remains specified future work; passive default values do not prove it.
 
 ## Borrowed transport and owner boundary
 
@@ -194,6 +195,8 @@ none is ISR-safe.
 | --- | --- |
 | bind, end, invalidateDeviceState, forgetDeviceEvidence | Bus-silent atomic binding and evidence lifecycle. Invalid replacement preserves the old binding. End cancels active work into its retained result; it never rolls back hardware effects. Forget requires unbound, inactive, result-free state. |
 | startInitialize | Copies timing and admits one nonzero uint64 instance-local token; IN_PROGRESS means admitted. Reads exact identity/revision and persistent controls only, with B5/L/A6/V5 callback ceilings. No profile adoption, reset, ACK or writes. |
+| startReadProfile | Binding only; reads P without identity, desired adoption or trust promotion. Complete contradiction invalidates old current trust. B/L/A4 and V3 callback ceilings; partial failed acquisition preserves the prior complete observation. |
+| startReconcile | Binding only; read-only F can establish initialization and KNOWN actual controls after invalidation. Retained reset evidence may require a 96-tick wait before the single F pass. B5/L/A6/V5 callback ceilings; no replay or cleanup writes. |
 | poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
 | cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
 | resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
@@ -216,12 +219,41 @@ lifecycle/cache/result methods and cancellation are bus-silent. See the exact
 precedence/lifetime/time tables below and the repository-only
 [validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
 
+Profile observation uses P = R(08,1), R(09,1), R(0A,1), then R(45,1) on
+B/L/A only. Its callback/TX/RX ceilings are 4/4/4 for B/L/A and 3/3/3 for V.
+F reads identity first: R(00,8), R(A0,1) on L/A/V only, then P. Reconciliation
+therefore has ceilings 5/5/12 for B, 6/6/13 for L/A and 5/5/12 for V.
+Both operations have `HardwareEffect::NONE`. A complete profile read returns OK
+even when its valid controls contradict old verified settings; it invalidates
+that old trust and never promotes the replacement. Complete reserved encodings
+retain raw validity, clear the affected typed flags and return
+CONFIGURATION_UNKNOWN. A failed or cancelled partial acquisition does not publish
+a mixed observation.
+
+Reconciliation establishes KNOWN only with matching identity, every applicable
+persistent field and required termination/reset/sequence proof. KNOWN describes
+actual controls independently of desired settings. It increments the saturating
+verified generation on each complete proof commit and never adopts desired.
+Complete raw acquisition may establish initialized even when reserved controls
+or unresolved history prevent KNOWN. A clear reset bit cannot replace a required
+settling interval or prove a historical recovery sequence. If reset is already
+pending without an owner-time anchor, the first fresh poll starts a 96-tick wait
+before F; reset first discovered in F finishes CONFIGURATION_UNKNOWN without
+a second pass. Neither operation repairs port invalidation.
+
+Desired comparison is prepared internally; prompt 13 supplies retained desired
+through explicit apply and owns the public desired-mismatch/recovery test. No
+desired setter or write operation is delivered by prompt 12. The
+[procedure guide](device-behavior.md#fixed-observations-and-shared-proof) documents
+the proof and independent termination controls.
+
 ## Complete design inventory
 
 This sketch contains both the delivered subset above and future operations.
 Only the delivered subset is declared in the public class. The compile-only
-fixture checks the complete future inventory separately. Profile observation/
-verification/reconciliation belong to prompt 12; application to 13; reset and
+fixture checks the complete future inventory separately. Profile observation and
+read-only reconciliation are delivered in prompt 12; application and desired-profile
+verification belong to prompt 13; reset and
 recovery to 14; port to 15; IRQ to 16; raw access and health helpers to 17.
 No begin/init/unbind aliases or successful placeholder methods are provided.
 
@@ -279,8 +311,8 @@ does not replay, and reset never reapplies a desired profile. The tables below
 finish the baseline's precedence, result retention and interruption rules.
 
 Pure binding/profile validators are implemented in prompt 7, decoding in 10,
-and the delivered owner subset in 11. Remaining driver methods are published
-with their owning work in prompts 12–17; health projection is prompt 17.
+and the delivered owner subset in 11–12. Remaining driver methods are published
+with their owning work in prompts 13–17; health projection is prompt 17.
 No unavailable function may appear in a runnable quick start before that work.
 The health validator requires offlineThreshold >= 1. Invalid policy returns
 INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it

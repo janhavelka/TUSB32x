@@ -1406,3 +1406,66 @@ Git/Python/Doxygen/PIO absent from child PATH, requesting C++11 and receiving
 C++17 from the library. No sibling source or tool dependency enters the build.
 All required checks passed without weakened contracts; only the tested scope
 and software evidence above are claimed.
+
+## Prompt 12 profile observation (2026-10-26)
+
+Implemented and independently reviewed the requested read-only P/F feature from
+synchronized `921132461e676ea2f05f7c4e6ed88edc641a294d`. Current peer inspection
+is in [execution-12-peers](audit/execution-12-peers.md). Official TI symlink PDFs
+were reopened: tusb320 SLLSEN9F, tusb320li SLLSEP2D, tusb320lai SLLSEQ8D and
+tusb322i SLLSEO5D agree with the archived revision identities. The archived
+control tables and exact reset maxima remain the silicon evidence; the fixed
+P/F plans and conservative owner-clock waits are library policy. No reference
+bytes or unsupported write gates changed.
+
+Tools: GCC 15.1.0 MinGW-W64, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2 and the existing managed PlatformIO Core with native platform
+1.2.1. Tests use strict warnings and active Release checks. Subagents used
+separate build/p12-tests and build/p12-review trees; lead used build/native.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Full strict native Debug/Release | PASS | 6/6 registered CTests each; independent public headers and compile-only future contracts build; every newly delivered method links through the real library |
+| Read-only owner behavior | PASS | 34,042 new profile checks: all seven exact variants, P/F allowed-read traces, zero writes, no desired adoption, raw/typed validity, normal generation increments and preservation, no P trust promotion, full initial/invalidated reconciliation, independent termination and reserved controls |
+| Interruptions/time | PASS | Zero/one/larger budgets; each read and final fresh-time boundary; first backend error/detail; cancel/end/expiry; partial receive bytes ignored; pending reset wait, rollover, deadline equality and no extra pass when reset stays asserted |
+| Prior regressions | PASS | 20,490 owner checks; 161,670 protocol checks; 8,602,548 codec checks; value/validator/version/launcher suites unchanged and passing |
+| Independent review regression | PASS | Public probe and retained all-variant tests disprove stale termination after a changed disable bit without full configuration trust; pre-fix tests failed, fixed tests pass; old complete raw/time/generation remains intact |
+| Public/package boundary | PASS | Actual 36-file source-equal archive, matching IDF allowlist and resolvable relative guide links; extracted renamed tests-OFF consumer beneath unrelated Git, no Python/Git/Doxygen/PIO on child PATH; public C++17 requirement propagates |
+| Native PlatformIO | PASS | Managed Core builds all real sources, links and runs the ordinary native consumer; no firmware claim |
+| Documentation/version | PASS | Strict Doxygen; 17 public structs, real decoder/validators and all 17 delivered owner methods visible; future callable methods absent; links/anchors, UTF-8/LF/whitespace, eight vendor hashes and no-op version sync |
+| Deferred public cases | NOT RUN | Desired-mismatch/recovery after apply belongs to prompt 13; actual interrupted mode/recovery-write histories belong to prompts 13-14. Generation saturation remains the reviewed unchanged bounded increment, without private-state injection or an impractical billions-operation test |
+| Hardware/other tools | NOT RUN | No SDK firmware or physical board qualification. The recorded same-day MinGW probe lacks ASan/UBSan runtimes; MSVC/Clang/clang-format unavailable. Remote CI excluded by the initial promptset policy |
+
+Commands from repository root:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+& build/native/test/Release/tusb32x_operations.exe
+& build/native/test/Release/tusb32x_protocol.exe
+doxygen Doxyfile
+python build/p10-doxygen.py
+python build/p12-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p12.tar.gz
+python build/p12-package.py
+git diff --check
+```
+
+The build/p10/p12 scripts are session-only inspection aids, not delivered guards.
+The package script checks every archived byte against current source, source
+selection and guide links, then builds/runs the real ordinary consumer with a
+restricted child PATH. No framework or sibling include path is introduced.
+The independent reviewer also compiled the owner tests directly with -O2,
+-UNDEBUG and strict warnings, outside the lead's CMake tree.
+
+An early test compile rejected aggregate assignment `fake = {}`; the fixture now
+uses an explicit `Fake{}` value. A later independent probe exposed stale
+termination proof; its regression failed before correction. Both were fixed
+before final passing runs, without weakening checks or changing expected silicon
+bytes. No host result above is physical timing or electrical evidence.

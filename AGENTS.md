@@ -11,7 +11,8 @@ composition and register transport/identity checks,
 alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
 It also provides a non-copyable owner facade with bus-silent lifecycle,
-instance-local tokens, retained results and read-only initialization. Other
+instance-local tokens, retained results, read-only initialization, profile
+observation and read-only reconciliation. Desired-profile apply/verification, other
 operation families and framework firmware remain planned. Do not describe planned
 interfaces, commands or builds as implemented or tested.
 

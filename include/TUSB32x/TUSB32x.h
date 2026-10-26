@@ -179,6 +179,8 @@ enum class ProfileField : uint16_t {
 /// settings even on CONFIGURATION_MISMATCH; read-profile alone cannot promote trust. Result take
 /// never adopts desired or erases interrupted effects. Historical verified values can remain valid
 /// records while state is UNKNOWN; their generation does not assert current usability.
+/// Termination can be proved independently of full profile trust. A newly observed contrary
+/// disable bit invalidates that proof even if a later read fails before replacing this image.
 struct ConfigurationSnapshot {
   bool hasDesiredProfile = false; ///< An accepted desired candidate exists; not actual device proof.
   DeviceProfile desiredProfile{}; ///< Last accepted desired settings; never an implied write.
@@ -350,7 +352,7 @@ struct DriverDiagnostics {
 /// @brief Serialized application-owned cooperative driver; no allocation or implicit I2C.
 /// @details Only poll invokes transport. Borrowed context must live until end returns. No ISR use,
 /// concurrent access or callback reentry. One active token becomes one immutable retained result.
-/// Initialization only reads; later operation families are not yet exposed. Cached copies remain
+/// Initialization, profile observation and reconciliation only read. Cached copies remain
 /// historical unless their validity and current trust allow use. This object cannot be copied/moved.
 class TUSB32x {
  public:
@@ -384,6 +386,27 @@ class TUSB32x {
   /// @return INVALID_PARAM, NOT_BOUND, BUSY, RESULT_PENDING, TOKEN_EXHAUSTED in that order,
   /// or IN_PROGRESS. Admission clears initialization usability; no callbacks or writes.
   Status startInitialize(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit one persistent-profile observation; no desired adoption or trust promotion.
+  /// @param[in] timing Owner milliseconds with unsigned deadline-now strictly in (0,2^63).
+  /// @param[out] token New token on IN_PROGRESS; unchanged on rejection.
+  /// @return INVALID_PARAM, NOT_BOUND, BUSY, RESULT_PENDING, TOKEN_EXHAUSTED in order,
+  /// or IN_PROGRESS. Admission is bus-silent and preserves current evidence.
+  /// @note Uses four scalar reads on 320 variants, three on 322I. Complete raw/decoded data
+  /// publishes after fresh time; partial failure preserves the previous image. Contradictory
+  /// controls invalidate trust immediately, without erasing identity or historical evidence.
+  /// Complete reserved controls return CONFIGURATION_UNKNOWN; otherwise observation returns OK.
+  Status startReadProfile(const OperationTiming& timing, OperationToken& token);
+  /// @brief Admit read-only identity/control/effect proof, available without initialization.
+  /// @param[in] timing Immutable owner millisecond interval strictly in (0,2^63).
+  /// @param[out] token New token on IN_PROGRESS; unchanged on rejection.
+  /// @return INVALID_PARAM, NOT_BOUND, BUSY, RESULT_PENDING, TOKEN_EXHAUSTED in order,
+  /// or IN_PROGRESS. No callbacks at admission and no desired-profile replacement.
+  /// @note At most 5 base/322 or 6 extended callbacks. Retained pending reset first requires
+  /// 96 ticks from the first fresh poll; interrupted LI/HI/LAI/HAI mode requires 6 ticks. The
+  /// deadline is never extended. Newly discovered reset remains unknown without another pass.
+  /// Full proof may establish KNOWN actual with CONFIGURATION_MISMATCH against retained desired;
+  /// unresolved proof returns CONFIGURATION_UNKNOWN. Old failed results are never rewritten.
+  Status startReconcile(const OperationTiming& timing, OperationToken& token);
   /// @brief Advance one bounded read-only owner turn; no sleep or retry.
   /// @param[in] token Exact represented token; zero is INVALID_PARAM, absent is RESULT_NOT_AVAILABLE,
   /// different is TOKEN_MISMATCH, checked before time. Terminal calls return frozen status unchanged.
@@ -392,8 +415,9 @@ class TUSB32x {
   /// @param[in] maxTransfers Callback ceiling; zero permits local transitions only. Basic callbacks
   /// always stop the turn after one invocation, even with a larger ceiling. Failed attempts count.
   /// @return IN_PROGRESS or terminal outcome. Deadline expires before new traffic/pending success;
-  /// callback failure stays primary with unknown time. Complete initialization uses 5 base/322 or
-  /// 6 extended callbacks, no writes. Timeout includes lock/all phases and clips to remaining time.
+  /// callback failure stays primary with unknown time. Initialize/reconcile use at most 5 base/322
+  /// or 6 extended callbacks; profile reads use 4 base/extended or 3 on 322. No writes.
+  /// Timeout includes lock/all phases and clips to remaining time.
   Status poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers = 1);
   /// @brief Cancel matching active work locally; no rollback, I2C or fabricated completion time.
   /// @param[in] token Exact token with the same zero/absent/mismatch precedence as poll.
@@ -427,7 +451,9 @@ class TUSB32x {
   /// @brief Clear only all-callback totals/lastStatus; no callbacks or managed-streak/effect changes.
   void clearTransportStats() { _stats = {}; }
  private:
-  enum class InitPhase : uint8_t { IDENTITY, REVISION, CONFIG08, CONFIG09, CONFIG0A, CONFIG45, DONE };
+  enum class ReadPhase : uint8_t {
+    WAIT, IDENTITY, REVISION, CONFIG08, CONFIG09, CONFIG0A, CONFIG45, DONE
+  };
   DriverConfig _config{};
   bool _hasAssociation = false;
   uint64_t _lastToken = 0;
@@ -439,18 +465,24 @@ class TUSB32x {
   PortSnapshot _port{};
   TransportStats _stats{};
   DriverDiagnostics _diagnostics{};
-  InitPhase _phase = InitPhase::IDENTITY;
+  ReadPhase _phase = ReadPhase::IDENTITY;
+  bool _waitReset = false;
+  bool _waitMode = false;
   bool _pending = false;
   uint8_t _received[8]{};
   Status _pendingStatus{};
   Status checkToken(OperationToken token) const;
+  Status startObservation(OperationKind kind, const OperationTiming& timing, OperationToken& token);
   Status finish(Status status, bool timeValid = false, uint64_t nowMs = 0);
+  void invalidateConfiguration();
   void invalidateUsability();
   void clearTarget();
   bool unresolved() const;
   void publishIdentityRead();
   void acceptRead();
   Status publishConfiguration();
+  Status compareObservedProfile(const DeviceProfile& expected);
+  void observeControl(uint8_t reg, uint8_t value);
 };
 
 }  // namespace TUSB32x

@@ -1,12 +1,21 @@
 # Changelog
 
 This checkout contains audited implementation contracts, portable C++17 values
-and a cooperative owner engine with read-only initialization.
+and a cooperative owner engine with read-only initialization, profile observation
+and reconciliation.
 Entries below distinguish those artifacts from planned device-driver functionality.
 
 ## Unreleased
 
 ### Added
+
+- Linked `startReadProfile` and read-only `startReconcile` through the existing
+  token/result engine. Profile observation preserves raw/typed validity and can
+  disprove old trust without promoting new controls. Complete reconciliation
+  proves actual identity/configuration and termination/reset evidence, including
+  a bounded wait for retained reset uncertainty; it never replays writes or adopts
+  desired settings. TUSB322I readable controls remain independent of write gates.
+  Apply and desired-profile verification remain prompt 13 work.
 
 - Non-copyable owner facade with atomic bus-silent binding/lifecycle,
   nonreused uint64 operation tokens, one retained terminal result and exact

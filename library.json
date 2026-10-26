@@ -1,7 +1,7 @@
 {
   "name": "TUSB32x",
   "version": "0.1.0-dev.1",
-  "description": "Portable C++17 TUSB32x owner lifecycle, read-only initialization, local validators and register decoding. Other device operations remain in development.",
+  "description": "Portable C++17 TUSB32x owner lifecycle, read-only initialization, profile observation/reconciliation, validators and decoding. Write operations remain in development.",
   "keywords": ["tusb320", "tusb320lai", "tusb322i", "usb-type-c", "i2c"],
   "authors": [
     {"name": "Thymos Solution s.r.o", "email": "info@thymos.cz", "url": "https://www.thymos.cz"},

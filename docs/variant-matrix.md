@@ -7,7 +7,12 @@ support. Register encodings are now specified in the
 [device procedures](device-behavior.md).
 Public values, validators and supplied-byte `decodeRegister` now exist, with
 private transport/identity and pure codec/composition checks through prompt 10.
-Device operations and CLI names below remain planned contracts. Pure decoding
+The owner now implements initialization, profile observation and read-only
+reconciliation for all seven I2C variants, including documented readable TUSB322I
+controls. Full identity/control/effect proof can establish KNOWN actual settings;
+this does not grant write permission or exact-part identification from a shared
+signature. Apply/desired verification, other device operations and CLI names
+below remain planned contracts. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding
 or comparison. Existing equivalent DRP00/11 is preserved during unrelated
 changes; a real non-reset return to DRP remains unavailable.
