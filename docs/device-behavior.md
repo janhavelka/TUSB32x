@@ -46,6 +46,10 @@ their safe control image; apply requires known actual controls at admission.
 
 ## Transport framing and callback contract
 
+Prompt 9 implements the [private terminal transport](transport.md) and its host
+protocol checks. The owner procedures below remain specified for later prompts;
+no facade, SDK adapter or physical framing/timing qualification exists yet.
+
 Every logical read selects a one-byte pointer, including repeated reads of the
 same register. Select **STOP-separated pointer/write then read** for the standard
 application adapters, directly following the sources above:

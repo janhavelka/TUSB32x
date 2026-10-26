@@ -131,7 +131,9 @@ the baseline and prompt6 contract; this table adds no alternate error vocabulary
 
 N14 is a positive admission boundary placed beside the gated cases to prevent
 over-broad rejection. N21 is a helper defect demonstration, not a library call.
-N24/N25 require injected callback failures when the real transport exists.
+Prompt 9 tests N01-N05/N11-N13 access boundaries and N25 scratch-output
+preservation through the private transport. Its write fixtures inject before/after
+effects with the same backend error; the managed multi-step N24 sequence remains later work.
 
 Later test owners: protocol/identity ranges in prompts9/18; exhaustive codecs and
 write images in10/18; profile/reset/recovery/IRQ effects in13/14/16/18; port

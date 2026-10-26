@@ -248,3 +248,37 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
 - Retain the explicit package content set. Use source-host URLs for intentionally
   excluded evidence and relative links between shipped guides, so archive
   navigation works without shipping vendor or audit machinery.
+
+## Prompt 9: private terminal transport and identity
+
+- Keep one private ProtocolContext borrowing existing owner config/stats/
+  diagnostics and one invocation boundary. No public facade/raw methods,
+  ownership manager, synchronous acquisition engine or framework transport is
+  introduced. Pure signature/revision comparisons consume complete observations;
+  the later owner retains raw validity and authorizes lifecycle actions.
+- A fixed seven-variant capability table gates revision/RdRp presence and exact
+  revision values. Range reads stay wholly in 00..0A (up to 11 bytes) or one
+  present 45/A0. Writes receive precomposed bytes and enforce access, including
+  the complete TUSB322I 08/09 gates. Safe composition and sequence prerequisites
+  remain mandatory caller work in prompts 10 onward.
+- All invoked failed writes retain POSSIBLE acceptance, including NACK_ADDR and
+  I2C_BUSY. Current Status callbacks have no independent phase/byte channel, so
+  the transport cannot prove that an attempted data-changing write had no effect.
+  CALLBACK_SUCCEEDED describes only a complete callback, never final verified
+  HardwareEffect::CONFIRMED. Read pointer selection is not a data-changing write.
+- Count attempts before invoking, normalize afterward, and update saturating
+  all-source totals exactly once. Raw callbacks do not touch managed history.
+  Keep legal callback detail/text; normalize every owner/progress/invalid code
+  to I2C_ERROR while preserving full detail. Retain last-failure evidence after
+  success and invalidate only affected callback-time flags, leaving numeric
+  history untouched. Transport never promotes initialized or configuration trust.
+- Clip the uint64 available budget before uint32 narrowing and reject zero
+  locally. Fixed scratch RX is published only after complete normalized OK;
+  adapters must detect short transfers before returning OK. TI's selected
+  STOP-separated pointer/read framing needs application-wide serialization and
+  one proved aggregate backend bound, not renewed per-phase timeouts.
+- Use TI-derived scripted expectations, independent of production codecs, for
+  exact frames, range/variant rejection, all status bytes, partial-read failures,
+  before/after-error write effects, saturation and exact identity/revision.
+  The inspected Renode pointer/multi-byte behavior and public revision 06 are
+  counterexamples, not accepted device behavior.

@@ -6,7 +6,8 @@ This repository will provide a general-purpose, framework-neutral C++17 library
 for the verified TUSB320 family, starting with TUSB320LAI. It currently contains
 passive public values, Status helpers, pure binding/profile validators, a CMake
 library target and host consumer, deterministic metadata/version tools and native
-IDF component registration, alongside the audit, TI references and prompts.
+IDF component registration, plus private register transport/identity checks,
+alongside the audit, TI references and prompts.
 Test commands are in [test/README.md](test/README.md).
 The device facade and framework firmware remain planned. Do not describe planned
 interfaces, commands or builds as implemented or tested.
@@ -94,7 +95,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the two C++ suites plus `tusb32x_version_sync` and, on Windows,
+  and run the three C++ suites (including `tusb32x_protocol`) plus
+  `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only planned
   contracts are never behavioral tests.
 - Version truth is `library.json`. Run `python scripts/generate_version.py sync`

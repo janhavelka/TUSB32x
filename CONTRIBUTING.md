@@ -7,7 +7,8 @@ Use the [engineering baseline](docs/prompts/ENGINEERING_BASELINE.md) for public
 names and [maintainability rules](docs/prompts/MAINTAINABILITY.md) for code/docs.
 
 The implemented library contains portable values, Status helpers and pure
-validators only. Add callable declarations with real definitions and link checks;
+validators, plus a private terminal transport/identity layer. Add public callable
+declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
 hardware stubs or empty future source files. Document behavior and errors with
 the change, update Unreleased and distinguish software checks from hardware proof.
@@ -23,7 +24,7 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Three runtime CTest suites are registered on all hosts, plus
+active in Release. Four runtime CTest suites are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
 Also configure, build and run the [ordinary consumer](examples/host/basic/README.md)

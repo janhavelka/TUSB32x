@@ -13,12 +13,14 @@
     "TUSB32x/TUSB32x.h", "TUSB32x/Config.h", "TUSB32x/Status.h",
     "TUSB32x/CommandTable.h", "TUSB32x/Version.h"
   ],
-  "build": {"includeDir": "include", "srcDir": "src", "srcFilter": "+<TUSB32x.cpp>"},
+  "build": {"includeDir": "include", "srcDir": "src", "srcFilter": "+<TUSB32x.cpp> +<TUSB32xProtocol.cpp>"},
   "export": {
     "include": [
-      "include/TUSB32x/*.h", "src/TUSB32x.cpp", "CMakeLists.txt",
+      "include/TUSB32x/*.h", "src/TUSB32x.cpp", "src/TUSB32xProtocol.cpp",
+      "src/TUSB32xProtocol.h", "CMakeLists.txt",
       "library.json", "idf_component.yml", "LICENSE", "README.md", "CHANGELOG.md",
       "Doxyfile", "docs/README.md", "docs/api-contracts.md", "docs/architecture.md",
+      "docs/transport.md",
       "docs/register-map.md", "docs/register-vectors.md", "docs/variant-matrix.md",
       "docs/device-behavior.md", "docs/feature-coverage.md", "docs/development.md",
       "examples/README.md", "examples/host/basic/CMakeLists.txt",

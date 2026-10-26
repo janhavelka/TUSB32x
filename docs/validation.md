@@ -1004,3 +1004,81 @@ MSVC/Clang/clang-format remain unavailable on PATH; this MinGW lacks the previou
 probed sanitizer libraries, so no new sanitizer pass is claimed. No sibling was
 edited and no remote CI was dispatched or polled. Final commit, upstream equality
 and clean task state are reported in the handoff and next progress update.
+
+## Prompt 9: private transport and exact identity, 2026-10-26
+
+Started clean and synchronized at `d7fbd59a3604d1af70dc9c751b44fa55742fb878` on
+`promptset/tusb32x-implementation-20261023`; fetch showed equal upstream, zero
+ahead/behind. Read the full original prompt and applicable contracts. Current
+peer source, examples, runner/test expectations, AGENTS and workflow definitions
+were re-audited; full revisions/clean states/adopted-rejected choices and exact
+TI/pinned-public sources are in [execution-9-peers](audit/execution-9-peers.md).
+No sibling was edited/built and no remote CI was dispatched, polled or queried.
+
+Tools freshly queried: CMake/CTest 4.0.1, Ninja 1.12.1, GCC 15.1.0 MinGW-W64
+UCRT MCF SEH, Python 3.12.10 and Doxygen 1.13.2. Native PlatformIO uses existing
+managed Core 6.1.19 and pinned platformio/native 1.2.1, with no second Core.
+
+| Check | Result | Evidence and boundary |
+| --- | --- | --- |
+| TI source and pinned counterexamples | PASS | Current B/L/A/V PDF downloads match archived SHA-256; all eight archives intact; address/framing/ID/revision/map pages read, four identity tables visually inspected; pinned Go/Rust/Renode hashes/source bodies verified |
+| Registered protocol | PASS | 161,461 active checks, fixed-size scripted expectations, all variants/address bytes/register offsets/Err representations/revisions, ranges/wrap/length/budget boundaries and exact pointer framing |
+| Failure/effect/accounting | PASS | Partial RX never published, all legal native detail/text retained, owner/invalid statuses normalized, identical error with/without applied write remains POSSIBLE, saturating independent totals/streaks, retained failures, raw/managed/time/lifecycle separation and independent instances |
+| Identity transport and pure checks | PASS | Exact eight-byte ascending signatures including NUL, separate 322I identity, wrong/reversed/partial/null/oversize inputs, exact revision policy including 06 mismatch, raw byte retained after successful callback, no base A0 |
+| Strict native Debug/Release | PASS | 5/5 genuine CTests each; public headers independently compile, planned-only fixtures remain build checks, 76,452 validator cases and existing values/version/launcher suites preserved |
+| Independent and direct builds | PASS | Strong reviewer rebuilt registered Release protocol: 161,461 checks/1 CTest; author direct GNU strict C++17 Debug and optimized -O2 -DNDEBUG builds pass with checks active |
+| Version and docs | PASS | sync/check/no-op preserve stable 0.1.0-dev.1; strict Doxyfile without suppressed warnings, 17 public structs/real helpers/four version constants and four private protocol functions visible |
+| Explicit sources/package | PASS | Two real CPP units shared host/component/PIO; real 32-file archive includes private protocol header and transport guide, no vendor/audit/test/tool/build payload; IDF include set matches |
+| Tests-OFF consumer | PASS | Renamed archive beneath unrelated Git, no Git/Python/Doxygen/PIO on child PATH, strict Release compile/link/run, C++17 propagated from C++11 baseline; four compiled TUs |
+| Native PlatformIO | PASS | Clean real native host build compiles both core units, links/runs existing consumer with version and zero fake attempts |
+| Component registration | PASS, host fixture only | Captures exact two-source/public include/C++17 registration and compiles/links/runs actual source plus consumer; no SDK/firmware claim |
+| Source/docs consistency | PASS | Complete scoped diff/whitespace, UTF-8/LF/final newline, local/own-source links and anchors, unchanged public callable inventory and archived terms/hashes |
+| Sanitizer/toolchain limits | BLOCKED/NOT RUN | Fresh ASan/UBSan probe cannot link -lasan/-lubsan; cl, clang++ and clang-format absent from PATH |
+
+Commands from the repository root:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug -R '^tusb32x_protocol$' --output-on-failure
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+$env:PYTHONIOENCODING = 'utf-8'
+scripts\pio.cmd run -d examples/host/basic -e native -t clean
+scripts\pio.cmd run -d examples/host/basic -e native -t exec
+scripts\pio.cmd pkg pack . --output build/TUSB32x-p9.tar.gz
+python build/p9-package.py
+cmake -S build/p9-component-fixture -B build/p9-component-fixture/out -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/p9-component-fixture/out
+& build/p9-component-fixture/out/registration_consumer.exe
+python build/p9-docs.py
+'int main() { return 0; }' | & g++ -x c++ '-fsanitize=address,undefined' -o build/p9-sanitizer-probe.exe -
+```
+
+The final command is the unavailable-sanitizer probe, not a passed core check.
+Package/session fixtures live only under ignored build/. The package script
+checks 32 unique regular relative source-equal archive members and all remaining
+relative guide links before extraction. It creates a fresh unrelated Git parent,
+renames the extracted library, configures the real ordinary consumer with tests
+default OFF, CMAKE_CXX_STANDARD=11, CMAKE_CXX_EXTENSIONS=OFF and strict warnings,
+then builds/runs with absolute CMake/Ninja/GCC paths and child PATH limited to
+Windows system directories. No parent Git identity enters library linkage.
+These session scripts are evidence, not the future hardened package guard.
+
+Receive storage is 11 bytes, TX is 1 pointer or 2 write bytes, each helper invokes
+zero/one terminal callback, pure comparisons invoke none. Status-only adapters
+must detect short transfers; callbacks cannot prove elapsed time or phase/byte
+acceptance. Hardware STOP/START/final NACK, SDK locks/internal waits/cleanup and
+one aggregate timeout still need their own adapter/fixture qualification.
+
+Three parallel agents supplied the peer audit, independently derived scripted
+tests and strong reasoning review of actual TI/production/test sources. Lead
+reviewed/integrated all changes. No public operation, raw diagnostic method,
+decoder/composer, owner scheduling, reset/recovery/IRQ engine, firmware or hardware
+qualification is claimed. Unresolved TUSB322I write gates remain enforced. Final
+commit/upstream equality and clean-state evidence belong in the handoff and next
+progress update.

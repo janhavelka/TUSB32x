@@ -7,6 +7,11 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Private register transport with one terminal callback/accounting boundary,
+  fixed receive scratch storage, exact variant/register/range gates, conservative
+  write-acceptance evidence and pure identity/revision comparisons. Added genuine
+  scripted protocol tests; managed operations and public diagnostics remain planned.
+
 - Development metadata at 0.1.0-dev.1 with library.json as version truth,
   deterministic sync/check/bump/set tooling, generated constexpr version values
   and isolated registered fixtures. Consumer builds need no version tool or Git.

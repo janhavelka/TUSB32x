@@ -14,6 +14,8 @@ files:
   include:
     - "include/TUSB32x/*.h"
     - "src/TUSB32x.cpp"
+    - "src/TUSB32xProtocol.cpp"
+    - "src/TUSB32xProtocol.h"
     - "CMakeLists.txt"
     - "library.json"
     - "idf_component.yml"
@@ -24,6 +26,7 @@ files:
     - "docs/README.md"
     - "docs/api-contracts.md"
     - "docs/architecture.md"
+    - "docs/transport.md"
     - "docs/register-map.md"
     - "docs/register-vectors.md"
     - "docs/variant-matrix.md"

@@ -37,7 +37,7 @@ enum class Err : uint8_t {
 };
 
 /// @brief Small copied status; owns no memory and performs no I2C.
-/// @details Callback statuses are restricted to OK and I2C_* values. The future transport path
+/// @details Callback statuses are restricted to OK and I2C_* values. The private transport path
 /// normalizes other callback codes to I2C_ERROR, preserving detail. Status text has static lifetime.
 /// A status alone cannot prove hardware effects or callback completion time.
 struct Status {

@@ -1,7 +1,9 @@
 # Register access and encoding contract
 
 Completed for prompt 3 on 2026-10-23. This is a specification for later code and
-tests, not an implemented driver. TUSB320LAI remains the primary target. Read the
+tests, not a complete driver. TUSB320LAI remains the primary target.
+Prompt 9 now implements its private access allowlist and identity comparisons;
+codecs, composition and owner procedures remain later work. Read the
 [variant matrix](variant-matrix.md) for identity acceptance, board prerequisites
 and unresolved gates, and [register vectors](register-vectors.md) for independent
 expected bytes. The [device guide](device-behavior.md) now specifies procedures,

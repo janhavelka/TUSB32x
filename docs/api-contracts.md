@@ -4,9 +4,10 @@ Prompts 5-8, updated 2026-10-26. The five headers under `include/TUSB32x/` provi
 complete passive values, constexpr Status/token helpers, two pure validators
 and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
-`TUSB32x`; no device facade, decoder, bus access or operation engine is implemented
-yet. Other signatures below remain planned. Admission, publication and lifetime
-rules are specified here; later prompts publish those callable declarations with
+`TUSB32x`. Prompt 9 implements [private register transport/identity](transport.md),
+without publishing bus-access methods. No device facade, decoder or operation
+engine is implemented yet. Other signatures below remain planned. Admission,
+publication and lifetime rules are specified here; later prompts publish those callable declarations with
 their real implementations.
 
 The [baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md), [register map](register-map.md)

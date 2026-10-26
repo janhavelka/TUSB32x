@@ -4,8 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit completed prompt 8 and fix its scope;
-prompt 9 remains separate.
+Current authorization: implement prompt 9 completely; prompt 10 remains separate.
 
 ## Prompt status
 
@@ -19,7 +18,7 @@ prompt 9 remains separate.
 | [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | COMPLETE |
 | [7: host-build](prompts/7-host-build.md) | COMPLETE |
 | [8: metadata-versioning](prompts/8-metadata-versioning.md) | COMPLETE |
-| [9: transport-identity](prompts/9-transport-identity.md) | NOT STARTED |
+| [9: transport-identity](prompts/9-transport-identity.md) | COMPLETE |
 | [10: register-codecs](prompts/10-register-codecs.md) | NOT STARTED |
 | [11: owner-engine](prompts/11-owner-engine.md) | NOT STARTED |
 | [12: profile-observation](prompts/12-profile-observation.md) | NOT STARTED |
@@ -631,3 +630,56 @@ formatter and sanitizer limits remain explicit. No remote CI was dispatched or
 polled. The lead commits and synchronizes these checked corrections on the same
 branch; final commit/equality and clean-state evidence belong in the handoff and
 next progress update.
+
+## Prompt 9 execution record
+
+Completed 2026-10-26 on the same execution branch/base, starting from synchronized
+prompt 8 audit commit `d7fbd59a3604d1af70dc9c751b44fa55742fb878`. Initial worktree/
+index were clean; fetch confirmed equal upstream and zero ahead/behind. Original
+prompt 9, parent/current AGENTS, COMMON, baseline transport/status/capability/
+accounting and current API/register/procedure contracts were reread. Prompt 10
+remains separate; no public device facade or unfinished operation was introduced.
+
+Fresh [execution-9-peers](audit/execution-9-peers.md) records PCA9555/ADS1115/
+LDC1614 full revisions, clean states, exact source/example/runner/test/workflow
+paths and adopted/rejected choices. Lead verified relevant actual implementations,
+current TI source bytes and all eight archived hashes; read address/framing/map/
+revision pages and visually inspected all four identity tables. Pinned Go/Rust/
+Renode source hashes were re-fetched and their counterexamples reread. No source
+was copied into core; no silicon gate or revision policy changed.
+
+Delegation: gpt-6.1-sol/high owned only the peer audit, then reviewed package/
+source/build/document boundaries read-only. Another gpt-6.1-sol/high owned only
+the fixed scripted fake/protocol tests after shared declarations were frozen.
+gpt-6-astra/high reviewed TI/error/possible-write/accounting contracts and actual
+production/tests read-only, then independently built/ran the final registered
+Release protocol suite. The lead owns production, build/package lists, integration,
+docs and Git. No blocking reviewer issue remained; review improved timestamp/
+identity/IRQ preservation cases, source citations and framing-only fixture wording.
+
+Implemented private TUSB32xProtocol.h/.cpp with mapped single-callback reads/
+writes, fixed scratch receive storage, one terminal normalization/accounting
+boundary, explicit raw/managed classification, saturating counters, retained
+failure evidence, clipped positive budgets and independent possible-write results.
+Exact eight-byte identity and per-part revision comparisons are pure. All invoked
+failed writes remain possibly accepted without phase evidence. TUSB322I 08/09,
+absent registers and read-only targets remain gated; safe byte composition and
+owner prerequisites are explicitly deferred to their owning implementation stages.
+
+PASS: 161,461 active protocol checks, focused registered suite, strict Debug/
+Release 5/5 CTests, independent strict Release and optimized NDEBUG direct builds,
+five public-header TUs, existing validator/value/version/launcher suites, version
+sync/check/no-op, strict Doxygen and public/private visibility, actual native
+PlatformIO build/run, real 32-file archive with explicit matching component
+selection, renamed extracted tests-OFF strict consumer beneath unrelated Git
+without maintainer tools on child PATH, host-only component registration, local
+links/anchors, source style/whitespace and unchanged vendor hashes. Exact tool
+versions/commands/results are in [validation](validation.md).
+
+ASan/UBSan remain BLOCKED by missing -lasan/-lubsan in installed MinGW; MSVC,
+Clang and clang-format are unavailable on PATH. SDK framing/aggregate timeout,
+real IDF archives, framework firmware, full omission/package guards and hardware
+remain NOT RUN/later scope. No remote CI was dispatched or polled and no sibling
+was changed. The lead commits/synchronizes this complete checked unit on the
+same branch, verifies upstream equality and clean task state, and reports the
+final commit in the handoff/next progress update without a self-reference loop.

@@ -1,7 +1,7 @@
 # Checked-in version fields are synchronized by scripts/generate_version.py.
 cmake_minimum_required(VERSION 3.16)
 set(TUSB32X_VERSION "0.1.0-dev.1")
-set(TUSB32X_SOURCES src/TUSB32x.cpp)
+set(TUSB32X_SOURCES src/TUSB32x.cpp src/TUSB32xProtocol.cpp)
 
 # Warnings are private: applications choose their own diagnostic policy.
 function(tusb32x_strict_warnings target)
@@ -23,7 +23,7 @@ endif()
 
 # CMake project VERSION accepts the numeric core, while TUSB32X_VERSION keeps SemVer suffixes.
 project(TUSB32x VERSION 0.1.0 LANGUAGES CXX)
-option(TUSB32X_BUILD_TESTS "Build the portable contract and validator checks" OFF)
+option(TUSB32X_BUILD_TESTS "Build portable contract, validator, protocol and tooling checks" OFF)
 add_library(TUSB32x STATIC ${TUSB32X_SOURCES})
 target_compile_features(TUSB32x PUBLIC cxx_std_17)
 target_include_directories(TUSB32x PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

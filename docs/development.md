@@ -1,8 +1,9 @@
 # Development metadata and version tools
 
 `library.json` is version truth. The current `0.1.0-dev.1` marks an incomplete
-driver: values, Status helpers and local validators are implemented; device
-operations, adapters and firmware qualification remain planned. Version text
+driver: values, Status helpers, local validators and private transport/identity
+helpers are implemented; device operations, adapters and firmware qualification
+remain planned. Version text
 identifies the package, never the firmware flashed on a board.
 
 ## Version workflow
@@ -42,12 +43,12 @@ leave a partial sync. Repair the failure and rerun the intended command.
 
 Plain host builds need CMake 3.16+ and a C++17 toolchain. Tests default OFF and
 consumers never discover Python, Git, Doxygen or PlatformIO. Tests ON find Python
-3.10+ for the registered tusb32x_version_sync suite alongside the two C++ suites.
+3.10+ for the registered tusb32x_version_sync suite alongside the three C++ suites.
 Windows additionally registers tusb32x_pio_launcher; its temporary CMD fixtures
 need no Core installation. Run them directly with `python tools/test_pio_launcher.py -v`.
 See [native checks](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md) in a source checkout.
 
-If `idf_component_register` exists, CMake registers the same explicit source and
+If `idf_component_register` exists, CMake registers the same explicit sources and
 public include/C++17 requirements as a native IDF component. Otherwise it creates
 the ordinary host target TUSB32x. The manifest's `idf >=5.3.0` is a dependency
 admission floor adopted from current TMP1x2/24Cxx and checked against the
@@ -82,7 +83,8 @@ prompt 33 work; a warning-free generation alone does not prove visibility.
 
 ## Package and ownership boundaries
 
-The PlatformIO export list contains public headers, the one real source, CMake,
+The PlatformIO export list contains public headers, both real sources and their
+private protocol header, CMake,
 manifests, license, selected guides and the real host consumer. Reference/vendor
 artifacts, prompts, audits, progress/validation machinery, tests, scripts and
 generated build output are excluded from ordinary archives. Maintainer commands

@@ -1,7 +1,8 @@
-# Native contract, validator and version checks
+# Native contract, validator, transport and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
+Prompt 9 adds private terminal transport and exact identity/revision checks.
 The device facade and behavioral driver suites remain planned.
 
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
@@ -22,6 +23,11 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
 - `tusb32x_validators`: variant/address/callback/timeout checks, exhaustive valid
   profile combinations, invalid enum bytes, input preservation and zero counting
   callbacks; unavailable valid fields return UNSUPPORTED_FEATURE.
+- `tusb32x_protocol`: fixed scripted exact address/kind/bytes/length/timeout and
+  extra-call expectations; variant/register/range gates, pointer every read,
+  scratch publication, legal/illegal callback status/detail, write acceptance,
+  saturating all/managed accounting, independent instances and TI-derived
+  identity/revision cases. This is private-helper behavior, not a working driver.
 - `tusb32x_version_sync`: 18 isolated Python fixture tests for version truth,
   drift/CLI exits, alternate-form duplicate rejection, no-op bytes/mtimes,
   no Git or enclosing identity, and dirty example independence. The suite cannot
@@ -97,6 +103,6 @@ GENERATE_XML=YES and GENERATE_LATEX=NO. Inspect generated XML for all 17 public
 structs; no warning alone would not prove their visibility. The retained evidence
 and exact command are in [validation](../docs/validation.md).
 
-These checks prove current portable values, pure validators, linkage and planned
-signature syntax. Protocol, transport execution, owner behavior, health projection, framework builds,
+These checks prove current portable values, pure validators, private register
+transport/identity, linkage and planned signature syntax. Owner behavior, health projection, framework builds,
 full package qualification and physical hardware tests remain future work.

@@ -6,6 +6,8 @@
   application-owned transport boundary.
 - [Development](development.md): version truth, generator exits, tool choices,
   component registration and package contents.
+- [Transport](transport.md): implemented private framing, access, accounting and
+  identity checks, with adapter and later owner limits.
 - [Variants](variant-matrix.md), [register map](register-map.md) and
   [register vectors](register-vectors.md): source-backed capability and encoding
   specifications; they do not claim driver or hardware qualification.

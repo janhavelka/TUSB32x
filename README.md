@@ -3,7 +3,8 @@
 TUSB32x is a framework-neutral C++17 library in development, starting with
 TI TUSB320LAI. It currently provides passive public values, constexpr Status
 helpers, pure binding/profile validators and stable package version constants.
-Device operations, transport execution and firmware adapters remain planned.
+The library also contains tested [private transport/identity helpers](docs/transport.md).
+The public device facade, managed operations and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -39,7 +40,7 @@ The [real host consumer](examples/host/basic/README.md) builds and runs multiple
 translation units with CMake or pinned native PlatformIO. Its callbacks are
 explicitly fake and never imply a physical device. If native IDF's
 `idf_component_register` exists, the root CMake file registers the same real
-source as a component. Registration and dependency admission are not linked
+sources as a component. Registration and dependency admission are not linked
 firmware evidence.
 
 ## Develop from a source checkout
