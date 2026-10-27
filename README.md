@@ -15,6 +15,11 @@ and pure passive health projection. Firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
+The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+maps TI/software requirements to named host tests, including both legal addresses,
+ambiguous writes, interrupted recovery and retained observations. These tests
+verify software contracts; physical adapters and hardware remain unqualified.
+
 `validateDriverConfig` checks callbacks, the explicit variant/address pair and
 positive timeout. `validateProfile` checks value/variant semantics and distinguishes
 invalid inputs from unsupported settings. Both are bounded, allocation-free and

@@ -23,6 +23,10 @@ are no retries, allocation, retained buffers, clocks or framework dependencies.
 The receive buffer is fixed at 11 bytes; output is copied only after normalized
 OK. A Status-only callback cannot report a short transfer: the adapter must
 detect one and return failure before claiming OK.
+The fixed host fake rejects a scripted short receive marked OK before copying
+bytes. This catches contradictory tests; it does not prove an adapter checks its
+actual byte count. Partial receives reported as failures leave public output and
+complete observations unchanged.
 
 TI SLLSEN9F section 7.5 p15, SLLSEP2D/SLLSEQ8D section 7.4 p15 and SLLSEO5D
 section 6.5 pp15-16 show pointer selection followed by STOP and a new read.

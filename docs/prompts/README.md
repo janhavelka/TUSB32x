@@ -9,8 +9,9 @@ deterministic metadata/version tools. The owner facade now implements lifecycle,
 token/result ownership, read-only initialization, profile observation, explicit
 apply, desired verification, read-only reconciliation, explicit reset and original
 TUSB320/I dead-battery recovery, complete read-only port refresh with cached
-publication, and explicit IRQ acknowledgement/bounded service. Later operations
-remain planned.
+publication, explicit IRQ acknowledgement/bounded service, safe raw diagnostics
+and passive health. Prompt 18 closes core protocol coverage gaps. Framework
+adapters, CLI and physical qualification remain later work.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

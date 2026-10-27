@@ -1,6 +1,6 @@
 # Feature, source and verification coverage
 
-Prompts 2-17, updated 2026-10-26. This matrix defines the capability boundary;
+Prompts 2-18, updated 2026-10-27. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
@@ -25,8 +25,8 @@ Prompt 3 completed the [register contract](register-map.md) and
 encodings, comparison/composition and negative cases. Rows below that name
 prompt 3 now have their register specification evidence. Read-only initialization,
 profile observation, apply, verification, reconciliation, reset, base recovery,
-port refresh and IRQ acknowledgement/service have owner behavior; other device
-operations remain planned. Prompt 10 implements and tests the pure
+port refresh and IRQ acknowledgement/service have owner behavior; raw diagnostics and passive health are also delivered. CLI and framework
+adapters remain planned. Prompt 10 implements and tests the pure
 field codecs/comparison and qualified byte composer, without executing any
 procedure. No unresolved gate was closed by byte arithmetic.
 
@@ -37,12 +37,16 @@ profile reads and read-only reconciliation are implemented through prompt 12;
 prompt 13 adds explicit profile application and desired verification; prompt 14
 adds explicit reset and original-part recovery; prompt 15 adds complete port
 refresh and cached publication; prompt 16 adds explicit IRQ acknowledgement and
-bounded service; prompt 17 adds raw diagnostics and passive health. The source-to-operation mapping
+bounded service; prompt 17 adds raw diagnostics and passive health. Prompt 18's
+[protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+maps the complete core requirement set to actual runtime test functions and
+commands, including both legal addresses and both outcomes of failed raw writes.
+The source-to-operation mapping
 below supplements the feature rows without turning a future test into a PASS.
 
 | Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
-| Register access/defaults and safe byte composition — Pure helpers and safe owner raw access implemented | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; PASS private access/transport9 and pure codecs/composition10; owner/CLI conformance remains18/21/22 |
+| Register access/defaults and safe byte composition — Pure helpers and safe owner raw access implemented | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; PASS private access/transport9 and pure codecs/composition10; owner conformance18 PASS; CLI21/22 remains planned |
 | Explicit variant/address validation and binding — Implemented; CLI Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | Every legal pair, address/variant rejection and zero validator callbacks7; atomic owner binding and target association11; CLI20 |
 | Eight-byte identity — Implemented through initialization | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / future init, probe, capabilities | Independent fixed/private transport vectors9 and read-only engine11; failure/mismatch retains raw evidence without inferred model; broader conformance18, CLI22 |
 | Revision acceptance — Implemented through initialization; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize; readRegisterSync / init, reg, diag | Private comparisons9 and read-only engine11; B omits A0, unknown revision retains raw/mismatch evidence and cannot create KNOWN; conformance18, CLI22 |
@@ -301,4 +305,5 @@ arithmetic and saturation without public test seeds. Health threshold1/default3/
 UINT32_MAX and invalid0 cases, OFFLINE explicit work, failed initialization,
 clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
-Broader conformance, CLI, adapters and electrical qualification remain later work.
+Prompt 18 completes the core protocol coverage audit. Owner portability, CLI,
+adapters and electrical qualification remain later work.

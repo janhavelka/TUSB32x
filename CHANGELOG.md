@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Protocol conformance matrix mapping TI/software requirements to named runtime
+  cases. Added public operation checks at both legal addresses for every supported
+  variant, both hardware outcomes of failed raw writes/ACKs, and unrelated-read
+  trust-retention checks. The scripted fake now rejects an incomplete receive
+  falsely marked successful. No production behavior or silicon gate changed.
+
 - Bounded `readRegisterSync`/`writeRegisterSync` using the existing terminal
   callback/accounting path and safe composer. Raw writes require current actual
   proof, reject procedure shortcuts and invalidate trust before possible effect.

@@ -36,6 +36,8 @@ using I2cWriteFn = Status (*)(uint8_t address, const uint8_t* data, size_t lengt
 /// @param[in] timeoutMs Positive aggregate milliseconds for lock, both phases, delays and cleanup.
 /// @param[in] user Borrowed application context; null is permitted when unused.
 /// @return OK only for both complete phases; otherwise a terminal I2C_* status with full detail.
+/// @note Status carries no received byte count. The adapter must detect a short read and return
+/// failure; the core cannot detect an incomplete receive falsely reported as OK.
 /// @note Selected framing is pointer-write STOP then read, with serialization across the STOP.
 /// Repeated START needs explicit adapter/part evidence. No core/adapter-added retry or recovery,
 /// retained buffers, asynchronous completion or instance reentry. SDK internal waits/cleanup require

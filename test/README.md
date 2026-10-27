@@ -332,3 +332,19 @@ prove OFFLINE allows explicit work and managed success clears the streak while
 raw success/failure, detach and source-stat clearing do not. Result delivery and
 clearing preserve unresolved recovery, trust, port age and active/retained slots.
 The suite is behavioral CTest evidence; it does not qualify physical adapters.
+
+## Protocol conformance
+
+The [requirement matrix](../docs/protocol-conformance.md) maps TI/software rules
+to real runtime functions and registered suites. `test_protocol_conformance.cpp`
+is part of `tusb32x_operations`; it checks public initialization, refresh, ACK
+(or the 322I gate) and raw reads at both legal addresses for all seven variants.
+Expected addresses, identity bytes and frames are independent literals.
+
+The scripted transport rejects short receives falsely marked OK; a Status-only
+callback cannot tell the core how many bytes arrived. Existing failed-receive
+tests separately check unchanged outputs and complete observation retention.
+Diagnostics tests cover both hardware outcomes of every supported failed raw
+write and ACK. A later successful identity-byte read cannot repair write trust
+or erase the original transport failure. These cases reuse the existing fixed
+fake and counters without another engine or simulation framework.

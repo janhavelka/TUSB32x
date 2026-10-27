@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 17 end to end; later prompts remain separate.
+Current authorization: implement prompt 18 end to end; later prompts remain separate.
 
 ## Prompt status
 
@@ -27,7 +27,7 @@ Current authorization: implement prompt 17 end to end; later prompts remain sepa
 | [15: port-snapshots](prompts/15-port-snapshots.md) | COMPLETE |
 | [16: interrupt-service](prompts/16-interrupt-service.md) | COMPLETE |
 | [17: diagnostics-health](prompts/17-diagnostics-health.md) | COMPLETE |
-| [18: protocol-conformance](prompts/18-protocol-conformance.md) | NOT STARTED |
+| [18: protocol-conformance](prompts/18-protocol-conformance.md) | COMPLETE |
 | [19: owner-portability](prompts/19-owner-portability.md) | NOT STARTED |
 | [20: cli-foundation](prompts/20-cli-foundation.md) | NOT STARTED |
 | [21: cli-operation-control](prompts/21-cli-operation-control.md) | NOT STARTED |
@@ -1349,3 +1349,41 @@ are NOT RUN; remote CI remains prompt34. Exact commands/results and limits are i
 The lead commits and syncs this complete checked unit on the same branch, verifies
 upstream equality/clean state, and reports final commit/sync in the handoff and
 next progress update. Prompt18 remains NOT STARTED.
+
+## Prompt 18 protocol conformance (2026-10-27)
+
+Started clean at `8507681e92938b3eb8d0a7aa7308a1c8318ecbaf`, the completed prompt 17,
+on the recorded execution branch with zero ahead/behind after fetch. Re-read the
+full prompt, shared instructions, implemented contracts/source/tests and current
+TI register/effect evidence. The [fresh peer audit](audit/execution-18-peers.md)
+records exact revisions, clean states, source/test/example/runner/build paths and
+adopted/rejected patterns for LDC1614, LSM6DS3TR, PCA9555 and ADS1115. No sibling
+changes or remote CI requests.
+
+Delegation: gpt-6-astra/high independently reviewed protocol/effect safety;
+gpt-6.1-sol/high audited tests and owned the disjoint protocol/address regressions;
+another gpt-6.1-sol/high owned the peer report and conformance matrix. The lead
+reviewed actual changes, expanded raw failure cases, integrated documentation,
+ran final checks and owns Git. No production defect was confirmed.
+
+Closed missing public high-address coverage for all seven configured variants,
+both possible raw-write/ACK failure outcomes and unrelated-read trust retention.
+The fixed fake now rejects a short receive falsely marked OK. Kept existing
+operation interruption/race tests and mapped real runtime names in
+[protocol conformance](protocol-conformance.md), without a second simulator or
+duplicate suite. Corrected a test comment that implied unproved 322I fault-read
+non-consumption. No production behavior, API, dependency or silicon gate changed.
+
+PASS: focused checks; full strict Debug and Release eight CTests each; strict
+Doxygen and visibility; source links/anchors, eight TI hashes and no-op version
+sync; source-equal 38-file package and renamed tests-OFF Release consumer beneath
+unrelated Git without maintainer tools on child PATH. A deliberately wrong
+high-address mutation passes the old operations suites but triggers 112 new
+assertion failures. Exact commands/counts are in
+[validation](validation.md#prompt-18-protocol-conformance-2026-10-27).
+
+ASan/UBSan are BLOCKED by missing MinGW runtimes; hardware, framework firmware
+and native PlatformIO execution were NOT RUN in this test/documentation unit.
+Existing TI/board gates remain unresolved. The lead commits and syncs this checked
+unit on the same branch, verifies upstream equality and clean state, and reports
+the final commit in the handoff/next progress update. Prompt 19 remains NOT STARTED.

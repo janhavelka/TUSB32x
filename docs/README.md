@@ -19,6 +19,8 @@
 - [Device behavior](device-behavior.md): implemented profile/reset/recovery/port/IRQ
   procedures, specified later operations, work bounds and silicon evidence.
 - [Feature coverage](feature-coverage.md): implemented, planned and gated work.
+- [Protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md):
+  repository-only requirement-to-test matrix and host evidence limits.
 - [Examples](../examples/README.md): the current portable consumer.
 
 Repository-only [implementation prompts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts),

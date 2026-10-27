@@ -17,6 +17,10 @@ read-only port refresh is implemented for all seven variants. Explicit IRQ
 acknowledgement and bounded service are implemented for the six 320 variants;
 TUSB322I rejects both before traffic under V_FAULT_CLEAR. Prompt 17 adds safe raw
 Sync diagnostics and pure passive health. CLI names below remain planned contracts.
+The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+covers all seven configured variants at both legal addresses through public
+operations. This checks address propagation, not physical part identification,
+strap sampling, enable polarity or closure of the unresolved gates below.
 Apply changes only differing fields, verifies the complete final image and
 retains independent termination/effect evidence after interruption. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding

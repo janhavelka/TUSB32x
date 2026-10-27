@@ -723,6 +723,24 @@ void scriptedFixtureRejectsMismatches() {
   CHECK(fake.errors == 1 && fake.calls == 1 && !fake.complete());
 }
 
+void scriptedFixtureRejectsSuccessfulShortReceive() {
+  // Status-only callbacks cannot report a byte count. The backend must reject
+  // short receive; the fake must not certify a script that violates that contract.
+  for (std::size_t filled = 0; filled < 8; ++filled) {
+    Fake fake;
+    auto& step = fake.expectRead(0x47, 0, 8);
+    step.fillLength = filled;
+    const uint8_t pointer = 0;
+    uint8_t output[8];
+    std::memset(output, 0xD3, sizeof(output));
+    const auto status = Fake::writeRead(0x47, &pointer, 1, output, 8, 20, &fake);
+    CHECK(status.code == t::Err::I2C_ERROR);
+    CHECK(status.detail == -90001);
+    CHECK(fake.calls == 1 && fake.errors == 1 && !fake.complete());
+    for (const auto byte : output) CHECK(byte == 0xD3);
+  }
+}
+
 // Manually connect pure composition to one terminal callback. These scripts prove
 // the actual [register,value] boundary, not execution/timing of an owner procedure.
 void composedWriteFrames() {
@@ -772,6 +790,7 @@ int runCodecTests();
 int main() {
   const int codecResult = runCodecTests();
   scriptedFixtureRejectsMismatches();
+  scriptedFixtureRejectsSuccessfulShortReceive();
   addressesAndBindings();
   accessAndRanges();
   framingTimeoutsAndScratch();

@@ -2078,3 +2078,70 @@ are validation evidence rather than shipped tools or fake firmware. The package
 consumer script supplies absolute compiler/CMake/Ninja paths and verifies its
 child PATH excludes maintainer tools; the package remains free of sibling paths,
 reference/vendor artifacts and audit machinery. Final source lists remain explicit.
+
+## Prompt 18 protocol conformance (2026-10-27)
+
+Started at synchronized `8507681e92938b3eb8d0a7aa7308a1c8318ecbaf` on the same
+execution branch. The [peer report](audit/execution-18-peers.md) records fresh
+read-only evidence; [protocol conformance](protocol-conformance.md) maps every
+required variant/protocol and cross-operation scenario to actual runtime cases.
+Three parallel reviews found test gaps but no production defect. The lead checked
+their findings against code/diffs, fixed the fake's successful-short-read loophole,
+added public address and raw write-effect regressions and reviewed the final unit.
+
+Tools: GNU15.1.0 MinGW-W64 UCRT/MCF, CMake/CTest4.0.1, Ninja1.12.1,
+Python3.12.10 and Doxygen1.13.2. The installed PlatformIO wrapper packs the library;
+native PlatformIO execution was not repeated for this test/documentation change.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Focused regression checks | PASS | Protocol/operations/diagnostics selection 3/3; direct changed diagnostics and public operation runs pass |
+| Full host Debug and Release | PASS | Eight registered CTests each; strict warnings and Release checks active; standalone headers/signatures compile |
+| New public address coverage | PASS | 622 checks, seven variants at both legal addresses through initialize, refresh, ACK or 322I IRQ gates, raw read and bus-silent end |
+| Protocol/codecs | PASS | 161,758 protocol and 8,602,548 codec checks; fake rejects all 0..7-byte short eight-byte receives marked OK before copying |
+| Diagnostics | PASS | 74,962 checks; every supported ordinary raw failure has applied/not-applied cases; failed raw ACK has cleared/retained latch cases; unrelated successful read does not repair trust or erase original detail |
+| Existing operation/port regressions | PASS | 20,490 owner, 35,454 observation, 89,140 apply/verify, 88,779 reset/recovery, 71,617 IRQ and 495,667 port checks; required interruptions/races retained without duplicate suites |
+| Values/validators/tooling | PASS | Passive/constexpr/multiple-TU checks, 76,452 validator checks, 18 version-tool tests and 2 Windows-launcher tests |
+| Address mutation | PASS, faulty code rejected | Isolated protocol copy changes managed 09 reads from high to low address. Old operations suites pass; new public regression rejects it with 112 failed assertions/exit 112 |
+| Short-OK fixture probe | PASS | Eight-byte request with only 3 bytes supplied returns failure/errors 1/incomplete after the fix; permanent runtime fixture covers every short length |
+| Documentation/provenance | PASS | Strict Doxygen without warnings; 17 public structs / 26 owner methods and pure functions visible; local links/anchors, UTF-8/LF, whitespace, eight archived TI SHA256 values and repeated no-op version sync |
+| Package consumer | PASS | 38 source-equal exported files, IDF inclusion matches; renamed tests-OFF Release consumer under unrelated Git compiles/links seven TUs as C++17, runs with zero fake attempts and no Git/Python/Doxygen/PIO on child PATH |
+| Sanitizers | BLOCKED | Fresh trivial link probes cannot find -lasan or -lubsan; no sanitizer runtime result claimed. MSVC/Clang/clang-format absent |
+| Separate evidence | NOT RUN | Physical bus/IRQ/electrical/current/timing qualification, framework firmware and native PlatformIO execution. Remote CI remains prompt 34; unresolved TI/board gates unchanged |
+
+Lead commands (focused checks preceded the final full suites):
+
+```powershell
+cmake -S . -B build/p18-conformance -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p18-conformance --config Debug
+ctest --test-dir build/p18-conformance -C Debug -R 'tusb32x_(protocol|operations|diagnostics)$' --output-on-failure
+cmake --build build/p18-conformance --config Debug --target tusb32x_diagnostics
+& build/p18-conformance/test/Debug/tusb32x_diagnostics.exe
+& build/p18-conformance/test/Debug/tusb32x_protocol.exe
+& build/p18-conformance/test/Debug/tusb32x_operations.exe
+cmake --build build/p18-conformance --config Debug
+ctest --test-dir build/p18-conformance -C Debug --output-on-failure
+cmake --build build/p18-conformance --config Release
+ctest --test-dir build/p18-conformance -C Release --output-on-failure
+
+& build/p18-test-audit/old_operations_address_mutant.exe
+& build/p18-test-audit/public_address_mutant.exe
+& build/p18-test-audit/short_ok_probe.exe
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p18.tar.gz
+python build/p18-package.py
+g++ -std=c++17 -fsanitize=address build/p17-sanitizer.cpp -o build/p18-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p17-sanitizer.cpp -o build/p18-ubsan.exe
+git diff --check
+```
+
+The address mutant and sanitizer probes intentionally fail as classified above.
+Ignored build scripts/executables are session evidence, not shipped dependencies.
+The lead inspected the isolated mutation/probe source and reran the executables;
+the new regression also passes against the real library in both full builds.
+Documentation clarifies that Status-only transport cannot detect a falsely
+successful short receive, DE-to-56 is arithmetic rather than permission to write
+during reset, and no explicit fault-clear write does not prove 322I read effects.

@@ -86,6 +86,9 @@ struct Fixture {
   const Part& part;
   bool inspectInvalidation = false;
   bool expectOrdinaryWrite = true;
+  // Explicit fake W1C acceptance, even when the terminal callback returns error.
+  // No IRQ timing or fault-clear behavior is inferred from this latch model.
+  bool clearIrqOnWrite = false;
   t::PortSnapshot historical{};
 
   static t::Status write(uint8_t address, const uint8_t* tx, std::size_t length,
@@ -106,7 +109,10 @@ struct Fixture {
         CHECK(f.device.diagnostics().configurationWriteUnresolved);
       }
     }
-    return Fake::write(address, tx, length, timeout, &f.fake);
+    const auto status = Fake::write(address, tx, length, timeout, &f.fake);
+    if (f.clearIrqOnWrite && length == 2 && tx[0] == 9 && (tx[1] & 0x10U) != 0)
+      f.fake.registers[9] &= 0xEF;
+    return status;
   }
 
   static t::Status writeRead(uint8_t address, const uint8_t* tx, std::size_t txLength,
@@ -412,44 +418,63 @@ void rawOrdinaryWrites() {
       for (const auto error : {t::Err::OK, t::Err::I2C_ERROR, t::Err::I2C_NACK_ADDR,
                               t::Err::I2C_NACK_DATA, t::Err::I2C_TIMEOUT,
                               t::Err::I2C_BUS, t::Err::I2C_BUSY}) {
-        Fixture f(part);
-        f.initialize();
-        f.refresh();
-        const auto before = f.device.diagnostics();
-        const auto stats = f.device.transportStats();
-        f.inspectInvalidation = true;
-        auto& step = f.fake.expectWrite(part.address, request.reg, request.value);
-        step.status = {error, -456789123, "raw ordinary write"};
-        step.applyWrite = true; // Failed writes can still reach the peripheral.
-        const auto result = f.device.writeRegisterSync(request.reg, request.value);
-        CHECK(sameStatus(result, step.status) && f.fake.calls == 1 && f.fake.complete());
-        CHECK(f.fake.registers[request.reg] == request.value);
-        const auto after = f.device.diagnostics();
-        CHECK(after.initialized && after.identity.identityValid && after.identity.identityMatches);
-        CHECK(after.configurationState == t::ConfigurationState::UNKNOWN &&
-              after.configurationWriteUnresolved);
-        CHECK(after.hardwareEffect == (error == t::Err::OK
-            ? t::HardwareEffect::PARTIAL : t::HardwareEffect::INDETERMINATE));
-        CHECK(after.lastOperationKind == before.lastOperationKind &&
-              sameStatus(after.lastOperationStatus, before.lastOperationStatus));
-        CHECK(sameEvidence(after.managedTransport, before.managedTransport));
-        CHECK(f.device.transportStats().totalAttempts == stats.totalAttempts + 1);
-        CHECK(f.device.transportStats().totalSuccess ==
-              stats.totalSuccess + (error == t::Err::OK ? 1U : 0U));
-        CHECK(f.device.transportStats().totalFailures ==
-              stats.totalFailures + (error == t::Err::OK ? 0U : 1U));
-        CHECK(health(f.device) == t::DriverState::READY);
-        CHECK(f.device.writeRegisterSync(request.reg, request.value)
-                  .is(t::Err::CONFIGURATION_UNKNOWN));
-        CHECK(f.fake.calls == 1); // No hidden read to repair the missing safe image.
-        f.device.clearTransportStats();
-        CHECK(f.device.transportStats().totalAttempts == 0 &&
-              f.device.transportStats().lastStatus.ok());
-        CHECK(f.device.diagnostics().configurationWriteUnresolved &&
-              f.device.diagnostics().hardwareEffect == after.hardwareEffect);
-        CHECK(sameEvidence(f.device.diagnostics().managedTransport, after.managedTransport));
-        CHECK(f.device.portSnapshot().sequence == f.historical.sequence &&
-              f.device.portSnapshot().invalidated);
+        for (const bool applied : {false, true}) {
+          if (error == t::Err::OK && !applied) continue;
+          Fixture f(part);
+          f.initialize();
+          f.refresh();
+          const auto before = f.device.diagnostics();
+          const auto stats = f.device.transportStats();
+          f.inspectInvalidation = true;
+          auto& step = f.fake.expectWrite(part.address, request.reg, request.value);
+          step.status = {error, -456789123, "raw ordinary write"};
+          // The callback status supplies no acceptance information in either case.
+          const uint8_t original = request.reg == 8 ? 0x80 : request.reg == 9 ? 0x94 :
+              request.reg == 0x0A ? 0x30 : 0;
+          f.fake.registers[request.reg] = original;
+          step.applyWrite = applied;
+          const auto result = f.device.writeRegisterSync(request.reg, request.value);
+          CHECK(sameStatus(result, step.status) && f.fake.calls == 1 && f.fake.complete());
+          CHECK(f.fake.registers[request.reg] == (applied ? request.value : original));
+          const auto after = f.device.diagnostics();
+          CHECK(after.initialized && after.identity.identityValid && after.identity.identityMatches);
+          CHECK(after.configurationState == t::ConfigurationState::UNKNOWN &&
+                after.configurationWriteUnresolved);
+          CHECK(after.hardwareEffect == (error == t::Err::OK
+              ? t::HardwareEffect::PARTIAL : t::HardwareEffect::INDETERMINATE));
+          CHECK(after.lastOperationKind == before.lastOperationKind &&
+                sameStatus(after.lastOperationStatus, before.lastOperationStatus));
+          CHECK(sameEvidence(after.managedTransport, before.managedTransport));
+          CHECK(f.device.transportStats().totalAttempts == stats.totalAttempts + 1);
+          CHECK(f.device.transportStats().totalSuccess ==
+                stats.totalSuccess + (error == t::Err::OK ? 1U : 0U));
+          CHECK(f.device.transportStats().totalFailures ==
+                stats.totalFailures + (error == t::Err::OK ? 0U : 1U));
+          CHECK(health(f.device) == t::DriverState::READY);
+          CHECK(f.device.writeRegisterSync(request.reg, request.value)
+                    .is(t::Err::CONFIGURATION_UNKNOWN));
+          CHECK(f.fake.calls == 1); // No hidden read to repair the missing safe image.
+          f.device.clearTransportStats();
+          CHECK(f.device.transportStats().totalAttempts == 0 &&
+                f.device.transportStats().lastStatus.ok());
+          CHECK(f.device.diagnostics().configurationWriteUnresolved &&
+                f.device.diagnostics().hardwareEffect == after.hardwareEffect);
+          CHECK(sameEvidence(f.device.diagnostics().managedTransport, after.managedTransport));
+          CHECK(f.device.portSnapshot().sequence == f.historical.sequence &&
+                f.device.portSnapshot().invalidated);
+          if (error != t::Err::OK) {
+            // An unrelated successful byte cannot repair either possible outcome
+            // or replace the original backend failure with synthetic success.
+            f.fake.expectRead(part.address, 0, 1).rx[0] = part.is322 ? 0x32 : 0x30;
+            uint8_t idByte = 0;
+            CHECK(f.device.readRegisterSync(0, idByte).ok());
+            CHECK(f.fake.complete() && f.fake.calls == 2);
+            CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::UNKNOWN);
+            CHECK(f.device.diagnostics().configurationWriteUnresolved &&
+                  f.device.diagnostics().hardwareEffect == t::HardwareEffect::INDETERMINATE);
+            CHECK(sameStatus(f.device.diagnostics().lastFailedTransportStatus, step.status));
+          }
+        }
       }
     }
   }
@@ -464,52 +489,58 @@ void rawAckUsesOnlyActualControls() {
     for (unsigned code = 0; code < controlsCount; ++code) {
       const uint8_t controls = static_cast<uint8_t>(part.base ? code * 2 : code);
       for (const auto error : {t::Err::OK, t::Err::I2C_BUSY}) {
-        Fixture f(part);
-        // Nonzero live/IRQ bits are observation, never a write image.
-        f.initialize(0x80, static_cast<uint8_t>(0xF0 | controls));
-        f.refresh(static_cast<uint8_t>(0x90 | controls));
-        const auto actual = f.device.configurationSnapshot();
-        auto staged = actual.verifiedProfile;
-        const unsigned changedDutyCode = ((controls & 0x06U) / 2U) ^ 1U;
-        staged.drpDutyCycle = DUTY_CODES[changedDutyCode];
-        if (!part.base) staged.disableUfpAccessory = !staged.disableUfpAccessory;
-        t::OperationToken token{};
-        CHECK(f.device.startApplyProfile(staged, {100, 1000}, token).inProgress());
-        CHECK(token.valid() && f.fake.calls == 0);
-        CHECK(f.device.cancel(token).ok());
-        const auto cancelled = f.take(token);
-        CHECK(cancelled.status.is(t::Err::CANCELLED) &&
-              cancelled.hardwareEffect == t::HardwareEffect::NONE && cancelled.transfers == 0);
-        CHECK(f.fake.calls == 0);
-        const auto configuration = f.device.configurationSnapshot();
-        CHECK(configuration.state == t::ConfigurationState::KNOWN);
-        CHECK(configuration.hasDesiredProfile &&
-              configuration.desiredProfile.drpDutyCycle == staged.drpDutyCycle &&
-              configuration.desiredProfile.drpDutyCycle != actual.verifiedProfile.drpDutyCycle);
-        CHECK(configuration.verifiedProfile.drpDutyCycle == actual.verifiedProfile.drpDutyCycle &&
-              configuration.rawConfig09 == actual.rawConfig09 &&
-              configuration.verifiedGeneration == actual.verifiedGeneration);
-        CHECK(configuration.desiredProfile.disableUfpAccessory == staged.disableUfpAccessory &&
-              configuration.verifiedProfile.disableUfpAccessory ==
-              actual.verifiedProfile.disableUfpAccessory);
-        const auto before = f.device.diagnostics();
-        const uint8_t command = static_cast<uint8_t>(controls | 0x10);
-        const uint8_t desiredCommand = static_cast<uint8_t>(command ^ (part.base ? 0x02 : 0x03));
-        CHECK(f.device.writeRegisterSync(9, desiredCommand).is(t::Err::UNSUPPORTED_FEATURE));
-        CHECK(!f.device.writeRegisterSync(9, static_cast<uint8_t>(command | 0x80)).ok());
-        CHECK(f.fake.calls == 0);
-        auto& step = f.fake.expectWrite(part.address, 9, command);
-        step.status = {error, -3456789, "raw ACK"};
-        CHECK(sameStatus(f.device.writeRegisterSync(9, command), step.status));
-        CHECK(f.fake.complete() && f.fake.calls == 1);
-        CHECK(sameEvidence(f.device.diagnostics().managedTransport, before.managedTransport));
-        CHECK(f.device.diagnostics().lastOperationKind == before.lastOperationKind &&
-              sameStatus(f.device.diagnostics().lastOperationStatus, before.lastOperationStatus));
-        CHECK(f.device.configurationSnapshot().state == configuration.state);
-        CHECK(!f.device.diagnostics().configurationWriteUnresolved);
-        CHECK(f.device.diagnostics().hardwareEffect == (error == t::Err::OK
-            ? t::HardwareEffect::CONFIRMED : t::HardwareEffect::INDETERMINATE));
-        CHECK(!f.device.portSnapshot().invalidated);
+        for (const bool cleared : {false, true}) {
+          if (error == t::Err::OK && !cleared) continue;
+          Fixture f(part);
+          // Nonzero live/IRQ bits are observation, never a write image.
+          f.initialize(0x80, static_cast<uint8_t>(0xF0 | controls));
+          f.refresh(static_cast<uint8_t>(0x90 | controls));
+          const auto actual = f.device.configurationSnapshot();
+          auto staged = actual.verifiedProfile;
+          const unsigned changedDutyCode = ((controls & 0x06U) / 2U) ^ 1U;
+          staged.drpDutyCycle = DUTY_CODES[changedDutyCode];
+          if (!part.base) staged.disableUfpAccessory = !staged.disableUfpAccessory;
+          t::OperationToken token{};
+          CHECK(f.device.startApplyProfile(staged, {100, 1000}, token).inProgress());
+          CHECK(token.valid() && f.fake.calls == 0);
+          CHECK(f.device.cancel(token).ok());
+          const auto cancelled = f.take(token);
+          CHECK(cancelled.status.is(t::Err::CANCELLED) &&
+                cancelled.hardwareEffect == t::HardwareEffect::NONE && cancelled.transfers == 0);
+          CHECK(f.fake.calls == 0);
+          const auto configuration = f.device.configurationSnapshot();
+          CHECK(configuration.state == t::ConfigurationState::KNOWN);
+          CHECK(configuration.hasDesiredProfile &&
+                configuration.desiredProfile.drpDutyCycle == staged.drpDutyCycle &&
+                configuration.desiredProfile.drpDutyCycle != actual.verifiedProfile.drpDutyCycle);
+          CHECK(configuration.verifiedProfile.drpDutyCycle == actual.verifiedProfile.drpDutyCycle &&
+                configuration.rawConfig09 == actual.rawConfig09 &&
+                configuration.verifiedGeneration == actual.verifiedGeneration);
+          CHECK(configuration.desiredProfile.disableUfpAccessory == staged.disableUfpAccessory &&
+                configuration.verifiedProfile.disableUfpAccessory ==
+                actual.verifiedProfile.disableUfpAccessory);
+          const auto before = f.device.diagnostics();
+          const uint8_t command = static_cast<uint8_t>(controls | 0x10);
+          const uint8_t desiredCommand = static_cast<uint8_t>(command ^ (part.base ? 0x02 : 0x03));
+          CHECK(f.device.writeRegisterSync(9, desiredCommand).is(t::Err::UNSUPPORTED_FEATURE));
+          CHECK(!f.device.writeRegisterSync(9, static_cast<uint8_t>(command | 0x80)).ok());
+          CHECK(f.fake.calls == 0);
+          f.clearIrqOnWrite = cleared;
+          f.fake.registers[9] = static_cast<uint8_t>(0x90U | controls);
+          auto& step = f.fake.expectWrite(part.address, 9, command);
+          step.status = {error, -3456789, "raw ACK"};
+          CHECK(sameStatus(f.device.writeRegisterSync(9, command), step.status));
+          CHECK(f.fake.complete() && f.fake.calls == 1);
+          CHECK(f.fake.registers[9] == static_cast<uint8_t>((cleared ? 0x80U : 0x90U) | controls));
+          CHECK(sameEvidence(f.device.diagnostics().managedTransport, before.managedTransport));
+          CHECK(f.device.diagnostics().lastOperationKind == before.lastOperationKind &&
+                sameStatus(f.device.diagnostics().lastOperationStatus, before.lastOperationStatus));
+          CHECK(f.device.configurationSnapshot().state == configuration.state);
+          CHECK(!f.device.diagnostics().configurationWriteUnresolved);
+          CHECK(f.device.diagnostics().hardwareEffect == (error == t::Err::OK
+              ? t::HardwareEffect::CONFIRMED : t::HardwareEffect::INDETERMINATE));
+          CHECK(!f.device.portSnapshot().invalidated);
+        }
       }
     }
   }

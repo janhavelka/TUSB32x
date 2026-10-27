@@ -7,6 +7,10 @@ Read the [variant matrix](variant-matrix.md), [register map](register-map.md),
 [encoding vectors](register-vectors.md) and [owner baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
 The API guide identifies delivered methods. Admission/result contracts were
 completed in prompts 5–6; one operation engine implements them in prompts 11–17.
+The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+maps these procedure, interrupt and interruption rules to current named host
+tests. Both possible outcomes of failed raw writes/ACKs retain uncertainty;
+an unrelated successful read cannot establish configuration trust.
 
 ## Evidence and boundaries
 

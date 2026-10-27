@@ -510,3 +510,21 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   may coexist with UNKNOWN trust; OFFLINE permits legal explicit operations.
   Peer units and rejected synthetic mismatch failures are recorded in
   [execution-17-peers](audit/execution-17-peers.md).
+
+## Prompt 18 protocol conformance (2026-10-27)
+
+- Keep existing adversarial operation tests and map their real function names to
+  requirements in [protocol conformance](protocol-conformance.md). Add only the
+  missing public high-address paths and raw failed-write/ACK outcomes, plus the
+  fixed fake's successful-short-receive rejection. The public address regression
+  detects a wrong-address mutation that the earlier operations suites missed.
+- Status-only callbacks have no received-length field. Adapter code must reject
+  incomplete receives; the fake must reject contradictory scripts. This check
+  must never be presented as the core detecting a dishonest successful callback.
+- Keep TI facts separate from test assumptions. A modeled ACK clearing the latch
+  does not qualify IRQ race timing; a 322I raw read without a clear write does
+  not resolve the fault's consuming-read question. DE-to-56 remains arithmetic:
+  actual DE has reset asserted and settings writes reject until proof is safe.
+- The [fresh peer audit](audit/execution-18-peers.md) confirms fixed storage,
+  explicit callback counts and original-error/effect retention. No new production
+  API, engine, simulator, replay policy or silicon support is needed for this unit.

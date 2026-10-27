@@ -16,6 +16,7 @@
 int runProfileObservationChecks();
 int runProfileApplicationChecks();
 int runResetRecoveryChecks();
+int runProtocolConformanceChecks();
 
 namespace {
 
@@ -1051,6 +1052,7 @@ int main() {
   failures += runProfileObservationChecks();
   failures += runProfileApplicationChecks();
   failures += runResetRecoveryChecks();
+  failures += runProtocolConformanceChecks();
   if (failures != 0) {
     std::printf("FAIL %d of %zu owner checks\n", failures, checks);
     return 1;

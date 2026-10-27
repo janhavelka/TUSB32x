@@ -24,7 +24,7 @@ struct FakeTusb32xDevice {
     std::size_t txLength = 1;
     uint8_t rx[11] = {};
     std::size_t rxLength = 1;
-    std::size_t fillLength = 1;
+    std::size_t fillLength = 1; ///< A short receive requires a terminal error, never OK.
     uint32_t timeoutMs = 20;
     TUSB32x::Status status = TUSB32x::Status::Ok();
     bool applyWrite = false;
@@ -106,6 +106,7 @@ struct FakeTusb32xDevice {
     if (kind != step.kind || address != step.address || tx == nullptr ||
         txLength != step.txLength || rxLength != step.rxLength || timeoutMs != step.timeoutMs ||
         txLength > 2 || rxLength > 11 || step.fillLength > rxLength ||
+        (kind == Kind::READ && step.status.ok() && step.fillLength != rxLength) ||
         (kind == Kind::READ && (rx == nullptr || rx == step.callerOutput)) ||
         (kind == Kind::WRITE && rx != nullptr)) return reject();
     if (std::memcmp(tx, step.tx, txLength) != 0) return reject();

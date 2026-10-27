@@ -1,6 +1,6 @@
 # Portable values, decoding and owner API
 
-Prompts 5-17, updated 2026-10-26. The five headers under `include/TUSB32x/` provide
+Prompts 5-18, updated 2026-10-27. The five headers under `include/TUSB32x/` provide
 complete passive values, constexpr Status/token helpers, pure validators/health projection,
 public pure register decoding and stable package version constants.
 They require C++17 and standard headers only. The validators link through target
@@ -16,6 +16,10 @@ and cached port publication; prompt 16 adds `startAcknowledgeInterrupt` and
 complete diagnostics views and pure `validateHealthPolicy`/`projectHealth`.
 The callable inventory below is delivered; framework adapters and CLI remain
 later work.
+
+Prompt 18's [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+connects these owner, interrupt and raw contracts to named runtime tests. The
+audit adds coverage without changing admission, effects, timing or silicon gates.
 
 The [baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md), [register map](register-map.md)
 and [procedure guide](device-behavior.md) remain the state and silicon contracts.
