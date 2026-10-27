@@ -23,6 +23,13 @@ its own fresh 96-tick wait anchor. A later raw zero cannot prove completion.
 Protected 45 bits 1:0 are outside profile equality. A contradictory read revokes
 their write-image permission without blocking independent supported fields;
 only complete managed proof renews that permission.
+The same distinction applies to TUSB322I's equivalent DRP00/11 encodings. A raw
+or incomplete profile read observing different mode bits leaves semantic KNOWN
+settings intact but revokes the old literal 0A write image. Raw 0A writes and
+typed changes to 0A then return CONFIGURATION_UNKNOWN without traffic. A later
+raw byte cannot renew permission. Complete reconciliation, verification or a
+no-op apply can prove the current representation; explicit reset still uses its
+own fresh precheck. Other capability gates remain independent.
 
 Status reads are not an explicit IRQ ACK. TI SLLSEN9F Table 7-7 p18 and
 SLLSEP2D/SLLSEQ8D Table 9 p18 specify IRQ W1C at 09 bit4. TUSB322I SLLSEO5D

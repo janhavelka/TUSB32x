@@ -19,6 +19,8 @@ The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/pro
 maps TI/software requirements to named host tests, including both legal addresses,
 ambiguous writes, interrupted recovery and retained observations. These tests
 verify software contracts; physical adapters and hardware remain unqualified.
+For TUSB322I, an observed equivalent DRP recoding retains semantic trust but
+requires fresh complete proof before using a literal 0A write image again.
 
 `validateDriverConfig` checks callbacks, the explicit variant/address pair and
 positive timeout. `validateProfile` checks value/variant semantics and distinguishes

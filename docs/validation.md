@@ -2145,3 +2145,65 @@ the new regression also passes against the real library in both full builds.
 Documentation clarifies that Status-only transport cannot detect a falsely
 successful short receive, DE-to-56 is arithmetic rather than permission to write
 during reset, and no explicit fault-clear write does not prove 322I read effects.
+
+## Independent prompts 16-18 audit (2026-10-27)
+
+Fresh audit from clean synchronized `91e8eb4a1b070c04ca5a62453916978a72da578d`.
+Three independent reviewers read actual code/tests and original prompts. IRQ
+composition, finite service, observation retention, accounting and passive health
+matched their contracts. Two confirmed gaps were fixed: stale literal 322I mode
+images after equivalent DRP observations, and missing 322I-specific mode-failure/
+interruption cases. The lead reviewed all changes and independent probes.
+
+The before-fix reproduction initializes 0A=02, reads 32, then writes 42. Old code
+invokes that write despite having observed DRP11; fixed code returns
+CONFIGURATION_UNKNOWN with zero callbacks. The registered regression covers
+both directions, raw/partial managed observations, raw/typed writers and full
+proof renewal. Compiling the final regression against the two unchanged old
+production units produces 20 failed assertions; the fixed suite passes.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Focused independent checks | PASS | IRQ protocol/operations/port 3/3, then current production protocol/operations/port/diagnostics 4/4; direct changed suites and probes |
+| Full strict Debug/Release | PASS | Fresh Ninja Multi-Config tree, eight registered CTests each; public header/signature fixtures compile; Release checks active |
+| Diagnostics regression | PASS | 75,426 checks; both 00/11 directions retain semantic KNOWN but reject stale literal writes, unchanged rejected tokens, no-op admission and complete reconciliation renewal |
+| 322I mode failures/interruption | PASS | 93,440 apply checks total; new 12 write-failure cases, 36 cancellation/deadline cases and 2 final-fresh successes across DFP/UFP, preserving original error/effects without delay/retry/replay |
+| Existing suites | PASS | 161,758 protocol; 8,602,548 codecs; 35,454 profile observation; 88,779 reset/recovery; 622 public addresses; 20,490 owner; 71,617 IRQ; 495,667 port; 76,452 validator checks; passive/constexpr/multiple-TU checks; 18 version and 2 launcher tests |
+| Independent mode-image probe | PASS | 216 checks: completed no-op proof renews permission, fresh-precheck reset remains available, completed profile-only observation does not renew; both DRP directions |
+| Before-fix regression | FAIL as intended | Old source with final diagnostics regression: 20 failed assertions. Isolated initial probe permits the forbidden stale write; fixed probe rejects before callbacks |
+| Documentation/source evidence | PASS | Strict Doxygen, 17 public structs / 26 owner methods visible, local links/anchors, UTF-8/LF/whitespace, eight archived TI hashes, repeated no-op version sync/check; current peer states/source registrations rechecked |
+| Consumers/package | PASS | Source-equal 38-file archive and matching IDF inclusion; extracted renamed tests-OFF consumer compiles/links/runs beneath unrelated Git with no maintainer tools on child PATH; native PlatformIO consumer runs with zero fake attempts |
+| Sanitizers | BLOCKED | Fresh GCC link probes fail because libasan/libubsan are absent; no sanitizer result claimed |
+| Hardware/framework firmware | NOT RUN | No electrical/IRQ/timing qualification or linked Arduino/IDF firmware. Existing 322I gates remain unresolved. Remote CI belongs to prompt 34 |
+
+Tools remain GNU15.1.0 MinGW, CMake/CTest4.0.1, Ninja1.12.1, Python3.12.10,
+Doxygen1.13.2, installed PlatformIO Core6.1.19/native1.2.1. MSVC/Clang/clang-format
+remain absent. Lead final commands:
+
+```powershell
+cmake -S . -B build/audit161718-final -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/audit161718-final --config Debug
+ctest --test-dir build/audit161718-final -C Debug --output-on-failure
+cmake --build build/audit161718-final --config Release
+ctest --test-dir build/audit161718-final -C Release --output-on-failure
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Werror -Iinclude -Isrc test/test_diagnostics.cpp src/TUSB32x.cpp src/TUSB32xCodecs.cpp src/TUSB32xProtocol.cpp build/audit161718-raw/TUSB32xOperations-before.cpp build/audit161718-raw/TUSB32xDiagnostics-before.cpp -o build/audit161718-raw/lead-before.exe
+& build/audit161718-raw/lead-before.exe
+& build/audit161718-raw/probe.exe
+& build/audit161718-raw/lead-fixed-probe.exe
+& build/audit161718-irq/mode_probe.exe
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-audit161718.tar.gz
+python build/audit161718-package.py
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+g++ -std=c++17 -fsanitize=address build/p17-sanitizer.cpp -o build/audit161718-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p17-sanitizer.cpp -o build/audit161718-ubsan.exe
+git diff --check
+```
+
+The old units were extracted read-only from HEAD with `git show`; no tracked
+production file was reverted. Ignored probes and extraction/visibility scripts
+were inspected and run by the lead. Permanent regressions use existing public
+operations and fixed fixtures; no public state seeds or second engine were added.

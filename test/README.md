@@ -348,3 +348,12 @@ Diagnostics tests cover both hardware outcomes of every supported failed raw
 write and ACK. A later successful identity-byte read cannot repair write trust
 or erase the original transport failure. These cases reuse the existing fixed
 fake and counters without another engine or simulation framework.
+
+The independent prompts 16-18 audit adds
+`equivalentModeObservationsRevokeStaleWriteImages` for 322I raw/partial profile
+observations in both DRP encoding directions. It preserves semantic KNOWN state
+while rejecting stale raw/typed 0A writes until complete proof. The operations
+suite also runs `tusb322ModeWriteFailures` and
+`tusb322ModeInterruptionBoundaries`: literal DFP/UFP sequences, both failed-write
+acceptance outcomes, cancel/deadline after every callback and final fresh time,
+retained original failure/effects and no hidden retry or borrowed L/A delay.

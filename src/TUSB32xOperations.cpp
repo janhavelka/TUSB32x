@@ -44,6 +44,7 @@ bool TUSB32x::unresolved() const {
 
 void TUSB32x::invalidateConfiguration() {
   _rdRpWriteImageValid = false;
+  _modeWriteImageValid = false;
   _configuration.state = ConfigurationState::UNKNOWN;
   _configuration.terminationState = TerminationState::UNKNOWN;
   _diagnostics.configurationState = ConfigurationState::UNKNOWN;
@@ -53,6 +54,7 @@ void TUSB32x::invalidateConfiguration() {
 
 void TUSB32x::invalidateUsability() {
   _rdRpWriteImageValid = false;
+  _modeWriteImageValid = false;
   _diagnostics.initialized = false;
   _diagnostics.managedTransport.initialized = false;
   if (_configuration.state != ConfigurationState::UNCONFIGURED)
@@ -356,6 +358,7 @@ Status TUSB32x::planProfile(const DeviceProfile& candidate, ProfileWrite (&write
     return error(Err::UNSUPPORTED_FEATURE);
   if (rdRpChanges && (!_rdRpWriteImageValid || (_configuration.rawConfig45 & 0x03U) != 0))
     return error(Err::CONFIGURATION_UNKNOWN);
+  if (fields0A != 0 && !_modeWriteImageValid) return error(Err::CONFIGURATION_UNKNOWN);
 
   uint8_t image08 = _configuration.rawConfig08;
   uint8_t image09 = _configuration.rawConfig09;
@@ -510,6 +513,11 @@ void TUSB32x::acceptRead() {
 }
 
 void TUSB32x::observeControl(uint8_t reg, uint8_t value) {
+  // SLLSEO5D Table6-10 p20: DRP00/11 are semantically equivalent, but composing
+  // from the older byte would silently recode MODE_SELECT. Keep profile trust
+  // separate from literal write-image permission; only complete F renews it.
+  if (reg == 0x0A && ((value ^ _configuration.rawConfig0A) & 0x30U) != 0)
+    _modeWriteImageValid = false;
   // Protected45 controls do not participate in user-profile equality. A raw/partial
   // observation can revoke that write image without replacing the historical P image
   // or blocking independently proved user settings. Only a complete F renews it.
@@ -647,6 +655,7 @@ Status TUSB32x::publishConfiguration() {
     increment(_configuration.verifiedGeneration);
     _diagnostics.configurationWriteUnresolved = false;
     _rdRpWriteImageValid = info.hasRdRp && (_observing.rawConfig45 & 0x03U) == 0;
+    _modeWriteImageValid = true;
   }
   _diagnostics.configurationState = _configuration.state;
   _diagnostics.terminationState = _configuration.terminationState;

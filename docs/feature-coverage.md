@@ -307,3 +307,12 @@ clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
 Prompt 18 completes the core protocol coverage audit. Owner portability, CLI,
 adapters and electrical qualification remain later work.
+
+## Independent prompts 16-18 audit
+
+The 2026-10-27 re-audit adds TUSB322I mode-write fault and interruption coverage
+and corrects stale literal 0A image permission after equivalent DRP00/11
+observations. Semantic trust remains KNOWN; raw/typed 0A changes require complete
+proof again. The updated [conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+links the new named cases to the registered suites. IRQ behavior, passive health
+and unresolved silicon gates are unchanged.

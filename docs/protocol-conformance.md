@@ -1,7 +1,7 @@
 # Core protocol conformance
 
-Prompt 18, reviewed 2026-10-27 from starting commit
-`8507681e92938b3eb8d0a7aa7308a1c8318ecbaf`. This matrix maps TI/software
+Prompts 16-18, independently re-audited 2026-10-27 from starting commit
+`91e8eb4a1b070c04ca5a62453916978a72da578d`. This matrix maps TI/software
 requirements to implemented APIs and named runtime cases. Tests use independent
 literal bytes and field tables; production encoders are not expected-value
 oracles. Evidence is host software only. Physical timing, electrical behavior,
@@ -32,31 +32,32 @@ function called by that executable's main or linked suite runner.
 N = `test_protocol_conformance.cpp`, the public operation regression linked into
 the existing operations executable; it adds no new suite or production interface.
 
-| Command key | Registered suite selection | Debug result for final prompt-18 code |
+| Command key | Registered suite selection | Debug result for final audit code |
 | --- | --- | --- |
-| PROTOCOL | `ctest --test-dir build/p18-conformance -C Debug -R '^tusb32x_protocol$' --output-on-failure` | PASS through ALL |
-| OPERATIONS | `ctest --test-dir build/p18-conformance -C Debug -R '^tusb32x_operations$' --output-on-failure` | PASS through ALL |
-| PORT | `ctest --test-dir build/p18-conformance -C Debug -R '^tusb32x_port$' --output-on-failure` | PASS through ALL |
-| DIAGNOSTICS | `ctest --test-dir build/p18-conformance -C Debug -R '^tusb32x_diagnostics$' --output-on-failure` | PASS through ALL |
-| VALIDATORS | `ctest --test-dir build/p18-conformance -C Debug -R '^tusb32x_validators$' --output-on-failure` | PASS through ALL |
-| ALL | `ctest --test-dir build/p18-conformance -C Debug --output-on-failure` | PASS, 8/8 registered tests |
+| PROTOCOL | `ctest --test-dir build/audit161718-final -C Debug -R '^tusb32x_protocol$' --output-on-failure` | PASS through ALL |
+| OPERATIONS | `ctest --test-dir build/audit161718-final -C Debug -R '^tusb32x_operations$' --output-on-failure` | PASS through ALL |
+| PORT | `ctest --test-dir build/audit161718-final -C Debug -R '^tusb32x_port$' --output-on-failure` | PASS through ALL |
+| DIAGNOSTICS | `ctest --test-dir build/audit161718-final -C Debug -R '^tusb32x_diagnostics$' --output-on-failure` | PASS through ALL |
+| VALIDATORS | `ctest --test-dir build/audit161718-final -C Debug -R '^tusb32x_validators$' --output-on-failure` | PASS through ALL |
+| ALL | `ctest --test-dir build/audit161718-final -C Debug --output-on-failure` | PASS, 8/8 registered tests |
 
-The lead configured `build/p18-conformance` with Ninja Multi-Config and
+The lead configured `build/audit161718-final` with Ninja Multi-Config and
 `TUSB32X_BUILD_TESTS=ON`, built Debug, then ran ALL successfully. The focused
 selections above show registration and how to rerun a suite; they are not claimed
 as separately executed commands. Reproduce the standard configuration with
-`cmake -S . -B build/p18-conformance -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON`
-and `cmake --build build/p18-conformance --config Debug`. Toolchain details and
+`cmake -S . -B build/audit161718-final -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON`
+and `cmake --build build/audit161718-final --config Debug`. Toolchain details and
 Release evidence belong in [validation](validation.md); Release checks stay
 active. Compile-only header/signature checks are not runtime protocol tests.
 Remote CI remains prompt 34 work.
 
 Debug runtime counts include 161,758 protocol checks, 8,602,548 codec checks,
 622 new public-address checks, 20,490 owner checks, 35,454 profile-observation
-checks, 89,140 apply checks, 88,779 reset/recovery checks and 74,962 diagnostics
+checks, 93,440 apply checks, 88,779 reset/recovery checks and 75,426 diagnostics
 checks. The registered port suite also passed; its detailed counts remain in
-validation. This unit changes test coverage and comments/Doxygen, with no
-production behavior change.
+validation. This audit fixes stale literal 322I mode-image permission after equivalent DRP
+recoding, and adds variant-specific failure/interruption tests. Public signatures
+and silicon gates are unchanged.
 
 ## Variant, framing and field matrix
 
@@ -74,6 +75,7 @@ production behavior change.
 | ACK actual 09=B5→15 / base B4→14; preserve applied controls rather than staged profile. Settings do not clear pending IRQ | B/L/A; V 09 gate | `startAcknowledgeInterrupt`, `startServiceInterrupt`, `writeRegisterSync` | C::composeIrqResetAndOrdinary; P::composedWriteFrames; I::everyAckByteAndStaged02, unrelatedProfileWritesPreserveLatch; D::rawAckUsesOnlyActualControls | PROTOCOL, PORT, DIAGNOSTICS |
 | Isolate reset bit 08; never replay a read reset bit into settings. DE→56 is field arithmetic only: actual DE rejects settings, while settled D6→56 is safe | B/L/A/V 0A masks | `decodeRegister`, `startReset`, `startApplyProfile`, `writeRegisterSync` | C::composeIrqResetAndOrdinary; R::literalSuccessAndDesiredRetention, freshResetControlsAndIdentityContradictions; D::rawWriteGuards | PROTOCOL, OPERATIONS, DIAGNOSTICS |
 | Protect 45 internal bits 03, require qualified safe image; no raw bypass of role/reset/recovery sequences or guessed settings image | B/L/A 45; V 45 unavailable | apply/reset/recovery and raw APIs | C::composeModesAndRecovery, composeRejections; A::internal45QualificationAndStagedControls; D::rawWriteGuards, protected45EvidenceIsIndependent, rawReadSafetyEvidence | PROTOCOL, OPERATIONS, DIAGNOSTICS |
+| Equivalent 322I DRP00/11 is semantic equality, not permission to write a contradicted literal mode image; full proof renews permission | V Table 6-10 p20 plus software safe-image policy | `readRegisterSync`, `startReadProfile`, `writeRegisterSync`, `startApplyProfile`, `startReconcile` | D::equivalentModeObservationsRevokeStaleWriteImages covers both directions and raw/partial managed observations; raw and typed writes reject without traffic until full proof | DIAGNOSTICS |
 | Base unattached precheck only for actual mode change; cable can race read→write. Attached current-only update remains legal; no-op verifies without writes; pre-write cancellation preserves actual proof | B §7.4.1-2 p14, Table 7-7 p19 | `startApplyProfile` | A::baseAttachmentAndWriteOrder, noOpAndVerification, prewriteAndEveryBoundary, interruptedBaseModeEvidence | OPERATIONS |
 | Separate disable/mode/wait/enable, retain requested disabled final state; 0A disableTerm and 45 disableRdRp independently effective | L/A §7.3.2 p14; B/L/A 45; 5 ms plus a separate one-tick software margin | `startApplyProfile`, `configurationSnapshot` | A::literalModePlans, ufpAndSettingsOnlyPlans, physicalModeWait, exactWaitGatesAndLateFinalTime; O::independentTerminationEvidence | OPERATIONS |
 | Explicit bounded reset, no desired-profile replay; reset mask/value counterexample and 95 ms maximum plus a one-tick policy margin | All seven; per-variant proof plan | `startReset`, `startReconcile` | R::literalSuccessAndDesiredRetention, everyCallbackFault, everyInterruptionBoundary, independentPhysicalWaits; F::reconcileResetWait | OPERATIONS |
@@ -88,8 +90,8 @@ suggested prompt name is required.
 
 | Prompt 18 scenario | APIs and variants | Named runtime tests and observable boundary | Command |
 | --- | --- | --- | --- |
-| `failed_write_may_have_applied` | apply B/L/A/V; reset all seven; recovery B; ACK B/L/A; supported raw writes | A::faultsAtEveryWriteAndProofRead covers each mutating phase with both applied/no-applied error; R::everyCallbackFault and I::everyTransportFailure do the same for their writes. D::rawOrdinaryWrites adds both raw effect outcomes and an unrelated successful ID read without trust repair; rawAckUsesOnlyActualControls models failed ACK both clearing and retaining the latch. Original error/detail, earlier effects and terminal callback count survive. A::mismatchAndExplicitRecovery and R::recoveryHistoryAndExplicitRestart reject blind replay/trust repair. | OPERATIONS, PORT, DIAGNOSTICS |
-| `cancel_after_each_phase_is_bus_silent` | all owner starts; per-variant supported plans | O::interruptionAtEveryPhase; F::everyReadFailureAndInterruption; A::prewriteAndEveryBoundary; R::everyInterruptionBoundary; I::interruptedBoundaries. Include first transfer, each later callback, waits, final callback before fresh publication, end/result retention; O::reinitializationAndAtomicBinding and R::recoveryHistoryAndExplicitRestart cover rebind. | OPERATIONS, PORT |
+| `failed_write_may_have_applied` | apply B/L/A/V; reset all seven; recovery B; ACK B/L/A; supported raw writes | A::faultsAtEveryWriteAndProofRead and tusb322ModeWriteFailures cover each mutating phase with both applied/no-applied error; R::everyCallbackFault and I::everyTransportFailure do the same for their writes. D::rawOrdinaryWrites adds both raw effect outcomes and an unrelated successful ID read without trust repair; rawAckUsesOnlyActualControls models failed ACK both clearing and retaining the latch. Original error/detail, earlier effects and terminal callback count survive. A::mismatchAndExplicitRecovery and R::recoveryHistoryAndExplicitRestart reject blind replay/trust repair. | OPERATIONS, PORT, DIAGNOSTICS |
+| `cancel_after_each_phase_is_bus_silent` | all owner starts; per-variant supported plans | O::interruptionAtEveryPhase; F::everyReadFailureAndInterruption; A::prewriteAndEveryBoundary, tusb322ModeInterruptionBoundaries; R::everyInterruptionBoundary; I::interruptedBoundaries. Include first transfer, each later callback, waits, final callback before fresh publication, end/result retention; O::reinitializationAndAtomicBinding and R::recoveryHistoryAndExplicitRestart cover rebind. | OPERATIONS, PORT |
 | `failed_status_read_preserves_observation` | refresh all seven; service B/L/A | S::everyReadFailureAndInterruption retains fields/time across failed partial observation and invalidation. S::changedBookends clears dependent validity while retaining raw 09/08/09. I::everyTransportFailure, serviceUsesFinalControlsAndBookends, recheckContradictionRetainsPublication retain complete pre-ACK history/time through later failure. | PORT |
 | `irq_reassertion_remains_visible` | ACK/service B/L/A; raw read all seven | I::finiteLatchRaces covers each read/ACK/recheck race, stuck/coalesced latch and finite five-callback service; exactWritesAndBounds and everyAckByteAndStaged02 inspect literal writes. S::admissionAndPublication performs read-only refresh; status read is no implicit ACK and no lossless edge count is claimed. | PORT |
 | `reconcile_partial_profile_allows_explicit_apply` | read/reconcile/verify/apply, supported variants | A::mismatchAndExplicitRecovery establishes KNOWN actual despite desired mismatch, preserves desired and old failed result, then explicitly applies; interrupted transitions remain UNKNOWN until complete proof. F::incompletePostWaitProof and partialTerminationContradictionWithoutTrust reject incomplete proof. | OPERATIONS |

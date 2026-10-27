@@ -528,3 +528,18 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
 - The [fresh peer audit](audit/execution-18-peers.md) confirms fixed storage,
   explicit callback counts and original-error/effect retention. No new production
   API, engine, simulator, replay policy or silicon support is needed for this unit.
+
+## Independent prompts 16-18 audit (2026-10-27)
+
+TUSB322I DRP00/11 is semantic equivalence, not literal write-image equality.
+A raw or incomplete observation can contradict the old mode bits without
+invalidating the verified DRP setting. Retain one private mode-image validity
+flag, revoke it on such an observation or normal invalidation, and renew it only
+after complete proof. Raw 0A writes and typed 0A changes check it. No-op proof and
+explicit reset with fresh precheck remain available. This follows the existing
+protected45 evidence pattern without another register cache or public API.
+
+Separate 322I failure/interruption tests are necessary because its DFP/UFP plan
+has no L/A wait and no 45 proof read. The existing LAI matrix did not exercise
+those branches. Keep literal scripts in the current fixture and reuse existing
+error normalization tests instead of multiplying the entire suite by every part.

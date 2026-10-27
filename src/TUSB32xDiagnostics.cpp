@@ -130,6 +130,7 @@ Status TUSB32x::writeRegisterSync(uint8_t reg, uint8_t value) {
     case 0x0A:
       requiredRaw = CONFIG_0A_VALID;
       actual = _configuration.rawConfig0A;
+      if (!_modeWriteImageValid) return error(Err::CONFIGURATION_UNKNOWN);
       // Even equivalent322I DRP encodings cannot justify raw mode-bit recoding.
       if (((value ^ actual) & (info->hasExtendedControls ? 0x31U : 0x30U)) != 0)
         return error(Err::UNSUPPORTED_FEATURE);

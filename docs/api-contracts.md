@@ -28,6 +28,12 @@ The [architecture](architecture.md) identifies file responsibilities. The
 without claiming runtime behavior. See [diagnostics and health](diagnostics.md)
 for safe raw usage and the separate evidence views.
 
+TUSB322I DRP00/11 semantic equality does not prove the old literal mode bits are
+still safe to write. An observed recoding revokes that 0A write image while
+semantic configuration stays KNOWN. Raw or typed 0A changes then require complete
+proof; raw reads cannot renew it. No-op apply, verification and reconciliation
+remain read-only ways to establish the current representation.
+
 ## Implemented value inventory
 
 All fields are ordinary fixed-storage values. Default construction performs no

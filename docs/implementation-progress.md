@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 18 end to end; later prompts remain separate.
+Current authorization: independently audit and fix completed prompts 16-18; later prompts remain separate.
 
 ## Prompt status
 
@@ -1387,3 +1387,41 @@ and native PlatformIO execution were NOT RUN in this test/documentation unit.
 Existing TI/board gates remain unresolved. The lead commits and syncs this checked
 unit on the same branch, verifies upstream equality and clean state, and reports
 the final commit in the handoff/next progress update. Prompt 19 remains NOT STARTED.
+
+## Independent prompts 16-18 audit (2026-10-27)
+
+Started clean and synchronized at `91e8eb4a1b070c04ca5a62453916978a72da578d`, the
+completed prompt18, on the same execution branch. Re-read all three original
+prompts in full and checked the implemented source, tests, baseline, TI evidence
+and diffs rather than adopting the prior summary. Two gpt-6-astra/high reviewers
+independently checked IRQ and raw/effect/health correctness; gpt-6.1-sol/high
+checked coverage, oracles, fake behavior and simplicity. Tracked test ownership
+was disjoint; the lead owns production fixes, documentation, checks and Git.
+
+Fresh sibling states are unchanged and clean on main: INA228 b28c5ea, PCA9555
+498178e, LDC1614 1db38b6, LSM6DS3TR 362b140, TMP1x2 bafc340, ADS1115 235af3e and
+INA3221 41b6184. Relevant declarations, implementations and runtime registrations
+were revisited; the exact paths and accepted/rejected patterns in
+[execution16](audit/execution-16-peers.md),
+[execution17](audit/execution-17-peers.md) and
+[execution18](audit/execution-18-peers.md) remain applicable. No peer edits,
+fetches or builds. TI B/L/A IRQ wording, V Table6-9/6-10 and V DFP/UFP recipes
+were reopened. Physical effects and unresolved gates remain separate evidence.
+
+Confirmed and fixed stale 322I mode-image permission after a raw/partial
+observation of equivalent DRP00/11 bits. Semantic KNOWN state stays intact;
+contradicted literal 0A images cannot authorize raw or typed writes until full
+proof. A bounded independent probe reproduced the pre-fix write; new registered
+regressions fail against the old source and pass after the fix. No-op proof and
+explicit fresh-precheck reset remain available. Closed distinct 322I mode-failure
+and cancellation/deadline coverage gaps. IRQ behavior and health needed no fix.
+
+PASS: full strict Debug and Release 8/8 CTests each; 75,426 diagnostics and
+93,440 apply checks plus prior suites; independent 216-check mode-image probe;
+Doxygen/visibility, links/anchors/hash/version checks, 38-file package with a
+tool-independent extracted consumer and native PlatformIO consumer. ASan/UBSan
+are BLOCKED by missing runtimes. Hardware and framework firmware are NOT RUN;
+remote CI remains prompt34. See [validation](validation.md#independent-prompts-16-18-audit-2026-10-27).
+The lead commits and syncs this complete checked audit on the same branch and
+reports final commit/equality in the handoff. Prompts 16-18 remain complete;
+prompt19 is not started.

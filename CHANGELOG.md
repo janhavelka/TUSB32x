@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent prompts 16-18 audit: prevent stale TUSB322I DRP mode bits from
+  entering raw or typed 0A writes after observing an equivalent 00/11 recoding.
+  Keep semantic trust separate from literal write-image permission and renew the
+  latter only through complete proof. Added both-direction regressions and 322I
+  DFP/UFP failures and interruptions at every write/callback boundary.
+
 - Protocol conformance matrix mapping TI/software requirements to named runtime
   cases. Added public operation checks at both legal addresses for every supported
   variant, both hardware outcomes of failed raw writes/ACKs, and unrelated-read

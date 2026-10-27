@@ -435,6 +435,8 @@ class TUSB32x {
   /// from a fresh sample after the mode-write callback; 322I mode has no added delay.
   /// At most 10 base, 12 LI/HI/LAI/HAI or 8 322I callbacks including proof.
   /// Failed writes retain uncertain effects and original errors; no rollback, retry or replay.
+  /// An observed equivalent 322I DRP recoding keeps semantic trust but revokes the old 0A write
+  /// image. Changed 0A fields require complete proof again; a no-op apply can obtain that proof.
   Status startApplyProfile(const DeviceProfile& profile, const OperationTiming& timing,
                            OperationToken& token);
   /// @brief Admit complete read-only proof against retained desired settings.
@@ -561,6 +563,8 @@ class TUSB32x {
   /// clock access. Ordinary writes, including same-value writes, invalidate trust/port and retain
   /// configuration-write uncertainty before invocation; success is PARTIAL, errors INDETERMINATE.
   /// Pure IRQ ACK preserves actual09 controls and trust/port; success confirms acceptance only.
+  /// Equivalent 322I DRP00/11 observations cannot authorize the older literal 0A image;
+  /// complete managed proof must renew it before a raw 0A write.
   /// Raw callbacks count in source totals, never managed history. Managed last-operation and IRQ
   /// records are unchanged. Callback failure detail is preserved; failure time remains unknown.
   Status writeRegisterSync(uint8_t reg, uint8_t value);
@@ -615,6 +619,8 @@ class TUSB32x {
   DriverDiagnostics _diagnostics{};
   /// @brief Protected45 bits are outside profile equality; only full proof renews its write image.
   bool _rdRpWriteImageValid = false;
+  /// @brief Literal mode bits need full proof even when 322I DRP00/11 compare equivalent.
+  bool _modeWriteImageValid = false;
   Phase _phase = Phase::IDENTITY;
   bool _waitReset = false;
   bool _waitMode = false;

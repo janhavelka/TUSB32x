@@ -21,6 +21,9 @@ The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/pro
 covers all seven configured variants at both legal addresses through public
 operations. This checks address propagation, not physical part identification,
 strap sampling, enable polarity or closure of the unresolved gates below.
+For TUSB322I, equal DRP semantics do not permit writing an older 00/11 mode
+representation after observing a recoding. Raw/typed 0A changes require renewed
+complete proof; the semantic configuration can remain KNOWN in the meantime.
 Apply changes only differing fields, verifies the complete final image and
 retains independent termination/effect evidence after interruption. Pure decoding
 retains raw TUSB322I fault evidence; no 08/09 write gate is closed by decoding

@@ -529,6 +529,11 @@ Do not expose a raw shortcut that bypasses the sequenced silicon preconditions.
 If safe composition needs a read before a write, a one-callback Sync write cannot
 perform both: use a current proved safe image or reject without traffic. Never
 hide two callbacks in a function documented as one.
+Semantic equivalence is insufficient for a literal write image: observing a
+different TUSB322I DRP00/11 representation revokes the old 0A image without
+turning otherwise equivalent verified settings into a mismatch. Raw 0A writes
+and typed changes to 0A require complete proof again. No-op apply remains a
+read-only proof path; explicit reset composes from its own fresh precheck.
 
 For startRecoverDeadBattery, first read 0x45 and require its TI-internal bits
 1:0 to be zero; otherwise fail CONFIGURATION_UNKNOWN before any write. Write

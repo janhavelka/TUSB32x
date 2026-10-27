@@ -673,6 +673,147 @@ void faultsAtEveryWriteAndProofRead() {
   }
 }
 
+void tusb322ModeWriteFailures() {
+  // SLLSEO5D 6.3.2.1-2 pp10-11 and Table6-10 p20: preserve debounce/
+  // preference, set disable, select DFP/UFP, then clear disable. Unlike L/A,
+  // 322I has no specified 5ms interval and has no register45 proof read.
+  for (const bool dfp : {false, true}) {
+    const uint8_t commands[] = {0x31, static_cast<uint8_t>(dfp ? 0x21 : 0x11),
+        static_cast<uint8_t>(dfp ? 0x20 : 0x10)};
+    for (std::size_t failed = 0; failed < 3; ++failed) {
+      for (const bool applied : {false, true}) {
+        Fixture f(PARTS[6]);
+        f.initialize();
+        const auto old = f.device.configurationSnapshot();
+        auto desired = old.verifiedProfile;
+        desired.portMode = dfp ? t::PortMode::DFP : t::PortMode::UFP;
+        f.bus.segments[0].registers[0x0A] = 0x30;
+        for (const auto command : commands)
+          f.bus.write(0x47, 0x0A, command).applyWrite = true;
+        f.proof(0x80, 0x14, commands[2]);
+        auto& fault = f.bus.at(failed);
+        fault.status = {t::Err::I2C_TIMEOUT, -1987654321, "322I mode acceptance unknown"};
+        fault.applyWrite = applied;
+        const auto attempts = f.device.transportStats().totalAttempts;
+        const auto token = f.apply(desired);
+        // Equal ticks expose any accidental borrowed L/A settling wait.
+        for (std::size_t index = 0; index < failed; ++index)
+          CHECK(f.poll(token, 100).inProgress());
+        CHECK(f.poll(token, 100).is(t::Err::I2C_TIMEOUT));
+        const auto expected = applied ? commands[failed] : failed == 0 ? 0x30 : commands[failed - 1];
+        CHECK(f.bus.segments[0].registers[0x0A] == expected);
+        CHECK(f.bus.calls == failed + 1 && f.bus.clean());
+        CHECK(f.device.transportStats().totalAttempts == attempts + failed + 1);
+        CHECK(f.device.diagnostics().modeTransitionUnresolved);
+        CHECK(f.device.diagnostics().configurationWriteUnresolved);
+        CHECK(f.device.poll(token, 1000, 255).is(t::Err::I2C_TIMEOUT));
+        CHECK(f.device.cancel(token).ok());
+        const auto result = f.take(token);
+        CHECK(result.status.code == fault.status.code && result.status.detail == fault.status.detail);
+        CHECK(result.status.msg == fault.status.msg && !result.completedTimeValid);
+        CHECK(result.transfers == failed + 1 && result.hardwareEffect == t::HardwareEffect::INDETERMINATE);
+        CHECK(result.configuration.state == t::ConfigurationState::UNKNOWN);
+        CHECK(result.configuration.terminationState == t::TerminationState::UNKNOWN);
+        CHECK(result.configuration.verifiedGeneration == old.verifiedGeneration);
+        CHECK(sameProfile(result.configuration.verifiedProfile, old.verifiedProfile));
+        CHECK(sameProfile(result.configuration.desiredProfile, desired));
+        CHECK(result.port.invalidated && f.bus.calls == failed + 1);
+
+        // A later unrelated successful byte is neither transition proof nor a
+        // reason to retry any of the three writes or replace the primary error.
+        f.bus.reset();
+        f.bus.read(0x47, 0).rx[0] = 0x32;
+        uint8_t idByte = 0;
+        CHECK(f.device.readRegisterSync(0, idByte).ok() && idByte == 0x32);
+        CHECK(f.bus.complete() && f.bus.calls == 1);
+        CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::UNKNOWN);
+        CHECK(f.device.diagnostics().modeTransitionUnresolved &&
+              f.device.diagnostics().configurationWriteUnresolved);
+        CHECK(f.device.diagnostics().lastFailedTransportStatus.detail == -1987654321);
+        CHECK(f.device.diagnostics().lastOperationStatus.code == result.status.code &&
+              f.device.diagnostics().lastOperationStatus.detail == result.status.detail);
+        CHECK(f.device.end().ok() && f.device.bind(f.config).ok());
+        CHECK(f.bus.calls == 1 && f.device.diagnostics().modeTransitionUnresolved);
+      }
+    }
+  }
+}
+
+void tusb322ModeInterruptionBoundaries() {
+  // Three literal writes followed by I/revision/08/09/0A: each callback and
+  // the final fresh publication turn is independently interruptible. Generic
+  // error normalization and L/A wait interruption already have their own cases.
+  constexpr std::size_t CALLBACKS = 8;
+  for (const bool dfp : {false, true}) {
+    const uint8_t mode = dfp ? 0x20 : 0x10;
+    for (std::size_t boundary = 0; boundary <= CALLBACKS; ++boundary) {
+      for (const bool deadline : {false, true}) {
+        Fixture f(PARTS[6]);
+        f.initialize();
+        const auto old = f.device.configurationSnapshot();
+        auto desired = old.verifiedProfile;
+        desired.portMode = dfp ? t::PortMode::DFP : t::PortMode::UFP;
+        f.bus.write(0x47, 0x0A, 0x31);
+        f.bus.write(0x47, 0x0A, static_cast<uint8_t>(mode | 0x01));
+        f.bus.write(0x47, 0x0A, mode);
+        f.proof(0x80, 0x14, mode);
+        const auto token = f.apply(desired, 100, 500);
+        for (std::size_t index = 0; index < boundary; ++index) {
+          CHECK(f.poll(token, 100).inProgress());
+          CHECK(!f.device.progress().waiting && !f.device.progress().readyAtValid);
+        }
+        CHECK(f.bus.calls == boundary && f.bus.clean());
+        CHECK(f.device.configurationSnapshot().verifiedGeneration == old.verifiedGeneration);
+        if (deadline) CHECK(f.poll(token, 500, 0).is(t::Err::TIMEOUT));
+        else CHECK(f.device.cancel(token).ok());
+        t::OperationResult retained{};
+        CHECK(f.device.resultSnapshot(token, retained).ok());
+        CHECK(retained.status.is(deadline ? t::Err::TIMEOUT : t::Err::CANCELLED));
+        CHECK(retained.completedTimeValid == deadline);
+        CHECK(retained.transfers == boundary && retained.token.value == token.value);
+        CHECK(retained.hardwareEffect == (boundary == 0 ? t::HardwareEffect::NONE
+                                                         : t::HardwareEffect::PARTIAL));
+        CHECK(retained.configuration.state == (boundary == 0 ? t::ConfigurationState::KNOWN
+                                                             : t::ConfigurationState::UNKNOWN));
+        CHECK(retained.configuration.verifiedGeneration == old.verifiedGeneration);
+        CHECK(sameProfile(retained.configuration.verifiedProfile, old.verifiedProfile));
+        CHECK(sameProfile(retained.configuration.desiredProfile, desired));
+        CHECK(f.device.diagnostics().modeTransitionUnresolved == (boundary != 0));
+        CHECK(f.device.diagnostics().configurationWriteUnresolved == (boundary != 0));
+        CHECK(f.device.poll(token, 501).code == retained.status.code);
+        CHECK(f.device.cancel(token).ok());
+        CHECK(f.take(token).status.code == retained.status.code);
+        CHECK(f.device.end().ok() && f.device.bind(f.config).ok());
+        CHECK(f.bus.calls == boundary && f.bus.clean());
+        CHECK(f.device.diagnostics().modeTransitionUnresolved == (boundary != 0));
+      }
+    }
+
+    Fixture completed(PARTS[6]);
+    completed.initialize();
+    auto desired = completed.device.configurationSnapshot().verifiedProfile;
+    desired.portMode = dfp ? t::PortMode::DFP : t::PortMode::UFP;
+    completed.bus.write(0x47, 0x0A, 0x31);
+    completed.bus.write(0x47, 0x0A, static_cast<uint8_t>(mode | 0x01));
+    completed.bus.write(0x47, 0x0A, mode);
+    completed.proof(0x80, 0x14, mode);
+    const auto token = completed.apply(desired, 100, 500);
+    for (std::size_t index = 0; index < CALLBACKS; ++index)
+      CHECK(completed.poll(token, 100).inProgress());
+    CHECK(completed.device.configurationSnapshot().verifiedGeneration == 1);
+    CHECK(completed.poll(token, 499, 0).ok());
+    CHECK(completed.device.cancel(token).ok()); // Terminal success remains frozen.
+    const auto result = completed.take(token);
+    CHECK(result.status.ok() && result.completedUptimeMs == 499 && result.completedTimeValid);
+    CHECK(result.hardwareEffect == t::HardwareEffect::CONFIRMED && result.transfers == CALLBACKS);
+    CHECK(result.configuration.state == t::ConfigurationState::KNOWN);
+    CHECK(result.configuration.verifiedGeneration == 2);
+    CHECK(sameProfile(result.configuration.verifiedProfile, desired));
+    CHECK(!completed.device.diagnostics().modeTransitionUnresolved);
+    CHECK(completed.bus.complete() && completed.bus.calls == CALLBACKS);
+  }
+}
+
 void exactWaitGatesAndLateFinalTime() {
   for (const auto& part : PARTS) {
     if (part.base) continue;
@@ -1102,6 +1243,8 @@ int runProfileApplicationChecks() {
   physicalModeWait();
   prewriteAndEveryBoundary();
   faultsAtEveryWriteAndProofRead();
+  tusb322ModeWriteFailures();
+  tusb322ModeInterruptionBoundaries();
   exactWaitGatesAndLateFinalTime();
   completeApplyMismatchAndPrecheckContradiction();
   applyLateReadbackAndSlotOwnership();

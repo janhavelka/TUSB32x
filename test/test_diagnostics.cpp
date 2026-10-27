@@ -681,6 +681,90 @@ void protected45EvidenceIsIndependent() {
   }
 }
 
+void equivalentModeObservationsRevokeStaleWriteImages() {
+  for (const uint8_t initial : {uint8_t{0x02}, uint8_t{0x32}}) {
+    const uint8_t observed = static_cast<uint8_t>(initial ^ 0x30U);
+    for (const bool managed : {false, true}) {
+      for (const bool typed : {false, true}) {
+        Fixture f(PARTS[6]);
+        f.initialize(0x80, 0x14, initial);
+        const auto before = f.device.configurationSnapshot();
+        if (managed) {
+          // Consume the final byte, then cancel before complete P publication.
+          // Safety evidence must already revoke the old exact mode image.
+          f.fake.expectRead(0x47, 8, 1).rx[0] = 0x80;
+          f.fake.expectRead(0x47, 9, 1).rx[0] = 0x14;
+          f.fake.expectRead(0x47, 0x0A, 1).rx[0] = observed;
+          const auto token = f.start(&Driver::startReadProfile);
+          for (uint64_t now = 100; now < 103; ++now)
+            CHECK(f.device.poll(token, now).inProgress());
+          CHECK(f.fake.complete() && f.fake.calls == 3);
+          CHECK(f.device.cancel(token).ok());
+          CHECK(f.take(token).status.is(t::Err::CANCELLED));
+        } else {
+          f.fake.expectRead(0x47, 0x0A, 1).rx[0] = observed;
+          uint8_t out = 0;
+          CHECK(f.device.readRegisterSync(0x0A, out).ok() && out == observed);
+          CHECK(f.fake.complete() && f.fake.calls == 1);
+        }
+        f.fake = Fake{};
+        const auto after = f.device.configurationSnapshot();
+        CHECK(after.state == t::ConfigurationState::KNOWN);
+        CHECK(after.rawConfig0A == before.rawConfig0A &&
+              after.verifiedGeneration == before.verifiedGeneration);
+        CHECK(after.verifiedProfile.portMode == t::PortMode::DRP);
+        CHECK(!f.device.diagnostics().configurationWriteUnresolved);
+        t::OperationToken noOp{};
+        CHECK(f.device.startApplyProfile(before.verifiedProfile, {150, 1150}, noOp)
+                  .inProgress());
+        CHECK(f.fake.calls == 0 && f.device.cancel(noOp).ok());
+        CHECK(f.take(noOp).hardwareEffect == t::HardwareEffect::NONE);
+        CHECK(f.device.configurationSnapshot().state == t::ConfigurationState::KNOWN);
+        auto desired = before.verifiedProfile;
+        desired.ccDebounce = t::CcDebounce::MS_118;
+        if (typed) {
+          t::OperationToken rejected{77};
+          const auto admission = f.device.startApplyProfile(desired, {200, 1200}, rejected);
+          CHECK(admission.is(t::Err::CONFIGURATION_UNKNOWN));
+          CHECK(rejected.value == 77 && f.fake.calls == 0);
+          if (admission.inProgress()) {
+            CHECK(f.device.cancel(rejected).ok());
+            CHECK(f.take(rejected).hardwareEffect == t::HardwareEffect::NONE);
+          }
+        } else {
+          CHECK(f.device.writeRegisterSync(0x0A, static_cast<uint8_t>(initial | 0x40U))
+                    .is(t::Err::CONFIGURATION_UNKNOWN));
+          CHECK(f.fake.calls == 0);
+        }
+        f.fake = Fake{};
+        CHECK(f.device.writeRegisterSync(8, 0x80).is(t::Err::UNSUPPORTED_FEATURE));
+        CHECK(f.device.writeRegisterSync(9, 0x14).is(t::Err::UNSUPPORTED_FEATURE));
+        CHECK(f.fake.calls == 0);
+
+        // A full proof renews the exact representation separately from semantic
+        // profile equality. The next unrelated write must preserve the new bits.
+        f.proof(0x80, 0x14, observed);
+        const auto reconciled = f.start(&Driver::startReconcile, 300);
+        CHECK(f.finish(reconciled, 300).ok() && f.fake.complete());
+        CHECK(f.take(reconciled).configuration.rawConfig0A == observed);
+        f.fake = Fake{};
+        const uint8_t expected = static_cast<uint8_t>(observed | 0x40U);
+        f.fake.expectWrite(0x47, 0x0A, expected);
+        if (typed) {
+          f.proof(0x80, 0x14, expected);
+          t::OperationToken applied{};
+          CHECK(f.device.startApplyProfile(desired, {400, 1400}, applied).inProgress());
+          CHECK(f.finish(applied, 400).ok() && f.fake.complete());
+          CHECK(f.take(applied).configuration.rawConfig0A == expected);
+        } else {
+          CHECK(f.device.writeRegisterSync(0x0A, expected).ok() && f.fake.complete());
+          CHECK(f.fake.calls == 1);
+        }
+      }
+    }
+  }
+}
+
 void rawStatusPrecedence() {
   Driver unbound;
   uint8_t out = 0xD3;
@@ -1011,6 +1095,7 @@ int main() {
   preservedRawRepresentations();
   rawStatusPrecedence();
   protected45EvidenceIsIndependent();
+  equivalentModeObservationsRevokeStaleWriteImages();
   writeCallbackNormalization();
   unresolvedRecoverySurvivesConsumption();
   settledResetAllowsOrdinaryRawWrite();
