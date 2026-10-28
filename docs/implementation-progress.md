@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 26, the native ESP-IDF CLI application.
+Current authorization: implement prompt 27, plain C++ and generic owner consumers.
 
 ## Prompt status
 
@@ -36,7 +36,7 @@ Current authorization: implement prompt 26, the native ESP-IDF CLI application.
 | [24: arduino-examples](prompts/24-arduino-examples.md) | COMPLETE (four SDK images; physical qualification not run) |
 | [25: idf-transport](prompts/25-idf-transport.md) | COMPLETE (two native SDK links; physical qualification not run) |
 | [26: idf-cli-example](prompts/26-idf-cli-example.md) | COMPLETE |
-| [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | NOT STARTED |
+| [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | COMPLETE |
 | [28: python-session](prompts/28-python-session.md) | NOT STARTED |
 | [29: observation-runners](prompts/29-observation-runners.md) | NOT STARTED |
 | [30: port-fixture-suites](prompts/30-port-fixture-suites.md) | NOT STARTED |
@@ -1860,3 +1860,59 @@ See [validation](validation.md#prompt-26-native-idf-cli-application-2026-10-28)
 for exact commands, versions, artifact sizes and limits. The lead commits/syncs
 this complete checked unit on the same branch and verifies clean upstream equality
 in the handoff; record that commit in the next progress update. Prompt27 is unstarted.
+
+## Prompt 27: plain C++ and generic owner integration (2026-10-28)
+
+Started clean after fetch at synchronized native-application commit
+`9e4b08a62303dbb9a6bbbfdbacb6aeb42154533c`, on the same execution branch/base.
+Read current parent/local rules, COMMON, full27, workflow/maintainability, exact
+operation/result/time and ownership contracts, public declarations and registered
+owner/consumer tests. Relevant workflow definitions remain absent locally; remote
+CI remains prompt34 only. No sibling edits/builds or hardware activity.
+
+Fresh FieldCore-node, LDC1614 and TMP1x2 revisions, clean state, exact declaration/
+implementation/test/runner/workflow/AGENTS paths and adopted/rejected conventions
+are in [execution27](audit/execution-27-peers.md). The integration guide maps owner
+concepts to public boundaries, explicitly preserving the limits of Status-only
+completion/effect evidence and backend aggregate bounds. No product types enter core.
+
+Delegation: gpt-6.1-sol/high owns the simulated ordinary host example; another
+owns only missing cases in the existing public owner scheduling fixture.
+gpt-6-astra/high owns fresh peer evidence and independent lifetime/effect review.
+The lead integrates, registers the actual host executable, documents and runs
+checks, and owns all Git. The review confirmed bus/context declaration order
+needed correction so it outlives the two driver instances; explicit end/take
+checks now demonstrate teardown. Existing fairness/recovery/fault matrices are
+reused rather than duplicated. No core change, product wrapper, new scheduler or
+public test hook was needed. The runnable host explicitly simulates LAI and
+synthetic time; delivery OK with a CONFIGURATION_MISMATCH payload demonstrates
+that delivery and operation success remain separate.
+
+PASS: strict full native Debug and Release, 62/62 registered CTests each, including
+the real shipped host main/profile target, existing public portable consumer and
+all prior suites. The owner scheduling fixture runs 5,487 checks with zero
+failures. All five public headers still compile independently. Standalone
+tests-OFF CMake and managed PlatformIO native consumer build/link/run pass.
+Final review also fixed duplicate target creation when the standalone project
+explicitly enables tests. That configuration now discovers 62 tests and passes
+the two affected host/operation suites; the tests-OFF path is unchanged.
+
+PASS: 74 source-equal package files with matching IDF selection and resolvable
+shipped links. Renamed extracted core/host and independent shared-CLI consumers
+build/run beneath an unrelated Git parent with maintainer tools absent from child
+PATH. The same public two-owner fixture also builds/runs there using tests OFF,
+without private core headers, framework/sibling paths, Git or Python. The initial
+isolated owner execution lacked MinGW runtime DLLs; copying only compiler runtime
+DLLs into a dedicated tool-free PATH resolved it, without a delivered source change.
+
+PASS: strict Doxygen/public XML visibility, Python documentation/style, stable
+version/no-op sync, local links, reference hashes and UTF-8/LF/whitespace checks.
+Fresh ASan/UBSan links remain BLOCKED by missing MinGW runtimes. Other host
+compilers and clang-format are unavailable. Physical Type-C/IRQ/VBUS, serial,
+real adapter aggregate timing and flashing/HIL remain NOT RUN; no board/port was
+identified or authorized. Framework links from prior stages were not repeated
+for this framework-free consumer change. Remote CI remains prompt34 only.
+See [validation](validation.md#prompt-27-plain-c-and-generic-owner-integration-2026-10-28)
+for exact versions, commands and limits. The lead commits/syncs this complete
+checked unit and verifies clean upstream equality in the handoff; record that
+commit in the next progress update. Prompt28 remains unstarted.

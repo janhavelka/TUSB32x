@@ -1,6 +1,6 @@
 # Feature, source and verification coverage
 
-Prompts 2-26, updated 2026-10-28. This matrix defines the capability boundary;
+Prompts 2-27, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
@@ -145,7 +145,7 @@ procedure sources remain the exact TI revisions already listed above.
 | Recovery/reset/termination, variant-gated | reset/recover; explicit CLI mutations | Separate obligations, current disable controls, acceptance and completion; p4 sequence ceilings unchanged; future O08/O09/O18/O19 | 13/14/18/19 |
 | Port/IRQ, B/L/A plus gated V | refresh/ACK/service; future CLI observation and service | Delivered S timestamps/bookends/validity, publication before ACK, retained complete/partial evidence and finite work; O20/O21; no queue or automatic reservice | 15/16, broader conformance18 and CLI21/22 |
 | Raw diagnostics/health, capability-gated | read/write Sync, stats/diagnostics/projectHealth; CLI reg/wreg/probe/health | Raw/all/managed accounting, unknown callback times, passive thresholds, no OFFLINE gate; source Doxygen and public behavioral diagnostics17; O22/O23/O25 | broader conformance18/19, CLI21/22 |
-| Generic external owner, all | Two driver/token pairs on borrowed shared bus | Passive observation/apply/cancel examples and uint32 extension compile under strict C++17; no FieldCore include or driver implementation | Real generic owner27; framework adapters23–26 |
+| Generic external owner, all | Two driver/token pairs on borrowed shared bus | Initial compile contracts plus delivered public runtime owner cases; no FieldCore include or core scheduler | Runtime owner27 below; framework adapters23–26 |
 
 No runtime operation, health helper or validator is linked by prompt 6. The
 configurationWriteUnresolved addition was passive at that stage; prompt 13 now
@@ -480,3 +480,22 @@ and both native adapter tick-rate suites. Host fakes and real linked images are
 separate proof layers; serial delivery, IRQ/CC/VBUS/electrical timing and board
 stack/overhead qualification remain NOT RUN. See the
 [native guide](../examples/esp_idf/basic/README.md) for commands and prerequisites.
+
+## Prompt 27 plain C++ owner integration
+
+| Contract | Public consumer/owner behavior | Executed evidence |
+| --- | --- | --- |
+| Runnable framework-free ordinary owner | Existing host/basic main/profile C++17 TUs, fixed simulated LAI callbacks and synthetic time | tusb32x_host_basic plus standalone tests-OFF CMake/native PlatformIO runs; admission, one-callback ceiling, exact take, status/effect and explicit end |
+| Delivery and operation outcome remain separate | Explicit apply followed by external reset and independently selected read-only reconcile | Host requires delivery OK with CONFIGURATION_MISMATCH payload, NONE effect/no replay and KNOWN differing actual configuration |
+| Two independent targets sharing external serialization | Existing Scheduler/Bus test fixture; no FieldCore include or product queue in core | Existing waiting/IRQ/failure fairness and queue/result backpressure; staleRequestsPreserveBothOwners adds active/terminal stale-token rejection without peer damage |
+| Cancellation/effects and separate owner policy | cancel retains exact result; later caller-selected startReconcile | cancelledApplyNeedsResultTakeAndSeparateReconcile covers pre-write NONE/KNOWN and post-write PARTIAL/UNKNOWN, result fence and read-only actual proof; existing late-write matrix covers INDETERMINATE errors |
+| External power/reset notification is local | invalidateDeviceState, unrelated raw read, separately selected reconcile and refresh | externalPowerEventNeedsFreshProofAndPortPublication keeps old observation invalidated until a complete new publication; another owner continues |
+| Borrowed bus/context outlives drivers | Bus declared before driver storage; explicit end/result delivery while context live | shutdownEndsBothOwnersBeforeBorrowedBusDies; scope-exit end checks consume zero callbacks and never hold locks between polls |
+| Caller-selected original-part startup recovery | Existing typed startRecoverDeadBattery after identity/readiness | waitingOwnerDoesNotHoldBus retains qualified base recovery without copying its sequence into consumer code; read-only reconcile does not certify its history |
+
+The [integration mapping](integration.md) connects generic request/service/result/
+diagnostics/power concepts to exact public boundaries. FieldCore paths remain
+source evidence, with richer completion/effect fields explicitly outside the
+Status-only bridge. Existing independent-header and isolated portable-consumer
+checks are reused. No core API, protocol, framework/product dependency or silicon
+capability changes; these are simulated host proofs, not Type-C qualification.

@@ -2936,3 +2936,99 @@ Native links and recording SDK tests are distinct from hardware/serial proof.
 Final Git commit/upstream equality and clean-state evidence belongs in the
 handoff and next progress update, avoiding a self-referencing commit-ID loop.
 Prompt27 remains unstarted.
+
+## Prompt 27 plain C++ and generic owner integration (2026-10-28)
+
+Started clean after fetch at synchronized
+`9e4b08a62303dbb9a6bbbfdbacb6aeb42154533c`, on the existing
+`promptset/tusb32x-implementation-20261023` branch. Read full27, current rules,
+COMMON, operation/result/time and ownership contracts, actual public declarations
+and existing owner/consumer registrations. Fresh FieldCore-node, LDC1614 and
+TMP1x2 revisions, clean state, precise source/test/runner/AGENTS paths and adopted
+or rejected conventions are in [execution27](audit/execution-27-peers.md).
+No sibling edits/builds, remote CI or hardware activity occurred.
+
+Two coding agents owned disjoint example/fixture files; an independent reviewer
+checked peer evidence, fairness, effects and lifetime. The lead inspected actual
+sources/diffs, integrated registration and documentation and ran final checks.
+The fixture's bus/context declaration order was corrected to outlive its two
+drivers, with explicit bus-silent end/result-delivery assertions. Existing
+fairness/recovery/uncertain-write matrices were reused. No core behavior/API,
+public test hook, framework/product dependency or stable version changed.
+
+Tools queried and used: host GCC15.1.0 (MinGW-W64 x86_64 UCRT/MCF), CMake and
+CTest4.0.1, Ninja1.12.1, Python3.12.10, Doxygen1.13.2 and the installed managed
+PlatformIO Core6.1.19 with native platform1.2.1. No SDK/tool installation or pin
+change was needed. Compiler runtime DLLs are ordinary runtime dependencies, not
+consumer dependencies on maintainer tools.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Strict full native Debug/Release | PASS | 62/62 registered CTests each; assertions active; all prior suites retained plus the real two-TU shipped host example |
+| Generic public owner fixture | PASS | 5,487 checks, zero failures; two targets, finite per-turn budgets, released callback gate/buffers, peer fairness, stale tokens, retained-result fences, cancellation before/after a possible write, external invalidation and caller-selected reconcile/recovery |
+| Borrowed lifetime and teardown | PASS | Bus declared before borrowers; explicit end while context remains alive, retained CANCELLED/PARTIAL evidence delivered by exact token, no callback or retained lock during end/take/destruction |
+| Runnable ordinary C++ example | PASS | Tests-OFF CMake and managed native PlatformIO build/link/run; simulated initialization, apply, copied port publication, local reset notification, unrelated raw read and separate read-only reconcile/refresh, explicit end; always-active checks and nonzero exit on failure |
+| Standalone optional tests | PASS | Final review found duplicate creation of the host target when tests were explicitly ON; the example now reuses that actual target and enables discovery at its project root: 62 discovered, both affected host/operation CTests pass |
+| Delivery versus operation outcome | PASS | Host requires delivery OK with CONFIGURATION_MISMATCH payload and NONE effect after an external reset; no desired replay, raw success leaves trust/freshness invalid until separate observations |
+| Independent public headers | PASS | Config, Status, TUSB32x, CommandTable and Version each compile as their own translation unit during the strict build; compile contracts are not registered as build-only behavior |
+| Package selection and isolation | PASS | 74 files source-equal to the archive, matching IDF include list, no vendor/reference/audit/test/build payload and all shipped guide links resolve; new integration guide is included |
+| Extracted ordinary/CLI consumers | PASS | Renamed library beneath unrelated Git parent, tests OFF, all core/consumer TUs compile as C++17 despite enclosing C++11 setting; build/run with Git/Python/Doxygen/PlatformIO absent from child PATH |
+| Extracted two-owner fixture | PASS | Same test_owner_scheduling.cpp and scripted support copied beside extracted core, tests OFF; strict build/link/run with 5,487 checks, no private core header path, framework/sibling dependency or maintainer tools on child PATH |
+| Documentation/version consistency | PASS | Strict Doxygen and visible public XML, Python docs/style, local links/anchors, stable no-op version sync/check, eight unchanged vendor hashes, UTF-8/LF/whitespace and git diff --check |
+| Host sanitizer availability | BLOCKED | Fresh ASan/UBSan link probes fail: installed MinGW toolchain lacks -lasan/-lubsan; cl, clang++ and clang-format unavailable |
+| Framework firmware links | NOT RUN | Prior stage evidence is preserved; no framework application/core source changed in this ordinary-consumer stage |
+| Physical/serial/Type-C qualification | NOT RUN | Simulation cannot establish SDK aggregate waits/cleanup, real bus timing, supply/reset/IRQ/CC/VBUS, serial behavior or power permission; no identified board/port was authorized |
+| Remote CI | NOT RUN | Explicit initial-promptset policy reserves remote CI for prompt34 |
+
+Actual commands run from the repository root:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R 'tusb32x_host_basic|tusb32x_operations|tusb32x_example_owner|tusb32x_example_integration|tusb32x_portable_consumer' --output-on-failure
+cmake -S examples/host/basic -B build/host-basic -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/host-basic --config Release
+& build/host-basic/tusb32x_host_basic.exe
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+cmake -S examples/host/basic -B build/p27-host-tests -G 'Ninja Multi-Config' -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p27-host-tests --config Release --target tusb32x_host_basic tusb32x_operations
+ctest --test-dir build/p27-host-tests -C Release -N
+ctest --test-dir build/p27-host-tests -C Release -R '^(tusb32x_host_basic|tusb32x_operations)$' --output-on-failure
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python build/p27-final-check.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p27.tar.gz
+python build/p27-package.py
+g++ -std=c++17 -fsanitize=address build/p20-sanitizer.cpp -o build/p27-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p20-sanitizer.cpp -o build/p27-ubsan.exe
+git diff --check
+```
+
+The session-only XML/link/package helpers are ignored local evidence, not core
+dependencies or new permanent validators. The package helper verifies the exact
+archive, creates an unrelated enclosing Git repository, restricts child PATH and
+invokes absolute CMake/Ninja/compiler paths for three separate tests-OFF
+applications. The two-owner fixture initially could not start without compiler
+runtime DLLs; its final run copies only those DLLs into a separate tool-free
+runtime directory, following the existing portable-consumer harness. No delivered
+source or contract was weakened. The final isolation artifact is
+build/p27-clean-parent-vwvov7qc; build/p27-package.log records all three runs.
+
+The [integration guide](integration.md) gives the concrete owner mapping, aggregate
+timeout/SDK disclosures, fresh next owner time after Status-only callbacks,
+conservative possible-write acceptance, same-target writer coordination, explicit
+power-event invalidation and shutdown. FieldCore's richer completion/effect fields
+and millisecond-scaled nowUs hook are documented without implying they survive a
+Status-only bridge. Host evidence does not certify source startup or physical
+Type-C. Qualified original-device recovery remains a separate application choice
+after identity and stable VDD; consumer code copies no silicon sequence.
+
+The final commit and verified push/fetch equality belong in the handoff and next
+progress update, avoiding a self-referencing hash update. Prompt28 is unstarted.

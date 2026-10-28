@@ -3,6 +3,11 @@
 Prompt 19 closes the core host checks before CLI and framework integration. The
 [peer audit](audit/execution-19-peers.md) records current sources and rejected
 assumptions. No new scheduler or clock belongs to the production library.
+Prompt 27's [generic integration guide](integration.md) and runnable
+[simulated example](../examples/host/basic/README.md) now demonstrate that boundary
+directly. The owner fixture also executes stale-token rejection, cancellation
+before/after a possible write, external power-event invalidation, separate
+reconciliation/fresh publication and explicit teardown with live borrowed context.
 
 The [native IDF application](../examples/esp_idf/basic/README.md) now demonstrates
 this owner split with real S2/S3 links. A pinned main task takes every read-only
@@ -17,6 +22,10 @@ serial timing remain separate qualification.
 | Contract | Named runtime evidence | Registered suite |
 | --- | --- | --- |
 | Two physical targets, alternating owner turns, finite queue/result capacity | `waitingOwnerDoesNotHoldBus`, `queueAndResultBackpressure`, `failedOrRepeatedIrqOwnerDoesNotStarvePeer` in `test/test_owner_scheduling.cpp` | `tusb32x_operations` |
+| Stale-token/retained-result isolation, cancellation and explicit reconciliation | `staleRequestsPreserveBothOwners`, `cancelledApplyNeedsResultTakeAndSeparateReconcile` | `tusb32x_operations` |
+| External reset/power event does not become fresh proof through unrelated raw success | `externalPowerEventNeedsFreshProofAndPortPublication` | `tusb32x_operations` |
+| Both owners end/take cancellations while the shared context remains live | `shutdownEndsBothOwnersBeforeBorrowedBusDies`; bus declared before driver storage | `tusb32x_operations` |
+| Runnable ordinary two-TU owner with simulated transport/time | Same shipped main/profile sources, explicit apply/invalidate/reconcile and always-active checks | `tusb32x_host_basic` |
 | Deadline110, callback starts108 with timeout2, physically returns111 | `literalLateWriteKeepsOutcomeAndEffect`: pending success becomes owner TIMEOUT; actual I2C_TIMEOUT/BUS/ERROR and full detail remain primary | `tusb32x_operations` |
 | Mode completion108.1/108.9, next fresh sample108/110, minimum six ticks | `physicalModeWait`, `exactWaitGatesAndLateFinalTime` in `test/test_profile_application.cpp` | `tusb32x_operations` |
 | Recovery31/reset96 ticks, independent elapsed microseconds, stalled/rollover time | `independentPhysicalWaits`, `wrappedWaitAndDisabledControls`, `clippedProcedureTimeouts` in `test/test_reset_recovery.cpp` | `tusb32x_operations` |

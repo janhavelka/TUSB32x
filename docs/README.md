@@ -7,6 +7,8 @@
   Raw Sync diagnostics and pure passive health are also implemented.
 - [Architecture](architecture.md): public/core/example responsibilities and the
   application-owned transport boundary.
+- [Owner integration](integration.md): runnable simulated plain C++, two-device
+  fairness/lifetimes, result delivery and the limits of a Status-only callback bridge.
 - [Development](development.md): version truth, generator exits, tool choices,
   component registration and package contents.
 - [Transport](transport.md): implemented private framing, access, accounting and

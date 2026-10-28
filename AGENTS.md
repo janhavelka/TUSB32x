@@ -28,6 +28,9 @@ Managed operation/control/result routes also use the core engine with one poll
 per turn and explicit retained-result take. The full 55-row shared CLI also provides
 bounded raw diagnostics, pure decode, passive health/counters, explicit invalidation
 and opt-in input reading; executable contract/parity checks use the host fixture.
+The ordinary host example now runs simulated owner operations and explicit
+invalidation/reconciliation; `docs/integration.md` maps generic owner integration
+without product dependencies. Its runtime checks are registered as `tusb32x_host_basic`.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -113,7 +116,10 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the eight C++ suites (including `tusb32x_protocol`,
+  and register the runnable simulated host example as well as generic owner cases
+  in `tusb32x_operations`; neither imports FieldCore or a framework.
+  Other registered checks include
+  the eight C++ suites (including `tusb32x_protocol`,
   `tusb32x_operations`, `tusb32x_port`, `tusb32x_diagnostics`, `tusb32x_cli` and
   `tusb32x_console`), the persistent `cli_transcript` against `tusb32x_cli_host`,
   executable `cli_contract`/`cli_contract_negative` parity checks, the isolated

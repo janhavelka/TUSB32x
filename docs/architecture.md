@@ -52,7 +52,7 @@ the same core to that CLI. No framework dependency enters the core target.
 | tools/tusb32x_cli_contract.py | Frozen implemented rows and typed record parsing; behavioral parity executes actual help |
 | test/cli/test_cli_operations.cpp, test_cli_diagnostics.cpp | Managed timing/result ownership plus raw safety/accounting, decode/health and literal device effects; parts of the existing CLI suite |
 | tools/check_cli_contract.py | One executed command/alias/help parity checker, shared help comparison for transcript, and deliberately broken-contract checks |
-| examples/host/basic/ | Standalone multi-file consumer of real values, validators, decoder and pure health; explicitly failing fake callbacks |
+| examples/host/basic/ | Standalone two-TU simulated owner; public bind/start/poll/take, apply, external invalidation/reconcile, copied port evidence and explicit end |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/planned_api.cpp | Compile-only delivered API signature inventory; the former future-declaration sketch is no longer needed |
 | test/contract/owner_examples.cpp | Compile-only passive observation, explicit apply/cancel and two devices sharing an external fake owner; no driver definitions |
@@ -119,6 +119,10 @@ fixtures without registering those build-only objects as passing runtime tests.
 `validateProfile` accepts readable TUSB322I settings independently of later
 changed-field write gates; it cannot prove observed configuration or a legal
 transition. The standalone consumer uses only actual callable API.
+The [generic integration guide](integration.md) maps service turns, exact-token
+delivery, power notifications and borrowed lifetimes to the application. The
+ordinary simulated example and two-device owner fixture execute that boundary;
+no product queue, callback completion extension or scheduler enters core.
 
 Managed I2C advances only in poll. Admission, cancellation, teardown and cached
 copies remain bus-silent. Synchronous raw diagnostics have an explicit separate

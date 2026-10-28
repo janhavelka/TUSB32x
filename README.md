@@ -78,7 +78,10 @@ const auto status = TUSB32x::validateProfile(
 
 The [real host consumer](examples/host/basic/README.md) builds and runs multiple
 translation units with CMake or pinned native PlatformIO. Its callbacks are
-explicitly fake and never imply a physical device. If native IDF's
+explicitly simulated. It binds, polls one callback per turn, takes exact results,
+checks effects and demonstrates invalidation/reconciliation without a physical
+device. The [integration guide](docs/integration.md) maps this to ordinary owners
+and a two-device fairness/lifetime fixture, without FieldCore dependencies. If native IDF's
 `idf_component_register` exists, the root CMake file registers the same real
 sources as a component. Registration and dependency admission are not linked
 firmware evidence.

@@ -15,6 +15,8 @@ adapters and S2/S3 example applications are implemented in prompts 23–26;
 physical qualification remains separate. Prompts 20–21 deliver
 the bounded local CLI plus managed operation/control/result routes. Prompt 22
 completes all diagnostic commands and executable alias/help/record parity.
+Prompt 27 adds runnable simulated plain C++ ownership and generic integration
+evidence without a FieldCore dependency.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

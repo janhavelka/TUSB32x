@@ -62,7 +62,7 @@ examples/
   02_owner_service/         Explicit bounded owner example
   esp_idf/basic/main/       Native ESP-IDF application
   esp_idf/common/IdfTransport.* Native application transport, no Arduino
-  host/basic/               Plain C++ consumer with app-owned callback stubs
+  host/basic/               Runnable plain C++ owner with app-owned simulated callbacks
 test/
   support/                  Scripted fake transport and externally timed fake owner
   test_protocol.cpp         Bytes, masks, access semantics, identity and variants

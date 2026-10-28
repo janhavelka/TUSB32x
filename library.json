@@ -21,7 +21,7 @@
       "src/TUSB32xOperations.cpp", "src/TUSB32xOwnerTime.h", "src/TUSB32xDiagnostics.cpp",
       "library.json", "idf_component.yml", "LICENSE", "README.md", "CHANGELOG.md",
       "Doxyfile", "docs/README.md", "docs/api-contracts.md", "docs/architecture.md",
-      "docs/transport.md", "docs/arduino-transport.md", "docs/idf-transport.md",
+      "docs/transport.md", "docs/arduino-transport.md", "docs/idf-transport.md", "docs/integration.md",
       "examples/esp_idf/Tusb32xIdf.h", "examples/esp_idf/Tusb32xIdf.cpp",
       "docs/diagnostics.md", "docs/CLI.md",
       "docs/register-map.md", "docs/register-vectors.md", "docs/variant-matrix.md",

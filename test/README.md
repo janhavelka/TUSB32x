@@ -492,7 +492,7 @@ Neither fake tests nor linked images prove physical timing or a qualified board.
 
 ## Native IDF application checks
 
-The complete matrix now registers 61 tests on Windows (60 elsewhere). Twenty-eight
+The complete matrix now registers 62 tests on Windows (61 elsewhere). Twenty-eight
 application scenarios compile and execute the actual native lifecycle, core,
 adapter, shared CLI and startup owner through recording SDK boundaries. They
 cover default/qualified setup, absent/configured/failed IRQ, owned versus borrowed
@@ -509,4 +509,27 @@ The actual S2/S3 application builds are separate evidence described in the
 
 ```text
 ctest --test-dir build/native -C Debug -R "tusb32x_idf|tusb32x_cli|tusb32x_console|cli_transcript|cli_contract" --output-on-failure
+```
+
+## Plain C++ owner checks
+
+`tusb32x_host_basic` builds and runs the same two translation units shipped under
+examples/host/basic. Its always-active checks exercise explicitly simulated
+binding/admission, one-callback turns, exact-token delivery, payload/effect
+inspection, external reset invalidation, unrelated raw-read limits, separate
+read-only reconciliation and copied/fresh port evidence. The standalone tests-OFF
+CMake/native PlatformIO commands remain in the [host README](../examples/host/basic/README.md).
+
+The existing `tusb32x_operations` suite additionally runs four generic two-device
+integration cases in test_owner_scheduling.cpp: stale requests preserve both
+owners, cancellation/result fences with separately chosen reconciliation, external
+power-event proof/freshness and explicit ended-owner result delivery while the
+bus remains live. Earlier cases retain queue/backpressure/fairness, uncertain
+write outcomes and caller-selected base recovery. No private driver hooks or
+FieldCore/framework include paths enter these owner cases. Each public header
+still compiles independently, and the isolated portable consumer retains its
+allocation/failure sentinels. See [integration](../docs/integration.md).
+
+```text
+ctest --test-dir build/native -C Debug -R "tusb32x_host_basic|tusb32x_operations|tusb32x_portable_consumer|tusb32x_example" --output-on-failure
 ```

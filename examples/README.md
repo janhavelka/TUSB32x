@@ -1,11 +1,14 @@
 # Examples
 
-The [ordinary host consumer](host/basic/README.md) is implemented. It compiles two
-application translation units, prints the stable package version and validates
-local values, decodes a supplied register byte and projects UNINIT passive health
-through the public API. The unbound facade performs no initialization or I/O.
-Its explicitly fake callbacks fail if invoked; no device is present.
-Build it using standalone CMake or its pinned native PlatformIO environment.
+The [ordinary host consumer](host/basic/README.md) runs an explicitly simulated
+TUSB320LAI with synthetic monotonic time through public callbacks. Two application
+translation units demonstrate binding, accepted admission, one-callback polling,
+exact-token delivery, explicit apply, copied port evidence, external invalidation
+and independently selected read-only reconciliation. Delivery OK remains distinct
+from a failed operation payload. Build/run it with standalone tests-OFF CMake or
+the pinned native PlatformIO environment. No physical chip is present. The
+[generic owner guide](../docs/integration.md) maps the same API to a serialized
+two-device owner without any product or framework dependency.
 
 The [shared CLI](../docs/CLI.md) is implemented under `examples/common/`.
 Its host fixture executes queries, target/lifecycle edits and staging without

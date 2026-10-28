@@ -34,6 +34,7 @@ files:
     - "docs/transport.md"
     - "docs/arduino-transport.md"
     - "docs/idf-transport.md"
+    - "docs/integration.md"
     - "examples/esp_idf/Tusb32xIdf.h"
     - "examples/esp_idf/Tusb32xIdf.cpp"
     - "docs/diagnostics.md"

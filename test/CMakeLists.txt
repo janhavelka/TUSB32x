@@ -13,6 +13,9 @@ target_include_directories(tusb32x_port PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../
 add_executable(tusb32x_diagnostics test_diagnostics.cpp)
 target_include_directories(tusb32x_diagnostics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
+# Run the same ordinary consumer shipped in the package, without framework/CLI sources.
+add_executable(tusb32x_host_basic ../examples/host/basic/main.cpp ../examples/host/basic/profile.cpp)
+
 # Example-only code is linked by CLI tests/fixture, never by the core target.
 add_library(tusb32x_cli_support STATIC
   ../examples/common/Tusb32xCli.cpp ../examples/common/Tusb32xCliOutput.cpp)
@@ -40,7 +43,7 @@ tusb32x_strict_warnings(tusb32x_cli_host)
 
 foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol
     tusb32x_operations tusb32x_port tusb32x_diagnostics tusb32x_cli tusb32x_console
-    tusb32x_example_owner tusb32x_example_integration tusb32x_output_mailbox)
+    tusb32x_example_owner tusb32x_example_integration tusb32x_output_mailbox tusb32x_host_basic)
   if(NOT suite STREQUAL "tusb32x_console")
     target_link_libraries(${suite} PRIVATE TUSB32x)
   endif()

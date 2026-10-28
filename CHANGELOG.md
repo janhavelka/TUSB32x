@@ -21,6 +21,13 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Runnable ordinary C++ simulated owner example with exact-token result delivery,
+  separate payload/effect checks, external invalidation and explicit read-only
+  reconciliation. Generic two-device tests extend stale-token, cancellation,
+  freshness and teardown coverage; borrowed bus storage now outlives driver
+  destruction. The integration guide maps product-owner concepts without a
+  FieldCore or framework dependency.
+
 - Complete native ESP-IDF 5.5.5 S2/S3 CLI application with explicit UART0 routes,
   owned synchronous resources, read-only startup results and checked bounded
   teardown. Input loss fails closed and output congestion cannot stall the owner.

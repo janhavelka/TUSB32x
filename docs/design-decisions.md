@@ -702,3 +702,19 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
 - Isolate SDKCONFIG and the component-manager lock by absolute build directory,
   resolve the directory-derived component name and regenerate example identity
   every incremental build. Core consumers gain no Git/Python/framework dependency.
+
+## Prompt 27 ordinary consumers and ownership (2026-10-28)
+
+- Extend the existing host/basic two-TU consumer to run a deliberately narrow
+  simulated LAI transport and synthetic owner clock. Do not package a test fake
+  as production protocol or introduce a framework/product dependency.
+- Register that actual main as a behavioral CTest: admission IN_PROGRESS,
+  one-callback polling, exact take, payload/effect distinction and explicit end
+  have always-active checks in Release. Delivery OK with mismatch is exercised.
+- Reuse the existing generic scheduler fixture for missing stale-token,
+  cancellation/invalidation/proof/freshness and teardown combinations. Keep the
+  shared bus declared before driver storage and explicitly end while context is
+  alive. Product queue/lifetime concepts are evidence, not a new chip wrapper.
+- Preserve Status-only uncertainty and fresh post-callback owner time. FieldCore
+  completion/effect fields and its millisecond-scaled nowUs hook cannot become
+  stronger timestamp/acceptance claims through this boundary.

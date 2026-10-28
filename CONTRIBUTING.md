@@ -36,9 +36,12 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Sixty runtime CTests are registered on all hosts, plus
+active in Release. Sixty-one runtime CTests are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
+The simulated ordinary host consumer is also a runtime CTest. Generic owner
+cases use public APIs and externally serialized callbacks; keep FieldCore paths
+as read-only evidence, never build dependencies. See [integration](docs/integration.md).
 Native application builds use the pinned IDF5.5.5 environment and independent
 absolute build/SDKCONFIG paths, including on incremental builds. See the
 [native application guide](examples/esp_idf/basic/README.md) for wiring and commands.
