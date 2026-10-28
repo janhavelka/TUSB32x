@@ -17,7 +17,7 @@ python tools/tusb32x_hil_runner.py --port COM7 --output build/session-001 --time
 
 COM7 is an illustration, not a discovered or selected device. Supply the actual
 authorized port. The entry point performs a fresh marker, version, cached bus,
-job-status, console and staged-profile exchange, then a fresh end marker. It does
+capabilities, job-status, console and staged-profile exchange, then a fresh end marker. It does
 not initialize the chip, apply settings, acknowledge an interrupt or reset it.
 A foreign active operation or retained result blocks the session. Firmware can
 advance work it already owns independently while processing a cached query.
@@ -47,9 +47,13 @@ after handling the outcome; Session does not retain backend buffers or reconnect
 
 `begin(expected=...)` establishes fresh framing and firmware identity, rejects
 foreign active/retained work and snapshots staging, automatic stepping, color
-and verbosity. `command(text)` returns a bounded Exchange with ack/records/end.
+and verbosity, together with the target's reported profile capability mask.
+Every Session registers required end-marker proof as NOT RUN, including reusable
+API sessions. A successful begin alone cannot produce a complete PASS.
+`command(text)` returns a bounded Exchange with ack/records/end.
 An admitted exchange has `admitted=True`, IN_PROGRESS and no terminal END yet.
-`wait_operation()` verifies its original terminal RESULT/DETAIL/END without taking
+`wait_operation()` requires original JOB evidence and verifies terminal
+RESULT/RESULT_DETAIL/END without taking
 the result. `take_result()` sends the exact owned token, verifies the copied
 payload and consumes the slot only on delivery OK. Inspect payload code/state,
 signed detail, effect and configuration independently of delivery. Failed owned
@@ -63,6 +67,11 @@ exists. Target queries remain available; target edits require a separately
 established session rather than a hidden variant/address change during a run.
 No device operation or safe-write composition is implemented again in Python.
 
+Profile staging edits require an available saved baseline for the selected
+variant. Its valid_fields must match CAPABILITIES.profile_fields, and every
+applicable value must be known. Unavailable or contradictory staging still permits
+read-only inspection; it cannot support an edit that would need later restoration.
+
 Each top-level exchange has one absolute deadline covering logging, write,
 fragments and closure. Per-write time is additionally clipped to its configured
 ceiling and checked after return. An admitted operation retains its original
@@ -73,6 +82,9 @@ Pass the same explicit deadline to several calls when the application wants one
 larger frame bound. Every I/O is checked before/after; received late bytes remain
 in capture but cannot establish success. Serial reads use at most a 50ms backend
 wait clipped to remaining time, with no new command timeout for each fragment.
+An expired public deadline in an established session invalidates and checkpoints
+the session before another write. Unconsumed tokens and unrestored local settings
+remain recorded; a later call cannot renew the lost operation's evidence.
 
 ## Framing, schemas and provenance
 
@@ -93,6 +105,10 @@ request's JOB/RESULT/END may follow a newer query or marker: original request,
 nonce, command, kind and token stay associated. Query copies are compared with
 the original payload and never counted as another completion. Nonce=none,
 command=invalid and counter exhaustion keep their explicit protocol meanings.
+Malformed arguments to a known route may receive command=invalid. The session
+accepts only the exact bus-silent INVALID_PARAM rejection: an unchanged zero-token
+ACK and matching failed END with zero callbacks, without payload records. It uses
+the firmware rejection rather than duplicating the firmware's argument parser.
 Original duplicate terminal pairs, wrong tokens, contradictory closures, LOSS,
 SESSION exhaustion, regressed new-input IDs, new boot banners and identity changes
 invalidate the session. Already received trailing/partial framing is checked
@@ -138,7 +154,13 @@ JSON is authoritative if replacing the summary fails. Temporary files are remove
 on failure. At most 1024 required checks, 64 residual facts and a 512KiB JSON report
 are accepted. Reports include at most 64KiB of the retained tail and count omitted
 bytes. Capture loss is sticky; later checkpoints can still save that failure.
-Failure to save returns incomplete, never a successful report claim.
+The bounded save_error field preserves the first checkpoint I/O failure and
+prevents exit zero. If summary replacement fails after JSON was published, one
+best-effort corrective JSON replacement records the save error and nonzero outcome.
+The summary is not retried. Failed first or corrective JSON replacement preserves
+the existing bytes and raises the save failure; unavailable storage may prevent
+persisting the newest failure. The tool reports that limitation and returns a
+nonzero exit instead of claiming a successful final save.
 
 Primary outcome, cleanup outcome and residual uncertainty are independent.
 Declare required checks NOT RUN before attempting them. Every required check
@@ -146,10 +168,18 @@ must PASS; an empty proof set, unknown proof, failed cleanup or residual uncerta
 prevents complete PASS. Intent is checkpointed before local/device mutations and
 exceptions/Ctrl-C are saved. Close failures are saved after attempting both serial
 and transcript teardown. Failed work plus good cleanup stays failed.
+Ctrl-C during the final checkpoint marks interruption and makes one further save
+attempt, returning 130. A second interruption or storage failure can prevent that
+interruption from being saved and is reported explicitly.
 
 `restore_local()` rechecks identity and restores only saved staging/output/auto
 values in the still verified idle session, verifying returned values rather than
-trusting OK alone. It never applies a hardware profile. Generations can advance;
+trusting OK alone. Profile restoration verifies availability, variant, the complete
+applicable validity mask and all saved applicable values in a final profile query.
+An individual setter requires its own saved field bit. A contradictory cleanup
+response invalidates the session; a later attempt cannot turn that loss into PASS.
+Public API checkpoints also save late interruptions, including after result take
+or final-marker closure. It never applies a hardware profile. Generations can advance;
 restoring values does not roll history back. Session loss preserves unconsumed
 tokens, uncertain device intent and unrestored local facts; it does not replay
 them against a rebooted/reconnected target. `finish()` requires owned results to

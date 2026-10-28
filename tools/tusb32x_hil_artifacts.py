@@ -3,8 +3,9 @@
 The caller supplies host and firmware metadata separately; this module never
 infers device identity or hardware success. Reports use PASS/FAIL/NOT RUN/BLOCKED.
 Each checkpoint replaces report.json and summary.md atomically, individually.
-report.json is authoritative if replacing the later summary fails. No serial
-port, subprocess or hardware operation is performed here.
+report.json is authoritative if replacing the later summary fails. A sticky
+save_error prevents complete PASS, with one best-effort JSON correction after a
+summary failure. No serial port, subprocess or hardware operation is performed here.
 """
 
 from __future__ import annotations
@@ -125,10 +126,11 @@ class Artifacts:
     required proof: register NOT RUN before attempting it. No checks means missing
     proof. Direct field changes are validated before reports are replaced.
 
-    Capture loss is sticky. After a cap, clock or transcript I/O failure, stop
-    recording and checkpoint the failure; the last valid report remains intact
-    if validation or temporary-file writing fails. Checkpoints remain possible
-    after capture loss and after close. This class is not thread-safe.
+    Capture loss and checkpoint save errors are sticky. After a cap, clock or
+    transcript I/O failure, stop recording and checkpoint the failure; the last
+    valid report remains intact if validation or temporary-file writing fails.
+    Checkpoints remain possible after capture loss and after close. This class
+    is not thread-safe.
     """
 
     def __init__(self, directory: Path, clock: Callable[[], float],
@@ -147,6 +149,7 @@ class Artifacts:
         self._last_time = 0.0
         self._capture_lost = False
         self._capture_error = ""
+        self._save_error = ""
         self._timestamp()
         self.metadata: dict = {}
         self.primary = "NOT RUN"
@@ -260,7 +263,7 @@ class Artifacts:
             return 1
         if (self.primary != "PASS" or self.cleanup in ("FAIL", "BLOCKED")
                 or not statuses or any(status != "PASS" for status in statuses)
-                or self._capture_lost or self.residual_uncertainty):
+                or self._capture_lost or self._save_error or self.residual_uncertainty):
             return 2
         return 0
 
@@ -270,7 +273,8 @@ class Artifacts:
         No clock, transcript or report file is touched. JSON is limited to 512 KiB,
         including the latest at most 64 KiB of retained tail (omission is counted).
         Metadata supports depth 8, 4096 nodes, 8192-character strings and finite
-        JSON numbers. Residual strings are at most 4096 chars.
+        JSON numbers. Residual strings are at most 4096 chars. save_error preserves
+        the first checkpoint I/O failure in at most 512 characters.
         """
         _status(self.primary)
         _status(self.cleanup)
@@ -284,6 +288,7 @@ class Artifacts:
         report = {
             "schema": 1, "primary": self.primary, "cleanup": self.cleanup,
             "interrupted": self.interrupted, "metadata": _copy_metadata(self.metadata),
+            "save_error": self._save_error,
             "checks": {name: dict(row) for name, row in self._checks.items()},
             "residual_uncertainty": residual,
             "capture": {"lost": self._capture_lost, "error": self._capture_error,
@@ -317,6 +322,7 @@ class Artifacts:
         lines = ["# TUSB32x session evidence", "",
                  f"Primary: {report['primary']}. Cleanup: {report['cleanup']}.", "",
                  f"Exit code: {report['exit_code']}. Interrupted: {report['interrupted']}.", "",
+                 f"Checkpoint save error: {_markdown(report['save_error']) or 'none'}.", "",
                  "| Required check | Status | Detail |", "| --- | --- | --- |"]
         for name, row in report["checks"].items():
             lines.append(f"| {_markdown(name)} | {row['status']} | {_markdown(row['detail'])} |")
@@ -360,23 +366,39 @@ class Artifacts:
 
         Validate and render both before replacing either. A failed replacement
         preserves that file's previous bytes and removes its temporary file.
-        JSON may be newer than Markdown if the second replacement fails.
+        Save errors remain in later reports and prevent exit zero. If JSON was
+        replaced before Markdown failed, attempt one corrective JSON replacement
+        recording the incomplete save; do not retry Markdown. Disk failure can
+        also prevent that correction, which is included in the raised error.
         """
         report = self.snapshot()
         encoded = self._json(report)
         summary = self._summary(report)
+        json_replaced = False
         try:
             self._replace("report.json", encoded)
+            json_replaced = True
             self._replace("summary.md", summary)
         except OSError as error:
-            raise EvidenceError(f"cannot save evidence checkpoint: {error}") from error
+            message = f"cannot save evidence checkpoint: {error}"
+            if not self._save_error:
+                self._save_error = message[:512].encode("utf-8", "replace").decode("utf-8")
+            if json_replaced:
+                try:
+                    # The just-published PASS must disclose the failed save when
+                    # JSON storage still works. Preserve the earlier report if
+                    # this one best-effort correction also fails.
+                    self._replace("report.json", self._json(self.snapshot()))
+                except (EvidenceError, OSError) as correction_error:
+                    message += f"; cannot record save failure: {correction_error}"
+            raise EvidenceError(message) from error
 
     def exit_code(self) -> int:
         """Return 0 complete PASS, 1 failed proof, 2 incomplete, or 130 interrupted.
 
         Cleanup PASS never repairs primary/check FAIL. All declared checks must
         PASS and at least one must exist. Cleanup NOT RUN means none was needed.
-        Capture loss, missing proof or residual uncertainty prevents exit zero.
+        Capture loss, save failure, missing proof or residual uncertainty prevents exit zero.
         Invalid public report state raises EvidenceError instead of returning PASS.
         """
         return self.snapshot()["exit_code"]

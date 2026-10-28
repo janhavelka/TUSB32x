@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 28, strict Python sessions and evidence artifacts.
+Current authorization: independently audit and correct completed prompts 27 and 28.
 
 ## Prompt status
 
@@ -1969,3 +1969,57 @@ HIL remain NOT RUN. Remote CI remains prompt34 only. See
 for exact commands/results and limits. The lead commits/syncs this complete unit
 on the same branch and verifies upstream equality in the handoff; record that
 commit in the next progress update. Prompt29 is unstarted.
+
+## Independent audit of prompts 27 and 28 (2026-10-28)
+
+Started clean after fetch at synchronized prompt28 commit
+`e1e79e6fb440fe2c3eb56d2df215b46722dcded3`, on the same execution branch/base.
+Reread both original prompts in full, current parent/local rules, COMMON,
+workflow/maintainability, owner timing/lifetime and CLI machine/runner contracts.
+Compared actual implementation commits, public declarations and executed fixtures.
+Fresh read-only FieldCore-node, TMP1x2, LDC1614 and 24Cxx revisions, exact files,
+clean state and adopted/rejected conventions are in the consolidated
+[independent review](audit/review-27-28.md). No local workflows exist; remote CI
+remains prompt34 only. No sibling edits/builds or hardware activity occurred.
+
+Delegation: gpt-6.1-sol/high independently reviewed prompt27 coverage, simplicity,
+lifetimes and fairness and ran fresh ordinary/owner consumers. Another audited
+prompt28 artifact faults/peers, then owned only the artifact helper/tests and
+three documentation files. gpt-6-astra/high reviewed actual session correlation,
+deadline, staging and result ownership with fresh context. The lead reproduced
+findings, owned session/live-fixture fixes, reviewed every returned diff, integrated
+checks/documentation and retained all Git ownership. Shared schemas, public C++
+API, core transport and operation engine remain unchanged.
+
+Prompt27 had no confirmed defect. Prompt28 corrections require API end-marker
+and original JOB proof, accept exact silent parser rejections without a duplicate
+argument parser, require available/applicable saved staging including each edited
+field, and validate complete restoration. Contradictory cleanup invalidates the
+session. Expired public deadlines and late public checkpoints now save failure/
+interruption and precise unconsumed/already-taken result facts. Sticky save_error
+and one corrective JSON replacement prevent a failed summary save from leaving
+an authoritative PASS. Final-save Ctrl-C gets one bounded interruption save.
+No serial retry, hardware restoration, second result cache or later runner plan
+was added. The stronger review's additional edge cases were confirmed and fixed
+before handoff, with focused regressions rather than contract weakening.
+
+PASS: 104 deterministic runner/artifact tests (30 dedicated artifact cases),
+full strict Debug and Release 63/63 CTests each, and affected four CLI/runner
+registrations repeated after final session corrections. Live C++ sessions now
+also execute malformed known-route arguments and literal dotted input, proving
+typed rejection preserves framing. Fresh ordinary tests-OFF Release and independent
+public headers pass; the two-owner fixture runs 5,487 checks with zero failures.
+The isolated portable consumer executes 369 checks and allocation/failure sentinels.
+
+PASS: 75 source-equal packed files and matched IDF selection, renamed extracted
+host/shared-CLI/public-owner consumers beneath unrelated Git with maintainer tools
+absent from child PATH; stable version/no-op sync, Doxygen/public XML, Python
+docstrings/style, local links, vendor hashes and UTF-8/LF/whitespace checks.
+Exact commands, versions and outcomes are in the validation audit entry. Hardware
+serial/CC/IRQ/VBUS and real adapter timing remain NOT RUN. No framework rebuild or
+remote CI was needed for these tooling-only corrections. Sanitizer/other compiler
+availability is recorded separately. Prompt29 remains unstarted.
+
+The lead commits and syncs the complete checked audit on the existing branch,
+then verifies equal upstream commits, zero ahead/behind and no uncommitted task
+changes in the handoff; record its hash in the next progress update.

@@ -3116,3 +3116,69 @@ with exits 0 complete PASS, 1 failure, 2 blocked/incomplete and 130 interruption
 The final commit/push/fetch equality and clean-tree evidence belong in the handoff
 and next progress update, avoiding a self-referencing hash loop. Prompt29 remains
 unstarted; no remote CI or serial hardware completion is claimed.
+
+## Independent prompt 27/28 audit (2026-10-28)
+
+Entry: clean synchronized `e1e79e6fb440fe2c3eb56d2df215b46722dcded3`, existing
+`promptset/tusb32x-implementation-20261023` branch. The
+[fresh review](audit/review-27-28.md) records full original-prompt coverage, peer
+revisions/dirty state/paths and reproduced gaps. Prompt27 required no correction;
+prompt28 required staging/restoration, mandatory proof, parser rejection, early
+deadline and late-checkpoint/artifact fixes. Tests use injected monotonic time,
+reactive fake serial, real files and the actual persistent C++ fixture. No physical
+serial port, sibling build/edit, flashing or remote CI was used.
+
+Tools rechecked: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GCC15.1.0 MinGW
+UCRT/MCF, Doxygen1.13.2 and managed PlatformIO6.1.19/native1.2.1. Optional
+pyserial3.5 remains pinned; its official release and API were reread, including
+finite read/write settings and OS-dependent DTR/RTS pulses on open. No tool or
+dependency was installed. Version truth remains 0.1.0-dev.1.
+
+| Check | Result | Executed evidence |
+| --- | --- | --- |
+| Fresh independent ordinary consumer | PASS | Separate tests-OFF Release configure/build/run in build/re27-host, ordinary callbacks and simulated values |
+| Public owner and headers | PASS | Fresh Debug operations/host/header targets in build/re27-owner; operations/host CTest 2/2, 5,487 owner checks, independent public includes |
+| Isolated portable consumer | PASS | 369 checks with explicit failure/allocation sentinels; no private headers or maintainer tools on child PATH |
+| Session and artifacts | PASS | 104 unittest cases, including 30 artifact cases; original 87 cases remain enabled |
+| Actual C++ session exchange | PASS | Existing single cli_transcript runs normal/failed-payload sessions and malformed known-route parser rejections; original 248-request transcript retained |
+| Strict complete native regressions | PASS | Debug 63/63 and Release 63/63 CTests, Release assertions active; four affected registrations repeated after the last session fixes |
+| Package isolation | PASS | 75 source-equal files; manifest/IDF selection and shipped links match; renamed tests-OFF host, shared CLI and public-owner consumers build/link/run beneath unrelated Git without Git/Python/Doxygen/PlatformIO on child PATH |
+| Version and source docs | PASS | Generator sync/check, repeated no-op sync preserving bytes/mtime; strict Doxygen/XML public visibility; Python docstrings and 100-column style |
+| Repository consistency | PASS | Local Markdown links/anchors, eight vendor SHA-256 hashes, changed UTF-8/LF/final newline, git diff --check |
+| ASan/UBSan and other host compilers | BLOCKED | Fresh trivial link cannot find -lasan/-lubsan; cl, clang++ and clang-format are absent |
+| Physical serial/Type-C/IRQ/VBUS | NOT RUN | No identified/authorized port, board, fixture, trace or hardware action; simulations prove software only |
+
+Commands executed from the repository root (Ninja Multi-Config for build/native):
+
+```text
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+python tools/test_tusb32x_hil_runner.py
+ctest --test-dir build/native -C Debug -R "^(hil_runner|cli_transcript|cli_contract|cli_contract_negative)$" --output-on-failure
+ctest --test-dir build/native -C Release -R "^(hil_runner|cli_transcript|cli_contract|cli_contract_negative)$" --output-on-failure
+cmake -S examples/host/basic -B build/re27-host -G Ninja -DTUSB32X_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build/re27-host
+build/re27-host/tusb32x_host_basic.exe
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+scripts/pio.cmd pkg pack . --output build/TUSB32x-re27-28.tar.gz
+python build/re27-28-package.py
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p27-final-check.py
+python build/re27-28-checks.py
+python build/p10-docs.py
+git diff --check
+```
+
+The build/ Python files are session-only local verification helpers, not shipped
+tools or future guards. Package artifacts/logs are build/TUSB32x-re27-28.tar.gz,
+build/re27-28-package.log and build/re27-28-clean-parent-uh2a1ql6. The helper checks
+all three extracted consumers with strict warnings and tests OFF; the owner still
+runs its real public API's 5,487 checks. Framework images were not rebuilt for
+host Python fixes; earlier links are not claimed as new-commit firmware evidence.
+Remote CI remains prompt34 only. Commit/push/fetch equality is verified in the
+handoff and the next progress update, avoiding a self-referencing hash loop.

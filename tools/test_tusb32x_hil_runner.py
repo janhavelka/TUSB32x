@@ -46,6 +46,9 @@ def record(record_type: str, request: int, nonce: str, **fields: object) -> dict
                     adapter_available="1"),
         "CONSOLE": dict(line_capacity="192", input_budget="64", output_capacity="8192",
                         record_capacity="512", drain_budget="256", available="8192"),
+        "CAPABILITIES": dict(configured_variant="tusb320lai", observed_variant="tusb320lai",
+                             profile_fields="255", advertisement_write="1",
+                             duty_write="1", accessory_write="1"),
         "CONFIG": dict(configuration="KNOWN", has_desired="1", has_observed="1",
                        has_applied="1", raw08="0", raw09="0", raw0a="0", raw45="unknown"),
         "CONFIG_DETAIL": dict(termination="ENABLED", reset="NONE", mismatch_register="unknown",
@@ -53,8 +56,8 @@ def record(record_type: str, request: int, nonce: str, **fields: object) -> dict
                               mismatch_mask="unknown"),
         "PROFILE": dict(source="staged", variant="tusb320lai", available="1", mode="drp",
                         current="default", duty="30", debounce="116", preference="normal",
-                        ufpaccessory="on", termination="on", rd_rp="unknown",
-                        disable_ufp_accessory="0", disable_term="0", disable_rd_rp="unknown"),
+                        ufpaccessory="on", termination="on", rd_rp="on", valid_fields="255",
+                        disable_ufp_accessory="0", disable_term="0", disable_rd_rp="0"),
         "SESSION": dict(code="TOKEN_EXHAUSTED", reason="request_exhausted"),
     }
     values.update(defaults.get(record_type, {}))
@@ -110,7 +113,7 @@ class Peer:
         self.verbose = "0"
         self.auto = "1"
         self.staged = dict(mode="drp", current="default", duty="30", debounce="116",
-                           preference="normal", ufpaccessory="on", termination="on")
+                           preference="normal", ufpaccessory="on", termination="on", rd_rp="on")
         self.foreign_active = False
         self.foreign_result = False
         self.operation: dict | None = None
@@ -136,7 +139,10 @@ class Peer:
         """Return configuration evidence and all four independently labelled profiles."""
         return [record("CONFIG", request, self.nonce),
                 record("CONFIG_DETAIL", request, self.nonce)] + [
-            record("PROFILE", request, self.nonce, source=source, **self.staged)
+            record("PROFILE", request, self.nonce, source=source, **self.staged,
+                   disable_ufp_accessory=int(self.staged["ufpaccessory"] == "off"),
+                   disable_term=int(self.staged["termination"] == "off"),
+                   disable_rd_rp=int(self.staged["rd_rp"] == "off"))
             for source in ("staged", "desired", "observed", "applied")
         ]
 
@@ -178,6 +184,8 @@ class Peer:
                            record("FRAMEWORK", request, self.nonce)]
             elif canonical == "bus":
                 payload = [record("BUS", request, self.nonce)]
+            elif canonical == "capabilities":
+                payload = [record("CAPABILITIES", request, self.nonce)]
             elif canonical in {"console", "color", "verbose"}:
                 if canonical != "console" and len(parts) > 1:
                     setattr(self, canonical, "1" if parts[1] in {"1", "on"} else "0")
@@ -193,9 +201,9 @@ class Peer:
                     ack["action"] = "LOCAL"
                     if payload[0]["state"] == "ACTIVE":
                         payload[0]["code"] = "IN_PROGRESS"
-            elif canonical == "profile.show" or canonical in self.staged:
-                if canonical in self.staged and len(parts) > 1:
-                    self.staged[canonical] = parts[1]
+            elif canonical == "profile.show" or canonical.replace("-", "_") in self.staged:
+                if canonical != "profile.show" and len(parts) > 1:
+                    self.staged[canonical.replace("-", "_")] = parts[1]
                     ack["action"] = "STAGED"
                 payload = self._profile(request)
             elif canonical in {"read", "init", "apply", "reset"}:
@@ -466,6 +474,60 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(result.ack["command"], "invalid")
         self.assertEqual(result.end["code"], "INVALID_PARAM")
 
+    def test_invalid_arguments_keep_verified_session_and_prior_local_changes(self):
+        """Accept silent parser rejection of a known route without guessing its syntax."""
+        for text in ("mode drp extra", "bus extra", "profile.show"):
+            with self.subTest(text=text):
+                session, peer, _, artifacts = self.begun()
+                session.command("color on")
+                before = dict(peer.staged)
+                def rejected(command, rows):
+                    """Reject the whole input before the fixture can change its staging."""
+                    if command == text:
+                        peer.staged = dict(before)
+                        return [record("ACK", peer.request, peer.nonce, command="invalid",
+                                       code="INVALID_PARAM", action="UNCHANGED"),
+                                record("END", peer.request, peer.nonce, command="invalid",
+                                       code="INVALID_PARAM", outcome="FAILED")]
+                    return rows
+                peer.response_hook = rejected
+                response = session.command(text)
+                self.assertEqual(response.command, "invalid")
+                self.assertEqual(response.end["code"], "INVALID_PARAM")
+                self.assertTrue(session.valid)
+                self.assertEqual(artifacts.metadata["local_changed"], ["color"])
+                session.finish()
+                self.assertEqual(peer.color, "0")
+                self.assertEqual(peer.staged, before)
+
+    def test_invalid_fallback_cannot_hide_success_traffic_or_payload(self):
+        """Only exact failed ACK/END parser closures can change the predicted canonical route."""
+        for damage in ("success", "detail", "token", "action", "traffic", "payload"):
+            with self.subTest(damage=damage):
+                session, peer, _, _ = self.begun()
+                def rejected(_, rows):
+                    """Inject a contradictory rejection independently of session validation."""
+                    ack = record("ACK", peer.request, peer.nonce, command="invalid",
+                                 code="INVALID_PARAM", action="UNCHANGED")
+                    end = record("END", peer.request, peer.nonce, command="invalid",
+                                 code="INVALID_PARAM", outcome="FAILED")
+                    if damage == "success":
+                        ack["code"] = end["code"] = "OK"
+                        end["outcome"] = "SUCCEEDED"
+                    elif damage == "detail":
+                        ack["detail"] = end["detail"] = "1"
+                    elif damage == "token":
+                        ack["token"] = end["token"] = "7"
+                    elif damage == "action":
+                        ack["action"] = "QUERY"
+                    elif damage == "traffic":
+                        end["callbacks"] = "1"
+                    return [ack, *([rows[1]] if damage == "payload" else []), end]
+                peer.response_hook = rejected
+                with self.assertRaises(runner.ProtocolError):
+                    session.command("bus extra")
+                self.assertFalse(session.valid)
+
     def test_extension_fields_are_preserved_without_substituting_required_fields(self):
         """Retain additive fields while still requiring the complete known schema."""
         session, peer, _, _ = self.begun()
@@ -556,6 +618,36 @@ class SessionTests(unittest.TestCase):
         with self.assertRaises(runner.SessionTimeout):
             session.command("bus", deadline=clock())
         self.assertEqual(peer.writes, before)
+
+    def test_expired_public_deadlines_save_owned_evidence_before_any_io(self):
+        """Expiration before the I/O loop still invalidates and checkpoints the owned token."""
+        for method in ("command", "mark", "wait_operation"):
+            with self.subTest(method=method):
+                session, peer, clock, artifacts = self.begun()
+                session.command("read", deadline=clock() + 1)
+                clock.now += 2
+                before = list(peer.writes)
+                with self.assertRaises(runner.SessionTimeout):
+                    if method == "command":
+                        session.command("bus", deadline=clock())
+                    else:
+                        getattr(session, method)(deadline=clock())
+                self.assertEqual(before, peer.writes)
+                self.assertFalse(session.valid)
+                saved = json.loads((artifacts.directory / "report.json").read_text())
+                self.assertEqual(saved["exit_code"], 1)
+                self.assertEqual(saved["checks"]["session"]["status"], "FAIL")
+                self.assertEqual(saved["metadata"]["unconsumed_operation"]["token"], peer.token)
+
+    def test_invalid_deadline_is_saved_as_invocation_incomplete(self):
+        """An invalid finite-deadline argument stays exit two rather than a protocol failure."""
+        session, peer, _, artifacts = self.begun()
+        before = list(peer.writes)
+        with self.assertRaises(runner.InvocationError):
+            session.command("bus", deadline=float("nan"))
+        self.assertEqual(peer.writes, before)
+        self.assertEqual(artifacts.exit_code(), 2)
+        self.assertFalse(session.valid)
 
     def test_late_write_and_short_write_invalidate(self):
         """Reject late or partial writes because complete command acceptance is unproved."""
@@ -746,6 +838,17 @@ class SessionTests(unittest.TestCase):
                     session.wait_operation()
                 self.assertFalse(session.valid)
 
+    def test_original_operation_requires_its_admission_job_record(self):
+        """A result and END cannot substitute for missing required original JOB evidence."""
+        session, peer, _, artifacts = self.begun()
+        peer.response_hook = lambda _, rows: [r for r in rows if r["type"] != "JOB"]
+        session.command("read")
+        peer.complete()
+        with self.assertRaisesRegex(runner.ProtocolError, "missing required original"):
+            session.wait_operation()
+        self.assertFalse(session.valid)
+        self.assertEqual(artifacts.exit_code(), 1)
+
     def test_orphan_terminal_record_and_zero_admission_token_reject(self):
         """Reject terminal records without ownership and admission without a token."""
         session, peer, _, _ = self.begun()
@@ -876,6 +979,69 @@ class SessionTests(unittest.TestCase):
             session.restore_local()
         self.assertEqual(peer.writes, before)
 
+    def test_missing_staging_proof_blocks_edits_without_traffic(self):
+        """Unavailable, partial or misattributed baseline cannot support later restoration."""
+        for fields in ({"available": "0"}, {"valid_fields": "0"}, {"valid_fields": "254"},
+                       {"mode": "unknown"}, {"variant": "tusb320"},
+                       {"disable_term": "1"}):
+            for command in ("mode dfp", "profile reset", "profile discard"):
+                with self.subTest(fields=fields, command=command):
+                    session, peer, _, artifacts = self.make_session()
+                    def missing(_, rows):
+                        """Damage staged validity while leaving every required key present."""
+                        return [dict(row, **fields) if row["type"] == "PROFILE" and
+                                row["source"] == "staged" else row for row in rows]
+                    peer.response_hook = missing
+                    session.begin()
+                    before = list(peer.writes)
+                    with self.assertRaises(runner.SessionBlocked):
+                        session.command(command)
+                    self.assertEqual(peer.writes, before)
+                    self.assertNotEqual(artifacts.cleanup, "PASS")
+
+    def test_coherently_absent_field_cannot_escape_restoration(self):
+        """A setter needs its own saved field even when all other capability bits are valid."""
+        session, peer, _, _ = self.make_session()
+        def absent_mode(_, rows):
+            """Advertise a missing mode field consistently in capabilities and staging."""
+            return [dict(row, profile_fields="254") if row["type"] == "CAPABILITIES" else
+                    dict(row, valid_fields="254", mode="unknown") if row["type"] == "PROFILE"
+                    else row for row in rows]
+        peer.response_hook = absent_mode
+        session.begin()
+        before = list(peer.writes)
+        with self.assertRaisesRegex(runner.SessionBlocked, "staged field unavailable"):
+            session.command("mode dfp")
+        self.assertEqual(peer.writes, before)
+        self.assertEqual(peer.staged["mode"], "drp")
+
+    def test_restoration_requires_available_valid_attributed_payload(self):
+        """Matching field text alone is insufficient proof of restored local staging."""
+        for fields in ({"available": "0"}, {"valid_fields": "0"}, {"variant": "unknown"}):
+            with self.subTest(fields=fields):
+                session, peer, _, artifacts = self.begun()
+                session.command("mode dfp")
+                def missing(text, rows):
+                    """Remove restored staging proof despite its matching requested mode."""
+                    return [dict(row, **fields) if text == "mode drp" and
+                            row["type"] == "PROFILE" and row["source"] == "staged"
+                            else row for row in rows]
+                peer.response_hook = missing
+                with self.assertRaises(runner.SessionBlocked):
+                    session.restore_local()
+                self.assertEqual(artifacts.cleanup, "FAIL")
+                self.assertIn("profile", artifacts.metadata["unrestored_local"])
+
+    def test_reusable_session_cannot_pass_without_finish(self):
+        """The public API declares end-marker proof even outside the command-line entrypoint."""
+        session, _, _, artifacts = self.begun()
+        artifacts.primary = "PASS"
+        artifacts.checkpoint()
+        self.assertEqual(artifacts.exit_code(), 2)
+        self.assertEqual(artifacts.snapshot()["checks"]["end_marker"]["status"], "NOT RUN")
+        session.finish()
+        self.assertEqual(artifacts.exit_code(), 0)
+
     def test_restoration_delivery_ok_requires_matching_local_payload(self):
         """An OK restoration acknowledgement still requires matching staging evidence."""
         session, peer, _, artifacts = self.begun()
@@ -892,6 +1058,16 @@ class SessionTests(unittest.TestCase):
             session.restore_local()
         self.assertEqual(artifacts.cleanup, "FAIL")
         self.assertIn("profile", artifacts.metadata["unrestored_local"])
+        self.assertFalse(session.valid)
+        before = list(peer.writes)
+        peer.response_hook = None
+        with self.assertRaises(runner.SessionBlocked):
+            session.restore_local()
+        with self.assertRaises(runner.SessionBlocked):
+            session.finish()
+        self.assertEqual(peer.writes, before)
+        artifacts.primary = "PASS"
+        self.assertEqual(artifacts.exit_code(), 1)
 
     def test_restore_local_settings_without_hardware_apply(self):
         """Restore staging, scheduling and output settings without applying device changes."""
@@ -910,6 +1086,46 @@ class SessionTests(unittest.TestCase):
         self.assertFalse(any(text.split()[0] in {"apply", "reset", "wreg"}
                              for text in peer.writes[before:]))
         self.assertTrue(peer.writes[-1].startswith("hilmark "))
+
+    def test_public_finish_checkpoint_interrupt_is_saved(self):
+        """A signal after final MARK closure cannot leave the reusable API at PASS."""
+        session, _, _, artifacts = self.begun()
+        original = artifacts.checkpoint
+        def interrupt_final():
+            """Interrupt once when the final check first becomes PASS."""
+            if (artifacts.snapshot()["checks"]["end_marker"]["status"] == "PASS" and
+                    not artifacts.interrupted):
+                raise KeyboardInterrupt()
+            original()
+        with mock.patch.object(artifacts, "checkpoint", side_effect=interrupt_final):
+            with self.assertRaises(KeyboardInterrupt):
+                session.finish()
+        self.assertFalse(session.valid)
+        saved = json.loads((artifacts.directory / "report.json").read_text())
+        self.assertTrue(saved["interrupted"])
+        self.assertEqual(saved["exit_code"], 130)
+
+    def test_post_delivery_checkpoint_interrupt_preserves_taken_result_fact(self):
+        """A late save interruption records successful take without inventing a retained token."""
+        session, peer, _, artifacts = self.begun()
+        session.command("read")
+        peer.complete()
+        session.wait_operation()
+        original = artifacts.checkpoint
+        def interrupt_take():
+            """Interrupt the post-take save only, leaving the interruption save available."""
+            if artifacts.metadata["operation"]["taken"] and not artifacts.interrupted:
+                raise KeyboardInterrupt()
+            original()
+        with mock.patch.object(artifacts, "checkpoint", side_effect=interrupt_take):
+            with self.assertRaises(KeyboardInterrupt):
+                session.take_result()
+        saved = json.loads((artifacts.directory / "report.json").read_text())
+        self.assertFalse(session.valid)
+        self.assertIsNone(peer.operation)
+        self.assertTrue(saved["metadata"]["operation"]["taken"])
+        self.assertNotIn("unconsumed_operation", saved["metadata"])
+        self.assertEqual(saved["exit_code"], 130)
 
     def test_finish_requires_owned_retained_result_to_be_consumed(self):
         """Finishing cannot silently abandon or consume an owned retained result."""
@@ -1078,6 +1294,44 @@ class MainTests(unittest.TestCase):
         self.assertNotEqual(report["primary"], "PASS")
         self.assertTrue(peer.closed)
         self.assertTrue((directory / "summary.md").exists())
+
+    def test_final_summary_save_failure_corrects_json_verdict(self):
+        """The real entrypoint cannot publish PASS JSON while returning incomplete saving."""
+        original = Artifacts._replace
+        def fail_final_summary(artifacts, name, data):
+            """Fail only the final summary after the final PASS JSON was replaced."""
+            if artifacts.primary == "PASS" and name == "summary.md":
+                raise OSError("final summary locked")
+            return original(artifacts, name, data)
+        with mock.patch.object(Artifacts, "_replace", new=fail_final_summary):
+            code, peer, report, directory, _ = self.invoke()
+        self.assertEqual(code, 2)
+        self.assertEqual(report["exit_code"], 2)
+        self.assertIn("final summary locked", report["save_error"])
+        self.assertTrue(peer.closed)
+        self.assertEqual(list(directory.glob("*.tmp")), [])
+
+    def test_final_checkpoint_interrupt_is_saved_with_exit_130(self):
+        """Ctrl-C during either final atomic replacement gets one bounded interruption save."""
+        original = Artifacts._replace
+        for interrupted_file in ("report.json", "summary.md"):
+            with self.subTest(interrupted_file=interrupted_file):
+                events = []
+                def interrupt_final(artifacts, name, data):
+                    """Interrupt final PASS once, leaving its interruption save available."""
+                    events.append(name)
+                    if artifacts.primary == "PASS" and name == interrupted_file:
+                        raise KeyboardInterrupt()
+                    return original(artifacts, name, data)
+                with mock.patch.object(Artifacts, "_replace", new=interrupt_final):
+                    code, peer, report, directory, _ = self.invoke()
+                self.assertEqual(code, 130)
+                self.assertEqual(report["exit_code"], 130)
+                self.assertTrue(report["interrupted"])
+                self.assertNotEqual(report["primary"], "PASS")
+                self.assertEqual(events[-2:], ["report.json", "summary.md"])
+                self.assertTrue(peer.closed)
+                self.assertEqual(list(directory.glob("*.tmp")), [])
 
     def test_backend_exit_zero_cannot_replace_missing_proof_with_pass(self):
         """A backend SystemExit zero is saved as failure, unlike argparse help before I/O."""

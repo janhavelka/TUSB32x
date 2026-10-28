@@ -24,6 +24,12 @@ LOCAL_PROFILE = {
     "preference": "preference", "ufpaccessory": "ufpaccessory", "termination": "termination",
     "rd-rp": "rd_rp",
 }
+# Public ProfileField bits, not a duplicate silicon capability table. The
+# cached CAPABILITIES record supplies the applicable fields for this target.
+PROFILE_BITS = {
+    "mode": 1, "current": 2, "preference": 4, "duty": 8, "debounce": 16,
+    "ufpaccessory": 32, "termination": 64, "rd_rp": 128,
+}
 KINDS = {
     "init": "INITIALIZE", "read": "REFRESH_PORT", "profile.read": "READ_PROFILE",
     "apply": "APPLY_PROFILE", "verify": "VERIFY_PROFILE", "reconcile": "RECONCILE",
@@ -230,6 +236,8 @@ class Session:
         self._exchange_deadline = None
         self._payload_failed = False
         self._record_bytes = 0
+        self.artifacts.check("session", "NOT RUN", "framing/identity not yet established")
+        self.artifacts.check("end_marker", "NOT RUN", "end marker not yet observed")
 
     def _now(self):
         """Sample finite non-regressing monotonic seconds; ambiguity invalidates evidence."""
@@ -242,16 +250,21 @@ class Session:
         return value
 
     def _deadline(self, deadline):
-        """Validate or establish one finite absolute deadline, never renewed per fragment."""
-        now = self._now()
-        value = now + self.timeouts.command if deadline is None else deadline
-        if not isinstance(value, (int, float)) or not math.isfinite(value):
-            raise InvocationError("deadline must be finite monotonic seconds")
-        if value <= now:
-            raise SessionTimeout("deadline expired")
-        if value - now > 3600:
-            raise InvocationError("deadline interval exceeds 3600 seconds")
-        return value
+        """Establish an absolute deadline; save expiration even before entering I/O."""
+        try:
+            now = self._now()
+            value = now + self.timeouts.command if deadline is None else deadline
+            if (isinstance(value, bool) or not isinstance(value, (int, float)) or
+                    not math.isfinite(value)):
+                raise InvocationError("deadline must be finite monotonic seconds")
+            if value <= now:
+                raise SessionTimeout("deadline expired")
+            if value - now > 3600:
+                raise InvocationError("deadline interval exceeds 3600 seconds")
+            return value
+        except BaseException as error:
+            self._abort(error)
+            raise
 
     def _remaining(self, deadline):
         """Check before and after every I/O; a late success is still a timeout."""
@@ -285,10 +298,18 @@ class Session:
         """Save failure/interruption without allowing cleanup to repair its primary outcome."""
         self.invalidate(str(error) or type(error).__name__)
         self.artifacts.interrupted |= isinstance(error, KeyboardInterrupt)
-        status = "BLOCKED" if isinstance(error, SessionBlocked) else "FAIL"
+        status = "BLOCKED" if isinstance(error, (SessionBlocked, InvocationError)) else "FAIL"
         self.artifacts.primary = status if not self.artifacts.interrupted else "NOT RUN"
         self.artifacts.check("session", status, str(error) or type(error).__name__)
         self.artifacts.checkpoint()
+
+    def _checkpoint(self):
+        """Save public API progress; a late save failure also invalidates the session."""
+        try:
+            self.artifacts.checkpoint()
+        except BaseException as error:
+            self._abort(error)
+            raise
 
     def _line(self, deadline, counters):
         """Assemble a bounded line while streaming every received fragment to disk."""
@@ -399,6 +420,9 @@ class Session:
             raise ProtocolError("result detail preceded payload")
         op.records[kind] = record
         if kind == "END":
+            required = set(ROW_BY_COMMAND[op.command]["records"].split(","))
+            if not required <= {"ACK", *op.records}:
+                raise ProtocolError("missing required original operation records")
             try:
                 validate_exchange([op.ack, *op.records.values()], op.request, op.command, op.nonce)
             except ValueError as error:
@@ -413,7 +437,7 @@ class Session:
                                      f"token={op.token} {result['code']} detail={result['detail']}")
             elif not self._payload_failed:
                 self.artifacts.check("operation_payloads", "PASS", "owned payloads succeeded")
-            self.artifacts.checkpoint()
+            self._checkpoint()
 
     def _ingest(self, record):
         """Route one record to the pending input or the single owned original operation."""
@@ -424,6 +448,13 @@ class Session:
         if kind in {"ACK", "MARK"}:
             if pending is None or pending.ack or int(record["request"]) <= self.last_request:
                 raise ProtocolError("duplicate/regressed/unexpected input acknowledgement")
+            # Firmware validates the whole command. Recognize its exact silent
+            # parser rejection without reimplementing arity/enums on the host.
+            if (kind == "ACK" and record["command"] == "invalid" and
+                    pending.command != "hilmark" and record["code"] == "INVALID_PARAM" and
+                    record["detail"] == "0" and record["action"] == "UNCHANGED" and
+                    record["token"] == "0"):
+                pending.command = "invalid"
             if record["nonce"] != pending.nonce or (
                     kind == "MARK" and pending.command != "hilmark") or (
                     kind == "ACK" and record["command"] != pending.command):
@@ -481,6 +512,12 @@ class Session:
         except ValueError as error:
             raise ProtocolError(str(error)) from error
         end = pending.records[-1]
+        if pending.command == "invalid" and (
+                [r["type"] for r in pending.records] != ["ACK", "END"] or
+                pending.ack["code"] != "INVALID_PARAM" or
+                pending.ack["action"] != "UNCHANGED" or pending.ack["detail"] != "0" or
+                pending.ack["token"] != "0"):
+            raise ProtocolError("invalid command requires a silent parser rejection")
         if end["code"] == "OK" and pending.command in ROW_BY_COMMAND:
             required = set(ROW_BY_COMMAND[pending.command]["records"].split(","))
             if not required <= {record["type"] for record in pending.records}:
@@ -543,16 +580,20 @@ class Session:
         """Require a fresh random MARK and matching END under one supplied deadline."""
         if not self.valid and not self._synchronizing:
             raise SessionBlocked("marker requires an establishing or verified session")
-        deadline = self._deadline(deadline)
-        nonce = self.nonce_factory()
-        if (not isinstance(nonce, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", nonce) or
-                nonce in {"none", self.nonce, self._begin_nonce}):
-            raise InvocationError("marker nonce must be fresh, bounded ASCII")
-        response = self._exchange("hilmark " + nonce, "hilmark", deadline)
-        if response.end["code"] != "OK":
-            raise ProtocolError("marker rejected")
-        self.nonce = nonce
-        return nonce
+        try:
+            deadline = self._deadline(deadline)
+            nonce = self.nonce_factory()
+            if (not isinstance(nonce, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", nonce) or
+                    nonce in {"none", self.nonce, self._begin_nonce}):
+                raise InvocationError("marker nonce must be fresh, bounded ASCII")
+            response = self._exchange("hilmark " + nonce, "hilmark", deadline)
+            if response.end["code"] != "OK":
+                raise ProtocolError("marker rejected")
+            self.nonce = nonce
+            return nonce
+        except BaseException as error:
+            self._abort(error)
+            raise
 
     def begin(self, expected=None, deadline=None):
         """Fresh marker, identity and idle prerequisite plus local snapshots; no device writes."""
@@ -583,6 +624,9 @@ class Session:
         self.identity.require(expected or {})
         bus = self.command("bus", deadline)
         self.artifacts.metadata["target"] = next(r for r in bus.records if r["type"] == "BUS")
+        capabilities = self.command("capabilities", deadline)
+        self._local["capabilities"] = next(r for r in capabilities.records if
+                                           r["type"] == "CAPABILITIES")
         jobs = self.command("job status", deadline)
         self._local["auto"] = next(r["auto"] for r in jobs.records if r["type"] == "JOB")
         console = self.command("console", deadline)
@@ -592,8 +636,26 @@ class Session:
                                       r["type"] == "PROFILE" and r["source"] == "staged")
         self.artifacts.metadata["local_before"] = self._local
         self.artifacts.check("session", "PASS", "fresh marker/identity and idle prerequisite")
-        self.artifacts.checkpoint()
+        self._checkpoint()
         return self.identity
+
+    def _profile_proof(self, profile):
+        """Require available, applicable staged fields before edits or restoration proof."""
+        capabilities = self._local["capabilities"]
+        fields = int(capabilities["profile_fields"])
+        if (not fields or fields & ~255 or profile["available"] != "1" or
+                profile["variant"] != capabilities["configured_variant"] or
+                profile["variant"] != self.artifacts.metadata["target"]["variant"] or
+                int(profile["valid_fields"]) != fields or
+                any(profile[key] == "unknown" for key, bit in PROFILE_BITS.items()
+                    if fields & bit)):
+            raise SessionBlocked("available valid staging baseline required for local edits")
+        for key, raw in (("ufpaccessory", "disable_ufp_accessory"),
+                         ("termination", "disable_term"), ("rd_rp", "disable_rd_rp")):
+            if fields & PROFILE_BITS[key] and profile[raw] != (
+                    "0" if profile[key] == "on" else "1"):
+                raise SessionBlocked("contradictory staged control evidence")
+        return fields
 
     def _guard(self, text, name):
         """Fence foreign work and checkpoint local intent separately from device effects."""
@@ -625,12 +687,16 @@ class Session:
                 changed.add(name)
             if name == "job.auto" and len(words) > 2:
                 changed.add("auto")
+            if "profile" in changed:
+                fields = self._profile_proof(self._local["profile"])
+                if name in LOCAL_PROFILE and not fields & PROFILE_BITS[LOCAL_PROFILE[name]]:
+                    raise SessionBlocked("staged field unavailable for restoration: " + name)
             self._changed.update(changed)
         if changed or mutation:
             self.artifacts.metadata["local_changed"] = sorted(self._changed)
             if mutation:
                 self.artifacts.metadata["device_intent"] = text
-            self.artifacts.checkpoint()  # Intent must survive interruption inside write().
+            self._checkpoint()  # Intent must survive interruption inside write().
 
     def command(self, text, deadline=None):
         """Execute one explicit contract route; no implicit apply/cancel/result consumption."""
@@ -644,12 +710,30 @@ class Session:
                 name in {"end", "bind", "forget-evidence", "invalidate", "xfer_reset"} or
                 (name == "job.auto" and len(text.split()) > 2)):
             self.command("job status", deadline)
-        self._guard(text, name)
+        changed_before = set(self._changed)
+        device_intent_before = self.artifacts.metadata.get("device_intent")
+        try:
+            self._guard(text, name)
+        except (SessionBlocked, InvocationError):
+            raise  # A rejected local prerequisite need not lose the verified session.
+        except BaseException as error:
+            self._abort(error)
+            raise
         response = self._exchange(text, name, deadline)
+        if response.command == "invalid":
+            # The exact ACK/END proves this input had no effect. Retain any
+            # earlier local changes that still require restoration.
+            self._changed = changed_before
+            self.artifacts.metadata["local_changed"] = sorted(self._changed)
+            if device_intent_before is None:
+                self.artifacts.metadata.pop("device_intent", None)
+            else:
+                self.artifacts.metadata["device_intent"] = device_intent_before
+            self._checkpoint()
         if name == "result.take" and response.end and response.end["code"] == "OK":
             self.artifacts.metadata["operation"]["taken"] = True
             self.operation = None
-            self.artifacts.checkpoint()
+            self._checkpoint()
         return response
 
     def wait_operation(self, deadline=None):
@@ -682,15 +766,16 @@ class Session:
         if not self.valid or self.operation:
             self.artifacts.metadata["unrestored_local"] = sorted(self._changed)
             raise SessionBlocked("local restoration requires verified idle session")
-        deadline = self._deadline(deadline)
-        self.command("version", deadline)  # Identity change invalidates instead of replaying.
-        self._restoring = True
         try:
+            deadline = self._deadline(deadline)
+            self.command("version", deadline)  # Identity change prevents replay.
+            self._restoring = True
             commands = []
             if "profile" in self._changed:
+                fields = self._profile_proof(self._local["profile"])
                 for command, key in LOCAL_PROFILE.items():
                     value = self._local["profile"][key]
-                    if value != "unknown":
+                    if fields & PROFILE_BITS[key]:
                         commands.append(f"{command} {value}")
             if "auto" in self._changed:
                 commands.append("job auto " + self._local["auto"])
@@ -705,6 +790,7 @@ class Session:
                 if words[0] in LOCAL_PROFILE:
                     payload = next(r for r in response.records if
                                    r["type"] == "PROFILE" and r["source"] == "staged")
+                    self._profile_proof(payload)
                     actual = payload[LOCAL_PROFILE[words[0]]]
                 elif words[0] == "job":
                     actual = next(r["auto"] for r in response.records if r["type"] == "JOB")
@@ -712,14 +798,22 @@ class Session:
                     actual = next(r[words[0]] for r in response.records if r["type"] == "CONSOLE")
                 if actual != words[-1]:
                     raise ProtocolError("local restoration payload mismatch: " + text)
+            if "profile" in self._changed:
+                response = self.command("profile show", deadline)
+                profile = next(r for r in response.records if
+                               r["type"] == "PROFILE" and r["source"] == "staged")
+                fields = self._profile_proof(profile)
+                if any(profile[key] != self._local["profile"][key]
+                       for key, bit in PROFILE_BITS.items() if fields & bit):
+                    raise ProtocolError("restored profile does not match saved staging")
             self._changed.clear()
             self.artifacts.metadata["local_changed"] = []
             self.artifacts.cleanup = "PASS"
-            self.artifacts.checkpoint()
-        except BaseException:
+            self._checkpoint()
+        except BaseException as error:
             self.artifacts.cleanup = "FAIL"
             self.artifacts.metadata["unrestored_local"] = sorted(self._changed)
-            self.artifacts.checkpoint()
+            self._abort(error)
             raise
         finally:
             self._restoring = False
@@ -728,17 +822,17 @@ class Session:
         """Restore local values and require a fresh end marker; leave borrowed I/O to its owner."""
         if not self.valid or self.operation:
             raise SessionBlocked("cannot close invalid session or abandon an owned result")
-        deadline = self._deadline(deadline)
-        self.restore_local(deadline)
-        self.mark(deadline)
         try:
+            deadline = self._deadline(deadline)
+            self.restore_local(deadline)
+            self.mark(deadline)
             self._buffered(deadline)
             self._remaining(deadline)
         except BaseException as error:
             self._abort(error)
             raise
         self.artifacts.check("end_marker", "PASS", "fresh end marker and closure")
-        self.artifacts.checkpoint()
+        self._checkpoint()
         self.valid = False
 
 
@@ -907,9 +1001,21 @@ def main(argv=None):
                             f"{name} close failed: {error}"[:4096])
             try:
                 artifacts.checkpoint()
+            except KeyboardInterrupt:
+                # A signal can arrive between the two atomic replacements.
+                # Save interruption once more, without retrying any serial work.
+                artifacts.interrupted = True
+                artifacts.primary = "NOT RUN"
+                try:
+                    artifacts.checkpoint()
+                except (EvidenceError, OSError, ValueError, KeyboardInterrupt) as error:
+                    print(f"Could not save interrupted evidence: {error}")
+                return 130
             except (EvidenceError, OSError, ValueError) as error:
                 print(f"Could not save final evidence: {error}")
-                return 130 if artifacts.interrupted else 2
+                if artifacts.interrupted:
+                    return 130
+                return 1 if artifacts.primary == "FAIL" else 2
     return artifacts.exit_code()
 
 

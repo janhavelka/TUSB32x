@@ -11,6 +11,14 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Fixed
 
+- Python sessions require final-marker and original JOB evidence, preserve owned
+  work on expired public deadlines, and accept exact bus-silent parser rejections.
+  Profile edits and restoration require complete applicable staging evidence;
+  contradictory cleanup responses invalidate the session instead of permitting replay.
+  Checkpoint I/O errors remain incomplete, with a corrective JSON save after a
+  failed summary; final-save interruption is recorded with exit 130 when storage
+  remains available.
+
 - Arduino examples reject an existing Wire controller and active USB pin
   conflicts. Failed teardown retains ownership, blocks reuse and reports failure
   without retrying. Actual application regressions cover startup, USB stalls,

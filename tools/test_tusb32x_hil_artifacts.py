@@ -253,6 +253,105 @@ class ArtifactTests(unittest.TestCase):
         self.assertEqual((self.directory / "report.json").read_bytes(), previous)
         self.assert_no_temporaries()
 
+    def test_failed_summary_corrects_passing_json_and_save_error_stays_incomplete(self) -> None:
+        """A failed summary cannot leave authoritative PASS when JSON storage still works."""
+        artifacts = self.artifacts()
+        self.passing(artifacts)
+        artifacts.checkpoint()
+        previous_summary = (self.directory / "summary.md").read_bytes()
+        from os import replace
+
+        def replace_json_only(source: Path, destination: Path) -> None:
+            """Fail the summary while permitting both JSON replacements."""
+            if destination.name == "summary.md":
+                raise OSError("summary locked")
+            replace(source, destination)
+
+        with mock.patch("tusb32x_hil_artifacts.os.replace", side_effect=replace_json_only):
+            with self.assertRaisesRegex(EvidenceError, "summary locked"):
+                artifacts.checkpoint()
+        saved = self.report()
+        self.assertEqual(saved["primary"], "PASS")
+        self.assertEqual(saved["exit_code"], 2)
+        self.assertIn("summary locked", saved["save_error"])
+        self.assertEqual((self.directory / "summary.md").read_bytes(), previous_summary)
+        self.assertEqual(artifacts.exit_code(), 2)
+        artifacts.checkpoint()
+        self.assertEqual(self.report()["exit_code"], 2)
+        self.assertIn("summary locked", (self.directory / "summary.md").read_text())
+        self.assert_no_temporaries()
+
+    def test_save_failure_preserves_primary_failure_and_interruption_precedence(self) -> None:
+        """Incomplete saving cannot downgrade a proved failure or saved interruption."""
+        from os import replace
+
+        for primary, interrupted, expected in (("FAIL", False, 1), ("PASS", True, 130)):
+            with self.subTest(expected=expected):
+                artifacts = Artifacts(self.directory / str(expected), self.clock)
+                self.addCleanup(artifacts.close)
+                self.passing(artifacts)
+                artifacts.primary = primary
+                artifacts.interrupted = interrupted
+
+                def replace_json_only(source: Path, destination: Path) -> None:
+                    """Leave JSON available while summary saving fails."""
+                    if destination.name == "summary.md":
+                        raise OSError("summary locked")
+                    replace(source, destination)
+
+                with mock.patch("tusb32x_hil_artifacts.os.replace", side_effect=replace_json_only):
+                    with self.assertRaises(EvidenceError):
+                        artifacts.checkpoint()
+                saved = json.loads((artifacts.directory / "report.json").read_text())
+                self.assertEqual(saved["exit_code"], expected)
+                self.assertEqual(saved["primary"], primary)
+                self.assertEqual(saved["interrupted"], interrupted)
+                self.assertTrue(saved["save_error"])
+                self.assertEqual(artifacts.exit_code(), expected)
+                self.assertEqual(list(artifacts.directory.glob("*.tmp")), [])
+
+    def test_initial_json_failure_preserves_prior_bytes_and_marks_owner_incomplete(self) -> None:
+        """Failure before replacing JSON leaves existing evidence and a nonpassing owner."""
+        artifacts = self.artifacts()
+        self.passing(artifacts)
+        artifacts.checkpoint()
+        previous = {name: (self.directory / name).read_bytes()
+                    for name in ("report.json", "summary.md")}
+        with mock.patch("tusb32x_hil_artifacts.os.replace", side_effect=OSError("disk full")):
+            with self.assertRaisesRegex(EvidenceError, "disk full"):
+                artifacts.checkpoint()
+        for name, data in previous.items():
+            self.assertEqual((self.directory / name).read_bytes(), data)
+        self.assertEqual(artifacts.exit_code(), 2)
+        self.assertIn("disk full", artifacts.snapshot()["save_error"])
+        self.assert_no_temporaries()
+
+    def test_failed_corrective_json_preserves_published_bytes_and_reports_both_errors(self) -> None:
+        """Unavailable correction storage raises honestly without claiming persisted failure."""
+        artifacts = self.artifacts()
+        self.passing(artifacts)
+        expected_json = artifacts._json(artifacts.snapshot())
+        from os import replace
+        calls = []
+
+        def fail_after_first_json(source: Path, destination: Path) -> None:
+            """Publish JSON once, then fail the summary and the corrective JSON."""
+            calls.append(destination.name)
+            if len(calls) == 1:
+                replace(source, destination)
+            else:
+                raise OSError("summary locked" if len(calls) == 2 else "JSON locked")
+
+        with mock.patch("tusb32x_hil_artifacts.os.replace", side_effect=fail_after_first_json):
+            with self.assertRaisesRegex(EvidenceError, "summary locked.*JSON locked"):
+                artifacts.checkpoint()
+        self.assertEqual(calls, ["report.json", "summary.md", "report.json"])
+        self.assertEqual((self.directory / "report.json").read_bytes(), expected_json)
+        self.assertFalse((self.directory / "summary.md").exists())
+        self.assertEqual(artifacts.exit_code(), 2)
+        self.assertIn("summary locked", artifacts.snapshot()["save_error"])
+        self.assert_no_temporaries()
+
     def test_good_cleanup_never_repairs_failed_work(self) -> None:
         """Primary and individual proof failures retain exit one after successful cleanup."""
         artifacts = self.artifacts()

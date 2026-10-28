@@ -894,6 +894,12 @@ def exercise_session(executable):
                     raise AssertionError("unknown fixture identity authorized a device mutation")
                 if io.writes != before:
                     raise AssertionError("blocked identity guard sent bytes")
+                for malformed in ("mode nonsense", "bus extra", "profile.show"):
+                    rejected = session.command(malformed)
+                    if (rejected.command != "invalid" or
+                            rejected.end["code"] != "INVALID_PARAM" or
+                            rejected.end["callbacks"] != "0" or not session.valid):
+                        raise AssertionError("real parser rejection damaged verified session")
                 session.command("color off")
                 session.command("verbose 1")
                 session.command("mode dfp")

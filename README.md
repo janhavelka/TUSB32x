@@ -88,7 +88,9 @@ firmware evidence.
 
 The [Python session layer](docs/hil-runner.md) provides strict serial framing,
 owned-result correlation, finite deadlines and streamed evidence with atomic
-reports. Its current command-line entry is a read-only marker/identity exchange;
+reports. Local restoration requires available, valid saved staging and matching
+readback; missing terminal proof or an interrupted/failed save cannot produce PASS.
+Its current command-line entry is a read-only marker/identity exchange;
 observation and fixture plans are later stages. Fake-serial and actual C++ fixture
 tests do not qualify a physical serial or Type-C connection.
 
