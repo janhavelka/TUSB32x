@@ -399,3 +399,12 @@ There is still one `cli_transcript` registration. Maximum-width actual formatter
 fixtures and all 33 schema bounds include newline/NUL; console and raw congestion
 cases keep whole-record loss honest. None of these host tests qualify serial,
 adapter framing, connector/CC/INT behavior or firmware memory/timing.
+
+## Independent CLI audit evidence
+
+Prompts 20-22 retain all 55 canonical routes and 164 executed parity routes. The
+grouped-help regression verifies contiguous topic sections rather than only row
+presence. Transcript session tests reject records after closure, including local
+requests. The owner regression covers both five-versus-eight-record reservation
+outcomes before exact result take, keeping original completion and query delivery
+separate. No core method, silicon gate or framework support claim changes.

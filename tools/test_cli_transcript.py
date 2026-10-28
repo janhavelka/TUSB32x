@@ -106,6 +106,7 @@ class PersistentHost:
         self.records: dict[int, list[dict[str, str]]] = {}
         self.operations: dict[str, tuple[int, str, str]] = {}
         self.completed: set[str] = set()
+        self.closed_requests: set[int] = set()
         self.last_ack = 0
         self.reader = threading.Thread(target=self._read, daemon=True)
         self.reader.start()
@@ -135,6 +136,7 @@ class PersistentHost:
         deadline = time.monotonic() + 3
         while True:
             record = self._next(deadline)
+            assert record is not None  # EOF is allowed only while closing the session.
             if record.get("request") != str(self.request):
                 continue
             if record["type"] == "ACK":
@@ -154,7 +156,7 @@ class PersistentHost:
             raise AssertionError(f"{text!r}: expected {code}, received {records[-1]}")
         return records
 
-    def _next(self, deadline: float) -> dict[str, str]:
+    def _next(self, deadline: float, *, allow_eof: bool = False) -> dict[str, str] | None:
         """Read one machine record within the finite deadline and validate session ordering."""
         while True:
             remaining = deadline - time.monotonic()
@@ -165,6 +167,8 @@ class PersistentHost:
             except queue.Empty:
                 raise AssertionError("fixture response deadline expired") from None
             if line is None:
+                if allow_eof:
+                    return None
                 raise AssertionError("fixture ended before request closure")
             if not line.startswith(b"TUSB "):
                 self.human_lines.append(line.decode("ascii"))
@@ -180,23 +184,26 @@ class PersistentHost:
                     del missing[required]
                     expect_rejection(lambda missing=missing: validate_record(missing))
             request = int(record["request"])
+            if request in self.closed_requests:
+                raise AssertionError("record followed an already closed request")
             if record["type"] in {"ACK", "MARK"}:
                 if request != self.last_ack + 1 or request > self.request:
                     raise AssertionError("fresh request acknowledgement regressed or skipped")
                 self.last_ack = request
-            elif request > self.last_ack:
+            elif request > self.last_ack or request not in self.records:
                 raise AssertionError("payload preceded its input acknowledgement")
             self.records.setdefault(request, []).append(record)
             if record["type"] == "END":
                 own = self.records[request]
                 ack = own[0]
+                command = "hilmark" if ack["type"] == "MARK" else ack["command"]
+                validate_exchange(own, request, command, ack["nonce"])
                 if ack.get("action") == "ADMITTED":
                     token = ack["token"]
                     if token in self.completed or token not in self.operations:
                         raise AssertionError("duplicate or foreign spontaneous completion")
-                    origin, command, nonce = self.operations[token]
-                    validate_exchange(own, origin, command, nonce)
                     self.completed.add(token)
+                self.closed_requests.add(request)
             return record
 
     def completion(self, token: str, *, code: str = "OK") -> list[dict[str, str]]:
@@ -210,7 +217,11 @@ class PersistentHost:
         return records
 
     def close(self) -> None:
-        """Close stdin and require clean exit within 3 s; always reap a failed fixture."""
+        """Require clean process exit and validate all trailing output through bounded EOF.
+
+        Older open jobs/help may close while the fixture drains. Every sent request
+        must then be acknowledged and closed; a zero exit code alone proves neither.
+        """
         assert self.process.stdin is not None
         self.process.stdin.close()
         try:
@@ -223,6 +234,11 @@ class PersistentHost:
         error = self.process.stderr.read().decode("utf-8", errors="replace")
         if result != 0 or error:
             raise AssertionError(f"fixture exit={result}, stderr={error!r}")
+        deadline = time.monotonic() + 3
+        while self._next(deadline, allow_eof=True) is not None:
+            pass
+        if self.last_ack != self.request or set(self.records) != self.closed_requests:
+            raise AssertionError("fixture ended with unclosed requests")
 
 
 def expect_rejection(action: Callable[[], object]) -> None:
@@ -232,6 +248,97 @@ def expect_rejection(action: Callable[[], object]) -> None:
     except ValueError:
         return
     raise AssertionError("damaged record or closure was accepted")
+
+
+def exercise_terminal_ordering(executable: str) -> None:
+    """Reject late/foreign records injected after an actual fixture response.
+
+    A closed local request has the same framing protection as a completed job.
+    Open older operations may still finish after newer queries, as exercised by
+    exercise_operations; closure is tracked per request, never by completion order.
+    """
+    cases = ((damage, at_close) for damage in (
+        "duplicate_end", "contradictory_end", "late_payload", "future_end"
+    ) for at_close in (False, True))
+    for damage, at_close in cases:
+        host = PersistentHost(executable)
+        try:
+            records = host.command("version", "version")
+            kind = "VERSION" if damage == "late_payload" else "END"
+            injected = dict(next(record for record in records if record["type"] == kind))
+            if damage == "contradictory_end":
+                injected.update(outcome="FAILED", code="I2C_TIMEOUT", detail="-7")
+            elif damage == "future_end":
+                injected["request"] = str(host.request + 1)
+            # Injection retains real schema-valid bytes; only session ordering is damaged.
+            line = "TUSB " + kind + " " + " ".join(
+                key + "=" + value for key, value in injected.items() if key != "type"
+            ) + "\n"
+            parse_record(line)
+            host.lines.put(line.encode("ascii"))
+            try:
+                if at_close:
+                    host.close()
+                else:
+                    host._next(time.monotonic() + 3)
+            except AssertionError as error:
+                expected = ("payload preceded its input acknowledgement" if damage == "future_end"
+                            else "record followed an already closed request")
+                if str(error) != expected:
+                    raise AssertionError(
+                        "damaged ordering failed for an unrelated reason"
+                    ) from error
+            else:
+                raise AssertionError(f"accepted {damage} after a completed request")
+            if not at_close:
+                host.close()
+        except BaseException:
+            if host.process.poll() is None:
+                host.process.kill()
+                host.process.wait(timeout=3)
+            raise
+
+    for automatic in (False, True):
+        host = PersistentHost(executable)
+        try:
+            host.command("bind", "bind")
+            if not automatic:
+                host.command("job auto 0", "job.auto")
+            started = host.command("init", "init", wait=False)
+            token = payload(started, "ACK")["token"]
+            try:
+                host.close()
+            except AssertionError as error:
+                if automatic or str(error) != "fixture ended with unclosed requests":
+                    raise
+            else:
+                if not automatic:
+                    raise AssertionError("accepted EOF with an active unclosed request")
+                if token not in host.completed:
+                    raise AssertionError("EOF drain discarded a legitimate pending completion")
+        except BaseException:
+            if host.process.poll() is None:
+                host.process.kill()
+                host.process.wait(timeout=3)
+            raise
+
+    host = PersistentHost(executable)
+    try:
+        # Queue real incremental help without collecting it first. EOF draining
+        # must validate its ACK, rows and closure rather than discard the output.
+        assert host.process.stdin is not None
+        host.request += 1
+        host.process.stdin.write(b"help all\n")
+        host.process.stdin.flush()
+        host.close()
+        help_rows = [record for record in host.records[1] if record["type"] == "HELP"]
+        if len(help_rows) != len(ROWS):
+            raise AssertionError("EOF drain discarded pending incremental help")
+    except BaseException:
+        if host.process.poll() is None:
+            host.process.kill()
+            host.process.wait(timeout=3)
+        raise
 
 
 def parser_negatives(records: list[dict[str, str]]) -> None:
@@ -808,6 +915,7 @@ def main() -> int:
         for mode in ("transport", "readback"):
             exercise_fault(args.host, mode)
         exercise_diagnostic_fixtures(args.host)
+        exercise_terminal_ordering(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()

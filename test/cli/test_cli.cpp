@@ -315,6 +315,29 @@ void setupAndAppearanceContracts() {
 
   owner.command("color 0");
   const auto help = owner.command("help all");
+  // Every fixed topic is one contiguous section, even though its commands were
+  // introduced in separate implementation stages. Help rows remain executable.
+  const char* topics[] = {"common", "connection", "port", "profile", "interrupt",
+      "lifecycle", "job", "registers", "diagnostics"};
+  const char* headings[] = {"[Common]\n", "[Connection]\n", "[Port]\n", "[Profile]\n",
+      "[Interrupt]\n", "[Lifecycle]\n", "[Job]\n", "[Registers]\n", "[Diagnostics]\n"};
+  std::size_t previousHeading = 0;
+  for (std::size_t topicIndex = 0; topicIndex < sizeof(topics) / sizeof(*topics); ++topicIndex) {
+    const std::size_t heading = help.find(headings[topicIndex]);
+    CHECK(heading != std::string::npos && heading >= previousHeading);
+    if (heading == std::string::npos) continue;
+    CHECK(help.find(headings[topicIndex], heading + std::strlen(headings[topicIndex])) == std::string::npos);
+    const std::size_t nextHeading = help.find("\n[", heading + 1);
+    std::size_t rowCount = 0;
+    const auto* topicRows = tusb32x_cli::commandRows(rowCount);
+    for (std::size_t rowIndex = 0; rowIndex < rowCount; ++rowIndex) {
+      if (std::strcmp(topicRows[rowIndex].topic, topics[topicIndex]) != 0) continue;
+      const std::size_t row = help.find(std::string("canonical=") + topicRows[rowIndex].command + " ");
+      CHECK(row > heading && row != std::string::npos &&
+          (nextHeading == std::string::npos || row < nextHeading));
+    }
+    previousHeading = heading;
+  }
   std::size_t count = 0;
   const auto* rows = tusb32x_cli::commandRows(count);
   for (std::size_t index = 0; index < count; ++index) {

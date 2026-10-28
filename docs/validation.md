@@ -2514,3 +2514,57 @@ Finite CTest timeouts and explicit built fixture paths remain registered, with
 13 tests on other hosts and the additional launcher test on Windows. Final Git
 commit/sync equality and clean-state evidence belongs in the handoff and next
 progress update, avoiding a self-referencing hash loop. Prompt 23 is unstarted.
+
+
+## Independent CLI audit (2026-10-28)
+
+Fresh review of prompts 20, 21 and 22 at entry `6d99a29`; three parallel reviewers
+and lead inspection of actual source and diff. Findings and current peer evidence
+are in [the audit](audit/cli-20-22-review.md). Only fixed help order, host transcript
+closure/parity checking and focused regressions changed; core behavior is unchanged.
+
+Tools: GCC 15.1.0, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10, Doxygen 1.13.2,
+managed PlatformIO Core 6.1.19 with native 1.2.1.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh strict Debug and Release | PASS | 14/14 registered tests in each; Release assertions active |
+| CLI suites | PASS | 156,606 local + 8,027 operation + 601,792 diagnostic = 766,425 checks; no failures |
+| Persistent transcript and parity | PASS | 248 primary-session requests plus existing fault/input sessions, 11 new ordering/EOF cases, all 55 rows/164 executable routes and existing alias/schema negatives |
+| Reproduced original defects | PASS | New help assertions against original dispatch fail 17 times; original PersistentHost accepts duplicate END; ready job.step now requires exactly one callback rather than accepting expiry |
+| Documentation | PASS | Strict Doxygen, 17 core structs/26 owner methods and 10 Cli/12 Console callable methods visible; Python style/docstrings, local links/anchors, source hashes and no-op version checks |
+| Native and package consumers | PASS | Managed PlatformIO native execution; 43 source-equal archive files; extracted tests-OFF C++17 core and CLI compile/link/run beneath unrelated Git with maintainer tools removed from child PATH; zero fake callbacks |
+| Sanitizers | BLOCKED | Fresh trivial probes cannot link -lasan/-lubsan with the installed GCC; no sanitizer pass claimed |
+| Framework, serial and hardware | NOT RUN | Separate later qualification; prompt 23 remains unstarted |
+
+Actual commands (session-only verification helpers remain in ignored `build/`):
+
+```powershell
+cmake -S . -B build/audit202122 -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/audit202122 --config Debug
+ctest --test-dir build/audit202122 -C Debug --output-on-failure
+cmake --build build/audit202122 --config Release
+ctest --test-dir build/audit202122 -C Release --output-on-failure
+& build/audit202122/test/Release/tusb32x_cli.exe
+python tools/test_cli_transcript.py --host build/audit202122/test/Release/tusb32x_cli_host.exe
+python tools/check_cli_contract.py --host build/audit202122/test/Release/tusb32x_cli_host.exe
+python -m py_compile tools/tusb32x_cli_contract.py tools/test_cli_transcript.py tools/check_cli_contract.py
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python build/p22-final-check.py
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+scripts/pio.cmd pkg pack . --output build/TUSB32x-audit202122.tar.gz
+python build/audit202122-package.py
+g++ -std=c++17 -fsanitize=address build/p20-sanitizer.cpp -o build/audit202122-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p20-sanitizer.cpp -o build/audit202122-ubsan.exe
+git diff --check
+```
+
+An overlong Python assertion line was wrapped and its style/transcript/parity
+checks repeated. A session-only package helper initially decoded its source with
+the Windows default encoding and failed before checking any package; replacing
+it with an explicit UTF-8 read fixed the helper, and both extracted consumers
+then passed. These were local verification issues, not suppressed failures.
+Final commit/sync evidence is reported in the handoff without a self-referencing
+commit-hash update loop. Remote CI was not queried under the initial promptset rule.

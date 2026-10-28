@@ -509,6 +509,71 @@ void outputLossAndTakeReservation() {
   CHECK(expiry.result().status.is(t::Err::TIMEOUT));
 }
 
+void unannouncedCompletionTakeReservation() {
+  for (const bool congested : {false, true}) {
+    Fixture f; f.manual(); f.command("bind");
+    f.command("hilmark original");
+    f.send("read");
+    const auto origin = f.requests;
+    const auto token = f.driver.progress().token;
+    f.drain();
+    f.command("hilmark query");
+    f.writeLimit = 0;
+    if (congested) {
+      // Fit an ordinary five-record take, but not the eight-record response that
+      // also owes the original completion. The active job remains manually stepped.
+      for (unsigned turn = 0; turn < 80 && f.cli.console().available() >= 8U * 511U; ++turn)
+        f.send("version");
+      CHECK(f.cli.console().available() < 8U * 511U);
+      CHECK(f.cli.console().available() >= 5U * 511U);
+    }
+    CHECK(f.cli.console().droppedRecords() == 0 && f.calls == 0);
+    // A serialized application cancellation between turns makes the result ready
+    // before Cli::tick has had an opportunity to announce it.
+    CHECK(f.driver.cancel(token).ok());
+    const std::string takeCommand = "result take " + std::to_string(token.value);
+    CHECK(f.cli.processCommand(takeCommand.c_str()));
+    const auto takeRequest = ++f.requests;
+    CHECK(f.calls == 0);
+    CHECK(f.driver.progress().resultPending == congested);
+    if (congested) {
+      const auto retained = f.result();
+      CHECK(retained.token.value == token.value && retained.status.is(t::Err::CANCELLED));
+      CHECK(retained.hardwareEffect == t::HardwareEffect::NONE);
+    }
+    f.tick();
+    f.writeLimit = 256;
+    f.drain();
+    const auto originalResult = "TUSB RESULT schema=1 nonce=original request=" + std::to_string(origin);
+    const auto originalEnd = "TUSB END schema=1 nonce=original request=" + std::to_string(origin);
+    CHECK(occurrences(f.output, originalResult + " ") == 1);
+    CHECK(occurrences(f.output, originalEnd + " ") == 1);
+    CHECK(f.output.find(originalResult) < f.output.find(originalEnd));
+    if (congested) {
+      const auto rejected = "TUSB ACK schema=1 nonce=query request=" + std::to_string(takeRequest) +
+          " command=result.take code=BUSY";
+      CHECK(f.output.find(rejected) != std::string::npos);
+      CHECK(f.output.find(rejected) < f.output.find(originalResult));
+      CHECK(f.driver.progress().resultPending);
+      f.output.clear();
+      f.send(takeCommand); f.drain();
+      CHECK(!f.driver.progress().resultPending);
+      CHECK(f.output.find(originalResult) == std::string::npos);
+      CHECK(f.output.find(originalEnd) == std::string::npos);
+    } else {
+      const auto delivered = "TUSB ACK schema=1 nonce=query request=" + std::to_string(takeRequest) +
+          " command=result.take code=OK";
+      CHECK(f.output.find(delivered) != std::string::npos);
+      CHECK(f.output.find(originalEnd) < f.output.find(delivered));
+    }
+    CHECK(f.output.find("command=result.take outcome=SUCCEEDED code=OK") != std::string::npos);
+    CHECK(f.output.find("origin_request=" + std::to_string(origin) + " token=" +
+        std::to_string(token.value)) != std::string::npos);
+    CHECK(f.output.find("state=CANCELLED code=CANCELLED") != std::string::npos);
+    CHECK(f.cli.console().droppedRecords() == 0 && f.calls == 0);
+  }
+}
+
 void irqAndApplyEffects() {
   Fixture f; f.manual(); f.registers[9] = 0x04; f.initialize();
   CHECK(f.driver.configurationSnapshot().verifiedProfile.drpDutyCycle == t::DrpDutyCycle::PERCENT_50);
@@ -615,6 +680,7 @@ int runCliOperationTests() {
   rejectedOwnerClockSamples();
   retainedResultsAndCorrelation();
   outputLossAndTakeReservation();
+  unannouncedCompletionTakeReservation();
   irqAndApplyEffects();
   failuresAndVariantGates();
   std::printf("CLI operations: %u checks, %u failures\n", checks, failures);

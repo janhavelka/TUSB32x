@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 22 complete CLI diagnostics/parity; later prompts remain separate.
+Current authorization: independently audit and fix completed prompts 20-22; prompt 23 remains separate.
 
 ## Prompt status
 
@@ -1607,3 +1607,38 @@ Exact commands/results are in
 The lead commits/syncs this complete checked unit on the same execution branch,
 verifies upstream equality and clean state, and reports the resulting commit in
 the handoff/next progress update. Prompt 23 remains unstarted.
+
+## Independent prompts 20-22 audit (2026-10-28)
+
+Started from clean, fetched, synchronized `6d99a29` on the existing execution
+branch. Re-read all three original prompts and current shared contracts. Three
+inherited-model reviewers independently inspected parser/console/target staging,
+managed operation/results, and diagnostics/parity tooling. The lead inspected
+actual code/diffs, integration and before-fix reproductions; no prompt23 work.
+
+Confirmed gaps: help rows followed implementation-stage order and repeated topic
+headings; transcript closure protection covered admitted jobs but not closed local
+requests. Fixed grouping by reordering the existing fixed arrays, and extended
+per-request closure checks without imposing completion order across open requests.
+Added the previously untested eight-record take-reservation branch: existing
+production ownership was correct. Current peer evidence and requirement coverage
+are in [the audit](audit/cli-20-22-review.md). Final checks and sync follow below.
+
+Final review also closed the EOF validation gap and corrected the explicit-step
+parity fixture: a sufficiently long admitted deadline now makes the check require
+one real callback, followed by explicit cancellation after measurement.
+
+PASS: fresh strict Debug and Release each run 14/14 registered tests. The CLI
+executes 766,425 checks (156,606 local, 8,027 operation, 601,792 diagnostic).
+Persistent execution covers 248 main-session requests plus fault/input sessions
+and 11 new ordering/EOF cases; parity covers 55 rows/164 routes. The original
+help implementation fails 17 new assertions and the original reader accepts a
+duplicate END, independently reproducing the corrected gaps.
+
+PASS: Doxygen visibility, Python style/docstrings, links/anchors/provenance,
+version consistency, installed PlatformIO native consumer and the 43-file
+source-equal archive with isolated tests-OFF core/CLI consumers. ASan/UBSan
+remain BLOCKED by missing link runtimes; framework/hardware evidence is NOT RUN.
+Full commands are in [validation](validation.md#independent-cli-audit-2026-10-28).
+Only the reviewed audit unit is committed and synchronized on the existing
+branch; final commit/equality is reported in the handoff. Prompt 23 is unstarted.

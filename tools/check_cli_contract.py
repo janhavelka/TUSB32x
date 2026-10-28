@@ -109,7 +109,9 @@ def _route(host, row: Mapping[str, str], spelling: str):
         host.command("bind", "bind")
     if command in {"cancel", "job.step"}:
         host.command("job auto 0", "job.auto")
-        host.command("init", "init", wait=False)
+        # Fixture turns advance time while output drains. Keep this ready first
+        # read alive through the counter query so step proves work, not expiry.
+        host.command("init 2147483647", "init", wait=False)
     if command in {"result", "result.take"}:
         started = host.command("init", "init")
         token = payload(started, "RESULT")["token"]
@@ -135,7 +137,7 @@ def _route(host, row: Mapping[str, str], spelling: str):
         raise AssertionError(f"{text}: raw diagnostic did not invoke exactly one callback")
     if row["execution"] == "CORE_JOB":
         if command == "job.step":
-            if delta > int(row["max_callbacks"]) or delta != int(
+            if delta != 1 or delta > int(row["max_callbacks"]) or delta != int(
                 payload(records, "JOB")["last_poll_callbacks"]
             ):
                 raise AssertionError("explicit step violated its one-poll callback bound")
@@ -162,6 +164,12 @@ def _route(host, row: Mapping[str, str], spelling: str):
         raise AssertionError("invalidation lost its explicit reason")
     if command == "xfer_assert" and payload(records, "XFER")["assertion"] != "PASS":
         raise AssertionError("exact transfer assertion did not pass")
+    if command == "job.step":
+        # Only this fixture-owned job remains active. Cleanup follows measured
+        # route assertions, and its original request must close before clean EOF.
+        token = payload(records, "JOB")["token"]
+        host.command("cancel " + token, "cancel")
+        host.completion(token, code="CANCELLED")
     return records
 
 

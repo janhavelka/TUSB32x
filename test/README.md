@@ -414,3 +414,13 @@ suite also runs `tusb322ModeWriteFailures` and
 `tusb322ModeInterruptionBoundaries`: literal DFP/UFP sequences, both failed-write
 acceptance outcomes, cancel/deadline after every callback and final fresh time,
 retained original failure/effects and no hidden retry or borrowed L/A delay.
+
+## CLI audit regressions
+
+`setupAndAppearanceContracts` checks one heading per topic and contiguous actual
+HELP records. `unannouncedCompletionTakeReservation` covers both capacity outcomes
+when a core result is ready before the CLI's next completion announcement. The
+persistent transcript injects schema-valid duplicate/contradictory terminal and
+late payload records captured from the real fixture; request closure is separate
+from operation-token completion order. Existing alias/schema negatives remain in
+the same registered checker. See `docs/validation.md` for current results.

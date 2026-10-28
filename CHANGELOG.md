@@ -11,6 +11,10 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Independent CLI audit: group help into one contiguous section per topic, reject
+  duplicate/late records after request closure, and cover take-response capacity
+  when the original completion is still unannounced. Core ownership stays unchanged.
+
 - Complete 55-row shared CLI with one-callback safe raw access, public pure
   decoding, cached IRQ, opt-in input reading, explicit invalidation and independently
   sourced health/transport evidence. Raw errors retain ATTEMPTED and signed

@@ -476,3 +476,17 @@ schemas include full-width record bounds including newline and C terminator.
 Prompts 20–22 complete the fixed shared CLI. Framework front ends, serial/CC/INT
 fixtures and board memory/electrical qualification remain later work; the native
 fixture is software evidence only.
+
+## Independent prompts 20-22 audit
+
+Full help emits each of the nine topics once, with its commands contiguous. C++
+and Python fixed rows share that order; no dynamic help registry is involved.
+The transcript validates closure per request, including local requests, so an
+older open operation can finish after newer queries but a closed request cannot
+receive another END or payload. Duplicate or contradictory records are failures.
+
+Result-take capacity is checked before consumption. The ordinary response reserves
+five maximum records; if the original completion remains unannounced, eight are
+reserved for both responses. Tests cover successful and refused takes in that
+state, original/query nonce separation and one original RESULT/END pair. This
+adds evidence to the existing ownership rule without a second result store.
