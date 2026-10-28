@@ -440,7 +440,7 @@ documentation commits do not inherit that proof or require another remote gate.
 Prompt30 adds orientation/accessory/role-current/interrupt plans to the existing
 runner, with --fixture/--fixture-config and expected firmware commit/framework/
 target required for physical work. Read docs/hil-runner.md and hardware-validation.md.
-Use existing hil_runner (finite90s) and cli_transcript registrations; they exercise
+Use existing hil_runner (finite 180s) and cli_transcript registrations; they exercise
 deterministic observations and the actual shared CLI/core only. No hardware is
 opened by ordinary tests. Missing equipment/input remains NOT RUN, closed silicon
 gates BLOCKED, failed evidence FAIL. A successful local restoration cannot certify

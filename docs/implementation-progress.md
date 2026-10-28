@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 29, finite read-only observation runners.
+Current authorization: implement prompt 34, dedicated CI and extracted firmware checkpoint.
 
 ## Prompt status
 
@@ -39,11 +39,11 @@ Current authorization: implement prompt 29, finite read-only observation runners
 | [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | COMPLETE |
 | [28: python-session](prompts/28-python-session.md) | COMPLETE |
 | [29: observation-runners](prompts/29-observation-runners.md) | COMPLETE |
-| [30: port-fixture-suites](prompts/30-port-fixture-suites.md) | NOT STARTED |
-| [31: recovery-fixture-suites](prompts/31-recovery-fixture-suites.md) | NOT STARTED |
-| [32: package-consumers](prompts/32-package-consumers.md) | NOT STARTED |
-| [33: validation-guards](prompts/33-validation-guards.md) | NOT STARTED |
-| [34: ci-matrix](prompts/34-ci-matrix.md) | NOT STARTED |
+| [30: port-fixture-suites](prompts/30-port-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
+| [31: recovery-fixture-suites](prompts/31-recovery-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
+| [32: package-consumers](prompts/32-package-consumers.md) | COMPLETE (software evidence; hardware separate) |
+| [33: validation-guards](prompts/33-validation-guards.md) | COMPLETE (software evidence; hardware separate) |
+| [34: ci-matrix](prompts/34-ci-matrix.md) | IN PROGRESS (exact-commit remote verification) |
 | [35: user-documentation](prompts/35-user-documentation.md) | NOT STARTED |
 | [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | NOT STARTED |
 | [37: final-core-review](prompts/37-final-core-review.md) | NOT STARTED |
@@ -2635,3 +2635,15 @@ Arduino performs its normal pinned platform build before resolving materialized
 nm/compiler executables; the mocked sequencing regression cannot yield image PASS.
 Existing Windows paths and managed Core remain unchanged. No SDK/tool pin or
 firmware source was changed to bypass these failures.
+
+
+Third implementation commit0ec200d3e1ab65552b81d4272f71568b147431be was
+synchronized and tested by push run [40777727121](https://github.com/janhavelka/TUSB32x/actions/runs/40777727121).
+Host/docs/package checks again pass. The final helper guard runs23cases.
+The runner's prior312-case PASS took86.915s; this run reached278successful cases
+before the90.0102s suite deadline. Verbose output identifies continuing bounded
+multi-suite artifact tests, not a stalled first case. This demonstrates insufficient
+whole-suite CPU margin. The single registration now permits180seconds and retains
+every test, assertion, cap and simulated operation deadline. No retry, test omission
+or protocol timeout change is introduced. This replaces the measured inadequate
+wall-clock ceiling; prior90-second failures and positive results remain recorded.

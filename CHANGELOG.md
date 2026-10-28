@@ -21,8 +21,9 @@ Entries below distinguish those artifacts from planned device-driver functionali
   is separate.
   Linux package provenance queries exact compiler objects, separating CMake 4
   linker dependencies. Runner checkpoints reuse their already validated JSON
-  bytes, and verbose per-case evidence preserves timeout diagnostics without
-  changing the suite or operation deadline bounds.
+  bytes, and verbose per-case evidence preserves timeout diagnostics. The
+  integrated suite has a finite 180-second host bound after measured CI runtime
+  exceeded 90 seconds; protocol and operation deadline checks are unchanged.
   IDF 6.1 header provenance uses its actual compiler ABI response file; fresh
   Arduino builds materialize their pinned toolchain before executable inspection.
 

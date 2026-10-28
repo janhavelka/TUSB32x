@@ -235,7 +235,9 @@ add_test(NAME cli_transcript
 set_tests_properties(cli_transcript PROPERTIES TIMEOUT 30)
 add_test(NAME hil_runner
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_tusb32x_hil_runner.py" -v)
-set_tests_properties(hil_runner PROPERTIES TIMEOUT 90)
+# The integrated 312-case suite exceeded 90s after 278 successful cases on CI.
+# Allow CPU/filesystem variance; every operation deadline stays independently tested.
+set_tests_properties(hil_runner PROPERTIES TIMEOUT 180)
 add_test(NAME cli_contract
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/check_cli_contract.py"
     --host "$<TARGET_FILE:tusb32x_cli_host>")

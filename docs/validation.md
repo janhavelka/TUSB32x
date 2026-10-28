@@ -3910,3 +3910,15 @@ Arduino performs its normal pinned platform build before resolving materialized
 nm/compiler executables; the mocked sequencing regression cannot yield image PASS.
 Existing Windows paths and managed Core remain unchanged. No SDK/tool pin or
 firmware source was changed to bypass these failures.
+
+
+Third implementation commit0ec200d3e1ab65552b81d4272f71568b147431be was
+synchronized and tested by push run [40777727121](https://github.com/janhavelka/TUSB32x/actions/runs/40777727121).
+Host/docs/package checks again pass. The final helper guard runs23cases.
+The runner's prior312-case PASS took86.915s; this run reached278successful cases
+before the90.0102s suite deadline. Verbose output identifies continuing bounded
+multi-suite artifact tests, not a stalled first case. This demonstrates insufficient
+whole-suite CPU margin. The single registration now permits180seconds and retains
+every test, assertion, cap and simulated operation deadline. No retry, test omission
+or protocol timeout change is introduced. This replaces the measured inadequate
+wall-clock ceiling; prior90-second failures and positive results remain recorded.
