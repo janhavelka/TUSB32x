@@ -8,6 +8,7 @@
 #include "TUSB32x/CommandTable.h"
 
 namespace TUSB32x {
+/// @cond TUSB32X_INTERNAL
 namespace detail {
 
 /// @brief Interpret one complete 09/08/09 observation using supplied bytes only.
@@ -94,4 +95,5 @@ Status comparePersistentSettings(Variant variant, uint8_t reg, uint8_t left, uin
 Status composeWrite(const WriteRequest& request, const WriteEvidence& evidence, uint8_t& out);
 
 }  // namespace detail
+/// @endcond
 }  // namespace TUSB32x

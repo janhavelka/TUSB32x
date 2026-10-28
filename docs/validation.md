@@ -4360,3 +4360,113 @@ Type-C/current/INT, power/startup and exact-board timing remain **NOT RUN**.
 Complete native readonly/soak proof still reports **BLOCKED** without optional
 callback-kind counters. No physical port, flash, power action, publication,
 sibling modification or next-prompt implementation occurred.
+
+## Independent prompts 35–36 audit (2026-10-29)
+
+Fresh audit of original prompts 35 and 36 and the actual `45da529..HEAD` diff,
+starting from `6e96f8efb62b19f78c4e1951b6ed71fa2c574e21`. Initial tree/index
+were clean; fetch confirmed same-branch upstream equality and zero ahead/behind.
+The [progress record](implementation-progress.md#independent-prompts-3536-audit-2026-10-29)
+captures parallel independent reviews, exact peer revisions/paths, TI evidence
+and confirmed fixes. Checks below used this audit's scoped dirty tree.
+
+Environment: Windows PowerShell, Python 3.12.10, CMake/CTest 4.0.1, Ninja 1.12.1,
+GNU 15.1.0 (MinGW-W64 UCRT/MCF), Doxygen 1.13.2, Git 2.52.0.windows.1 and
+the existing managed PlatformIO Core 6.1.19. No new tool installation or pin change.
+
+### Confirmed defects and regression evidence
+
+An initial positive documentation guard did not establish private API exclusion:
+direct HTML/XML inspection found five private core structs. A fully documented
+private fixture passed the old guard, then failed after the new leak check.
+Three fixtures now check published-private rejection, retained file visibility
+and missing private-helper comments despite extraction exclusion. All original
+public/enum/parameter/reference/hidden-API/generated-boundary cases remain active.
+The first positive run after exclusion correctly rejected ten definitions whose
+documentation had previously been inherited from headers. Useful adjacent
+invariant comments corrected those omissions; the final positive guard passes.
+
+Deterministic child-clock probes also reproduced a zero-exit validator PASS at
+1.10 seconds with a 1-second deadline. Both child helpers now clip the final wait
+and reject observed completion at or after the deadline. New regression cases
+cover 0.999, 1.000 and 1.100 seconds without sleeps, plus retained logs and cleanup.
+The existing firmware_guard and validate_runner registrations pass after these
+corrections. This closes a real executable defect exposed by the documentation
+audit; it does not claim process creation is portably interruptible.
+
+The source/guide review also corrected `irq service` sample-publication wording
+and disclosed missing optional callback-kind counters on both Arduino and native
+IDF. The actual runner guard and existing negative runtime test block full
+readonly/soak plans before initialization. No adapter support was invented.
+
+### Executed local checks
+
+```text
+cmake -S . -B build/audit-35-36-release -G Ninja -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build/audit-35-36-release --config Release --target tusb32x_compile_contracts tusb32x_header_contracts tusb32x_port tusb32x_cli tusb32x_cli_host tusb32x_console tusb32x_operations tusb32x_protocol tusb32x_diagnostics tusb32x_host_basic
+ctest --test-dir build/audit-35-36-release -C Release -R "^(doxygen|doxygen_negative|tusb32x_version_sync|core_contracts)$" --output-on-failure --output-junit audit-docs.xml
+ctest --test-dir build/audit-35-36-release -C Release -R "^(tusb32x_compile_contracts|tusb32x_protocol|tusb32x_operations|tusb32x_port|tusb32x_diagnostics|tusb32x_cli|tusb32x_console|tusb32x_host_basic|cli_contract|cli_contract_negative|cli_transcript|tusb32x_package_consumer)$" --output-on-failure --output-junit audit-native.xml
+ctest --test-dir build/audit-35-36-release -C Release -R "^firmware_guard$" --output-on-failure
+ctest --test-dir build/audit-35-36-release -C Release -R "^validate_runner$" --output-on-failure --output-junit audit-validator.xml
+ctest --test-dir build/audit-35-36-release -C Release -R "^(doxygen|doxygen_negative)$" --output-on-failure --output-junit audit-doxygen-fixed.xml
+ctest --test-dir build/audit-35-36-release -C Release -R "^doxygen$" --output-on-failure --output-junit audit-doxygen-final.xml
+ctest --test-dir build/audit-35-36-release -C Release -R "^tusb32x_portable_consumer$" --output-on-failure --output-junit audit-portable.xml
+```
+
+| Evidence | Actual result |
+| --- | --- |
+| Initial guard selection | **4/4 PASS**, 21.43 s. The later direct private-page finding demonstrates the limitation in that initial positive result. Version fixtures and core boundaries pass. |
+| Core/CLI/transcript/package selection | **12/12 Release PASS**, 14.45 s. Includes the actual persistent C++ fixture, CLI parity/negative checks and renamed extracted tests-OFF consumer. |
+| Changed child helpers | firmware_guard **1/1 PASS** (25 cases, 1.26 s); validate_runner **1/1 PASS**, 0.90 s. Existing finite registrations reused. |
+| Expanded real-Doxygen fixtures | **36 cases PASS**. The paired positive run initially failed on ten missing adjacent helper comments; these were fixed, not suppressed. Final doxygen **1/1 PASS**, 2.78 s. |
+| Independent portable consumer | **1/1 PASS**, 1.52 s, actual copied public headers/library and runtime allocation sentinel. |
+| README and independent headers | Fresh strict Debug/Release compile/link and README runtime **PASS**. After final comment corrections, rebuilt Release compile/header targets and reran the README contract **1/1 PASS**. |
+| Standalone ordinary C++ example | Fresh tests-OFF configure/build/run **PASS**; outputs the documented SIMULATED flow, failed-payload/successful-delivery distinction and invalidation/reconciliation checks. Cache discovers no Python/Git/Doxygen. |
+| Generated API inspection | **PASS**, 18 principal type pages/member anchors, all 23 Err values, and inspected parameter/return contracts for startInitialize, poll, takeResult and both raw APIs. No TUSB32x::detail XML compounds or HTML pages remain; public decodeRegister is visible. |
+| Source/registration review | **PASS**, five changed C++ files have identical executable tokens/literals; all 34 Python modules compile. Actual CTest JSON retains 72 unique finite owned checks: 53 native, six contracts, two Doxygen, eight Python and three package. Strict flags and Release -UNDEBUG remain active. |
+| Stable version | `python scripts/generate_version.py sync` and `check`: **PASS**, no generated byte changes; truth remains 0.1.0-dev.1. |
+
+The Debug README check used a separate `build/audit-35-36-debug` directory,
+`CMAKE_BUILD_TYPE=Debug`, target `tusb32x_compile_contracts` and the matching
+CTest filter. Standalone commands were:
+
+```text
+cmake -S examples/host/basic -B build/audit-35-36-host -G Ninja -DTUSB32X_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build/audit-35-36-host --config Release
+build/audit-35-36-host/tusb32x_host_basic.exe
+```
+
+Evidence is retained under `build/audit-35-36-release`: the named JUnit files,
+`audit-api-review.json`, `audit-source-review.json`, `audit-registrations.json`
+and package-consumer evidence. The current Doxygen `latest.json` selects
+`test/doxygen-check/run-9ypcrg03` with real HTML/XML and empty errors. The scoped
+selections were not immediately repeated through a full validation wrapper.
+The final link/archive check is recorded below after the guide edits.
+
+No firmware matrix or remote run was repeated for this audit. Earlier firmware
+and CI evidence remains tied to `c50f8ddda8809425ede2161586466c95fa650ae6` /
+[run 40782369910](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910),
+not this later change. Physical serial/USB, aggregate adapter blocking, I2C
+framing, CC/current/INT, power/startup and exact-board timing remain **NOT RUN**.
+Full readonly/soak evidence on the shipped Arduino/native-IDF examples remains
+**BLOCKED** without optional callback-kind counters; manual CLI use is available.
+No hardware, sibling, publishing or next-prompt action occurred.
+
+Final repository link check reuses `tools.check_package.markdown_links` across
+all **139** tracked Markdown files: **849 local links/fragments PASS**, including
+the parent AGENTS reference. The managed Core produced a fresh archive with:
+
+```text
+scripts\pio.cmd pkg pack . --output build/audit-35-36-package/TUSB32x.tar.gz
+python tools/check_package.py --archive build/audit-35-36-package/TUSB32x.tar.gz --extract-only --out build/audit-35-36-package/check
+```
+
+Archive SHA-256:
+`284c593213918c24343be45ef3a81dbf8922c488669b261475c1c7de72747014`.
+Safe extraction into a newly created temporary root renamed the library to
+`renamed-tusb32x`; **77 source-equal members and 210 packaged links PASS**.
+Evidence: `build/audit-35-36-package/check/package-report.json`. This final
+guide-byte check reports consumer **NOT RUN**; the independently executed
+registered consumer above supplies compile/link/runtime proof. No new extracted
+firmware link is implied. Version sync/check and the full scoped diff review
+pass; final commit/synchronization evidence belongs in the handoff.

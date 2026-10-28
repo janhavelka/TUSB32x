@@ -146,6 +146,8 @@ def check_api(root: Path, output: Path, pages: dict[Path, HtmlPage],
         location = node.find("location")
         file = _relative_file(root, location.get("file", "")) if location is not None else ""
         kind, name = node.get("kind"), node.findtext("compoundname", "")
+        if name == "TUSB32x::detail" or name.startswith("TUSB32x::detail::"):
+            errors.add(f"Private core symbol published: {name}")
         if kind == "file":
             files.add(file)
             if not _documented(node):

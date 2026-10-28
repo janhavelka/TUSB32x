@@ -290,6 +290,30 @@ class FirmwareChecks(unittest.TestCase):
             firmware.run_logged([self.root / "absent"], self.root, dict(os.environ),
                                 self.output / "missing.log")
 
+    def test_child_completion_obeys_original_deadline(self):
+        """Clip the last wait and reject exit zero observed at or beyond its deadline."""
+        for completed_at in (0.999, 1.0, 1.1):
+            with self.subTest(completed_at=completed_at):
+                child = mock.Mock()
+                child.poll.side_effect = (None, 0)
+                child.returncode = 0
+                log = self.output / "completion.log"
+                with mock.patch.object(firmware.subprocess, "Popen", return_value=child), \
+                        mock.patch.object(firmware.time, "monotonic",
+                                          side_effect=(0.0, 0.99, completed_at)), \
+                        mock.patch.object(firmware, "stop_process") as stop:
+                    if completed_at < 1.0:
+                        self.assertEqual(firmware.run_logged(
+                            ["modeled-child"], self.root, {}, log, timeout=1.0), "")
+                    else:
+                        with self.assertRaisesRegex(firmware.FirmwareError, "timed out"):
+                            firmware.run_logged(
+                                ["modeled-child"], self.root, {}, log, timeout=1.0)
+                self.assertAlmostEqual(child.wait.call_args.kwargs["timeout"], 0.01)
+                stop.assert_not_called()  # The child was already observed terminated.
+                self.assertTrue(log.is_file())
+                self.assertTrue(log.with_suffix(".command.json").is_file())
+
     def test_log_overflow_fails_and_retains_only_bounded_prefix(self):
         """Fast exit and still-running children cannot leave oversized artifacts."""
         for suffix in ("", "; import time; time.sleep(60)"):

@@ -135,6 +135,8 @@ def run_command(name, command, directory, timeout, cwd=ROOT, environment=None,
     Output overflow stops the child, retains the bounded prefix and fails even
     after exit zero. Polling may transiently exceed the retained byte limit.
     KeyboardInterrupt is propagated after terminating the child; the owner saves it.
+    Completion observed at or after the deadline fails. Process creation cannot
+    be interrupted portably; terminating a child uses separate finite cleanup waits.
     """
     command = [str(item) for item in command]
     log = directory / (name + ".log")
@@ -157,9 +159,11 @@ def run_command(name, command, directory, timeout, cwd=ROOT, environment=None,
                         raise subprocess.TimeoutExpired(command, timeout)
                     try:
                         code = process.wait(timeout=min(0.25, remaining))
-                        break
                     except subprocess.TimeoutExpired:
                         continue
+                    if time.monotonic() - started >= timeout:
+                        raise subprocess.TimeoutExpired(command, timeout)
+                    break
             except BaseException:
                 stop_process(process)
                 raise

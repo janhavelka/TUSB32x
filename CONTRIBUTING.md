@@ -98,7 +98,8 @@ including parameters and returns; a quiet run with hidden APIs is a failure.
 `EXTRACT_ALL=NO` and warnings enabled. Fix omissions rather than hiding public
 symbols, suppressing diagnostics or publishing private implementation helpers.
 The existing negative fixtures must reject missing public/enum comments, wrong
-parameters, broken references and hidden APIs.
+parameters, broken references, hidden public APIs and published private core types.
+Private extraction exclusions must still leave file and helper comments checked.
 
 ## Version, packages and firmware
 

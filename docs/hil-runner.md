@@ -104,10 +104,10 @@ and backend physical transactions are separate quantities. A combined pointer/re
 callback is one callback, even though it transfers a register pointer. The plan
 requires adapter counter availability, checks that no data-write callback occurs,
 and blocks rather than inventing that proof when the adapter cannot supply it.
-The current native-IDF front end reports these optional callback-kind counts as
-unknown, so these complete readonly/soak plans are BLOCKED there. Its ordinary
-CLI read commands remain available; native transmit/receive SDK totals cannot
-substitute for callback-kind proof.
+The current Arduino and native-IDF front ends report these optional callback-kind
+counts as unknown, so these complete readonly/soak plans are BLOCKED on both.
+Their ordinary CLI read commands remain available; Wire or native SDK
+transmit/receive totals cannot substitute for callback-kind proof.
 Saturated adapter-write or all-source counters cannot prove exact deltas; regressed
 or inconsistent totals fail. Exact staging/validation and rejected verify aliases
 also require zero callback deltas.

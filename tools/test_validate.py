@@ -123,6 +123,28 @@ class ValidatorTests(unittest.TestCase):
         self.assertEqual(result.status, "FAIL")
         self.assertIn("timeout", result.detail)
 
+    def test_child_completion_obeys_original_deadline(self):
+        """A clipped final wait cannot make deadline equality or late exit a PASS."""
+        for completed_at in (0.999, 1.0, 1.1):
+            with self.subTest(completed_at=completed_at):
+                child = Mock()
+                child.wait.return_value = 0
+                child.returncode = 0
+                with patch.object(validate.subprocess, "Popen", return_value=child), \
+                        patch.object(validate, "stop_process") as stop, \
+                        patch.object(validate.time, "monotonic",
+                                     side_effect=(0.0, 0.99, completed_at, completed_at)):
+                    result = validate.run_command("completion", ["modeled-child"], self.root, 1.0)
+                child.wait.assert_called_once()
+                self.assertAlmostEqual(child.wait.call_args.kwargs["timeout"], 0.01)
+                self.assertEqual(result.status, "PASS" if completed_at < 1.0 else "FAIL")
+                self.assertTrue(Path(result.log).is_file())
+                if completed_at < 1.0:
+                    stop.assert_not_called()
+                else:
+                    self.assertIn("timeout", result.detail)
+                    stop.assert_called_once_with(child)
+
     def test_output_overflow_fails_and_bounds_retained_log(self):
         """A short zero-exit child cannot pass after exceeding the output limit."""
         with patch.object(validate, "MAX_LOG_BYTES", 1024):

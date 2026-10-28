@@ -108,6 +108,53 @@ int privateHelper(int value) {
         self.assertEqual(result, expected, output.getvalue())
         return output.getvalue()
 
+    def private_core(self, hidden: bool) -> None:
+        """Write a documented private type/helper, optionally outside public extraction."""
+        self.write("src/Private.h", '''/// @file Private.h
+/// @brief Private core fixture; file and helper comments are checked independently.
+#pragma once
+''' + ("/// @cond TUSB32X_INTERNAL\n" if hidden else "") + '''namespace TUSB32x {
+namespace detail {
+/// @brief Private implementation value, not a supported public API.
+struct PrivateValue {
+  int value = 0; ///< Scratch value, initially zero.
+};
+/// @brief Keep scratch nonnegative before the fixed adjustment.
+/// @param[in] value Local scratch input.
+/// @return Nonnegative scratch plus the fixed adjustment.
+int privateAdjustment(int value) {
+  if (value < 0) value = 0;
+  return value + 2;
+}
+}
+}
+''' + ("/// @endcond\n" if hidden else ""))
+
+    def test_published_private_core_api_fails(self) -> None:
+        """C++ namespace privacy needs a check beyond EXTRACT_PRIVATE=NO."""
+        self.private_core(hidden=False)
+        self.assertIn("Private core symbol published: TUSB32x::detail::PrivateValue",
+                      self.run_guard())
+
+    def test_hidden_private_core_keeps_file_documentation(self) -> None:
+        """Private declarations stay absent while their source file remains checked."""
+        self.private_core(hidden=True)
+        self.run_guard(0)
+        evidence = json.loads((self.root / "build/doxygen-check/latest.json").read_text())
+        index = (Path(evidence["output"]) / "xml/index.xml").read_text(encoding="utf-8")
+        self.assertNotIn("PrivateValue", index)
+        self.assertNotIn("TUSB32x::detail", index)
+        self.assertIn("Private.h", index)
+
+    def test_hidden_private_helper_still_requires_comment(self) -> None:
+        """Excluding a private symbol cannot conceal its missing invariant comment."""
+        self.private_core(hidden=True)
+        self.replace("src/Private.h",
+                     "/// @brief Keep scratch nonnegative before the fixed adjustment.\n"
+                     "/// @param[in] value Local scratch input.\n"
+                     "/// @return Nonnegative scratch plus the fixed adjustment.\n", "")
+        self.assertIn("Missing source helper comment: src/Private.h", self.run_guard())
+
     def test_documented_fixture_passes_and_retains_actual_xml(self) -> None:
         """The positive control must generate visible XML/HTML, not just tokens."""
         self.run_guard(0)

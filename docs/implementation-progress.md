@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 36, audit source documentation and maintainer guidance.
+Current authorization: independently re-audit completed prompts 35 and 36.
 
 ## Prompt status
 
@@ -2904,3 +2904,71 @@ publication or sibling mutation was performed or inferred.
 
 The complete scoped unit is reviewed and ready for authorized commit/sync.
 Final commit/equality evidence belongs in the handoff and next progress update.
+
+## Independent prompts 35–36 audit (2026-10-29)
+
+Started at `6e96f8efb62b19f78c4e1951b6ed71fa2c574e21`, clean index/tree,
+equal to the same-name upstream after fetch with zero ahead/behind. That commit
+completed prompt 36; `e37f0a35aa0cbad5cf6a4f46d22032e2adce253d` completed
+prompt 35. Read both original prompts in full and inspected their actual
+`45da529..HEAD` diff, current declarations, implementation and tests. The branch
+remains `promptset/tusb32x-implementation-20261023`; prompt 37 has not started.
+
+Three fresh-context reviewers worked in parallel: gpt-6.1-sol/high for guide/
+coverage review, gpt-6.1-sol/high for tooling/metadata and gpt-6-astra/high for
+source, silicon, ownership and timing. Shared contracts were unchanged. Disjoint
+source/guide and firmware-helper corrections were delegated after verification;
+the lead owned checker/validator integration, evidence, review and Git. A separate
+read-only review checked the lead's fixes against the actual code and tests.
+
+Fresh read-only references, all clean when inspected:
+
+| Peer HEAD | Exact inspected sources and decisions |
+| --- | --- |
+| TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | AGENTS.md, docs/README.md, Doxyfile, tools/check_doxygen.py, tools/test_check_doxygen.py, scripts/generate_version.py, CMakeLists.txt and .github/workflows/ci.yml. Retain guide navigation, visibility/negative fixtures and manifest truth; reject EXTRACT_ALL=YES as omission evidence. No CONTRIBUTING.md exists. |
+| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Doxyfile, AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py and .github/workflows/ci.yml. Retain strict warnings and coordinated owner/API guidance; a quiet renderer is insufficient visibility proof. |
+| INA228 `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | AGENTS.md, docs/README.md, docs/CLI.md and docs/validation/hardware-validation-procedure.md. Retain explicit command provenance and physical prerequisites; reject sensor assumptions for Type-C fixtures. |
+| FieldCore-node `5ad9292dc8481cf08be9a61f662495a6474d1da0` | AGENTS.md; include/TunnelMonitor/i2c/I2cOwnerTransport.h, I2cTask.h, I2cDeviceBinding.h and I2cLifetime.h; include/TunnelMonitor/contracts/Time.h; src/i2c/I2cTask.cpp. Retain serialized ownership and fresh time; its richer completion/effect evidence and millisecond-derived microsecond clock do not survive a Status-only bridge. |
+| 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | AGENTS.md, scripts/generate_version.py, library.json, platformio.ini, CMakeLists.txt, CI and test/core_no_arduino/compile_main.cpp. Retain managed Core/stable generation; reject consumer-time metadata injection. No CONTRIBUTING.md exists. |
+| OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200` | AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py, tools/check_version_header_contract.py, library.json, platformio.ini, CMakeLists.txt and CI. Retain ownership/version checks; reject volatile versions and unrelated branch/release policy. |
+
+Verified all eight archived TI PDF hashes and eight pinned public-code source
+caches against provenance. Reopened TI timing/register pages: SLLSEN9F pp7/11/14/
+16/18–19, SLLSEP2D/SLLSEQ8D pp6/14/18–20 and SLLSEO5D pp4/6–7/9–11/19–20.
+Reviewed every maintained public/core/example C++ file and all 34 Python modules,
+plus generated API pages and the actual behavioral cases for unchanged outputs,
+ACK preservation, no-op apply, timing anchors, cancellation and result ownership.
+
+Confirmed corrections:
+
+- `irq service` also publishes a new port sample before ACK/recheck; the register
+  guide's old list omitted it. Source and runtime service assertions agree.
+- Both Arduino and native-IDF front ends omit optional callback-kind counters.
+  Complete readonly/soak plans are BLOCKED on both, as the production guard and
+  existing no-initialization regression prove. Guides and example READMEs now
+  disclose this; ordinary CLI observations remain available.
+- The real generated API exposed five private `TUSB32x::detail` structs despite
+  EXTRACT_PRIVATE=NO. Source-only extraction boundaries now keep those private,
+  while public decodeRegister remains visible. Ten nontrivial private definitions
+  gained adjacent invariant comments. New real-Doxygen fixtures reject leaked
+  private types and still enforce file/helper documentation when excluded.
+- Firmware-check and validator child helpers could accept exit zero observed
+  after their original deadlines. Remaining-budget waits and post-completion
+  checks now reject equality/late success. Deterministic before/equal/late cases
+  retain logs and check the original budget. Process creation and synchronous
+  trusted-input writes retain their disclosed backend limits.
+
+No C++ executable token/literal, public API, silicon rule, package version,
+source list or SDK pin changed. Python executable changes are confined to the
+two deadline helpers and private-API guard, with tests. Warning checks and public
+visibility gates were preserved. No extra framework or checker was introduced.
+
+[Fresh validation](validation.md#independent-prompts-3536-audit-2026-10-29)
+records the passing focused checks, initial probes/failures and corrected output.
+Final generated pages show 18 principal types, all 23 Err values and applicable
+parameter/return contracts with no private core compound. Registration remains
+72 finite owned tests; Release assertions and strict warnings stay active.
+No firmware matrix or remote CI was queried/repeated; the earlier result belongs
+only to `c50f8ddda8809425ede2161586466c95fa650ae6` / run 40782369910.
+Hardware qualification remains NOT RUN. Commit/sync evidence belongs in the
+handoff and next progress update, without a self-referencing hash update.

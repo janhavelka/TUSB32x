@@ -6,6 +6,7 @@
 #include <limits>
 
 namespace TUSB32x {
+/// @cond TUSB32X_INTERNAL
 namespace detail {
 namespace {
 
@@ -143,6 +144,7 @@ TransferResult invoke(const ProtocolContext& context, TrafficSource source, cons
 
 }  // namespace
 
+// The fixed exact-part table has no family or nearest-revision fallback.
 const VariantInfo* findVariant(Variant variant) {
   for (const auto& info : VARIANTS) {
     if (info.variant == variant) return &info;
@@ -150,6 +152,8 @@ const VariantInfo* findVariant(Variant variant) {
   return nullptr;
 }
 
+// Check the family map before binding/slot checks. UNSPECIFIED allows only
+// variant-independent validation; a bound variant must prove register presence.
 Status validateRegisterAccess(Variant variant, uint8_t reg, bool write) {
   if (reg > CONTROL_LAST && reg != RD_RP_REGISTER && reg != REVISION_REGISTER) {
     return Status::Error(Err::INVALID_PARAM, "Unmapped scalar register");
@@ -167,6 +171,8 @@ Status validateRegisterAccess(Variant variant, uint8_t reg, bool write) {
   return info == nullptr ? Status::Ok() : validateWrite(*info, reg);
 }
 
+// Keep partial backend bytes private. Only complete normalized callback success
+// copies scratch into the caller's buffer; local rejection never counts a callback.
 TransferResult readRegisters(const ProtocolContext& context, TrafficSource source, uint8_t reg,
                              uint8_t* out, size_t length, uint64_t remainingMs) {
   Status status = validateRequest(context, source, remainingMs);
@@ -184,6 +190,8 @@ TransferResult readRegisters(const ProtocolContext& context, TrafficSource sourc
   return result;
 }
 
+// The caller owns composition and sequence proof; this boundary checks access
+// and sends exactly one pointer/value frame through the shared accounting path.
 TransferResult writeRegister(const ProtocolContext& context, TrafficSource source, uint8_t reg,
                              uint8_t value, uint64_t remainingMs) {
   Status status = validateRequest(context, source, remainingMs);
@@ -194,6 +202,8 @@ TransferResult writeRegister(const ProtocolContext& context, TrafficSource sourc
   return invoke(context, source, tx, sizeof(tx), nullptr, 0, remainingMs);
 }
 
+// Compare every ascending signature byte, including NUL. A family match does
+// not infer the selected variant, enable polarity or physical target identity.
 Status checkIdentity(Variant variant, const uint8_t* bytes, size_t length) {
   if (findVariant(variant) == nullptr) {
     return Status::Error(Err::INVALID_CONFIG, "Select an explicit supported variant");
@@ -208,6 +218,8 @@ Status checkIdentity(Variant variant, const uint8_t* bytes, size_t length) {
   return Status::Ok();
 }
 
+// An absent revision is unsupported; an undocumented value is a mismatch,
+// never permission to assume a newer revision has the selected capabilities.
 Status checkRevision(Variant variant, uint8_t revision) {
   const VariantInfo* info = findVariant(variant);
   if (info == nullptr) {
@@ -223,4 +235,5 @@ Status checkRevision(Variant variant, uint8_t revision) {
 }
 
 }  // namespace detail
+/// @endcond
 }  // namespace TUSB32x

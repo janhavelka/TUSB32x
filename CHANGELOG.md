@@ -78,6 +78,10 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
   pointer/reference helpers. Bounded logs and checkpoint errors preserve failed,
   incomplete or interrupted outcomes; suite CPU allowances do not alter protocol
   or operation deadlines.
+- Validation and firmware-check children that finish at or after their original
+  deadline now fail even with exit zero; their final waits use the remaining budget.
+- Generated public API pages exclude private core types. Regression fixtures
+  reject private API leaks while still checking private helper documentation.
 
 ### Documentation
 
@@ -91,6 +95,6 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
   validation, documentation and version tools. Expanded Python input/deadline/
   artifact/exit contracts without changing executable behavior or package version.
 - Kept unresolved TUSB322I access and board evidence limits explicit. Complete
-  native readonly/soak proof remains blocked by unavailable optional callback-kind
-  counters. Physical serial, I2C/CC/INT, supply and timing qualification is not
-  established by models, linked images or CI.
+  Arduino/native-IDF readonly/soak proof remains blocked by unavailable optional
+  callback-kind counters. Physical serial, I2C/CC/INT, supply and timing
+  qualification is not established by models, linked images or CI.

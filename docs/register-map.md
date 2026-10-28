@@ -278,7 +278,8 @@ field flag, acceptable coherence and an acceptable owner-computed age before
 using an observation. `observedUptimeMs` timestamps the boundary before the first
 required read, not publication; `observedTimeValid` qualifies that timestamp.
 The core supplies no implicit age threshold. The CLI's `sample` and `freshness`
-are cached queries; only an explicit `read`/`irq read` obtains a new port sample.
+are cached queries. Explicit `read`, `irq read` and `irq service` obtain a new
+port sample; service publishes it before its subsequent ACK/recheck steps.
 An unrelated successful raw read or reconciliation cannot clear port invalidation.
 
 Rechecked printed TI pages on 2026-10-26: B SLLSEN9F Table7-1 and section7.3.1.2 p11,

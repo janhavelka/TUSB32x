@@ -35,6 +35,12 @@ worker therefore uses the transmit API rather than that boolean gate on S2.
 S3 suppresses writes while disconnected. No example waits in `while (!Serial)`.
 SDK acceptance cannot prove receipt by a host, particularly across disconnects.
 
+The front end reports optional adapter callback-kind counters as unknown.
+The Python runner's complete `readonly` and `soak` plans require those counters
+to prove no data-write callbacks, so they report BLOCKED on these examples.
+Individual CLI observation and owned-result commands remain available; see the
+[runner guide](hil-runner.md#readonly-soak-and-register-observation).
+
 ## Board qualification before bus work
 
 The default build provides a diagnostic console. Hardware startup is enabled

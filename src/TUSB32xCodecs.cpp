@@ -214,8 +214,11 @@ Status decodeRegister(Variant variant, uint8_t reg, uint8_t value, RegisterDecod
   return Status::Ok();
 }
 
+/// @cond TUSB32X_INTERNAL
 namespace detail {
 
+// Paired context qualifies raw field codes. Changed attachment/direction bookends
+// revoke dependent fields; matching bookends still cannot prove atomic sampling.
 Status decodePort(Variant variant, uint8_t first09, uint8_t status08, uint8_t last09,
                   PortSnapshot& out) {
   RegisterDecode status{}, attachment{};
@@ -301,6 +304,8 @@ Status decodePort(Variant variant, uint8_t first09, uint8_t status08, uint8_t la
   return Status::Ok();
 }
 
+// Encode only validated persistent fields. The output contains no live/command
+// bits and grants no permission to write a gated register or skip a procedure.
 Status encodeProfileRegister(Variant variant, uint8_t reg, const DeviceProfile& profile,
                              uint8_t& out) {
   Status status = validateProfile(variant, profile);
@@ -354,6 +359,8 @@ Status encodeProfileRegister(Variant variant, uint8_t reg, const DeviceProfile& 
   return Status::Ok();
 }
 
+// Require documented field codes before comparison. TUSB322I DRP00/11 semantic
+// equality is separate from permission to reuse either literal write image.
 Status comparePersistentSettings(Variant variant, uint8_t reg, uint8_t left, uint8_t right,
                                  bool& equal) {
   const VariantInfo* info = findVariant(variant);
@@ -378,6 +385,9 @@ Status comparePersistentSettings(Variant variant, uint8_t reg, uint8_t left, uin
   return Status::Ok();
 }
 
+// Validate intent and actual evidence before replacing complete requested fields.
+// ACK/reset preserve actual controls; only their explicit intent sets command bits.
+// Stage flags are caller-supplied proof, not a substitute for the owner procedure.
 Status composeWrite(const WriteRequest& request, const WriteEvidence& evidence, uint8_t& out) {
   const VariantInfo* info = findVariant(request.variant);
   if (info == nullptr) {
@@ -524,4 +534,5 @@ Status composeWrite(const WriteRequest& request, const WriteEvidence& evidence, 
 }
 
 }  // namespace detail
+/// @endcond
 }  // namespace TUSB32x

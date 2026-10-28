@@ -136,11 +136,12 @@ python tools/tusb32x_hil_runner.py --port "$fixturePort" --variant tusb320lai --
 
 See the [runner guide](hil-runner.md) for optional pyserial installation, finite
 limits, console-specific DTR/RTS settings and exit meanings. Its full readonly/soak
-plans require adapter callback-kind counters: the native-IDF front end currently
-reports those as unknown, so these plans are BLOCKED there even though individual
-CLI observation commands are available. Expected values are operator expectations
-until fresh firmware records match them. Host checkout identity and labels are separate
-facts. The plans initialize read-only, own and take each admitted result, inspect
+plans require adapter callback-kind counters: the Arduino and native-IDF front
+ends currently report those as unknown, so these plans are BLOCKED on both even
+though individual CLI observation commands are available. Expected values remain
+operator expectations until fresh firmware records match them. Host checkout
+identity and labels are separate facts. The plans initialize read-only, own and
+take each admitted result, inspect
 ordinary mapped registers and restore only saved local CLI settings. They never
 apply, reset, ACK or recover dead battery. In particular, base 320/I recovery is
 an explicit separate operation, not a prerequisite the runner silently performs.

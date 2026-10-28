@@ -6,6 +6,7 @@
 #include <limits>
 
 namespace TUSB32x {
+/// @cond TUSB32X_INTERNAL
 namespace detail {
 
 inline constexpr uint64_t HALF_RANGE = uint64_t{1} << 63; ///< Ambiguous uint64 clock distance.
@@ -35,4 +36,5 @@ constexpr bool nextToken(uint64_t previous, uint64_t& out) {
 }
 
 }  // namespace detail
+/// @endcond
 }  // namespace TUSB32x

@@ -11,6 +11,7 @@
 #include "TUSB32x/TUSB32x.h"
 
 namespace TUSB32x {
+/// @cond TUSB32X_INTERNAL
 namespace detail {
 
 /// @brief Closed exact-part capabilities shared by transport and pure codecs.
@@ -110,4 +111,5 @@ Status checkIdentity(Variant variant, const uint8_t* bytes, size_t length);
 Status checkRevision(Variant variant, uint8_t revision);
 
 }  // namespace detail
+/// @endcond
 }  // namespace TUSB32x

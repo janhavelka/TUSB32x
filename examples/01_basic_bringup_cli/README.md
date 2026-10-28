@@ -23,6 +23,11 @@ After startup, `version`, `bus`, `sample`, `cfg` and `diag` inspect evidence.
 explicitly `result take <token>` before starting another job. Commands that write
 the device remain explicit; read the [CLI reference](../../docs/CLI.md).
 
+The Python runner's complete `readonly` and `soak` plans report BLOCKED because
+this front end does not supply optional adapter callback-kind counters. Individual
+CLI observations remain available; see the
+[runner guide](../../docs/hil-runner.md#readonly-soak-and-register-observation).
+
 The shared [application implementation](../arduino/ExampleApp.cpp) owns setup,
 finite input/output and orderly bus shutdown. Only one main.cpp is selected by
 each environment. A successful firmware build is not flash, serial or HIL evidence.

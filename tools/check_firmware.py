@@ -109,8 +109,11 @@ def run_logged(command, cwd, environment, log, timeout=60, input_text=None):
     """Return decoded child output; retain log and adjacent .command.json evidence.
 
     command is an argument list, cwd/environment select the child context and
-    timeout is a monotonic seconds ceiling (60 by default). Optional input_text
-    is finite trusted probe input written once. Parent directories are created;
+    timeout bounds child execution through observed completion in monotonic
+    seconds (60 by default). Process creation and the optional synchronous write
+    of finite trusted input_text cannot be interrupted by this deadline. Once
+    they return, an expired deadline fails even after exit zero. Child-tree
+    cleanup has its own finite waits. Parent directories are created;
     existing log files are replaced. Missing execution raises Incomplete; nonzero
     exit, timeout or output above 16 MiB raises FirmwareError. Timeout, overflow
     or interruption stops the child tree; the bounded log prefix remains.
@@ -137,12 +140,13 @@ def run_logged(command, cwd, environment, log, timeout=60, input_text=None):
                 process.stdin.write(input_text.encode("utf-8"))
                 process.stdin.close()
             while process.poll() is None:
-                if time.monotonic() - started >= timeout:
+                remaining = timeout - (time.monotonic() - started)
+                if remaining <= 0:
                     raise FirmwareError(f"child timed out after {timeout}s; log: {log}")
                 if log.stat().st_size > MAX_LOG_BYTES:
                     raise FirmwareError(f"child output exceeded 16 MiB; log: {log}")
                 try:
-                    process.wait(timeout=0.25)
+                    process.wait(timeout=min(0.25, remaining))
                 except subprocess.TimeoutExpired:
                     pass
         except BaseException:
@@ -156,6 +160,8 @@ def run_logged(command, cwd, environment, log, timeout=60, input_text=None):
                 stream.truncate(MAX_LOG_BYTES)
     if exceeded:
         raise FirmwareError(f"child output exceeded 16 MiB; log: {log}")
+    if time.monotonic() - started >= timeout:
+        raise FirmwareError(f"child timed out after {timeout}s; log: {log}")
     if process.returncode:
         raise FirmwareError(f"child exited {process.returncode}: {command[0]}; log: {log}")
     return log.read_text(encoding="utf-8", errors="replace")
