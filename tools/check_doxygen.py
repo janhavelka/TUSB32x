@@ -25,6 +25,8 @@ import tempfile
 from urllib.parse import unquote, urlsplit
 import xml.etree.ElementTree as ET
 
+from check_contracts import NON_CODE
+
 ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT_SECONDS = 120
 _SOURCE_SUFFIXES = {".h", ".hpp", ".cpp", ".cc", ".cxx", ".ino"}
@@ -98,10 +100,10 @@ def source_files(root: Path) -> list[Path]:
 
 def _code(text: str) -> str:
     """Blank C++ comments/string literals while preserving offsets and lines."""
-    pattern = (r'//[^\n]*|/\*.*?\*/|R"([^ ()\\\t\r\n]*)\(.*?\)\1"'
-               r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
-    return re.sub(pattern, lambda match: re.sub(r"[^\n]", " ", match[0]),
-                  text, flags=re.DOTALL)
+    # Share the boundary checker's lexer, retaining physical positions so XML body
+    # locations and adjacent source comments still refer to the original text.
+    return NON_CODE.sub(lambda match: match[0] if match.lastgroup == "number"
+                        else re.sub(r"[^\n]", " ", match[0]), text)
 
 
 def _documented(node: ET.Element) -> bool:
@@ -210,8 +212,10 @@ def check_sources(root: Path, sources: list[Path],
     review and behavioral tests still establish the comments' semantic accuracy.
     """
     errors: set[str] = set()
-    signature = re.compile(r"^[ \t]*(?:[\w:*&<>]+[ \t]+)+(?P<name>(?:\w+::)*~?\w+)\s*"
-                           r"\([^;{}]*\)(?:\s+(?:const|noexcept|override|final))*\s*\{",
+    signature = re.compile(r"^[ \t]*(?:[\w:*&<>]+[ \t]+|[\w:<>]+(?=[*&]))+[*& \t]*"
+                           r"(?P<name>(?:\w+::)*~?\w+)\s*"
+                           r"\([^;{}]*\)(?:\s+(?:const|noexcept|override|final))*"
+                           r"(?:\s*->\s*[\w:*&<> \t]+)?\s*\{",
                            re.MULTILINE)
     for path in sources:
         text = path.read_text(encoding="utf-8")
@@ -296,7 +300,7 @@ def check_configuration(configuration: str) -> set[str]:
     if re.search(r"^\s*@INCLUDE", configuration, re.MULTILINE):
         errors.add("Doxyfile must not override warning settings through @INCLUDE")
     for key in ("EXCLUDE_SYMBOLS", "INPUT_FILTER", "FILTER_PATTERNS",
-                "FILTER_SOURCE_PATTERNS", "PREDEFINED"):
+                "FILTER_SOURCE_PATTERNS", "PREDEFINED", "ALIASES"):
         if values.get(key):
             errors.add(f"Doxyfile must not hide declarations through {key}")
     return errors

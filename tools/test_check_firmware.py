@@ -290,6 +290,18 @@ class FirmwareChecks(unittest.TestCase):
             firmware.run_logged([self.root / "absent"], self.root, dict(os.environ),
                                 self.output / "missing.log")
 
+    def test_log_overflow_fails_and_retains_only_bounded_prefix(self):
+        """Fast exit and still-running children cannot leave oversized artifacts."""
+        for suffix in ("", "; import time; time.sleep(60)"):
+            with self.subTest(running=bool(suffix)), \
+                    mock.patch.object(firmware, "MAX_LOG_BYTES", 64):
+                log = self.output / "overflow.log"
+                command = [sys.executable, "-c", "import sys; "
+                           "sys.stdout.write('x' * 1024); sys.stdout.flush()" + suffix]
+                with self.assertRaisesRegex(firmware.FirmwareError, "output exceeded"):
+                    firmware.run_logged(command, self.root, dict(os.environ), log, timeout=5)
+                self.assertEqual(log.read_bytes(), b"x" * 64)
+
     def test_idf_constraints_override_requires_explicit_flag(self):
         """Inherited opt-outs are removed; only an explicit switch preserves the waiver."""
         sdk = self.root / "sdk"

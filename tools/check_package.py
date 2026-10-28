@@ -324,6 +324,35 @@ def make_dependencies(text):
     return paths
 
 
+def selected_compiles(build, compiles, configuration):
+    """Select one Ninja Multi-Config row with complete, unambiguous source coverage.
+
+    CMake records each configuration in compile_commands.json. Its generated
+    object paths name the target and configuration separately; other rows have
+    not been built and cannot supply dependency evidence for this invocation.
+    """
+    selected = []
+    sources = set()
+    for entry in compiles:
+        if not entry.get("output") or not entry.get("file"):
+            raise PackageError("missing multi-config source or compiled object")
+        target = (Path(entry["directory"]) / entry["output"]).resolve()
+        if not target.is_relative_to(build.resolve()):
+            raise PackageError("compiled object outside clean build")
+        rows = re.findall(r"(?:^|/)CMakeFiles/[^/]+\.dir/([^/]+)/",
+                          target.relative_to(build.resolve()).as_posix())
+        if len(rows) != 1:
+            raise PackageError("ambiguous multi-config compiled object")
+        sources.add(Path(entry["file"]).resolve())
+        if rows[0] == configuration:
+            selected.append(entry)
+    selected_sources = [Path(entry["file"]).resolve() for entry in selected]
+    if (not selected or set(selected_sources) != sources
+            or len(selected_sources) != len(set(selected_sources))):
+        raise PackageError("missing or duplicate sources in requested build configuration")
+    return selected
+
+
 def check_dependencies(root, fixture, build, args, environment, compiles):
     """Reject actual compiler inputs outside the copied sources or compiler/SDK roots.
 
@@ -333,6 +362,13 @@ def check_dependencies(root, fixture, build, args, environment, compiles):
     The Ninja query has the same 60-second subprocess bound as the build.
     """
     if args.generator in ("Ninja", "Ninja Multi-Config"):
+        ninja_configuration = []
+        if args.generator == "Ninja Multi-Config":
+            compiles = selected_compiles(build, compiles, args.config)
+            manifest = f"build-{args.config}.ninja"
+            if not (build / manifest).is_file():
+                raise PackageError("missing requested Ninja configuration manifest")
+            ninja_configuration = ["-f", manifest]
         # ELF linkers can add their own dependency records in CMake 4. Query the
         # actual compile outputs rather than confusing those records with C++ inputs.
         outputs = []
@@ -346,7 +382,7 @@ def check_dependencies(root, fixture, build, args, environment, compiles):
         if not outputs or len(set(outputs)) != len(outputs):
             raise PackageError("missing or duplicate compiled objects")
         result = subprocess.run(
-            [args.make_program, "-C", str(build), "-t", "deps", *outputs],
+            [args.make_program, "-C", str(build), *ninja_configuration, "-t", "deps", *outputs],
             env=environment, text=True, capture_output=True, check=True, timeout=60)
         (build / "package-ninja-dependencies.log").write_text(result.stdout, encoding="utf-8")
         records = []

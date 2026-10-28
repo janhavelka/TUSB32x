@@ -43,10 +43,14 @@ def fixture():
     host["steps"].append({"run": "python tools/validate.py --checks native,contracts "
                                   "--configs '${{ matrix.config }}' "
                                   "--compiler '${{ matrix.compiler }}' "
+                                  "--out build/host "
                                   "${{ matrix.sanitize && '--sanitize' || '' }}"})
     for name, group in (("python", "python"), ("docs", "doxygen"), ("package", "package")):
         model["jobs"][name]["steps"].append({
-            "run": f"python tools/validate.py --checks {group} --configs Release"})
+            "run": f"python tools/validate.py --checks {group} --configs Release "
+                   f"--out build/{name}"})
+    model["jobs"]["docs"]["steps"][-1]["run"] = (
+        "doxygen --version > build/docs/tool.log\n" + model["jobs"]["docs"]["steps"][-1]["run"])
     model["jobs"]["idf"]["strategy"] = {"fail-fast": False, "matrix": {"include": [
         {"version": "5.5.5", "target": "esp32s2"},
         {"version": "5.5.5", "target": "esp32s3"},
@@ -57,7 +61,41 @@ def fixture():
     model["jobs"]["idf"]["container"] = {"image": "${{ matrix.image }}"}
     for name in ("arduino", "idf"):
         model["jobs"][name]["needs"] = "package"
-        model["jobs"][name]["steps"].append({"uses": download})
+        model["jobs"][name]["steps"].append({"uses": download, "with": {
+            "name": "tusb32x-package", "path": "build/package"}})
+    model["jobs"]["package"]["steps"].extend([
+        {"run": "pio pkg pack . --output build/package/TUSB32x.tar.gz "
+                "> build/package/pack.log 2>&1\n"
+                "sha256sum build/package/TUSB32x.tar.gz > build/package/archive-sha.log\n"
+                "python tools/check_package.py --archive build/package/TUSB32x.tar.gz "
+                "--out build/package/distribution > build/package/consumer.log 2>&1"},
+        {"uses": upload, "with": {"name": "tusb32x-package", "path":
+            "build/package/TUSB32x.tar.gz\nbuild/package/archive-sha.log\n"
+            "build/package/source-sha.log",
+            "retention-days": 7, "if-no-files-found": "error"}},
+    ])
+    for name in ("arduino", "idf"):
+        run = ("sha256sum --check build/package/archive-sha.log\n"
+               "python tools/check_package.py --archive build/package/TUSB32x.tar.gz "
+               f"--extract-only --out build/{name}/distribution > build/{name}/extract.log 2>&1\n"
+               "package=$(python -c 'import json; print(json.load(open(\"build/" + name +
+               "/distribution/package-report.json\"))[\"extracted\"])')\n")
+        if name == "arduino":
+            run += ('pio pkg install --project-dir "$package" > build/arduino/install.log 2>&1\n'
+                    'python tools/check_firmware.py --package "$package" '
+                    '--out "$GITHUB_WORKSPACE/build/arduino/firmware" --checks arduino '
+                    '> build/arduino/link.log 2>&1')
+        else:
+            run = '. "$IDF_PATH/export.sh" > build/idf/environment.log 2>&1\n' + run
+            run += ('check=idf-s2\nif [ "$TARGET" = esp32s3 ]; then check=idf-s3; fi\n'
+                    'python tools/check_firmware.py --package "$package" '
+                    '--out "$GITHUB_WORKSPACE/build/idf/firmware" --checks "$check" '
+                    '--idf-path "$IDF_PATH" --idf-python "$(command -v python)" '
+                    '> build/idf/link.log 2>&1')
+        step = {"run": run}
+        if name == "idf":
+            step["env"] = {"TARGET": "${{ matrix.target }}"}
+        model["jobs"][name]["steps"].append(step)
     return model
 
 
@@ -165,10 +203,8 @@ class CiChecks(unittest.TestCase):
     def test_success_only_package_payload_can_accompany_failure_evidence(self):
         """Archive upload may require success while independent diagnostic upload always runs."""
         model = fixture()
-        archive = copy.deepcopy(model["jobs"]["package"]["steps"][1])
+        archive = model["jobs"]["package"]["steps"][-1]
         archive["if"] = "success()"
-        archive["with"]["name"] = "tusb32x-package"
-        model["jobs"]["package"]["steps"].append(archive)
         ci.audit_workflow(model, source(model))
         archive["if"] = "false"
         with self.assertRaises(ci.AuditError):
@@ -222,6 +258,88 @@ class CiChecks(unittest.TestCase):
         self.reject(lambda m: m["jobs"]["docs"]["steps"][-1].update(run=
             "python tools/validate.py --checks doxygen --configs Debug"))
         self.reject(lambda m: m["jobs"]["python"].update(strategy={"matrix": {"x": [1, 2]}}))
+
+    def test_validation_must_execute_instead_of_echoing_its_arguments(self):
+        """A shell no-op cannot satisfy the validator command ownership check."""
+        for prefix in ("echo ", ": ", "# "):
+            self.reject(lambda m: m["jobs"]["host"]["steps"][-1].update(run=
+                prefix + m["jobs"]["host"]["steps"][-1]["run"]))
+
+    def test_validator_cannot_suppress_failures_or_override_arguments(self):
+        """Trailing controls and argparse's last-value wins cannot weaken scope."""
+        for suffix in (" || true", "; true", " &", " --checks python",
+                       " --configs Debug", " --out build/other"):
+            with self.subTest(suffix=suffix):
+                self.reject(lambda m: m["jobs"]["host"]["steps"][-1].update(run=
+                    m["jobs"]["host"]["steps"][-1]["run"] + suffix))
+
+    def test_required_commands_cannot_be_heredoc_data_or_disabled_blocks(self):
+        """A literal command in an inert shell block is not executed validation."""
+        for name in ("host", "package", "arduino", "idf"):
+            index = -2 if name == "package" else -1
+            for opening, closing in (("cat <<'NOT_EXECUTED'", "NOT_EXECUTED"),
+                                     ("if false; then", "fi")):
+                with self.subTest(name=name, opening=opening):
+                    self.reject(lambda m: m["jobs"][name]["steps"][index].update(run=
+                        opening + "\n" + m["jobs"][name]["steps"][index]["run"]
+                        + "\n" + closing))
+
+    def test_distribution_commands_must_share_one_ordered_step(self):
+        """Extraction, package selection and linking execute in the same shell."""
+        for name in ("package", "arduino", "idf"):
+            index = -2 if name == "package" else -1
+
+            def split_step(model):
+                """Move the last command into a fresh shell that loses local variables."""
+                step = model["jobs"][name]["steps"][index]
+                lines = step["run"].splitlines()
+                step["run"] = "\n".join(lines[:-1])
+                model["jobs"][name]["steps"].append({"run": lines[-1]})
+
+            with self.subTest(name=name, mutation="split"):
+                self.reject(split_step)
+            with self.subTest(name=name, mutation="reverse"):
+                self.reject(lambda m: m["jobs"][name]["steps"][index].update(run=
+                    "\n".join(reversed(m["jobs"][name]["steps"][index]["run"].splitlines()))))
+
+    def test_firmware_commands_cannot_be_omitted_or_replaced_by_noops(self):
+        """Both firmware owners must execute the actual extracted-package link helper."""
+        for name in ("arduino", "idf"):
+            for replacement in ("", "echo ", ": ", "# "):
+                def mutate(model):
+                    """Remove or disable only the real link command in a complete job."""
+                    step = model["jobs"][name]["steps"][-1]
+                    lines = []
+                    for line in step["run"].splitlines():
+                        if "python tools/check_firmware.py " in line:
+                            if not replacement:
+                                continue
+                            line = replacement + line
+                        lines.append(line)
+                    step["run"] = "\n".join(lines)
+                with self.subTest(name=name, replacement=replacement):
+                    self.reject(mutate)
+
+    def test_distribution_provenance_and_target_binding_are_required(self):
+        """Archive checks, extracted paths and target selection cannot drift silently."""
+        for name in ("arduino", "idf"):
+            for before, after in (
+                    ("sha256sum --check", "echo sha256sum --check"),
+                    ("--extract-only", ""),
+                    ('--package "$package"', '--package "$GITHUB_WORKSPACE"'),
+                    ('["extracted"]', '["archive"]')):
+                self.reject(lambda m: m["jobs"][name]["steps"][-1].update(run=
+                    m["jobs"][name]["steps"][-1]["run"].replace(before, after)))
+            for key, value in (("name", "other-package"), ("path", "build/other")):
+                self.reject(lambda m: m["jobs"][name]["steps"][-2]["with"].update({key: value}))
+        self.reject(lambda m: m["jobs"]["idf"]["steps"][-1]["env"].update(TARGET="esp32s2"))
+        self.reject(lambda m: m["jobs"]["idf"]["steps"][-1].update(run=
+            m["jobs"]["idf"]["steps"][-1]["run"].replace("then check=idf-s3", "then check=idf-s2")))
+        self.reject(lambda m: m["jobs"]["package"]["steps"][-1]["with"].update(
+            path="build/package/source-sha.log"))
+        for before in ("pio pkg pack", "sha256sum", "python tools/check_package.py"):
+            self.reject(lambda m: m["jobs"]["package"]["steps"][-2].update(run=
+                m["jobs"]["package"]["steps"][-2]["run"].replace(before, "echo " + before)))
 
     def test_exact_nonzero_ctest_counts_reuse_existing_ownership(self):
         """Actual JSON registration counts close omissions while validate owns label semantics."""

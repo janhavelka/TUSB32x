@@ -47,6 +47,9 @@ labels are disjoint: adding a suite requires assigning it to one group. Do not
 run unittest discovery over the HIL modules: the existing hil_runner registration
 already loads those modules once. The validator checks inventory and actual JUnit
 execution counts; a missing group, disabled test or zero execution fails.
+Command logs retain a maximum 16 MiB prefix; overflow fails even after exit zero.
+Report-storage errors preserve prior checkpoints and return incomplete; an
+interrupted run retains exit 130 even when its final checkpoint cannot be saved.
 See [validation prerequisites and exits](docs/validation.md#local-validation-entry-point).
 Run focused malformed-input fixtures first, then the combined entry point; avoid
 immediately repeating its full suite through a second wrapper. HIL and remote CI

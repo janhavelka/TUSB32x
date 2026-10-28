@@ -126,6 +126,7 @@ For maintainer validation, `python tools/validate.py --checks all` runs the
 declared local release checks: strict Debug/Release CTest groups, boundary and
 documentation guards, Python/session tests, clean packages and extracted S2/S3
 firmware links. It saves logs and partial verdicts under build/validation.
+Each command log retains at most 16 MiB; overflow fails the check.
 Focused selections such as `--checks native,contracts,python` report only their
 requested scope. Missing required tools return INCOMPLETE, never a successful skip.
 See the source-checkout [validation guide](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md#local-validation-entry-point)

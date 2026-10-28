@@ -115,11 +115,38 @@ class ValidatorTests(unittest.TestCase):
         child = Mock()
         child.wait.side_effect = subprocess.TimeoutExpired(["tool"], 1)
         with patch.object(validate.subprocess, "Popen", return_value=child), \
-                patch.object(validate, "stop_process") as stop:
+                patch.object(validate, "stop_process") as stop, \
+                patch.object(validate.time, "monotonic", side_effect=(0, 0, 1, 1)):
             result = validate.run_command("timeout", ["tool"], self.root, 1)
         stop.assert_called_once_with(child)
+        child.wait.assert_called_once_with(timeout=0.25)
         self.assertEqual(result.status, "FAIL")
         self.assertIn("timeout", result.detail)
+
+    def test_output_overflow_fails_and_bounds_retained_log(self):
+        """A short zero-exit child cannot pass after exceeding the output limit."""
+        with patch.object(validate, "MAX_LOG_BYTES", 1024):
+            result = validate.run_command("overflow", [sys.executable, "-c",
+                "import sys; sys.stdout.buffer.write(b'x' * 4096); sys.stdout.flush()"],
+                self.root, 10)
+        self.assertEqual(result.status, "FAIL")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("output exceeded 1024 bytes", result.detail)
+        self.assertEqual(Path(result.log).read_bytes(), b"x" * 1024)
+
+    def test_output_overflow_stops_running_child(self):
+        """Overflow stops a live writer before its deadline and keeps a bounded prefix."""
+        actual_stop = validate.stop_process
+        with patch.object(validate, "MAX_LOG_BYTES", 1024), \
+                patch.object(validate, "stop_process", wraps=actual_stop) as stop:
+            result = validate.run_command("overflow-running", [sys.executable, "-c",
+                "import sys,time; sys.stdout.buffer.write(b'x' * 4096); "
+                "sys.stdout.flush(); time.sleep(30)"], self.root, 10)
+        stop.assert_called_once()
+        self.assertIsNotNone(stop.call_args.args[0].poll())
+        self.assertEqual(result.status, "FAIL")
+        self.assertIn("output exceeded 1024 bytes", result.detail)
+        self.assertEqual(Path(result.log).stat().st_size, 1024)
 
     def test_child_interrupt_stops_and_propagates(self):
         """The command boundary terminates its child before propagating Ctrl-C."""
@@ -228,6 +255,67 @@ class ValidatorTests(unittest.TestCase):
             else:
                 with self.assertRaises(ValueError):
                     validate.verify_execution(path, ["one"])
+
+    def test_final_report_failure_returns_incomplete_and_preserves_checkpoint(self):
+        """A failed final save must preserve logs and return two without a traceback."""
+        actual_save = validate.save_report
+        attempts = []
+
+        def save(*args, **kwargs):
+            """Permit initial and command checkpoints, then fail final storage."""
+            attempts.append(1)
+            if len(attempts) >= 3:
+                raise OSError("final report storage unavailable")
+            return actual_save(*args, **kwargs)
+
+        def finish(args, directory, record):
+            """Retain a real command log and a successful command checkpoint."""
+            record(validate.run_command("debug-native", [sys.executable, "-c",
+                "print('retained child output')"], directory, 10))
+
+        errors = io.StringIO()
+        with patch.object(validate, "save_report", side_effect=save), \
+                patch.object(validate, "run_ctests", side_effect=finish), \
+                patch.object(validate, "run_firmware"), \
+                redirect_stdout(io.StringIO()), redirect_stderr(errors):
+            code = validate.main(["--checks", "native", "--configs", "Debug",
+                                  "--out", str(self.root)])
+        self.assertEqual(code, 2)
+        self.assertIn("INCOMPLETE:", errors.getvalue())
+        self.assertIn("Cannot save report:", errors.getvalue())
+        report = json.loads(next(self.root.glob("run-*/report.json")).read_text())
+        self.assertEqual(report["results"][0]["status"], "PASS")
+        self.assertIn("retained child output", Path(report["results"][0]["log"]).read_text())
+
+    def test_interruption_report_failure_retains_exit_130_and_prior_evidence(self):
+        """Storage loss during Ctrl-C preserves prior failure evidence and exit 130."""
+        actual_save = validate.save_report
+        attempts = []
+
+        def save(*args, **kwargs):
+            """Keep completed work's checkpoint but reject the interruption update."""
+            attempts.append(1)
+            if len(attempts) >= 3:
+                raise OSError("interruption report storage unavailable")
+            return actual_save(*args, **kwargs)
+
+        def interrupt(args, directory, record):
+            """Stop after recording one failed command."""
+            record(validate.Result("debug-native", "FAIL", "retained child failure"))
+            raise KeyboardInterrupt
+
+        errors = io.StringIO()
+        with patch.object(validate, "save_report", side_effect=save), \
+                patch.object(validate, "run_ctests", side_effect=interrupt), \
+                patch.object(validate, "run_firmware"), \
+                redirect_stdout(io.StringIO()), redirect_stderr(errors):
+            code = validate.main(["--checks", "native,python", "--configs", "Debug",
+                                  "--out", str(self.root)])
+        self.assertEqual(code, 130)
+        self.assertIn("Interrupted; cannot save updated report:", errors.getvalue())
+        report = json.loads(next(self.root.glob("run-*/report.json")).read_text())
+        self.assertEqual(report["results"][0]["detail"], "retained child failure")
+        self.assertEqual(report["pending"], ["debug-python"])
 
     def test_combined_selections_execute_each_suite_once(self):
         """Actual selection code constructs one disjoint CTest call per group/config."""

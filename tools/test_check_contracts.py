@@ -130,6 +130,33 @@ struct Owner { Owner(const Owner&) = delete; };
         self.append("src/TUSB32x.cpp", 'const char* text = "//"; void bad() { malloc(1); }')
         self.reject("allocation")
 
+    def test_digit_separators_cannot_hide_following_allocation(self):
+        """Keep C++17 numeric apostrophes distinct from character literal quotes."""
+        path = self.root / "src/TUSB32x.cpp"
+        original = path.read_bytes()
+        for number in ("1'000", "0xFF'FFu", "0b1010'0101ULL", "1'234.5e-6",
+                       "0x1'F.Ap+2", ".1'25e+3", "1'000_count"):
+            with self.subTest(number=number):
+                path.write_bytes(original)
+                text = (f"constexpr auto before = {number};\n"
+                        "int* allocation() { return new int(1); }\n"
+                        f"constexpr auto after = {number};")
+                self.append("src/TUSB32x.cpp", text)
+                self.reject("allocation")
+                for keep_strings in (False, True):
+                    self.assertEqual(contracts.masked(text, keep_strings), text)
+
+    def test_numeric_literals_preserve_real_character_and_string_masking(self):
+        """Numeric handling cannot expose forbidden words contained in literals."""
+        text = ("auto number = 1'000; auto quote = '\\''; auto wide = L'x'; "
+                'auto text = "1\'000 new int"; // 2\'000 malloc(4)\n'
+                'auto raw = R"(3\'000 new int)";')
+        code = contracts.masked(text)
+        self.assertIn("1'000", code)
+        self.assertNotIn("new", code)
+        self.assertNotIn("malloc", code)
+        self.assertEqual(len(code), len(text))
+
     def test_spliced_call_cannot_hide_allocation(self):
         """Apply C++ line splicing before checking forbidden function names."""
         self.append("src/TUSB32x.cpp", "void bad() { mal\\\nloc(1); }")

@@ -2673,3 +2673,60 @@ This documentation-only reporting unit receives local link/format/version checks
 and its own commit/sync. It does not create another remote gate or extend the
 9aa8898 CI result to its reporting commit. Physical serial/I2C/CC/INT/power/timing
 remains NOT RUN; no flashing, publication or sibling modification occurred.
+
+## Independent audit of prompts 33 and 34, 2026-10-28
+
+Re-read both original prompts completely, COMMON, AGENT_WORKFLOW, maintainability
+and verification/package rules. Started at clean `e6d3ba9ab910d672fcf2abda1848ac0838d46912`
+on `promptset/tusb32x-implementation-20261023`; fetch confirmed upstream equality
+and zero ahead/behind. Reviewed original implementation diffs from `fc77aae`
+through `9aa8898`, current sources and actual registered commands. Parallel
+reviewers independently checked validator/registration/version behavior,
+Doxygen visibility/omissions, and workflow/package/firmware provenance. The lead
+verified findings, reviewed their corrections and integrated disjoint files.
+
+Fresh read-only peer evidence:
+
+| Peer revision; clean worktree | Sources re-opened and decision |
+| --- | --- |
+| TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | AGENTS, CMake, workflow, version generator/tests and Doxygen checker/tests. Keep explicit commands, strict generation and visibility; reject copying a permissive extraction setting or assuming its green SDK rows qualify TUSB. |
+| 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | AGENTS, CMake and tools/test_cli_transcript.py. Keep the explicit built fixture path and real C++ exchange; do not substitute recorded text or EEPROM mutation policies. |
+| OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200` | AGENTS, Doxyfile, workflow/action pins and tools/check_clean_consumer_package.py. Keep actual clean consumers and full action pins; reject warning suppression or SHA-shape checks as sufficient proof. |
+| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | AGENTS, Doxyfile and examples/esp_idf/basic/main/CMakeLists.txt. Keep strict warnings and real component linkage; do not copy fixed directory-derived component names or enclosing-Git identity. |
+| INA3221 `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` | AGENTS, CMake and examples/esp_idf/basic/main/CMakeLists.txt. Retain native app_main/API evidence; SDK-shaped host fixtures remain a separate evidence level. |
+
+Confirmed corrections remain inside the original validation/package scope:
+
+- Numeric apostrophes no longer mask following C++ code. The original allocation
+  bypass compiles as C++17; lexical and runtime allocation checks remain distinct.
+- Doxygen rejects alias-based hiding and checks documented pointer/reference and
+  trailing-return helpers, including attached pointer/name spelling. It shares
+  the boundary lexer's token recognition while preserving XML source positions.
+- Final report I/O failure returns incomplete; interrupted report I/O retains
+  exit 130 and prior evidence. Command logs retain at most 16 MiB; overflow fails
+  even after exit zero. Firmware logs also trim an overshoot after termination.
+- Workflow review requires actual ordered scripts, matching archive identity and
+  matrix targets. Negative scripts cover omission, echo/no-op, heredoc, duplicate
+  arguments and ignored failures. No workflow, SDK pin or firmware source changed.
+- Ninja Multi-Config package inspection selects the built configuration and its
+  Ninja manifest. The existing package-origin suite now executes its clean
+  consumer alongside standard Ninja and both outside-header negatives. Four
+  35-second child bounds fit a documented 160-second suite bound.
+
+Final local checks pass: Release 72/72 registrations; Debug native/contracts
+59/59; final affected Doxygen 2/2 after the attached-declarator correction.
+Inventory remains 53 native, six contracts, two Doxygen, eight Python on Windows,
+and three package tests. Assertions and all six strict warning flags are present
+in actual Debug/Release commands. Negative suites execute 39 boundary, 33 Doxygen,
+43 validator/CI, 24 firmware and 42 package cases. Version tests execute 18 cases;
+sync/check changes neither bytes nor mtimes. Full commands and artifacts are in
+[validation](validation.md#independent-audit-of-prompts-33-and-34-2026-10-28).
+
+The four official action release tags were re-resolved to the existing SHAs.
+The prior exact-SHA run remains independently confirmed successful: 14 jobs at
+`9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`, with cached artifact ZIP digests and
+32 image/map/config/lock hashes rechecked. All eight images contain 11 extracted
+project sources. This audit does not transfer that result to new commits.
+The lead will commit/sync this checked correction and inspect the existing
+push-triggered checks affected by these validator/tool changes. No manual
+dispatch, HIL, flashing, publication or sibling mutation is involved.

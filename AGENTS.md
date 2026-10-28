@@ -155,7 +155,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   arduino, idf-s2 and idf-s3. Default host configurations are Debug and Release.
   Reuse disjoint CTest validation labels; do not run the same runner modules again
   through unittest discovery. Logs/JUnit and atomic partial reports stay under
-  build/validation. Missing tools return INCOMPLETE/nonzero; no implicit HIL,
+  build/validation. Retained command logs are capped at 16 MiB; overflow fails.
+  Missing tools return INCOMPLETE/nonzero; no implicit HIL,
   flashing, publication or remote CI. See [validation](docs/validation.md#local-validation-entry-point).
 - On Windows use `scripts/pio.cmd` with the installed VS Code-managed Core.
   The native host consumer command is:

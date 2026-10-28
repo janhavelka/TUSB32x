@@ -42,6 +42,13 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Fixed
 
+- Validation guards preserve C++17 digit separators, reject alias-hidden API
+  documentation and check pointer/reference and trailing-return helper comments.
+  Final report storage failures keep the documented incomplete/interrupted exits.
+  Validator and firmware logs retain bounded prefixes and fail on overflow.
+  Workflow checks require executable package and target-specific image commands.
+  Ninja Multi-Config package provenance inspects the selected configuration.
+
 - Base TUSB320/I fixture power cycles revoke prior recovery readiness across later
   suite sessions and within combined plans. Only a newly qualified explicit
   recovery permits later source-capable settings; declarations and reads do not.

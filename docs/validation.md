@@ -3997,3 +3997,90 @@ CC attachment/current, INT/supply/enable timing and exact-board qualification.
 No serial port, flashing, fixture power control, publication, release or registry
 action occurred. Image links and host/fake-serial tests do not establish hardware
 qualification. Later numbered prompts use local verification and retain this CI SHA.
+
+## Independent audit of prompts 33 and 34, 2026-10-28
+
+Starting HEAD was `e6d3ba9ab910d672fcf2abda1848ac0838d46912`, clean and equal to
+the existing execution branch's upstream after fetch. Re-read both prompts and
+reviewed original diffs, current implementation, registered tests, peer sources
+and actual checkpoint artifacts. [Progress](implementation-progress.md#independent-audit-of-prompts-33-and-34-2026-10-28)
+records exact peer revisions, files and choices. No production C++ behavior,
+framework pin, package inventory, version or workflow was changed.
+
+| Confirmed gap | Correction and negative proof |
+| --- | --- |
+| C++17 digit separators opened a character-literal mask across following code | Recognize preprocessing numbers before character literals. Decimal, binary, hexadecimal, floating/exponent and suffix cases preserve the allocation violation; the original bypass compiles as C++17. |
+| Doxygen aliases could hide callable members, and helper declarator spelling could evade comments | Reject aliases and exercise real Doxygen private/protected expansion; detect pointer/reference and trailing returns, including attached names. Positive documented variants still pass. Share the lexical token rules without changing XML line/offset evidence. |
+| Final/interrupted report I/O could escape documented exits | Catch final saves and handle interrupted checkpoint failure without recursive saves. Preserve old logs/checkpoints; report incomplete as exit 2 and interruption as 130. |
+| A successful short child could leave arbitrarily large validation output | Stop live overflow, fail fast-exit overflow, and retain a maximum 16 MiB prefix. Firmware overshoot is also trimmed after termination. Polling may transiently exceed the retained limit; overflow never becomes successful evidence. |
+| Workflow guard accepted absent, inert or failure-suppressed commands and a fixed target | Compare maintained whole scripts, archive upload/download/extraction and matrix binding. Execute negative fixtures for no-ops, heredocs, disabled/reordered/split blocks, ignored exits and duplicate options. No shell interpreter or parallel command framework was added. |
+| Ninja Multi-Config queried objects for unbuilt configurations | Select complete unique sources for the requested configuration and its build manifest. Reject missing/ambiguous/outside records; actually build/link/run the clean Multi-Config consumer inside the existing package-origin registration. |
+
+Focused negatives preceded combined verification. Final suites execute boundary
+39 cases, Doxygen 33, validator/CI 43 (19 validator, 24 CI), firmware 24 and
+package 42, all PASS.
+Version fixtures execute 18 cases. No guard was replaced with source-token-only
+proof: compiled headers, armed allocation sentinels, real CLI parity/negative
+contracts, persistent C++ transcripts and clean package consumers remain active.
+
+Commands and outcomes:
+
+```text
+python tools/test_check_contracts.py -v
+python tools/test_check_doxygen.py -v
+python tools/test_validate.py -v
+python tools/test_check_firmware.py -v
+python tools/test_check_package.py -v
+python tools/check_ci.py
+python tools/check_package.py --test-archive --out build/audit-33-34-matrix/package-multiconfig --generator "Ninja Multi-Config"
+python tools/test_check_package.py --consumer-origins
+python tools/validate.py --checks native,contracts,doxygen,python,package --configs Release --out build/audit-33-34-release
+python tools/validate.py --checks native,contracts --configs Debug --out build/audit-33-34-debug
+ctest --test-dir build/audit-33-34-release/run-_n_zr31y/Release -C Release -R "^(doxygen|doxygen_negative)$" --output-on-failure
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+git diff --check
+```
+
+**PASS:** Release 72/72 registered suites, Debug 59/59 native/contracts, and final
+affected documentation 2/2 after the last declarator fixture. The two combined
+validator reports have no pending scope, and exact inventory/JUnit execution
+matches ownership: 53 native, six contracts, two Doxygen, eight Python on Windows,
+three package. Ninja's actual command database confirms all six strict warnings
+and active assertions in 33 runtime-test translation units per configuration.
+Compile-only contracts remain separate. Package tests include ordinary and
+Multi-Config tests-OFF executions with no Git/Python/Doxygen/PIO on their child
+PATH, plus two actual outside-header negative builds. The suite's four bounded
+35-second consumers have a 160-second CTest limit; no behavioral contract or
+assertion was relaxed. Version sync/check leaves bytes and mtimes unchanged.
+
+Final local evidence:
+
+- `build/audit-33-34-release/run-_n_zr31y`: all five Release groups, inventories,
+  JUnit, per-command logs, clean package evidence and fresh generated API pages.
+- `build/audit-33-34-debug/run-i707r6_p`: Debug native/contracts and inventory.
+- `build/audit-33-34-lead`: final documentation rerun, firmware negatives and
+  official action-tag re-resolution. Local Markdown check covers 138 tracked
+  Markdown files and 805 local links; packaged links are also checked by the
+  real clean consumer.
+- `build/audit-33-34-doxygen`: original reproductions, fixed parser omissions
+  and real HTML/XML visibility. Current guard checks 36 maintained C++ files.
+- `build/audit-33-34-matrix`: original/fixed actual-YAML probes, failed/fixed
+  Multi-Config consumer and independently rehashed prior CI artifacts.
+
+Tools: Python 3.12.10, CMake/CTest 4.0.1, Ninja 1.12.1, GNU 15.1.0
+MinGW/UCRT/MCF, Doxygen 1.13.2 and existing managed PlatformIO 6.1.19.
+PyYAML 6.0.3 is the existing workflow parser; no new Core, SDK or package was
+installed. Local Linux sanitizers/SDK 6.1 are not substituted with mocks.
+
+The original checkpoint remains **PASS** at its actual tested SHA
+`9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`, [run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875).
+Fresh service lookup confirms completed/success. Independent reinspection checks
+the stored ZIP digests, 32 ELF/BIN/map/config/lock hashes and all eight image
+source sets; no missing image evidence was found. New audit commits do not
+inherit that SHA's result. The next entry records synchronization and any
+affected push-triggered checks after this tool correction is committed.
+
+Physical serial/I2C/CC/INT/supply/timing remains **NOT RUN**. No board, port,
+flash, fixture power, registry or publication operation occurred. Native images
+and fake-serial tests establish software handling only.

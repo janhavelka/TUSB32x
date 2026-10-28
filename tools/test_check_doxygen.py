@@ -168,6 +168,19 @@ int privateHelper(int value) {
                      "/// @protected\n/// @brief Return an owner-supplied input unchanged.")
         self.assertIn("Public documentation hiding directive", self.run_guard())
 
+    def test_alias_cannot_hide_public_function(self) -> None:
+        """Alias expansion cannot change a public declaration's documentation access."""
+        self.replace("include/TUSB32x/Api.h",
+                     "/// @brief Return an owner-supplied input unchanged.",
+                     "/// @conceal\n/// @brief Return an owner-supplied input unchanged.")
+        configuration = (self.root / "Doxyfile").read_text(encoding="utf-8")
+        for directive in ("private", "protected"):
+            for assignment in ("=", "+="):
+                with self.subTest(directive=directive, assignment=assignment):
+                    self.write("Doxyfile", configuration
+                               + f'ALIASES {assignment} "conceal=@{directive}"\n')
+                    self.assertIn("through ALIASES", self.run_guard())
+
     def test_appended_excluded_function_cannot_disappear(self) -> None:
         """Doxyfile append assignments have the same exclusion effect as equals."""
         with (self.root / "Doxyfile").open("a", encoding="utf-8") as stream:
@@ -211,6 +224,50 @@ int privateHelper(int value) {
         self.replace("src/Helper.cpp", "int privateHelper(int value) {\n"
                      "  if (value < 0) value = 0;\n  return value + 2;\n}",
                      "int privateHelper(int value) { if (value < 0) value = 0; return value + 2; }")
+        self.assertIn("Missing source helper comment", self.run_guard())
+
+    def test_pointer_and_reference_helpers_need_comments(self) -> None:
+        """Return pointer/reference placement cannot bypass the helper comment check."""
+        source = (self.root / "src/Helper.cpp").read_text(encoding="utf-8")
+        source = source.replace(
+            "// Clip the bounded sample at zero before adding its fixed offset.\n", "")
+        for signature, result in (("int *privateHelper(int value)", "nullptr"),
+                                  ("int &privateHelper(int& value)", "value"),
+                                  ("int*privateHelper(int value)", "nullptr"),
+                                  ("int&privateHelper(int& value)", "value")):
+            with self.subTest(signature=signature):
+                self.write("src/Helper.cpp", source.replace(
+                    "int privateHelper(int value)", signature).replace("value + 2", result))
+                self.assertIn("Missing source helper comment", self.run_guard())
+
+    def test_trailing_return_helper_needs_comment(self) -> None:
+        """A trailing return type still defines a nontrivial private helper."""
+        self.replace("src/Helper.cpp",
+                     "// Clip the bounded sample at zero before adding its fixed offset.\n", "")
+        self.replace("src/Helper.cpp", "int privateHelper(int value)",
+                     "auto privateHelper(int value) -> int")
+        self.assertIn("Missing source helper comment", self.run_guard())
+
+    def test_documented_helper_declarator_variants_pass(self) -> None:
+        """Supported return declarators remain legal with their adjacent comment."""
+        source = (self.root / "src/Helper.cpp").read_text(encoding="utf-8")
+        for signature, result in (("int *privateHelper(int value)", "nullptr"),
+                                  ("int &privateHelper(int& value)", "value"),
+                                  ("int*privateHelper(int value)", "nullptr"),
+                                  ("int&privateHelper(int& value)", "value"),
+                                  ("auto privateHelper(int value) -> int", "value + 2")):
+            with self.subTest(signature=signature):
+                self.write("src/Helper.cpp", source.replace(
+                    "int privateHelper(int value)", signature).replace("value + 2", result))
+                self.run_guard(0)
+
+    def test_digit_separators_cannot_hide_undocumented_helper(self) -> None:
+        """C++17 numeric apostrophes cannot mask the helper between two literals."""
+        self.replace("src/Helper.cpp",
+                     "// Clip the bounded sample at zero before adding its fixed offset.\n",
+                     "constexpr int LOWER = 1'000;\n")
+        self.replace("src/Helper.cpp", "  return value + 2;\n}\n}",
+                     "  return value + 2;\n}\nconstexpr int UPPER = 2'000;\n}")
         self.assertIn("Missing source helper comment", self.run_guard())
 
     def test_documented_unrelated_name_cannot_hide_missing_helper_comment(self) -> None:

@@ -15,7 +15,6 @@ from collections import Counter
 import json
 from pathlib import Path
 import re
-import shlex
 import sys
 
 import validate
@@ -111,33 +110,27 @@ def commands(job):
     return [step["run"] for step in job["steps"] if "run" in step]
 
 
-def validation_commands(job, host=False):
-    """Read canonical validate.py arguments without executing or expanding shell code."""
-    found = []
-    for command in commands(job):
-        for line in command.replace("\\\n", " ").splitlines():
-            if "tools/validate.py" not in line:
-                continue
-            words = shlex.split(line)
-            require(words.count("tools/validate.py") == 1,
-                    "validation must invoke the existing literal tools/validate.py")
-            require("--checks" in words and "--configs" in words,
-                    "CI validation requires explicit checks and configuration")
-            if host:
-                require(words.count("--compiler") == 1 and
-                        words.index("--compiler") + 1 < len(words) and
-                        words[words.index("--compiler") + 1] == "${{ matrix.compiler }}",
-                        "host validation must use the matrix compiler")
-                require(line.count(SANITIZE_ARGUMENT) == 1 and "--sanitize" not in
-                        shlex.split(line.replace(SANITIZE_ARGUMENT, "")),
-                        "host validation must use the matrix sanitizer selection")
-            try:
-                checks = words[words.index("--checks") + 1]
-                configuration = words[words.index("--configs") + 1]
-            except IndexError as error:
-                raise AuditError("validation argument has no value") from error
-            found.append((checks, configuration))
-    return found
+def audit_validation(jobs):
+    """Require the maintained validation scripts once, without shell wrappers.
+
+    Exact script comparison rejects ignored exits, duplicate options and commands
+    embedded in heredoc data. Changes to these small scripts require policy review.
+    """
+    scripts = {
+        "host": "python tools/validate.py --checks native,contracts "
+                "--configs '${{ matrix.config }}' --compiler '${{ matrix.compiler }}' "
+                "--out build/host " + SANITIZE_ARGUMENT,
+        "python": "python tools/validate.py --checks python --configs Release --out build/python",
+        "docs": "doxygen --version > build/docs/tool.log\n"
+                "python tools/validate.py --checks doxygen --configs Release --out build/docs",
+        "package": "python tools/validate.py --checks package --configs Release "
+                   "--out build/package",
+    }
+    for name, job in jobs.items():
+        actual = [command.strip() for command in commands(job) if "tools/validate.py" in command]
+        expected = [scripts[name]] if name in scripts else []
+        require(actual == expected,
+                f"validation script must execute the declared scope once: {name}")
 
 
 def audit_registration(data):
@@ -148,6 +141,69 @@ def audit_registration(data):
     actual = {name: len(names) for name, names in groups.items()}
     require(actual == expected, f"unexpected CTest registration counts: {actual}; expected {expected}")
     return actual
+
+
+def audit_distribution(jobs):
+    """Require this workflow's literal archive and target-specific link commands.
+
+    This is a narrow contract for the maintained workflow, not a shell parser.
+    Exact step scripts reject comments, no-ops, failure suppression and commands
+    embedded in heredoc data without evaluating shell input.
+    """
+    def require_script(name, expected):
+        """Require the complete distribution step once, including order and wrappers."""
+        actual = [step for step in jobs[name]["steps"]
+                  if any(tool in step.get("run", "") for tool in (
+                      "pio pkg pack", "tools/check_package.py", "tools/check_firmware.py"))]
+        require(len(actual) == 1 and actual[0]["run"].strip() == "\n".join(expected),
+                f"missing or changed distribution script: {name}")
+        return actual[0]
+
+    require_script("package", [
+        "pio pkg pack . --output build/package/TUSB32x.tar.gz > build/package/pack.log 2>&1",
+        "sha256sum build/package/TUSB32x.tar.gz > build/package/archive-sha.log",
+        "python tools/check_package.py --archive build/package/TUSB32x.tar.gz "
+        "--out build/package/distribution > build/package/consumer.log 2>&1",
+    ])
+    payloads = [step for step in jobs["package"]["steps"]
+                if step.get("uses", "").startswith("actions/upload-artifact@")
+                and step.get("with", {}).get("name") == "tusb32x-package"]
+    require(len(payloads) == 1 and payloads[0]["with"]["path"].split() == [
+        "build/package/TUSB32x.tar.gz", "build/package/archive-sha.log",
+        "build/package/source-sha.log"], "package must upload the identified archive exactly once")
+    for name in ("arduino", "idf"):
+        downloads = [step for step in jobs[name]["steps"]
+                     if step.get("uses", "").startswith("actions/download-artifact@")]
+        require(len(downloads) == 1 and downloads[0].get("with") == {
+            "name": "tusb32x-package", "path": "build/package"},
+            f"firmware must download the same identified archive: {name}")
+        extraction = [
+            "sha256sum --check build/package/archive-sha.log",
+            "python tools/check_package.py --archive build/package/TUSB32x.tar.gz "
+            f"--extract-only --out build/{name}/distribution > build/{name}/extract.log 2>&1",
+            "package=$(python -c 'import json; print(json.load(open(\"build/" + name +
+            "/distribution/package-report.json\"))[\"extracted\"])')",
+        ]
+        if name == "arduino":
+            require_script(name, extraction + [
+                'pio pkg install --project-dir "$package" > build/arduino/install.log 2>&1',
+                'python tools/check_firmware.py --package "$package" '
+                '--out "$GITHUB_WORKSPACE/build/arduino/firmware" --checks arduino '
+                '> build/arduino/link.log 2>&1',
+            ])
+        else:
+            step = require_script(name, [
+                '. "$IDF_PATH/export.sh" > build/idf/environment.log 2>&1',
+                *extraction,
+                "check=idf-s2",
+                'if [ "$TARGET" = esp32s3 ]; then check=idf-s3; fi',
+                'python tools/check_firmware.py --package "$package" '
+                '--out "$GITHUB_WORKSPACE/build/idf/firmware" --checks "$check" '
+                '--idf-path "$IDF_PATH" --idf-python "$(command -v python)" '
+                '> build/idf/link.log 2>&1',
+            ])
+            require(step.get("env", {}).get("TARGET") == "${{ matrix.target }}",
+                    "native firmware command must use the matrix target")
 
 
 def audit_workflow(document, source):
@@ -253,20 +309,14 @@ def audit_workflow(document, source):
             "IDF matrix must retain independent failed-row evidence")
     for name in ("check", "python", "docs", "package", "arduino"):
         require("strategy" not in jobs[name], f"job must execute only once: {name}")
-    expected_commands = {"host": [("native,contracts", "${{ matrix.config }}")],
-                         "python": [("python", "Release")],
-                         "docs": [("doxygen", "Release")],
-                         "package": [("package", "Release")],
-                         "check": [], "arduino": [], "idf": []}
-    for name, expected in expected_commands.items():
-        require(validation_commands(jobs[name], host=name == "host") == expected,
-                f"CTest group must have exactly one declared CI owner: {name}")
+    audit_validation(jobs)
     for name in ("arduino", "idf"):
         needs = jobs[name].get("needs", [])
         require(needs == "package" or isinstance(needs, list) and "package" in needs,
                 f"firmware job must consume the identified package: {name}")
         require(any(step.get("uses", "").startswith("actions/download-artifact@")
                     for step in jobs[name]["steps"]), f"missing package download: {name}")
+    audit_distribution(jobs)
     return {"jobs": len(jobs), "host_rows": len(HOST_ROWS), "idf_rows": len(IDF_ROWS)}
 
 

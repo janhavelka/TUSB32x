@@ -3,7 +3,8 @@
 
 Run ordinary unit tests with Python 3.10+; no build tool or hardware is used.
 The explicit --consumer-origins mode runs three bounded builds with supplied host
-tools, retains temporary evidence, and checks actual header provenance. No mode
+tools and a fourth clean Ninja Multi-Config build when Ninja is selected. It
+retains temporary evidence and checks actual header provenance. No mode
 uses a framework, network or hardware. Fixtures live in fresh temporary roots.
 """
 
@@ -451,6 +452,40 @@ class DependencyContracts(unittest.TestCase):
             "obj.o: /root/source.cpp \\\n /root/with\\ space/header.h\n"),
             ["/root/source.cpp", "/root/with space/header.h"])
 
+    def test_multi_config_selects_complete_requested_sources_and_manifest(self) -> None:
+        """Other configurations need no objects, but selected sources must be complete."""
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary).resolve()
+            source = build / "main.cpp"
+            source.write_text("fixture", encoding="utf-8")
+            (build / "package-toolchain-includes.txt").write_text("", encoding="utf-8")
+            (build / "build-Release.ninja").touch()
+            compiles = [{"directory": str(build), "file": str(source),
+                         "output": f"CMakeFiles/consumer.dir/{config}/main.cpp.o"}
+                        for config in ("Debug", "Release", "RelWithDebInfo")]
+            selected = compiles[1]
+            args = SimpleNamespace(generator="Ninja Multi-Config", make_program="ninja",
+                                   config="Release")
+            good = f"{selected['output']}: #deps 1, deps mtime 1 (VALID)\n    {source}\n\n"
+            with mock.patch.object(package.subprocess, "run") as run:
+                run.return_value.stdout = good
+                package.check_dependencies(build, build, build, args, {}, compiles)
+                self.assertEqual(run.call_args.args[0], ["ninja", "-C", str(build),
+                    "-f", "build-Release.ninja", "-t", "deps", selected["output"]])
+                for bad in ([], [compiles[0]], compiles + [selected],
+                            compiles + [{**compiles[0], "file": str(build / "omitted.cpp")}],
+                            [{**selected, "output": "outside-layout.o"}],
+                            [{**selected, "output": "../outside.o"}],
+                            [{**selected, "output": ""}]):
+                    with self.subTest(compiles=bad), self.assertRaises(package.PackageError):
+                        package.check_dependencies(build, build, build, args, {}, bad)
+                run.return_value.stdout = good.replace("/Release/", "/Debug/")
+                with self.assertRaises(package.PackageError):
+                    package.check_dependencies(build, build, build, args, {}, compiles)
+                (build / "build-Release.ninja").unlink()
+                with self.assertRaisesRegex(package.PackageError, "manifest"):
+                    package.check_dependencies(build, build, build, args, {}, compiles)
+
     def test_make_special_characters_and_drive_paths(self) -> None:
         """Drive colons, escaped hashes/backslashes and doubled dollars survive."""
         self.assertEqual(package.make_dependencies(
@@ -473,7 +508,8 @@ def consumer_origins(argv):
     """Run a real positive and two escaped-header negatives; return zero only on PASS.
 
     Copy trusted exports, checker and fixture into an owned temporary checkout.
-    Each full checker invocation is bounded to 35 seconds (105 seconds total).
+    Each full checker invocation is bounded to 35 seconds (140 seconds total for
+    Ninja, including a clean Multi-Config consumer; 105 seconds for other generators).
     Keep stdout/stderr and builds under the printed evidence root for inspection.
     Explicit host tools are required; unavailable tools are invocation errors.
     """
@@ -509,15 +545,19 @@ def consumer_origins(argv):
         sibling = evidence / "sibling" / "OwnerTime.h"
         sibling.parent.mkdir()
         shutil.copyfile(copied / "src/TUSB32xOwnerTime.h", sibling)
-        for label, header in (("clean", None),
-                              ("checkout-header", copied / "src/TUSB32xOwnerTime.h"),
-                              ("sibling-header", sibling)):
+        cases = [("clean", None, args.generator),
+                 ("checkout-header", copied / "src/TUSB32xOwnerTime.h", args.generator),
+                 ("sibling-header", sibling, args.generator)]
+        if args.generator == "Ninja":
+            cases.append(("clean-multi-config", None, "Ninja Multi-Config"))
+        for label, header, generator in cases:
             source.write_text(original if header is None else original.replace(
                 include, f'#include "{header.as_posix()}"'), encoding="utf-8")
             command = [sys.executable, str(copied / "tools/check_package.py"),
                        "--test-archive", "--out", str(evidence / label)]
-            for key in ("cmake", "compiler", "make_program", "generator", "config"):
+            for key in ("cmake", "compiler", "make_program", "config"):
                 command.extend(["--" + key.replace("_", "-"), getattr(args, key)])
+            command.extend(["--generator", generator])
             result = subprocess.run(command, capture_output=True, text=True, timeout=35)
             output = result.stdout + result.stderr
             (evidence / f"{label}.log").write_text(output, encoding="utf-8")

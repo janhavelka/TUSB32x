@@ -33,6 +33,10 @@ INCLUDE = re.compile(r'^[ \t]*#[ \t]*include\s*([<"])([^>"\n]+)[>"]\s*$', re.M)
 NON_CODE = re.compile(
     r'/\*.*?\*/|//[^\n]*|'
     r'(?:u8|u|U|L)?R"(?P<delimiter>[^ ()\\\t\r\n]{0,16})\(.*?\)(?P=delimiter)"|'
+    # Preprocessing numbers include digit separators, exponent signs and suffixes.
+    # Keep their apostrophes from opening a character literal over following code.
+    r"(?P<number>(?<![\w.])(?:[0-9]|\.[0-9])"
+    r"(?:[eEpP][+-]|[0-9A-Za-z_.]|'[0-9A-Za-z_])*)|"
     r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', re.S,
 )
 FORBIDDEN = {
@@ -66,6 +70,8 @@ def masked(text: str, keep_strings: bool = False) -> str:
     def replace(match: re.Match) -> str:
         """Mask one non-code token without moving subsequent directive positions."""
         token = match[0]
+        if match.lastgroup == "number":
+            return token
         if keep_strings and not token.startswith(("//", "/*")):
             return token
         return "".join("\n" if char == "\n" else " " for char in token)

@@ -612,6 +612,12 @@ supplement independent headers and the allocation-sentinel consumer. Actual
 Doxygen plus HTML/XML visibility, helper comments and broken-reference negatives
 cover source documentation. Existing CLI parity, version, archive, session and
 transcript registrations are reused; runner modules are not discovered twice.
+Numeric separators cannot hide forbidden source tokens; real Doxygen fixtures
+reject alias-hidden declarations and undocumented pointer/trailing-return helpers.
+Storage-failure and overflow fixtures verify incomplete/interrupted exits and
+16 MiB retained command-log bounds. The workflow guard checks actual extracted
+image commands, archive identity and matrix-target selection, including no-op
+and failure-suppression negatives.
 See the repository-only [validation guide](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md#local-validation-entry-point).
 No validator selection invokes physical HIL, flashing, publication or remote CI.
 

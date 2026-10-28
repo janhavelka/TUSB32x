@@ -115,6 +115,7 @@ def run_logged(command, cwd, environment, log, timeout=60, input_text=None):
     log.with_suffix(".command.json").write_text(
         json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
     started = time.monotonic()
+    exceeded = False
     with log.open("wb") as stream:
         try:
             process = subprocess.Popen(
@@ -139,7 +140,13 @@ def run_logged(command, cwd, environment, log, timeout=60, input_text=None):
         except BaseException:
             stop_process(process)
             raise
-    if log.stat().st_size > MAX_LOG_BYTES:
+        finally:
+            # A child can finish or overshoot between size checks. Keep only the
+            # bounded prefix; an overflow still fails, including a zero exit.
+            if log.stat().st_size > MAX_LOG_BYTES:
+                exceeded = True
+                stream.truncate(MAX_LOG_BYTES)
+    if exceeded:
         raise FirmwareError(f"child output exceeded 16 MiB; log: {log}")
     if process.returncode:
         raise FirmwareError(f"child exited {process.returncode}: {command[0]}; log: {log}")

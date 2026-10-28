@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CHECKS = ("native", "contracts", "doxygen", "python", "package", "arduino", "idf-s2", "idf-s3")
 CTEST_CHECKS = CHECKS[:5]
 FIRMWARE_CHECKS = CHECKS[5:]
+MAX_LOG_BYTES = 16 * 1024 * 1024
 REQUIRED_TESTS = {
     "native": {"tusb32x_validators", "tusb32x_protocol", "tusb32x_operations",
                "tusb32x_port", "tusb32x_diagnostics", "tusb32x_cli", "tusb32x_console",
@@ -119,9 +120,11 @@ def stop_process(process):
 
 def run_command(name, command, directory, timeout, cwd=ROOT, environment=None,
                 incomplete_codes=()):
-    """Execute argument-list child once with a deadline; stream output to its log.
+    """Execute argument-list child once with a deadline and 16 MiB retained log.
 
     Missing executables are INCOMPLETE. Timeouts and unsuccessful children fail.
+    Output overflow stops the child, retains the bounded prefix and fails even
+    after exit zero. Polling may transiently exceed the retained byte limit.
     KeyboardInterrupt is propagated after terminating the child; the owner saves it.
     """
     command = [str(item) for item in command]
@@ -133,13 +136,34 @@ def run_command(name, command, directory, timeout, cwd=ROOT, environment=None,
                        if os.name == "nt" else {"start_new_session": True})
             process = subprocess.Popen(command, cwd=cwd, env=environment, stdout=output,
                                        stderr=subprocess.STDOUT, **options)
+            overflow = False
             try:
-                code = process.wait(timeout=timeout)
-            except (subprocess.TimeoutExpired, KeyboardInterrupt):
+                while True:
+                    if os.fstat(output.fileno()).st_size > MAX_LOG_BYTES:
+                        stop_process(process)
+                        code = process.returncode
+                        break
+                    remaining = timeout - (time.monotonic() - started)
+                    if remaining <= 0:
+                        raise subprocess.TimeoutExpired(command, timeout)
+                    try:
+                        code = process.wait(timeout=min(0.25, remaining))
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+            except BaseException:
                 stop_process(process)
                 raise
-        status = "PASS" if code == 0 else ("INCOMPLETE" if code in incomplete_codes else "FAIL")
-        detail = "completed" if code == 0 else f"child exit {code}"
+            finally:
+                # Check again after exit: a fast successful child may overflow
+                # between polls. Preserve only the diagnostic prefix on disk.
+                if os.fstat(output.fileno()).st_size > MAX_LOG_BYTES:
+                    overflow = True
+                    output.truncate(MAX_LOG_BYTES)
+        status = "FAIL" if overflow else (
+            "PASS" if code == 0 else ("INCOMPLETE" if code in incomplete_codes else "FAIL"))
+        detail = (f"output exceeded {MAX_LOG_BYTES} bytes; retained prefix" if overflow
+                  else "completed" if code == 0 else f"child exit {code}")
         result = Result(name, status, detail, command, str(log), code)
     except subprocess.TimeoutExpired:
         result = Result(name, "FAIL", f"timeout after {timeout}s", command, str(log))
@@ -389,9 +413,17 @@ def main(argv=None):
     try:
         run_ctests(args, directory, record)
         run_firmware(args, directory, record)
+        if not results:
+            record(Result("validation", "INCOMPLETE", "no checks executed"))
+        report = save_report(directory, args.checks, args.configs, results)
     except KeyboardInterrupt:
-        record(Result("interruption", "INCOMPLETE", "interrupted; remaining checks NOT RUN"))
-        save_report(directory, args.checks, args.configs, results, interrupted=True)
+        results.append(Result("interruption", "INCOMPLETE",
+                              "interrupted; remaining checks NOT RUN"))
+        try:
+            save_report(directory, args.checks, args.configs, results, interrupted=True)
+        except OSError as error:
+            print(f"Interrupted; cannot save updated report: {error}; "
+                  f"prior checkpoints and command logs: {directory}", file=sys.stderr)
         return 130
     except (OSError, ValueError) as error:
         results.append(Result("validation", "INCOMPLETE", str(error)))
@@ -401,9 +433,6 @@ def main(argv=None):
         except OSError as save_error:
             print(f"Cannot save report: {save_error}; command logs: {directory}", file=sys.stderr)
         return 1 if any(result.status == "FAIL" for result in results) else 2
-    if not results:
-        record(Result("validation", "INCOMPLETE", "no checks executed"))
-    report = save_report(directory, args.checks, args.configs, results)
     print(f"{report['status']}: requested scope; hardware/remote CI NOT RUN")
     if any(result.status == "FAIL" for result in results):
         return 1

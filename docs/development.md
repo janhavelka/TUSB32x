@@ -162,7 +162,10 @@ links and executes; ordinary host tests do not require PlatformIO. Separately,
 the actual managed-Core archive is checked with the command above.
 `tusb32x_package_origins` additionally runs the complete checker on a valid copy
 and injected checkout/outside header dependencies; both injected builds must be
-rejected after compilation. It has a finite 120-second limit and needs the same
+rejected after compilation. With Ninja, it also runs a clean Ninja Multi-Config
+consumer. Only the selected configuration's compiled objects supply dependency
+evidence; unbuilt configurations cannot substitute for them. Four child builds
+have 35-second bounds within the suite's 160-second limit. It needs the same
 maintainer tools. Extracted
 Arduino builds use the four root environments. Native builds use the archived
 `examples/esp_idf/basic` and separate absolute build/SDKCONFIG paths for S2/S3;
