@@ -1,5 +1,5 @@
 /// @file Tusb32xCli.cpp
-/// @brief Strict dispatch, independent staging and one core-owned operation poll per turn.
+/// @brief Strict dispatch/staging, one managed poll and explicit core Sync diagnostics.
 #include "Tusb32xCli.h"
 
 #include <cstring>
@@ -54,40 +54,40 @@ constexpr CommandRow ROWS[] = {
      "none", "all", "ACK,PORT,PORT_DETAIL,END"},
     {"profile.show", "cfg,settings", "profile", "profile [show]", "CACHE_ONLY", "NONE",
      "[cached] Separate staged, desired, observed and applied fields",
-     "none", "all", "ACK,CONFIG,PROFILE,END"},
+     "none", "all", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"profile.reset", "none", "profile", "profile reset", "PURE", "LOCAL_STATE",
      "[stage] Candidate defaults, not silicon reset or device writes",
-     "none", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "none", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"profile.discard", "none", "profile", "profile discard", "PURE", "LOCAL_STATE",
      "[stage] Copy core desired; if absent use explicit profile reset",
-     "retained_desired", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "retained_desired", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"profile.validate", "none", "profile", "profile validate", "PURE", "NONE",
      "[stage] Validate candidate values; no apply or write permission",
-     "none", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "none", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"mode", "none", "profile", "mode [port|dfp|ufp|drp]", "PURE", "LOCAL_STATE",
      "[stage] Local role candidate; port unsupported on TUSB322I",
-     "none", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "none", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"current", "none", "profile", "current [default|1a5|3a0]", "PURE", "LOCAL_STATE",
      "[stage] CC advertisement category, not measured current or PD",
-     "none", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "none", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"duty", "none", "profile", "duty [30|40|50|60]", "PURE", "LOCAL_STATE",
      "[stage] DRP source duty percent; staging is not write permission",
-     "none", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "none", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"debounce", "none", "profile", "debounce [milliseconds]", "PURE", "LOCAL_STATE",
      "[stage] Base 116/133/151/168; extended 118/134/152/168 ms",
-     "none", "variant_values", "ACK,CONFIG,PROFILE,END"},
+     "none", "variant_values", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"preference", "none", "profile", "preference [normal|try-sink|try-source]", "PURE", "LOCAL_STATE",
      "[stage] Extended dual-role preference; absent on base parts",
-     "none", "extended", "ACK,CONFIG,PROFILE,END"},
+     "none", "extended", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"ufpaccessory", "none", "profile", "ufpaccessory [on|off]", "PURE", "LOCAL_STATE",
      "[stage] Extended UFP accessory enabled/disabled, raw polarity separate",
-     "none", "extended", "ACK,CONFIG,PROFILE,END"},
+     "none", "extended", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"termination", "none", "profile", "termination [on|off]", "PURE", "LOCAL_STATE",
      "[stage] Extended 0A termination control, distinct from 45 Rd/Rp",
-     "none", "extended", "ACK,CONFIG,PROFILE,END"},
+     "none", "extended", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"rd-rp", "none", "profile", "rd-rp [on|off]", "PURE", "LOCAL_STATE",
      "[stage] Separate 45 Rd/Rp control; absent on TUSB322I",
-     "none", "has_45", "ACK,CONFIG,PROFILE,END"},
+     "none", "has_45", "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"},
     {"init", "initialize,probe", "connection", "init [timeout_ms]", "CORE_JOB", "READ_OBSERVATION",
      "[live read] Identify/observe only; never reset or replay staging",
      "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
@@ -141,6 +141,42 @@ constexpr CommandRow ROWS[] = {
     {"result.take", "none", "job", "result take <token>", "PURE", "LOCAL_STATE",
      "[cached] Exact-token delivery; reserve response before releasing core slot",
      "retained_result", "all", "ACK,RESULT,RESULT_DETAIL,END", 0, 0, 0, "host", "operation_routes"},
+    {"reg", "rreg,rawread", "registers", "reg <address>", "RAW_I2C", "READ_OBSERVATION",
+     "[live read] One raw byte; consuming semantics may be variant-dependent",
+     "idle_no_result", "mapped_register", "ACK,REG,DECODE,DECODE_PROFILE,END",
+     1, 1, 1, "host", "diagnostic_routes"},
+    {"decode", "none", "registers", "decode <address> <byte>", "PURE", "NONE",
+     "[cached] Supplied raw field codes, not paired port applicability or proof",
+     "none", "mapped_register", "ACK,REG,DECODE,DECODE_PROFILE,END",
+     0, 0, 0, "host", "diagnostic_routes"},
+    {"wreg", "rawwrite", "registers", "wreg <address> <byte>", "RAW_I2C", "DEVICE_WRITE",
+     "[device write] Core-safe image only; sequenced changes need typed operations",
+     "idle_no_result", "known_safe_image", "ACK,REG,END", 1, 2, 0, "host", "diagnostic_routes"},
+    {"irq", "none", "interrupt", "irq", "CACHE_ONLY", "NONE",
+     "[cached] Last managed IRQ operation; not a fresh latch observation",
+     "none", "all", "ACK,IRQ,END", 0, 0, 0, "host", "diagnostic_routes"},
+    {"intpin", "none", "interrupt", "intpin", "PLATFORM_ACTION", "NONE",
+     "[live read] Opt-in application input level; no GPIO setup or I2C",
+     "optional_input", "application", "ACK,PIN,END", 0, 0, 0, "host", "diagnostic_routes"},
+    {"invalidate", "none", "lifecycle", "invalidate <external-reset|power-loss|target-change>",
+     "PURE", "LOCAL_STATE", "[cached] Explicit external-change notice; retain effects and result",
+     "none", "all", "ACK,INVALIDATE,END", 0, 0, 0, "host", "diagnostic_routes"},
+    {"drv", "health,state", "diagnostics", "drv", "CACHE_ONLY", "NONE",
+     "[cached] Pure managed health; READY does not prove configuration or port",
+     "none", "all", "ACK,DRV,END", 0, 0, 0, "host", "diagnostic_routes"},
+    {"diag", "none", "diagnostics", "diag", "CACHE_ONLY", "NONE",
+     "[cached] Independent trust, retained effects, identity and failure evidence",
+     "none", "all", "ACK,DIAG,MANAGED,FAILURE,IDENTITY,IRQ,XFER,END",
+     0, 0, 0, "host", "diagnostic_routes"},
+    {"xfer_stats", "counters", "diagnostics", "xfer_stats", "CACHE_ONLY", "NONE",
+     "[cached] Saturating all-callback totals, including raw; not bus transactions",
+     "none", "all", "ACK,XFER,END", 0, 0, 0, "host", "diagnostic_routes"},
+    {"xfer_reset", "none", "diagnostics", "xfer_reset", "PURE", "LOCAL_STATE",
+     "[cached] Idle source totals clear only; retain managed health and effects",
+     "idle_no_result", "all", "ACK,XFER,END", 0, 0, 0, "host", "diagnostic_routes"},
+    {"xfer_assert", "none", "diagnostics", "xfer_assert <attempts> [successes failures]", "PURE", "NONE",
+     "[cached] Exact all-source equality; any saturated counter rejects",
+     "unsaturated_totals", "all", "ACK,XFER,END", 0, 0, 0, "host", "diagnostic_routes"},
 };
 
 bool equal(const char* a, const char* b) { return std::strcmp(a, b) == 0; }
@@ -384,6 +420,20 @@ t::Status Cli::stage(const t::DeviceProfile& candidate) {
   return t::Status::Ok();
 }
 
+bool Cli::countersSaturated(const t::TransportStats& stats) {
+  constexpr uint32_t maximum = std::numeric_limits<uint32_t>::max();
+  return stats.totalAttempts == maximum || stats.totalSuccess == maximum || stats.totalFailures == maximum;
+}
+
+t::Status Cli::assertCounters(const t::TransportStats& stats, uint32_t attempts,
+    uint32_t success, uint32_t failures, bool all) {
+  if (countersSaturated(stats))
+    return t::Status::Error(t::Err::INVALID_PARAM, "Exact assertion unavailable for saturated callback totals");
+  if (stats.totalAttempts != attempts || (all && (stats.totalSuccess != success || stats.totalFailures != failures)))
+    return t::Status::Error(t::Err::INVALID_PARAM, "All-source callback totals differ from expectation");
+  return t::Status::Ok();
+}
+
 bool Cli::sessionAvailable() {
   if (_lastRequest == std::numeric_limits<uint64_t>::max()) {
     _exhausted = true;
@@ -418,8 +468,9 @@ void Cli::execute(const char* line, bool poisoned) {
     std::memcpy(request.nonce, _nonce, sizeof(_nonce));
     record(request, "MARK", "");
   } else acknowledge(request, response);
-  if (response.status.ok() || response.status.inProgress()) payload(request, response);
-  if (!response.deferred) close(request, response.status, response.token);
+  if (response.status.ok() || response.status.inProgress() || response.payload == Payload::XFER ||
+      response.payload == Payload::PIN) payload(request, response);
+  if (!response.deferred) close(request, response.status, response.token, response.callbacks);
 }
 
 Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& request) {
@@ -439,7 +490,8 @@ Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& 
     else if ((count == 2 || count == 3) && equal(tokens[1], "read")) row = findRow("profile.read");
     else return invalid();
   } else if (equal(tokens[0], "irq")) {
-    if (count >= 2 && equal(tokens[1], "read")) row = findRow("irq.read");
+    if (count == 1) row = findRow("irq");
+    else if (count >= 2 && equal(tokens[1], "read")) row = findRow("irq.read");
     else if (count >= 2 && equal(tokens[1], "ack")) row = findRow("irq.ack");
     else if (count >= 2 && equal(tokens[1], "service")) row = findRow("irq.service");
     else return invalid();
@@ -456,6 +508,101 @@ Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& 
   if (row == nullptr) return invalid();
   const char* command = row->command;
   request.command = command;
+
+  if (equal(command, "reg") || equal(command, "decode") || equal(command, "wreg")) {
+    const bool writing = equal(command, "wreg");
+    const bool supplied = equal(command, "decode");
+    uint32_t reg = 0, value = 0;
+    if (count != (supplied || writing ? 3U : 2U) || !number(tokens[1], 255, reg, true) ||
+        ((supplied || writing) && !number(tokens[2], 255, value, true))) return invalid();
+    response.reg = static_cast<uint8_t>(reg);
+    response.value = static_cast<uint8_t>(value);
+    response.source = supplied ? "supplied" : writing ? "write" : "read";
+    if (supplied) {
+      response.status = t::decodeRegister(_config.variant, response.reg, response.value, response.decoded);
+    } else {
+      response.status = writing ? _driver.writeRegisterSync(response.reg, response.value)
+          : _driver.readRegisterSync(response.reg, response.value);
+      // Public raw API gates return local non-I2C errors. OK/I2C_* mean exactly
+      // one invoked callback, even when source counters have saturated.
+      response.callbacks = response.status.ok() || (response.status.code >= t::Err::I2C_ERROR &&
+          response.status.code <= t::Err::I2C_BUSY) ? 1 : 0;
+      if (response.status.ok() && !writing)
+        response.status = t::decodeRegister(_driver.diagnostics().identity.variant,
+            response.reg, response.value, response.decoded);
+      if (response.callbacks != 0) response.action = "ATTEMPTED";
+    }
+    if (response.status.is(t::Err::UNSUPPORTED_FEATURE))
+      response.status.msg = writing
+          ? "Raw access is absent, gated or requires a typed mode/reset/termination/recovery operation"
+          : "Register is absent on this variant; a supplied byte cannot establish that capability";
+    response.payload = Payload::REGISTER;
+    return response;
+  }
+  if (equal(command, "invalidate")) {
+    if (count != 2) return invalid();
+    const char* message = nullptr;
+    if (equal(tokens[1], "external-reset")) {
+      response.reason = "external-reset";
+      message = "Application reported an external device reset";
+    } else if (equal(tokens[1], "power-loss")) {
+      response.reason = "power-loss";
+      message = "Application reported device power loss";
+    } else if (equal(tokens[1], "target-change")) {
+      response.reason = "target-change";
+      message = "Application reported a physical target change";
+    } else return invalid();
+    response.status = _driver.invalidateDeviceState(t::Status::Error(t::Err::CONFIGURATION_UNKNOWN, message));
+    response.action = "LOCAL";
+    response.payload = Payload::INVALIDATE;
+    return response;
+  }
+  if (equal(command, "xfer_assert")) {
+    if ((count != 2 && count != 4) ||
+        !number(tokens[1], std::numeric_limits<uint32_t>::max(), response.expectedAttempts) ||
+        (count == 4 && (!number(tokens[2], std::numeric_limits<uint32_t>::max(), response.expectedSuccess) ||
+                       !number(tokens[3], std::numeric_limits<uint32_t>::max(), response.expectedFailures))))
+      return invalid();
+    response.asserting = true;
+    response.assertAll = count == 4;
+    const auto stats = _driver.transportStats();
+    response.status = assertCounters(stats, response.expectedAttempts,
+        response.expectedSuccess, response.expectedFailures, response.assertAll);
+    response.assertion = response.status.ok() ? "PASS" : countersSaturated(stats) ? "SATURATED" : "FAIL";
+    response.payload = Payload::XFER;
+    return response;
+  }
+  if (equal(command, "irq") || equal(command, "intpin") || equal(command, "drv") ||
+      equal(command, "diag") || equal(command, "xfer_stats") || equal(command, "xfer_reset")) {
+    if (count != 1) return invalid();
+    if (equal(command, "irq")) response.payload = Payload::IRQ;
+    else if (equal(command, "intpin")) {
+      response.payload = Payload::PIN;
+      if (_platform.readInput == nullptr)
+        response.status = t::Status::Error(t::Err::UNSUPPORTED_FEATURE, "Application input reader is not configured");
+      else {
+        response.inputAvailable = _platform.readInput(response.inputLevel, _platform.user);
+        if (!response.inputAvailable)
+          response.status = t::Status::Error(t::Err::INVALID_CONFIG, "Application input reader did not provide a level");
+      }
+    } else if (equal(command, "drv")) {
+      response.status = t::projectHealth(_driver.diagnostics().managedTransport, {}, response.health);
+      response.payload = Payload::DRV;
+    } else if (equal(command, "diag")) response.payload = Payload::DIAG;
+    else {
+      if (equal(command, "xfer_reset")) {
+        const auto progress = _driver.progress();
+        if (progress.state == t::OperationState::ACTIVE) response.status = error(t::Err::BUSY);
+        else if (progress.resultPending) response.status = error(t::Err::RESULT_PENDING);
+        else {
+          _driver.clearTransportStats();
+          response.action = "LOCAL";
+        }
+      }
+      response.payload = Payload::XFER;
+    }
+    return response;
+  }
 
   if (equal(row->execution, "CORE_JOB") && !equal(command, "job.step")) {
     const bool nested = equal(tokens[0], "profile") || equal(tokens[0], "irq");
@@ -478,6 +625,13 @@ Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& 
     else if (equal(command, "irq.service")) response.status = _driver.startServiceInterrupt(timing, response.token);
     else if (equal(command, "reset")) response.status = _driver.startReset(timing, response.token);
     else response.status = _driver.startRecoverDeadBattery(timing, response.token);
+    if (response.status.is(t::Err::UNSUPPORTED_FEATURE)) {
+      if (equal(command, "recover-dead-battery"))
+        response.status.msg = "Dead-battery recovery is qualified only for original TUSB320/I after stable VDD";
+      else if (equal(command, "irq.ack") || equal(command, "irq.service"))
+        response.status.msg = "IRQ/fault-clear writes are not qualified on this variant";
+      else response.status.msg = "Requested changes require a gated variant capability; unchanged proved fields may remain usable";
+    }
     if (response.status.inProgress()) {
       _operationRequest = request;
       _operationToken = response.token;
@@ -706,7 +860,7 @@ Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& 
   if ((base && (equal(command, "preference") || equal(command, "ufpaccessory") ||
                 equal(command, "termination"))) ||
       (_config.variant == t::Variant::TUSB322I && equal(command, "rd-rp"))) {
-    response.status = error(t::Err::UNSUPPORTED_FEATURE);
+    response.status = t::Status::Error(t::Err::UNSUPPORTED_FEATURE, "This control is absent on the selected variant");
     return response;
   }
   response.payload = Payload::PROFILE;

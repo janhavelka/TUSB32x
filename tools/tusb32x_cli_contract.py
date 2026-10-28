@@ -2,7 +2,7 @@
 
 C++ owns command dispatch. Transcript owners separately check request ordering,
 nonce attribution and exactly one matching terminal closure. This module covers
-the implemented local and cooperative-operation routes only.
+all implemented local, cooperative-operation and diagnostic routes.
 """
 
 from collections.abc import Mapping
@@ -54,6 +54,10 @@ SCHEMAS = {
         "has_applied", "desired_generation", "applied_generation", "configuration",
         "raw08", "raw09", "raw0a", "raw45",
     ),
+    "CONFIG_DETAIL": PREFIX + (
+        "observed_ms", "observed_time_valid", "termination", "reset", "mismatch_valid",
+        "mismatch_register", "mismatch_expected", "mismatch_observed", "mismatch_mask",
+    ),
     "PROFILE": PREFIX + (
         "source", "variant", "available", "generation", "valid_fields", "mode", "current",
         "duty", "debounce", "preference", "ufpaccessory", "termination", "rd_rp",
@@ -72,24 +76,67 @@ SCHEMAS = {
         "canonical", "aliases", "topic", "execution", "effect", "prerequisites",
         "capability", "records", "max_callbacks", "tx_bytes", "rx_bytes", "fixture", "test",
     ),
+    "REG": PREFIX + ("source", "variant", "address", "value"),
+    "DECODE": PREFIX + (
+        "variant", "address", "value", "profile_valid_fields", "status_valid_fields",
+        "attachment", "orientation", "detected_current", "accessory", "active_cable",
+        "interrupt_pending", "reset_requested", "reset_valid",
+    ),
+    "DECODE_PROFILE": PREFIX + (
+        "variant", "address", "valid_fields", "mode", "current", "duty", "debounce",
+        "preference", "ufpaccessory", "termination", "rd_rp", "disable_ufp_accessory",
+        "disable_term", "disable_rd_rp",
+    ),
+    "DRV": PREFIX + (
+        "source", "state", "threshold", "bound", "initialized", "configuration", "effect",
+        "termination", "reset", "managed_streak",
+    ),
+    "DIAG": PREFIX + (
+        "bound", "initialized", "configuration", "effect", "termination", "reset",
+        "config_write_unresolved", "recovery_unresolved", "mode_unresolved",
+        "reset_acceptance_uncertain", "last_kind", "last_code", "last_detail",
+    ),
+    "MANAGED": PREFIX + (
+        "source", "initialized", "success", "failures", "streak", "last_code", "last_detail",
+        "last_success_ms", "last_success_time_valid", "last_failure_ms", "last_failure_time_valid",
+    ),
+    "FAILURE": PREFIX + ("code", "detail", "time_ms", "time_valid"),
+    "IDENTITY": PREFIX + (
+        "variant", "address", "identity_valid", "identity_matches", "bytes", "revision",
+        "revision_valid", "revision_matches",
+    ),
+    "IRQ": PREFIX + (
+        "source", "observed", "pending_before", "ack_attempted", "ack_confirmed",
+        "pending_after", "pending_after_valid",
+    ),
+    "PIN": PREFIX + ("source", "available", "value"),
+    "INVALIDATE": PREFIX + ("reason",),
+    "XFER": PREFIX + (
+        "source", "attempts", "success", "failures", "last_code", "last_detail", "saturated",
+        "assertion", "expected_attempts", "expected_success", "expected_failures",
+    ),
 }
 
 
 def _row(command, aliases, topic, syntax, execution="PURE", effect="LOCAL_STATE",
-         prerequisites="none", capability="all", records="ACK,END", *, operation=False):
+         prerequisites="none", capability="all", records="ACK,END", *, operation=False,
+         diagnostic=False, max_callbacks=None, tx_bytes=None, rx_bytes=None):
     """Build fixed host metadata; no firmware code generation."""
     return {
         "command": command, "aliases": aliases, "topic": topic, "syntax": syntax,
         "execution": execution, "effect": effect, "prerequisites": prerequisites,
         "capability": capability, "records": records,
-        "max_callbacks": "1" if execution == "CORE_JOB" else "0",
-        "tx_bytes": "2" if execution == "CORE_JOB" else "0",
-        "rx_bytes": "8" if execution == "CORE_JOB" else "0",
-        "fixture": "host", "test": "operation_routes" if operation else "local_routes",
+        "max_callbacks": max_callbacks or ("1" if execution == "CORE_JOB" else "0"),
+        "tx_bytes": tx_bytes or ("2" if execution == "CORE_JOB" else "0"),
+        "rx_bytes": rx_bytes or ("8" if execution == "CORE_JOB" else "0"),
+        "fixture": "host", "test": (
+            "diagnostic_routes" if diagnostic else
+            "operation_routes" if operation else "local_routes"
+        ),
     }
 
 
-PROFILE_RECORDS = "ACK,CONFIG,PROFILE,END"
+PROFILE_RECORDS = "ACK,CONFIG,CONFIG_DETAIL,PROFILE,END"
 OPERATION_RECORDS = "ACK,JOB,RESULT,RESULT_DETAIL,END"
 ROWS = (
     _row("help", "?", "common", "help [topic|command]", "CACHE_ONLY", "NONE",
@@ -175,6 +222,34 @@ ROWS = (
          "retained_result", records="ACK,RESULT,RESULT_DETAIL,END", operation=True),
     _row("result.take", "none", "job", "result take <token>", prerequisites="retained_result",
          records="ACK,RESULT,RESULT_DETAIL,END", operation=True),
+    _row("reg", "rreg,rawread", "registers", "reg <address>", "RAW_I2C", "READ_OBSERVATION",
+         "idle_no_result", "mapped_register", "ACK,REG,DECODE,DECODE_PROFILE,END", diagnostic=True,
+         max_callbacks="1", tx_bytes="1", rx_bytes="1"),
+    _row("decode", "none", "registers", "decode <address> <byte>", effect="NONE",
+         capability="mapped_register", records="ACK,REG,DECODE,DECODE_PROFILE,END",
+         diagnostic=True),
+    _row("wreg", "rawwrite", "registers", "wreg <address> <byte>", "RAW_I2C", "DEVICE_WRITE",
+         "idle_no_result", "known_safe_image", "ACK,REG,END", diagnostic=True,
+         max_callbacks="1", tx_bytes="2", rx_bytes="0"),
+    _row("irq", "none", "interrupt", "irq", "CACHE_ONLY", "NONE",
+         records="ACK,IRQ,END", diagnostic=True),
+    _row("intpin", "none", "interrupt", "intpin", "PLATFORM_ACTION", "NONE",
+         prerequisites="optional_input", capability="application", records="ACK,PIN,END",
+         diagnostic=True),
+    _row("invalidate", "none", "lifecycle",
+         "invalidate <external-reset|power-loss|target-change>",
+         records="ACK,INVALIDATE,END", diagnostic=True),
+    _row("drv", "health,state", "diagnostics", "drv", "CACHE_ONLY", "NONE",
+         records="ACK,DRV,END", diagnostic=True),
+    _row("diag", "none", "diagnostics", "diag", "CACHE_ONLY", "NONE",
+         records="ACK,DIAG,MANAGED,FAILURE,IDENTITY,IRQ,XFER,END", diagnostic=True),
+    _row("xfer_stats", "counters", "diagnostics", "xfer_stats", "CACHE_ONLY", "NONE",
+         records="ACK,XFER,END", diagnostic=True),
+    _row("xfer_reset", "none", "diagnostics", "xfer_reset", prerequisites="idle_no_result",
+         records="ACK,XFER,END", diagnostic=True),
+    _row("xfer_assert", "none", "diagnostics", "xfer_assert <attempts> [successes failures]",
+         effect="NONE", prerequisites="unsaturated_totals", records="ACK,XFER,END",
+         diagnostic=True),
 )
 COMMANDS = frozenset(row["command"] for row in ROWS)
 ERRORS = frozenset((
@@ -207,12 +282,20 @@ _BOOL = frozenset((
     "has_applied", "available", "invalidated", "observed_time_valid", "waiting",
     "ready_at_valid", "result_pending", "auto", "completed_time_valid", "irq_observed",
     "irq_before", "ack_attempted", "ack_confirmed", "irq_after", "irq_after_valid",
+    "initialized", "reset_valid", "config_write_unresolved",
+    "recovery_unresolved", "mode_unresolved", "reset_acceptance_uncertain", "observed",
+    "pending_after_valid", "last_success_time_valid", "last_failure_time_valid", "time_valid",
+    "saturated", "mismatch_valid",
 ))
 _U32 = frozenset((
     "staged_generation", "desired_generation", "applied_generation", "generation",
     "config_generation", "dropped_records", "dropped_bytes", "bus_hz", "timeout_ms", "callbacks",
+    "threshold", "managed_streak", "success", "failures", "streak", "attempts",
 ))
-_U16 = frozenset(("profile_fields", "observed_valid_fields", "valid_fields"))
+_U16 = frozenset((
+    "profile_fields", "observed_valid_fields", "valid_fields", "profile_valid_fields",
+    "status_valid_fields",
+))
 _U8 = frozenset(("address", "raw_valid_mask", "max_callbacks", "tx_bytes", "rx_bytes",
                  "last_poll_callbacks"))
 _BOUNDS = {
@@ -297,17 +380,28 @@ def validate_record(record: Mapping[str, str]) -> None:
             _unsigned(value, (1 << 16) - 1)
         elif key in _U8:
             _unsigned(value, 255)
-        elif key in {"detail", "sda", "scl", "irq"}:
+        elif key in {"detail", "last_detail", "sda", "scl", "irq"}:
             _signed(value)
         elif key in {"sequence", "observed_ms", "token", "origin_request", "deadline_ms",
-                     "ready_at_ms", "started_ms", "completed_ms"}:
+                     "ready_at_ms", "started_ms", "completed_ms", "last_success_ms",
+                     "last_failure_ms", "time_ms"}:
             _unsigned(value, (1 << 64) - 1)
         elif key == "age_ms" and value != "unknown":
             _unsigned(value, (1 << 63) - 1)
         elif key in {"raw08", "raw09", "raw0a", "raw45"} and value != "unknown":
             _unsigned(value, 255)
+        elif key in {"mismatch_register", "mismatch_expected", "mismatch_observed",
+                     "mismatch_mask"} and value != "unknown":
+            _unsigned(value, 255)
         elif key in {"adapter_writes", "adapter_write_reads"} and value != "unknown":
             _unsigned(value, (1 << 32) - 1)
+        elif key in {"value", "revision"} and value != "unknown":
+            _unsigned(value, 1 if kind == "PIN" else 255)
+        elif key in {"expected_attempts", "expected_success", "expected_failures"}:
+            if value != "unknown":
+                _unsigned(value, (1 << 32) - 1)
+        elif key in {"last_code", "code"} and value not in ERRORS:
+            raise ValueError("invalid error name")
     if "configuration" in record and record["configuration"] not in CONFIGURATIONS:
         raise ValueError("invalid configuration state")
     if "code" in record and record["code"] not in ERRORS:
@@ -315,14 +409,22 @@ def validate_record(record: Mapping[str, str]) -> None:
     if kind in {"ACK", "END"} and record["command"] not in COMMANDS | {"invalid"}:
         raise ValueError("noncanonical command")
     if kind == "ACK":
-        if record["action"] not in {"QUERY", "LOCAL", "UNCHANGED", "STAGED", "ADMITTED"}:
+        if record["action"] not in {
+            "QUERY", "LOCAL", "UNCHANGED", "STAGED", "ADMITTED", "ATTEMPTED",
+        }:
             raise ValueError("invalid input action")
         admitted = record["action"] == "ADMITTED"
         if admitted != (record["code"] == "IN_PROGRESS"):
             raise ValueError("operation admission requires IN_PROGRESS")
         if admitted and record["token"] == "0":
             raise ValueError("admitted operation requires a nonzero token")
-        if record["code"] not in {"OK", "IN_PROGRESS"} and record["action"] != "UNCHANGED":
+        attempted = record["action"] == "ATTEMPTED"
+        if attempted and (record["command"] not in {"reg", "wreg"} or not (
+            record["code"] == "OK" or record["code"].startswith("I2C_")
+        )):
+            raise ValueError("attempted action requires a raw terminal callback status")
+        if (record["code"] not in {"OK", "IN_PROGRESS"} and record["action"] != "UNCHANGED"
+                and not attempted):
             raise ValueError("failed command must leave state unchanged")
     if kind == "END":
         if record["outcome"] not in TERMINAL_STATES:
@@ -373,20 +475,99 @@ def validate_record(record: Mapping[str, str]) -> None:
             raise ValueError(f"oversized identity token: {key}")
     if kind in {"BUS", "TARGET"} and record["variant"] not in VARIANTS:
         raise ValueError("invalid selected variant")
-    if kind == "PROFILE" and record["variant"] not in VARIANTS | {"unspecified", "unknown"}:
+    if kind in {"PROFILE", "IDENTITY"} and record["variant"] not in (
+        VARIANTS | {"unspecified", "unknown"}
+    ):
         raise ValueError("invalid profile attribution")
+    if kind in {"REG", "DECODE", "DECODE_PROFILE"} and record["variant"] not in VARIANTS:
+        raise ValueError("invalid register variant")
     if kind == "CAPABILITIES" and (
         record["configured_variant"] not in VARIANTS or record["observed_variant"] not in (
             VARIANTS | {"unknown", "unspecified"}
         )
     ):
         raise ValueError("invalid capability variant")
-    enums = _PROFILE_ENUMS if kind == "PROFILE" else _PORT_ENUMS if kind == "PORT" else (
+    enums = _PROFILE_ENUMS if kind in {"PROFILE", "DECODE_PROFILE"} else (
+        _PORT_ENUMS if kind in {"PORT", "DECODE"} else (
         _DETAIL_ENUMS if kind == "PORT_DETAIL" else {}
-    )
+    ))
     for key, allowed in enums.items():
+        if key not in record:
+            continue
         if record[key] not in allowed:
             raise ValueError(f"invalid {kind} enum: {key}")
+    if kind == "DECODE":
+        for key in ("accessory", "active_cable", "interrupt_pending"):
+            if record[key] not in _DETAIL_ENUMS[key]:
+                raise ValueError(f"invalid decoded code: {key}")
+        if record["reset_requested"] not in {"0", "1", "unknown"} or (
+            (record["reset_requested"] == "unknown") != (record["reset_valid"] == "0")
+        ):
+            raise ValueError("reset command validity contradicts supplied bit")
+    if kind in {"DRV", "DIAG", "CONFIG_DETAIL"} and (
+        record["termination"] not in {"UNKNOWN", "ENABLED", "DISABLED"}
+        or record["reset"] not in {"NONE", "MAY_BE_PENDING", "COMPLETED"}
+        or ("effect" in record and record["effect"] not in EFFECTS)
+    ):
+        raise ValueError("invalid diagnostic evidence")
+    if kind == "DRV" and record["state"] not in {"UNINIT", "READY", "DEGRADED", "OFFLINE"}:
+        raise ValueError("invalid driver health")
+    if kind == "DRV":
+        _unsigned(record["threshold"], (1 << 32) - 1, 1)
+    if kind == "DIAG" and record["last_kind"] not in OPERATION_KINDS:
+        raise ValueError("invalid last operation kind")
+    if kind == "CONFIG_DETAIL":
+        for key in ("mismatch_register", "mismatch_expected", "mismatch_observed", "mismatch_mask"):
+            if (record[key] == "unknown") != (record["mismatch_valid"] == "0"):
+                raise ValueError("mismatch validity contradicts byte evidence")
+    sources = {
+        "REG": {"read", "write", "supplied"}, "MANAGED": {"managed_callbacks"},
+        "DRV": {"managed_callbacks"},
+        "IRQ": {"managed_operation"}, "PIN": {"application"}, "XFER": {"all_callbacks"},
+    }
+    if kind in sources and record["source"] not in sources[kind]:
+        raise ValueError("invalid diagnostic source")
+    if kind == "PIN" and (record["value"] == "unknown") != (record["available"] == "0"):
+        raise ValueError("pin availability contradicts value")
+    if kind == "IRQ":
+        for key, valid in (("pending_before", "observed"),
+                           ("pending_after", "pending_after_valid")):
+            if record[key] not in {"0", "1", "unknown"} or (
+                (record[key] == "unknown") != (record[valid] == "0")
+            ):
+                raise ValueError("IRQ validity contradicts pending evidence")
+    if kind == "IDENTITY":
+        if not (record["bytes"] == "unknown" or re.fullmatch(r"[0-9A-Fa-f]{16}", record["bytes"])):
+            raise ValueError("invalid identity byte evidence")
+        if (record["bytes"] == "unknown") != (record["identity_valid"] == "0") or (
+            (record["revision"] == "unknown") != (record["revision_valid"] == "0")
+        ):
+            raise ValueError("identity validity contradicts raw evidence")
+    if kind == "INVALIDATE" and record["reason"] not in {
+        "external-reset", "power-loss", "target-change",
+    }:
+        raise ValueError("invalid invalidation reason")
+    if kind == "XFER":
+        saturated = any(record[key] == "4294967295" for key in ("attempts", "success", "failures"))
+        if record["assertion"] not in {"NONE", "PASS", "FAIL", "SATURATED"} or (
+            (record["saturated"] == "1") != saturated
+        ):
+            raise ValueError("invalid transfer assertion or saturation")
+        requested = record["expected_attempts"] != "unknown"
+        full = record["expected_success"] != "unknown"
+        if full != (record["expected_failures"] != "unknown") or (full and not requested):
+            raise ValueError("incomplete expected transfer counters")
+        if (record["assertion"] == "NONE") == requested:
+            raise ValueError("transfer assertion lacks matching request")
+        if record["assertion"] == "SATURATED" and not saturated:
+            raise ValueError("saturated assertion lacks saturated evidence")
+        if record["assertion"] in {"PASS", "FAIL"}:
+            equal = record["expected_attempts"] == record["attempts"] and (not full or (
+                record["expected_success"] == record["success"]
+                and record["expected_failures"] == record["failures"]
+            ))
+            if saturated or (record["assertion"] == "PASS") != equal:
+                raise ValueError("transfer assertion contradicts exact counters")
     if kind == "CONSOLE":
         for key, maximum in _BOUNDS.items():
             _unsigned(record[key], maximum)

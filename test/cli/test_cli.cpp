@@ -41,6 +41,36 @@ struct CliTestAccess {
     cli.resultOutput(request, result);
     cli.close(request, result.status, result.token, result.transfers, result.state);
   }
+  static TUSB32x::Status assertCounters(const TUSB32x::TransportStats& stats,
+      uint32_t attempts, uint32_t success, uint32_t failures, bool all) {
+    return Cli::assertCounters(stats, attempts, success, failures, all);
+  }
+  static void maximumDiagnostics(Cli& cli, const TUSB32x::DriverDiagnostics& diagnostics,
+      const TUSB32x::ConfigurationSnapshot& configuration, const TUSB32x::TransportStats& stats,
+      const TUSB32x::HealthSnapshot& health) {
+    Cli::Request request;
+    request.id = std::numeric_limits<uint64_t>::max();
+    std::memcpy(request.nonce, "01234567890123456789012345678901", 33);
+    request.command = "diag";
+    cli.configurationOutput(request, configuration);
+    cli.diagnosticsOutput(request, diagnostics, stats);
+    cli.healthOutput(request, health, diagnostics);
+    Cli::Response response;
+    response.asserting = response.assertAll = true;
+    response.expectedAttempts = response.expectedSuccess = response.expectedFailures =
+        std::numeric_limits<uint32_t>::max();
+    response.assertion = "SATURATED";
+    cli.transportOutput(request, response, stats);
+    response.reg = 8; response.value = 255;
+    response.decoded.variant = TUSB32x::Variant::TUSB320LAI;
+    response.decoded.reg = 8; response.decoded.value = 255;
+    response.decoded.statusValidFields = 511;
+    response.decoded.detectedCurrent = TUSB32x::DetectedCurrent::CHARGE_THROUGH_500_MA;
+    response.decoded.accessory = TUSB32x::Accessory::DEBUG_LOCAL_DFP;
+    response.decoded.orientation = TUSB32x::Orientation::NOT_APPLICABLE;
+    response.decoded.attachment = TUSB32x::Attachment::LOCAL_SOURCE;
+    cli.registerOutput(request, response);
+  }
 };
 }  // namespace tusb32x_cli
 
@@ -231,16 +261,19 @@ void routesAndAliases() {
   f.rejected("profile discard", "CONFIGURATION_UNKNOWN", "profile.discard");
   std::size_t count = 0;
   const auto* rows = tusb32x_cli::commandRows(count);
-  CHECK(count == 44);
+  CHECK(count == 55);
   for (std::size_t index = 0; index < count; ++index) {
     const bool managed = std::strcmp(rows[index].execution, "CORE_JOB") == 0;
-    CHECK(rows[index].maxCallbacks == (managed ? 1 : 0) &&
-        rows[index].txBytes == (managed ? 2 : 0) && rows[index].rxBytes == (managed ? 8 : 0));
+    const bool raw = std::strcmp(rows[index].execution, "RAW_I2C") == 0;
+    const bool rawRead = std::strcmp(rows[index].command, "reg") == 0;
+    CHECK(rows[index].maxCallbacks == (managed || raw ? 1 : 0) &&
+        rows[index].txBytes == (managed ? 2 : raw ? rawRead ? 1 : 2 : 0) &&
+        rows[index].rxBytes == (managed ? 8 : rawRead ? 1 : 0));
     const auto help = f.command((std::string("help ") + rows[index].command).c_str());
     CHECK(help.find("outcome=SUCCEEDED") != std::string::npos);
   }
   for (const auto* topic : {"all", "common", "connection", "port", "profile", "lifecycle",
-      "interrupt", "job", "?", "ver", "model", "settings", "snapshot", "unbind",
+      "interrupt", "job", "registers", "diagnostics", "?", "ver", "model", "settings", "snapshot", "unbind",
       "initialize", "probe", "status", "selfcheck", "selftest", "stop", "job.cancel", "job.result"}) {
     const auto help = f.command((std::string("? ") + topic).c_str());
     CHECK(help.find("outcome=SUCCEEDED") != std::string::npos);
@@ -249,7 +282,7 @@ void routesAndAliases() {
   auto text = f.command("help");
   CHECK(text.find('\x1b') == std::string::npos);
   CHECK(text.find("init ") != std::string::npos && text.find("irq ack") != std::string::npos &&
-      text.find("wreg ") == std::string::npos && text.find("job step") != std::string::npos);
+      text.find("wreg ") != std::string::npos && text.find("job step") != std::string::npos);
   f.command("color on");
   text = f.command("help");
   CHECK(text.find("\x1b[36m") != std::string::npos && text.find("\x1b[32m") != std::string::npos);
@@ -355,8 +388,8 @@ void malformedAndPoisonedInput() {
       "addr -1", "addr +71", "addr 0x", "addr 0x47g", "addr 256", "addr 99999999999999999999999999999999",
       "variant TUSB320LAI", "variant lai", "variant tusb320lai 0x47 extra", "profile invalid",
       "profile show extra", "profile reset extra", "profile validate extra", "cfg extra", "color yes", "verbose on",
-      "ufpaccessory 1", "termination false", "rd-rp 0", "help all extra", "help unknown", "help raw", "help registers",
-      "help diagnostics", "hilmark none", "hilmark a.b", "hilmark", "hilmark abc extra", "bind extra", "end extra",
+      "ufpaccessory 1", "termination false", "rd-rp 0", "help all extra", "help unknown", "help raw", "help scan",
+      "help firmware", "hilmark none", "hilmark a.b", "hilmark", "hilmark abc extra", "bind extra", "end extra",
       "forget-evidence extra", "version extra", "bus extra", "sample extra", "freshness extra",
       "profile.show", "a a a a a a a a a a a a a", "12345678901234567890123456789012345"};
   for (const auto* input : invalid) f.rejected(input);
@@ -755,6 +788,82 @@ void operationFormatterAndExhaustionBounds() {
 }
 
 int runCliOperationTests();
+int runCliDiagnosticsTests();
+
+void diagnosticFormatterAndSaturationBounds() {
+  constexpr uint32_t maximum = std::numeric_limits<uint32_t>::max();
+  for (unsigned field = 0; field < 3; ++field) {
+    t::TransportStats stats;
+    if (field == 0) stats.totalAttempts = maximum;
+    else if (field == 1) stats.totalSuccess = maximum;
+    else stats.totalFailures = maximum;
+    CHECK(tusb32x_cli::CliTestAccess::assertCounters(stats, stats.totalAttempts,
+        stats.totalSuccess, stats.totalFailures, true).is(t::Err::INVALID_PARAM));
+    CHECK(tusb32x_cli::CliTestAccess::assertCounters(stats, stats.totalAttempts, 0, 0, false)
+        .is(t::Err::INVALID_PARAM));
+  }
+  t::TransportStats stats;
+  stats.totalAttempts = maximum - 1; stats.totalSuccess = maximum - 2; stats.totalFailures = 1;
+  CHECK(tusb32x_cli::CliTestAccess::assertCounters(stats, maximum - 1, maximum - 2, 1, true).ok());
+  CHECK(tusb32x_cli::CliTestAccess::assertCounters(stats, maximum - 1, 0, 0, false).ok());
+  CHECK(tusb32x_cli::CliTestAccess::assertCounters(stats, maximum - 1, 0, 0, true)
+      .is(t::Err::INVALID_PARAM));
+
+  // Literal copied values bound actual formatters without seeding a driver or claiming observations.
+  Fixture f;
+  t::DriverDiagnostics diagnostics;
+  diagnostics.bound = diagnostics.initialized = true;
+  diagnostics.configurationState = t::ConfigurationState::UNCONFIGURED;
+  diagnostics.hardwareEffect = t::HardwareEffect::INDETERMINATE;
+  diagnostics.resetState = t::ResetState::MAY_BE_PENDING;
+  diagnostics.terminationState = t::TerminationState::DISABLED;
+  diagnostics.configurationWriteUnresolved = diagnostics.recoverySequenceUnresolved =
+      diagnostics.modeTransitionUnresolved = diagnostics.resetAcceptanceUncertain = true;
+  diagnostics.lastOperationKind = t::OperationKind::ACKNOWLEDGE_INTERRUPT;
+  diagnostics.lastOperationStatus = t::Status::Error(t::Err::CONFIGURATION_MISMATCH,
+      "Literal formatting fixture", std::numeric_limits<int32_t>::min());
+  diagnostics.lastFailedTransportStatus = diagnostics.lastOperationStatus;
+  diagnostics.lastFailedTransportUptimeMs = std::numeric_limits<uint64_t>::max();
+  diagnostics.lastFailedTransportTimeValid = true;
+  auto& managed = diagnostics.managedTransport;
+  managed.initialized = true;
+  managed.totalSuccess = managed.totalFailures = managed.consecutiveFailures = maximum;
+  managed.lastStatus = diagnostics.lastOperationStatus;
+  managed.lastSuccessUptimeMs = managed.lastFailureUptimeMs = std::numeric_limits<uint64_t>::max();
+  managed.lastSuccessTimeValid = managed.lastFailureTimeValid = true;
+  diagnostics.identity.variant = t::Variant::TUSB320LAI;
+  diagnostics.identity.address = t::DeviceAddress::ADDR_HIGH_0X67;
+  diagnostics.identity.identityValid = diagnostics.identity.revisionValid = true;
+  std::memset(diagnostics.identity.rawIdentity, 255, 8);
+  diagnostics.identity.rawRevision = 255;
+  t::ConfigurationSnapshot configuration;
+  configuration.observedUptimeMs = std::numeric_limits<uint64_t>::max();
+  configuration.observedTimeValid = configuration.mismatchValid = true;
+  configuration.mismatchRegister = configuration.mismatchExpected =
+      configuration.mismatchObserved = configuration.mismatchMask = 255;
+  configuration.resetState = t::ResetState::MAY_BE_PENDING;
+  stats.totalAttempts = stats.totalSuccess = stats.totalFailures = maximum;
+  stats.lastStatus = diagnostics.lastOperationStatus;
+  t::HealthSnapshot health;
+  health.state = t::DriverState::DEGRADED; health.evidence = managed; health.offlineThreshold = maximum;
+  tusb32x_cli::CliTestAccess::maximumDiagnostics(f.cli, diagnostics, configuration, stats, health);
+  f.flush();
+  for (const auto* type : {"CONFIG_DETAIL", "DIAG", "MANAGED", "FAILURE", "IDENTITY", "IRQ",
+      "XFER", "DRV", "REG", "DECODE", "DECODE_PROFILE"})
+    CHECK(f.output.find(std::string("TUSB ") + type + " schema=1 nonce=01234567890123456789012345678901 request=18446744073709551615") != std::string::npos);
+  CHECK(f.output.find("mismatch_register=255 mismatch_expected=255 mismatch_observed=255 mismatch_mask=255")
+      != std::string::npos);
+  CHECK(f.output.find("bytes=FFFFFFFFFFFFFFFF revision=255") != std::string::npos);
+  CHECK(f.output.find("source=all_callbacks attempts=4294967295") != std::string::npos);
+  CHECK(f.output.find("source=managed_callbacks state=DEGRADED threshold=4294967295") != std::string::npos);
+  CHECK(f.cli.console().droppedRecords() == 0 && f.bus.calls == 0);
+  for (std::size_t start = 0; start < f.output.size();) {
+    const auto end = f.output.find('\n', start);
+    CHECK(end != std::string::npos && end - start + 2 <= 512);
+    if (end == std::string::npos) break;
+    start = end + 1;
+  }
+}
 
 int main() {
   {
@@ -783,6 +892,9 @@ int main() {
   retainedEvidenceAndNoPoll(); outputAndSessionBoundaries();
   portFormatterAndStatusMessageBounds();
   operationFormatterAndExhaustionBounds();
+  diagnosticFormatterAndSaturationBounds();
   std::printf("CLI: %u checks, %u failures\n", checks, failures);
-  return runCliOperationTests() == 0 && failures == 0 ? 0 : 1;
+  const int operationFailures = runCliOperationTests();
+  const int diagnosticFailures = runCliDiagnosticsTests();
+  return operationFailures == 0 && diagnosticFailures == 0 && failures == 0 ? 0 : 1;
 }

@@ -1,12 +1,12 @@
 # Feature, source and verification coverage
 
-Prompts 2-21, updated 2026-10-28. This matrix defines the capability boundary;
+Prompts 2-22, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
 read-only port refresh, explicit IRQ acknowledgement/bounded service, native
 builds, raw diagnostics, passive health, bounded local CLI and host checks exist.
-Remaining CLI diagnostics, framework firmware and hardware qualification remain planned.
+The fixed CLI inventory is complete; framework firmware and hardware qualification remain planned.
 **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
@@ -305,7 +305,9 @@ arithmetic and saturation without public test seeds. Health threshold1/default3/
 UINT32_MAX and invalid0 cases, OFFLINE explicit work, failed initialization,
 clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
-Prompt 18 completes the core protocol coverage audit. Prompt 19 completes the core owner portability checks. Remaining CLI diagnostics, adapters and electrical qualification remain later work.
+Prompt 18 completes the core protocol coverage audit. Prompt 19 completes owner
+portability checks. Prompt 22 completes CLI diagnostics below; adapters and
+electrical qualification remain later work.
 
 ## Independent prompts 16-18 audit
 
@@ -369,3 +371,31 @@ formatting and completion after request exhaustion. `cli_transcript` validates
 178 requests in one persistent process plus two fault sessions, all 44 executed
 help rows and terminal payload/closure negatives. This is host protocol/logic
 evidence, not serial/CC/INT, electrical power policy or firmware qualification.
+
+## Prompt 22 complete command coverage
+
+The shared CLI now has all 55 fixed rows and aliases. Handlers below delegate to
+public core methods or the injected input reader, never a separate register
+composer/engine. They are exercised in `test/cli/test_cli_diagnostics.cpp` within
+the existing `tusb32x_cli` suite. The [complete guide](CLI.md) freezes grammar,
+33 record schemas, counter sources, validity and unsupported-feature restrictions.
+
+| CLI routes / aliases | Core API / source | Executed evidence |
+| --- | --- | --- |
+| reg / rreg / rawread | readRegisterSync; public decodeRegister for returned codes | rawReadAliasesAndFailures; pureDecodeAndVariantGates; everyRawCallbackStatus: one callback, all variants/errors, original detail and no managed accounting |
+| decode | decodeRegister | pureDecodeAndVariantGates: no binding/I2C, reserved fields remain invalid, supplied codes do not imply port applicability |
+| wreg / rawwrite | writeRegisterSync | rawWriteEffectsAndProcedureDenial; everyRawCallbackStatus: actual W1C/duty preservation, forbidden sequence shortcuts, uncertain acceptance/trust; failedRawWriteUnderBackpressure never retries |
+| irq / intpin | cached diagnostics.interrupt / opt-in Platform.readInput | cachedInterruptHistory; pinAndInvalidationEvidence: historical versus sampled level, missing/failing reader remains unknown, no GPIO setup |
+| invalidate / forget-evidence | invalidateDeviceState / forgetDeviceEvidence | pinAndInvalidationEvidence; parserAndOwnerExclusion: explicit reason, retained effects/results/historical port; active/bound/result gates and target edits never forget implicitly |
+| drv / health / state; diag | projectHealth(default policy); cached diagnostics | healthAndManagedProbe; automaticTrafficIsSeparate: managed-only projection, independent trust/effects, original failure/time validity and no policy/admission control |
+| xfer_stats / counters; xfer_assert; xfer_reset | transportStats / pure exact comparison / clearTransportStats | rawReadAliasesAndFailures; healthAndManagedProbe; root CLI limit fixtures: all-callback source, saturated rejection, exact zero/one deltas and idle clear invariance |
+| cfg / settings / profile show | configurationSnapshot including CONFIG_DETAIL | configurationMismatchDetails: independently observed mismatch reg8/expected64/observed128/mask192 and acquisition time, result retained |
+
+`tools/check_cli_contract.py` executes all canonical/alias/help routes through the
+built fixture and independently checks callback/write effects and all required
+records. The transcript reuses its help comparison. Registered `cli_contract`
+and `cli_contract_negative` reject deliberately broken alias/schema dependencies.
+There is still one `cli_transcript` registration. Maximum-width actual formatter
+fixtures and all 33 schema bounds include newline/NUL; console and raw congestion
+cases keep whole-record loss honest. None of these host tests qualify serial,
+adapter framing, connector/CC/INT behavior or firmware memory/timing.

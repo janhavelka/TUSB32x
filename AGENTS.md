@@ -20,7 +20,9 @@ diagnostics views and pure passive health projection. Framework firmware remains
 planned. The example-only common CLI implements bounded local help/identity,
 cache/target/lifecycle queries and edits, and independent validated profile staging.
 Managed operation/control/result routes also use the core engine with one poll
-per turn and explicit retained-result take. Remaining device diagnostics are prompt 22.
+per turn and explicit retained-result take. The full 55-row shared CLI also provides
+bounded raw diagnostics, pure decode, passive health/counters, explicit invalidation
+and opt-in input reading; executable contract/parity checks use the host fixture.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -108,7 +110,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
   and run the eight C++ suites (including `tusb32x_protocol`,
   `tusb32x_operations`, `tusb32x_port`, `tusb32x_diagnostics`, `tusb32x_cli` and
-  `tusb32x_console`), the persistent `cli_transcript` against `tusb32x_cli_host`, the isolated
+  `tusb32x_console`), the persistent `cli_transcript` against `tusb32x_cli_host`,
+  executable `cli_contract`/`cli_contract_negative` parity checks, the isolated
   `tusb32x_portable_consumer` with allocation/failure sentinels, plus
   `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only signature/header

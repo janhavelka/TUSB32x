@@ -12,7 +12,8 @@ Its host fixture executes queries, target/lifecycle edits and staging without
 handler callbacks; managed operation commands use the core through one poll per
 turn. Results remain core-owned until explicit take. No startup command runs.
 The CLI and console suites plus a persistent Python transcript test this same
-processor; they do not prove firmware or hardware integration.
+processor; the complete diagnostic inventory and executable parity/negative
+contract checks also use it. These prove no firmware or hardware integration.
 
 Arduino and native ESP-IDF transport/owner examples arrive in later prompts.
 Current component registration is build plumbing only, with no linked firmware

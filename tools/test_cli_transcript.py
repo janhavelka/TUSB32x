@@ -76,8 +76,14 @@ def validate_exchange(
                 or detail["token"] != ack["token"] or end["token"] != ack["token"]
                 or detail["origin_request"] != result["origin_request"]):
             raise ValueError("result delivery changed its token or origin")
-    if ack.get("action") != "ADMITTED" and end["callbacks"] != "0":
-        raise ValueError("local handler performed callbacks")
+    if ack.get("action") != "ADMITTED":
+        raw = command in {"reg", "wreg"}
+        terminal_callback = end["code"] == "OK" or end["code"].startswith("I2C_")
+        expected = "1" if raw and terminal_callback else "0"
+        if end["callbacks"] != expected:
+            raise ValueError("handler callback count contradicts its execution/status")
+        if (ack.get("action") == "ATTEMPTED") != (raw and terminal_callback):
+            raise ValueError("attempted raw action contradicts terminal callback evidence")
     if (end["outcome"] == "SUCCEEDED") != (end["code"] == "OK"):
         raise ValueError("contradictory local terminal outcome")
 
@@ -96,6 +102,7 @@ class PersistentHost:
         self.nonce = "none"
         self.schema_kinds: set[str] = set()
         self.samples: dict[str, dict[str, str]] = {}
+        self.human_lines: list[str] = []
         self.records: dict[int, list[dict[str, str]]] = {}
         self.operations: dict[str, tuple[int, str, str]] = {}
         self.completed: set[str] = set()
@@ -160,6 +167,7 @@ class PersistentHost:
             if line is None:
                 raise AssertionError("fixture ended before request closure")
             if not line.startswith(b"TUSB "):
+                self.human_lines.append(line.decode("ascii"))
                 continue
             record = parse_record(line.decode("ascii"))
             if record["type"] in {"LOSS", "SESSION"}:
@@ -307,6 +315,15 @@ def maximum_width_records(samples: Mapping[str, Mapping[str, str]]) -> None:
         "callbacks": "4294967295", "last_poll_callbacks": "255",
         "kind": "ACKNOWLEDGE_INTERRUPT", "state": "TIMED_OUT", "phase": "FINISHING",
         "effect": "INDETERMINATE", "termination": "DISABLED", "reset": "MAY_BE_PENDING",
+        "profile_valid_fields": "65535", "status_valid_fields": "65535",
+        "value": "255", "threshold": "4294967295", "managed_streak": "4294967295",
+        "success": "4294967295", "failures": "4294967295", "streak": "4294967295",
+        "attempts": "4294967295", "last_kind": "RECOVER_DEAD_BATTERY",
+        "last_code": "CONFIGURATION_MISMATCH", "last_detail": "-2147483648",
+        "last_success_ms": "18446744073709551615", "last_failure_ms": "18446744073709551615",
+        "time_ms": "18446744073709551615", "expected_attempts": "4294967295",
+        "expected_success": "4294967295", "expected_failures": "4294967295",
+        "reason": "external-reset",
     }
     for kind, record in records.items():
         if kind in ("LOSS", "SESSION", "HELP"):
@@ -317,25 +334,43 @@ def maximum_width_records(samples: Mapping[str, Mapping[str, str]]) -> None:
         if kind in ("ACK", "END"):
             record.update(
                 command=max((row["command"] for row in ROWS), key=len),
-                code="CONFIGURATION_UNKNOWN", detail="-2147483648",
+                code="CONFIGURATION_MISMATCH", detail="-2147483648",
             )
         if kind == "ACK":
             record["action"] = "UNCHANGED"
         if kind == "END":
             record["outcome"] = "FAILED"
         if kind == "RESULT":
-            record.update(state="FAILED", code="CONFIGURATION_UNKNOWN", detail="-2147483648")
+            record.update(state="FAILED", code="CONFIGURATION_MISMATCH", detail="-2147483648")
         if kind == "JOB":
-            record.update(code="CONFIGURATION_UNKNOWN", detail="-2147483648")
+            record.update(code="CONFIGURATION_MISMATCH", detail="-2147483648")
+        if kind == "FAILURE":
+            record.update(code="CONFIGURATION_MISMATCH", detail="-2147483648")
         if kind == "CONSOLE":
             record.update(queued="4096", available="4096")
-        if kind == "PROFILE":
+        if kind in {"PROFILE", "DECODE_PROFILE"}:
             record.update(
-                source="observed", available="0", valid_fields="0", mode="unknown",
+                valid_fields="65535", mode="unknown",
                 current="unknown", duty="unknown", debounce="unknown", preference="try-source",
                 ufpaccessory="unknown", termination="unknown", rd_rp="unknown",
                 disable_ufp_accessory="unknown", disable_term="unknown", disable_rd_rp="unknown",
             )
+        if kind == "PROFILE":
+            record.update(source="observed", available="0")
+        if kind == "REG":
+            record["source"] = "supplied"
+        if kind == "DRV":
+            record["state"] = "DEGRADED"
+        if kind == "PIN":
+            record.update(available="0", value="unknown")
+        if kind == "IDENTITY":
+            record.update(bytes="3032334253555400", identity_valid="1", revision="255",
+                          revision_valid="1")
+        if kind == "CONFIG_DETAIL":
+            record.update(mismatch_valid="1", mismatch_register="255", mismatch_expected="255",
+                          mismatch_observed="255", mismatch_mask="255")
+        if kind == "XFER":
+            record.update(saturated="1", assertion="SATURATED")
         if kind == "PORT":
             record.update(raw_valid_mask="3", valid_fields="511")
     help_base = records.pop("HELP")
@@ -385,22 +420,16 @@ def exercise(host: PersistentHost) -> int:
     ):
         host.command(text, canonical)
     host.command("profile discard", "profile.discard", code="CONFIGURATION_UNKNOWN")
+    from check_cli_contract import compare_help
+
     for topic in (
         "all", "common", "connection", "port", "profile", "lifecycle", "profile.reset", "ver",
     ):
         records = host.command("? " + topic, "help")
         if topic == "all":
-            actual = [r for r in records if r["type"] == "HELP"]
-            if len(actual) != len(ROWS):
-                raise AssertionError("executed help and host row counts differ")
-            for observed, expected in zip(actual, ROWS):
-                if observed["canonical"] != expected["command"]:
-                    raise AssertionError("executed help canonical row differs")
-                for key, value in expected.items():
-                    if key not in ("command", "syntax") and observed[key] != value:
-                        raise AssertionError(f"executed help metadata differs: {key}")
+            compare_help(records, ROWS)
     for text in (
-        "unknown", "mode dfp extra", "addr -1", "addr 0x47g", "hilmark none", "help registers",
+        "unknown", "mode dfp extra", "addr -1", "addr 0x47g", "hilmark none", "help unknown",
     ):
         host.command(text, "invalid", code="INVALID_PARAM")
     host.command("binary poison", "invalid", code="INVALID_PARAM", raw=b"mode ufp\x00\x08\n")
@@ -477,7 +506,7 @@ def exercise_operations(host: PersistentHost) -> None:
         "recover-dead-battery -1", "job auto on", "job step 256", "job step -1",
         "cancel 0", "stop 18446744073709551616", "result 0", "result take",
         "result take 0", "job result 1 extra", "job start init", "profile commit",
-        "help diagnostics", "reg 8", "diag",
+        "help nonexistent", "reg", "diag extra",
     ):
         host.command(text, "invalid", code="INVALID_PARAM")
     host.command("help job", "help")
@@ -624,6 +653,143 @@ def exercise_fault(executable: str, mode: str) -> None:
         raise
 
 
+def exercise_diagnostics(host: PersistentHost) -> None:
+    """Execute raw/pure/cache routes, exclusions, accounting and explicit local invalidation."""
+    host.command("end", "end")
+    host.command("forget-evidence", "forget-evidence")
+    host.command("variant tusb320lai 0x47", "variant")
+    host.command("bind", "bind")
+    operation(host, "init", "init")
+    before = host.command("diag", "diag")
+    for kind, key, value in (
+        ("DIAG", "last_kind", "UNKNOWN"), ("MANAGED", "last_detail", "2147483648"),
+        ("IDENTITY", "bytes", "not_hex_bytes"), ("IRQ", "pending_before", "2"),
+        ("XFER", "source", "managed_callbacks"), ("XFER", "saturated", "1"),
+    ):
+        damaged = dict(payload(before, kind))
+        damaged[key] = value
+        expect_rejection(lambda damaged=damaged: validate_record(damaged))
+    managed = dict(payload(before, "MANAGED"))
+    irq = dict(payload(before, "IRQ"))
+    stats = payload(before, "XFER")
+    attempts, success, failures = (int(stats[key]) for key in ("attempts", "success", "failures"))
+    for text in ("reg 0x00", "rreg 0x07", "rawread 0x08", "reg 0x09", "reg 0xA0"):
+        records = host.command(text, "reg")
+        if payload(records, "END")["callbacks"] != "1":
+            raise AssertionError("raw read lost its terminal callback count")
+        attempts += 1
+        success += 1
+    for text in ("decode 0x08 0xff", "decode 0x09 0", "decode 0x0A 8"):
+        records = host.command(text, "decode")
+        damaged = dict(payload(records, "REG"), value="256")
+        expect_rejection(lambda damaged=damaged: validate_record(damaged))
+    for text, canonical in (("irq", "irq"), ("drv", "drv"), ("health", "drv"),
+                            ("state", "drv"), ("xfer_stats", "xfer_stats"),
+                            ("counters", "xfer_stats")):
+        host.command(text, canonical)
+    after = host.command("diag", "diag")
+    for kind, expected in (("MANAGED", managed), ("IRQ", irq)):
+        observed = dict(payload(after, kind))
+        for key in ("request", "nonce"):
+            observed.pop(key)
+            expected.pop(key)
+        if observed != expected:
+            raise AssertionError("raw/pure/cached diagnostics changed managed evidence")
+    host.command(f"xfer_assert {attempts} {success} {failures}", "xfer_assert")
+    mismatch = host.command(f"xfer_assert {attempts + 1}", "xfer_assert", code="INVALID_PARAM")
+    if payload(mismatch, "XFER")["assertion"] != "FAIL":
+        raise AssertionError("counter mismatch did not emit failed source evidence")
+    for text in ("reg -1", "rawread 0x100", "decode 8 -1", "decode 8 256", "wreg 8",
+                 "rawwrite 8 0x100", "irq extra", "drv extra", "xfer_stats extra",
+                 "xfer_assert -1", "xfer_assert 4294967296", "xfer_assert 1 2",
+                 "xfer_assert 1 2 3 4", "xfer_assert 0x01", "invalidate", "invalidate reset"):
+        host.command(text, "invalid", code="INVALID_PARAM")
+    host.command("decode 0x0b 0", "decode", code="INVALID_PARAM")
+    host.command("reg 0x0b", "reg", code="INVALID_PARAM")
+    host.command("wreg 0x00 0", "wreg", code="UNSUPPORTED_FEATURE")
+    host.command("wreg 0x0A 8", "wreg", code="UNSUPPORTED_FEATURE")
+    host.command("wreg 0x08 0x80", "wreg")
+    attempts += 1
+    success += 1
+    host.command(f"xfer_assert {attempts} {success} {failures}", "xfer_assert")
+    uncertain = payload(host.command("diag", "diag"), "DIAG")
+    host.command("xfer_reset", "xfer_reset")
+    cleared = host.command("diag", "diag")
+    if payload(cleared, "XFER")["attempts"] != "0":
+        raise AssertionError("idle reset did not clear all-source totals")
+    for key in ("configuration", "effect", "config_write_unresolved", "reset"):
+        if payload(cleared, "DIAG")[key] != uncertain[key]:
+            raise AssertionError("counter reset repaired configuration/effect evidence")
+    for reason in ("external-reset", "power-loss", "target-change"):
+        host.command("invalidate " + reason, "invalidate")
+    host.command("job auto 0", "job.auto")
+    started = host.command("init", "init", wait=False)
+    token = payload(started, "ACK")["token"]
+    host.command("reg 8", "reg", code="BUSY")
+    host.command("wreg 8 128", "wreg", code="BUSY")
+    host.command("xfer_reset", "xfer_reset", code="BUSY")
+    host.command("diag", "diag")
+    host.command("cancel", "cancel")
+    host.completion(token, code="CANCELLED")
+    host.command("xfer_reset", "xfer_reset", code="RESULT_PENDING")
+    host.command("reg 8", "reg", code="RESULT_PENDING")
+    host.command("result take " + token, "result.take")
+    host.command("job auto 1", "job.auto")
+    host.command("end", "end")
+    host.command("forget-evidence", "forget-evidence")
+    host.command("variant tusb320 0x60", "variant")
+    host.command("decode 0xA0 0", "decode", code="UNSUPPORTED_FEATURE")
+    host.command("bind", "bind")
+    host.command("reg 0xA0", "reg", code="UNSUPPORTED_FEATURE")
+    host.command("intpin", "intpin", code="UNSUPPORTED_FEATURE")
+
+
+def exercise_diagnostic_fixtures(executable: str) -> None:
+    """Execute optional input levels/failures and raw callback faults in isolated processes."""
+    for value, code, available in (("0", "OK", "1"), ("1", "OK", "1"),
+                                   ("unavailable", "UNSUPPORTED_FEATURE", "0"),
+                                   ("failure", "INVALID_CONFIG", "0")):
+        host = PersistentHost(executable, "--input", value)
+        try:
+            pin = payload(host.command("intpin", "intpin", code=code), "PIN")
+            if pin["available"] != available or pin["value"] != (
+                value if available == "1" else "unknown"
+            ):
+                raise AssertionError("application input validity or level changed")
+            host.close()
+        except BaseException:
+            if host.process.poll() is None:
+                host.process.kill()
+                host.process.wait(timeout=3)
+            raise
+    for mode, text, canonical in (("transport", "reg 8", "reg"),
+                                   ("write", "wreg 8 128", "wreg")):
+        host = PersistentHost(executable, "--fault", mode)
+        try:
+            host.command("bind", "bind")
+            if mode == "write":
+                operation(host, "init", "init")
+            before = payload(host.command("diag", "diag"), "MANAGED")
+            records = host.command(text, canonical, code="I2C_TIMEOUT")
+            ack, end = payload(records, "ACK"), payload(records, "END")
+            if ack["action"] != "ATTEMPTED" or end["detail"] != "-2147483648":
+                raise AssertionError("raw failure lost callback evidence or backend detail")
+            after = host.command("diag", "diag")
+            for key in SCHEMAS["MANAGED"][3:]:
+                if payload(after, "MANAGED")[key] != before[key]:
+                    raise AssertionError("raw failure contaminated managed health")
+            if payload(after, "XFER")["failures"] != "1":
+                raise AssertionError("raw failure missing from all-callback totals")
+            if mode == "write" and payload(after, "DIAG")["configuration"] != "UNKNOWN":
+                raise AssertionError("failed raw write retained configuration trust")
+            host.close()
+        except BaseException:
+            if host.process.poll() is None:
+                host.process.kill()
+                host.process.wait(timeout=3)
+            raise
+
+
 def main() -> int:
     """Run the bounded transcript; return zero only after all records and fixture exit pass."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -635,11 +801,13 @@ def main() -> int:
         if local_requests != 51:
             raise AssertionError("original local transcript sequence changed")
         exercise_operations(host)
+        exercise_diagnostics(host)
         maximum_width_records(host.samples)
         requests = host.request
         host.close()
         for mode in ("transport", "readback"):
             exercise_fault(args.host, mode)
+        exercise_diagnostic_fixtures(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()

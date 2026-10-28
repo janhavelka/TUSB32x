@@ -17,7 +17,9 @@ Prompt 17 adds safe one-callback raw access and pure passive health. Prompts
 18–19 strengthen conformance/ownership evidence. Prompt 20 adds a bounded local
 CLI in example code, with no core scheduler or transitive core dependency.
 Prompt 21 routes managed operations through one tick poll, retaining only request
-correlation metadata; the sole result remains in core until explicit take. The
+correlation metadata; the sole result remains in core until explicit take.
+Prompt 22 adds raw Sync/public decoder routes and cached diagnostics,
+with no new protocol/composer/engine. Executable parity uses the actual fixture.
 [API inventory](api-contracts.md) describes delivered methods and their contracts; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
@@ -43,7 +45,8 @@ correlation metadata; the sole result remains in core until explicit take. The
 | examples/common/Tusb32xCli.h/.cpp, Tusb32xCliOutput.cpp and ConsoleBuffer.h | Example-only dispatcher/staging, fixed output/help and bounded console; bus-silent admission and one core poll in tick, injected platform hooks, no framework dependency or second result store |
 | test/cli/test_cli.cpp, cli_host.cpp, test/console/test_console.cpp and tools/test_cli_transcript.py | Registered local CLI/console behavior and Python-to-persistent-real-C++ transcript; fixture executable is not itself a behavioral CTest |
 | tools/tusb32x_cli_contract.py | Frozen implemented rows and typed record parsing; behavioral parity executes actual help |
-| test/cli/test_cli_operations.cpp | Managed-route admission, one-poll timing/budgets, core-retained result ownership, reservation and literal device-effect vectors; part of the existing CLI suite |
+| test/cli/test_cli_operations.cpp, test_cli_diagnostics.cpp | Managed timing/result ownership plus raw safety/accounting, decode/health and literal device effects; parts of the existing CLI suite |
+| tools/check_cli_contract.py | One executed command/alias/help parity checker, shared help comparison for transcript, and deliberately broken-contract checks |
 | examples/host/basic/ | Standalone multi-file consumer of real values, validators, decoder and pure health; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/planned_api.cpp | Compile-only delivered API signature inventory; the former future-declaration sketch is no longer needed |
@@ -91,8 +94,8 @@ initialization, profile observation, explicit apply, desired-profile verificatio
 and read-only reconciliation, explicit reset, base dead-battery recovery and
 complete read-only port refresh and explicit IRQ acknowledgement/service.
 Raw diagnostics, passive health, local CLI staging and managed operation/control/
-result routes are implemented; remaining CLI diagnostics and framework adapters
-remain later work.
+result routes and all contracted diagnostic CLI commands are implemented;
+framework adapters remain later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
 exports remain outside the current implementation.

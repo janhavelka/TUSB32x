@@ -1,8 +1,7 @@
 # Concrete CLI and runner contract
 
-This is an implementation specification. Prompts 20–21 deliver local staging,
-managed operations and retained-result flow in [the CLI guide](../CLI.md).
-Remaining device diagnostics are prompt 22. Prompts
+This is an implementation specification. Prompts 20–22 deliver the complete fixed
+CLI inventory in [the CLI guide](../CLI.md), including diagnostic and parity checks. Prompts
 23–26 integrate the same processor; 28–31 test
 and use it; 32–34 package it and finish check registration. Read [COMMON.md](COMMON.md),
 [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) and
@@ -231,17 +230,18 @@ calling them request regression. A regressed new-input ACK/MARK, new boot banner
 identity change, session exhaustion or framing loss invalidates the runner
 session. Do not claim the host revision proves firmware.
 
-Illustrative record shapes below are future protocol examples, not test results:
+Illustrative record shapes below describe protocol, not test results:
 
 ```text
 TUSB MARK schema=1 nonce=case_7_begin request=20
-TUSB ACK schema=1 nonce=case_7_begin request=21 command=mode code=OK detail=0 action=STAGED staged_generation=4 desired_generation=2 applied_generation=2 configuration=KNOWN
-TUSB END schema=1 nonce=case_7_begin request=21 command=mode outcome=SUCCEEDED code=OK detail=0 callbacks=0
+TUSB ACK schema=1 nonce=case_7_begin request=21 command=mode code=OK detail=0 action=STAGED token=0 staged_generation=4 desired_generation=2 applied_generation=2 configuration=KNOWN
+TUSB END schema=1 nonce=case_7_begin request=21 command=mode outcome=SUCCEEDED code=OK detail=0 token=0 callbacks=0
 TUSB ACK schema=1 nonce=case_8_begin request=24 command=apply code=IN_PROGRESS detail=0 action=ADMITTED token=17 staged_generation=4 desired_generation=3 applied_generation=2 configuration=KNOWN
-TUSB JOB schema=1 nonce=case_8_begin request=24 token=17 state=ACTIVE callbacks=1 deadline_ms=12000
+TUSB JOB schema=1 nonce=case_8_begin request=24 token=17 kind=APPLY_PROFILE state=ACTIVE phase=WRITING code=IN_PROGRESS detail=0 callbacks=1 last_poll_callbacks=1 deadline_ms=12000 waiting=0 ready_at_ms=0 ready_at_valid=0 result_pending=0 auto=1
 TUSB RESULT schema=1 nonce=case_8_begin request=24 origin_request=24 token=17 kind=APPLY_PROFILE state=FAILED code=I2C_TIMEOUT detail=-7 effect=INDETERMINATE callbacks=2 desired_generation=3 applied_generation=2 configuration=UNKNOWN
-TUSB END schema=1 nonce=case_8_begin request=24 command=apply outcome=FAILED code=I2C_TIMEOUT detail=-7 token=17
-TUSB PORT schema=1 nonce=case_9_begin request=30 raw_valid_mask=3 valid_fields=31 invalidated=0 attachment=DETACHED local_role=NOT_APPLICABLE peer_role=NOT_APPLICABLE orientation=NOT_APPLICABLE detected_current=NOT_APPLICABLE sequence=9 observed_ms=12050 observed_time_valid=1 age_ms=12
+TUSB RESULT_DETAIL schema=1 nonce=case_8_begin request=24 origin_request=24 token=17 started_ms=11000 completed_ms=0 completed_time_valid=0 termination=UNKNOWN reset=NONE irq_observed=0 irq_before=0 ack_attempted=0 ack_confirmed=0 irq_after=0 irq_after_valid=0
+TUSB END schema=1 nonce=case_8_begin request=24 command=apply outcome=FAILED code=I2C_TIMEOUT detail=-7 token=17 callbacks=2
+TUSB PORT schema=1 nonce=case_9_begin request=30 raw08=0 raw09=0 raw_valid_mask=3 valid_fields=31 invalidated=0 attachment=DETACHED local_role=NOT_APPLICABLE peer_role=NOT_APPLICABLE orientation=NOT_APPLICABLE detected_current=NOT_APPLICABLE sequence=9 observed_ms=12050 observed_time_valid=1 age_ms=12
 TUSB FIRMWARE schema=1 nonce=case_10_begin request=31 git=unknown tree=unknown build=unknown
 TUSB FRAMEWORK schema=1 nonce=case_10_begin request=31 name=esp-idf version=unknown target=esp32s3
 ```
@@ -270,6 +270,9 @@ field's validity bit before using them as current port evidence.
 ACK is an input-action response; END closes that request. Each input line has
 one ACK, except hilmark uses MARK as its acknowledgement; do not emit both for
 the same marker request. A local staged command has ACK/END immediately.
+Raw Sync handlers use ATTEMPTED whenever a terminal callback was invoked, including
+I2C_* failure, and report END callbacks=1. Local raw rejections use UNCHANGED and
+callbacks=0. A failed raw write can change hardware/trust; it is not unchanged.
 Admitted work has an IN_PROGRESS ACK and its END only
 at terminal completion, after RESULT. A failed admission has a typed END and no
 token or terminal operation result. A later cancel/status/result request has its

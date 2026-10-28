@@ -1,10 +1,11 @@
-# CLI and cooperative operations
+# Complete shared CLI
 
 The implemented CLI is example code in
 [examples/common](../examples/common/Tusb32xCli.h). It accepts local queries,
-target/lifecycle edits, independently staged profiles and explicit managed operations.
-Command handlers and admission perform **zero I2C callbacks**. Only `tick()` polls
-the existing core once per owner turn. Neither setup nor opening a console binds,
+target/lifecycle edits, independent staging, managed operations and diagnostics.
+Local, cached, pure and admission handlers perform **zero I2C callbacks**. Only
+the explicit `reg`/`wreg` Sync routes can invoke one callback in a handler. `tick()`
+polls the existing core at most once per owner turn. Neither setup nor opening a console binds,
 initializes, resets, applies settings or acknowledges an interrupt. The application
 serializes access and must not separately poll the same driver in that CLI turn.
 
@@ -52,7 +53,8 @@ An omitted control value queries CLI staging. Setters change staging only.
 | profile | `rd-rp [on\|off]` | — | Separate 0x45 disableRdRp control |
 
 Implemented help topics are `common`, `connection`, `lifecycle`, `port`, `profile`,
-`interrupt`, `job` and `all`. Help also accepts a canonical command ID or a listed alias; `profile`
+`interrupt`, `job`, `registers`, `diagnostics` and `all`. Help also accepts a canonical
+command ID or a listed alias; `profile`
 selects its complete topic, and `profile.show` selects that single help row.
 Internal IDs such as `profile.show` name machine responses; input uses `profile show`.
 Unknown topics and later-stage commands reject as `INVALID_PARAM`.
@@ -151,6 +153,88 @@ timeout and end retain possible writes, disabled termination and reset/recovery
 evidence; they do not undo electrical effects. Autonomous TUSB322I VCONN and board
 power policy remain separate from software delivery and communication success.
 
+## Diagnostics, raw access and external evidence
+
+The full inventory has 55 canonical rows. These remaining routes use public core
+APIs, the pure decoder or one opt-in application input reader. No command scans
+addresses, configures GPIO, selects a new target implicitly, performs bus recovery
+or controls VBUS/power policy.
+
+| Grammar | Aliases | Effect and bounds |
+| --- | --- | --- |
+| `reg <address>` | `rreg`, `rawread` | `readRegisterSync`: one pointer TX/one RX byte, at most one callback |
+| `decode <address> <byte>` | — | Public pure `decodeRegister`, no binding or callback required |
+| `wreg <address> <byte>` | `rawwrite` | `writeRegisterSync`: two TX/zero RX bytes, at most one callback |
+| `irq` | — | Cached last managed IRQ-operation evidence, not a new latch sample |
+| `intpin` | — | One optional application input-level read; no core callback or GPIO setup |
+| `invalidate <external-reset\|power-loss\|target-change>` | — | Explicit `invalidateDeviceState` notification with CONFIGURATION_UNKNOWN reason |
+| `drv` | `health`, `state` | Pure default-threshold-three managed health projection |
+| `diag` | — | Cached trust/effects, all uncertainty flags, managed history, failure/identity/IRQ evidence and source totals |
+| `xfer_stats` | `counters` | Cached saturating all-callback totals and last callback Status |
+| `xfer_reset` | — | Idle-only `clearTransportStats`: source totals/lastStatus only |
+| `xfer_assert <attempts> [successes failures]` | — | Exact equality against all-callback totals; zero transport |
+
+Register addresses and byte values are complete unsigned decimal or `0x` hex
+values in 0..255, then validated by the core map/access rules. Readable offsets are
+0x00..0x0A, present 0x45 and extended-only 0xA0. Base TUSB320/I has no 0xA0;
+TUSB322I has no 0x45. Invalid offsets, absent controls, active ownership and retained
+results reject before transport. Configured aggregate timeout is the binding's
+i2cTimeoutMs; these routes add no retry or preparatory callback. A callback is not
+a physical transaction count or proof of adapter timing/framing.
+
+Raw writes require the core's current proved safe image and access permissions.
+They cannot bypass mode/reset/termination/recovery sequences. The CLI never masks
+bytes, composes writes or supplies staged/desired settings as an actual image.
+Unsupported access explains the restriction and directs sequenced changes to
+typed operations. TUSB322I 0x08/0x09 writes remain gated. Its unresolved fault
+clear/update wording also means raw reads are not promised nondestructive.
+
+REG source is read/write/supplied. A write value is the requested accepted image,
+not readback or configuration verification. Every actual raw callback uses ACK
+action ATTEMPTED and END callbacks 1, including I2C_* failure; local raw rejection
+uses UNCHANGED and callbacks 0. A failed write may have changed hardware and keeps
+UNKNOWN configuration, uncertainty/effect evidence and the original signed detail.
+Raw reads can invalidate safety proof but never publish/repair managed identity,
+profile, port or IRQ observations. All raw attempts count in source totals and
+remain excluded from managed health. A later successful raw read cannot repair trust.
+
+DECODE/DECODE_PROFILE preserve supplied raw bytes and independent status/profile
+validity. Reserved and absent fields print UNKNOWN/unknown rather than plausible
+defaults. These are single-byte codes, not a port observation: detached direction
+may decode CC2 here, while paired port output correctly reports NOT_APPLICABLE.
+Local advertisement, remote current detection, accessory and active-cable codes
+remain separate. CC indications are not measured current, PD or power permission.
+
+IRQ is historical managed-operation evidence. pending_before/after print unknown
+unless their respective observation flags are valid; successful ACK acceptance
+does not prove a later clear latch. `intpin` publishes only a logical level and
+does not infer active polarity. A missing reader returns UNSUPPORTED_FEATURE;
+a reader that returns false gives INVALID_CONFIG. Both publish available 0 and
+value unknown, even if a failing reader changed its output argument.
+
+All invalidation reasons are explicit external notifications, not hardware actions
+or target reselection. They cancel active work locally and retain its result,
+historical port fields and possible effects. Forgetting remains the separate
+unbound/inactive/no-result operation; target edits never invoke it implicitly.
+
+XFER source is all_callbacks. Assertion counts are complete unsigned decimal
+uint32 values (0..4294967295), with either one or three expected totals. Mismatch
+returns INVALID_PARAM/assertion FAIL. If any actual total is UINT32_MAX, even an
+apparently equal assertion returns INVALID_PARAM/SATURATED: exact equality is no
+longer proved. No success+failure addition is used to infer an overflowed total.
+Failed assertions still print source, actual and requested values. With work
+active xfer_reset returns BUSY; a retained result returns RESULT_PENDING. A valid
+idle clear cannot change managed streak/failure history, trust, effects, port age
+or results. Cached assertion/reset output is taken before any later owner poll.
+
+DRV and MANAGED explicitly identify managed_callbacks. READY can coexist with
+UNKNOWN configuration or an invalidated port, and OFFLINE never prevents legal
+work. DIAG preserves configuration-write, recovery, mode and reset-acceptance
+uncertainty independently of a later effect NONE. FAILURE retains the original
+failed callback code/detail and time validity after later success. Identity bytes
+are eight ascending register bytes; a shared signature is not exact-part discovery.
+No timestamp is inferred when the corresponding time-valid flag is false.
+
 ## Staging and cached evidence
 
 Staging starts at generation one with a validated candidate. Candidate defaults
@@ -173,7 +257,10 @@ Rd/Rp control and does not support `mode port`. `on` means enabled:
 control polarity, separately from semantic enable values.
 
 CONFIG preserves the exact `raw_valid_mask` and `observed_valid_fields`, plus all
-three has-flags and current configuration trust. PROFILE records carry source,
+three has-flags and current configuration trust. CONFIG_DETAIL adds profile
+acquisition time/validity, termination/reset and the exact qualified mismatch
+register/expected/observed/mask tuple; unavailable tuple bytes print unknown.
+PROFILE records carry source,
 variant attribution, availability, generation and per-field validity. Staged fields
 use the CLI-selected part. Desired/applied fields use the retained core association,
 even after an ended local target edit; observed fields use the exact core validity
@@ -287,15 +374,30 @@ key lists are shown. ACK/END and helper records fit 512-byte storage with a
 | CAPABILITIES | `configured_variant observed_variant identity_valid identity_matches revision_valid revision_matches profile_fields advertisement_write duty_write accessory_write` |
 | TARGET | `variant address bound staged_reset` |
 | CONFIG | `raw_valid_mask observed_valid_fields has_desired has_observed has_applied desired_generation applied_generation configuration raw08 raw09 raw0a raw45` |
+| CONFIG_DETAIL | `observed_ms observed_time_valid termination reset mismatch_valid mismatch_register mismatch_expected mismatch_observed mismatch_mask` |
 | PROFILE | `source variant available generation valid_fields mode current duty debounce preference ufpaccessory termination rd_rp disable_ufp_accessory disable_term disable_rd_rp` |
 | PORT | `raw08 raw09 raw_valid_mask valid_fields invalidated attachment local_role peer_role orientation detected_current sequence observed_ms observed_time_valid age_ms` |
 | PORT_DETAIL | `advertised_current accessory active_cable interrupt_pending config_generation configuration coherence` |
 | HELP | `canonical aliases topic execution effect prerequisites capability records max_callbacks tx_bytes rx_bytes fixture test` |
+| REG | `source variant address value` |
+| DECODE | `variant address value profile_valid_fields status_valid_fields attachment orientation detected_current accessory active_cable interrupt_pending reset_requested reset_valid` |
+| DECODE_PROFILE | `variant address valid_fields mode current duty debounce preference ufpaccessory termination rd_rp disable_ufp_accessory disable_term disable_rd_rp` |
+| DRV | `source state threshold bound initialized configuration effect termination reset managed_streak` |
+| DIAG | `bound initialized configuration effect termination reset config_write_unresolved recovery_unresolved mode_unresolved reset_acceptance_uncertain last_kind last_code last_detail` |
+| MANAGED | `source initialized success failures streak last_code last_detail last_success_ms last_success_time_valid last_failure_ms last_failure_time_valid` |
+| FAILURE | `code detail time_ms time_valid` |
+| IDENTITY | `variant address identity_valid identity_matches bytes revision revision_valid revision_matches` |
+| IRQ | `source observed pending_before ack_attempted ack_confirmed pending_after pending_after_valid` |
+| PIN | `source available value` |
+| INVALIDATE | `reason` |
+| XFER | `source attempts success failures last_code last_detail saturated assertion expected_attempts expected_success expected_failures` |
 
-ACK `action` is QUERY, LOCAL, UNCHANGED, STAGED or ADMITTED. An admitted operation
+ACK `action` is QUERY, LOCAL, UNCHANGED, STAGED, ADMITTED or ATTEMPTED. An admitted operation
 uses IN_PROGRESS and a nonzero token; failed admission uses token 0, UNCHANGED
-and immediate END with no terminal operation result. Local failures are UNCHANGED.
-Local END has SUCCEEDED for OK and FAILED otherwise, with callbacks 0; operation
+and immediate END with no terminal operation result. Local failures are UNCHANGED;
+raw callback failures are ATTEMPTED because hardware/configuration may have changed.
+Local END has SUCCEEDED for OK and FAILED otherwise, with callbacks 0; raw Sync
+END has callbacks 0 or 1 according to actual invocation. Operation
 END carries exact SUCCEEDED/FAILED/CANCELLED/TIMED_OUT and its callback count.
 Result query/take END reports delivery independently of the copied payload failure.
 Token 0 denotes a local response without an associated operation. `code` is the
@@ -311,12 +413,15 @@ or byte count is inferred from callback counts.
 
 HELP is executable metadata for the advertised subset: canonical ID/aliases,
 topic, execution/effect, prerequisites/capability, record types, callback/TX/RX
-bounds and host fixture/test. Rows use CACHE_ONLY, PURE or CORE_JOB, with explicit
+bounds and host fixture/test. Rows use CACHE_ONLY, PURE, CORE_JOB, RAW_I2C or
+PLATFORM_ACTION, with explicit
 effect classes. Managed rows
 and job step advertise one callback per owner poll, at most two TX/eight RX bytes
 per callback. These are ceilings, not physical transaction counts or whole-job
 bounds. Job step conservatively advertises DEVICE_WRITE because already-admitted
-work may write. All admission and other local handler callback bounds remain zero.
+work may write. Raw rows have their per-handler byte/callback ceilings. All
+admission and other local handler transport bounds remain zero; intpin's opt-in
+application input read is separate from transport accounting.
 Core operation totals and timing remain in the procedure/API guides. Human
 descriptions distinguish cached queries, staging, live reads and device writes.
 
@@ -338,7 +443,9 @@ From the source checkout:
 ```text
 cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
 cmake --build build/native --config Debug
-ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
+ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript|cli_contract" --output-on-failure
+python tools/check_cli_contract.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/check_cli_contract.py --host build/native/test/Debug/tusb32x_cli_host.exe --self-test-negative
 ```
 
 The test-only `tusb32x_cli_support` target compiles the two common CPP files.
@@ -358,7 +465,14 @@ sources. `tusb32x_cli_host` is a persistent, explicitly fake-bus fixture used by
 for bounded host fixtures at uint64 request/uint32 generation limits. There is
 no public seed setter or production boundary-manipulation command.
 
-Prompt 21 completes operation admission/control/result routes. Prompt 22 adds
-remaining cached IRQ/input-pin, invalidation, register/decode and diagnostic routes.
-These remaining routes are not advertised or handled yet. Framework front ends,
-serial/CC/INT fixtures and board memory/electrical qualification remain later work.
+The executable contract checker compares all 55 canonical rows, aliases, help
+topics and records against the built fixture, including actual callback/write
+deltas. The transcript reuses its help comparison. Its negative check requires
+broken alias and required-field dependencies to fail on real fixture output.
+CTest registers cli_contract and cli_contract_negative with explicit fixture paths
+and finite timeouts, retaining the single cli_transcript registration. All 33
+schemas include full-width record bounds including newline and C terminator.
+
+Prompts 20–22 complete the fixed shared CLI. Framework front ends, serial/CC/INT
+fixtures and board memory/electrical qualification remain later work; the native
+fixture is software evidence only.

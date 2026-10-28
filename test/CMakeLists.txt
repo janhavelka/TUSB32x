@@ -19,7 +19,7 @@ add_library(tusb32x_cli_support STATIC
 target_link_libraries(tusb32x_cli_support PUBLIC TUSB32x)
 target_include_directories(tusb32x_cli_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
 tusb32x_strict_warnings(tusb32x_cli_support)
-add_executable(tusb32x_cli cli/test_cli.cpp cli/test_cli_operations.cpp)
+add_executable(tusb32x_cli cli/test_cli.cpp cli/test_cli_operations.cpp cli/test_cli_diagnostics.cpp)
 target_link_libraries(tusb32x_cli PRIVATE tusb32x_cli_support)
 add_executable(tusb32x_console console/test_console.cpp)
 target_include_directories(tusb32x_console PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
@@ -62,6 +62,13 @@ add_test(NAME cli_transcript
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_cli_transcript.py"
     --host "$<TARGET_FILE:tusb32x_cli_host>")
 set_tests_properties(cli_transcript PROPERTIES TIMEOUT 30)
+add_test(NAME cli_contract
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/check_cli_contract.py"
+    --host "$<TARGET_FILE:tusb32x_cli_host>")
+add_test(NAME cli_contract_negative
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/check_cli_contract.py"
+    --host "$<TARGET_FILE:tusb32x_cli_host>" --self-test-negative)
+set_tests_properties(cli_contract cli_contract_negative PROPERTIES TIMEOUT 60)
 # Imported objects must keep ABI/sanitizer flags in the downstream link.
 set(consumer_flags "${CMAKE_CURRENT_BINARY_DIR}/consumer-flags.cmake")
 file(WRITE "${consumer_flags}" "# Parent compile/link flags; no source or tool lookup.\n")

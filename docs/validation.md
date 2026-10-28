@@ -2430,3 +2430,87 @@ No new SDK/framework dependency or successful hardware stub was added. Remaining
 cached IRQ/pin, invalidation, register/decode and diagnostic command coverage is
 prompt 22, not an unfinished operation route. Final commit/sync evidence belongs
 in the handoff and next progress update, avoiding a self-referencing hash loop.
+
+## Prompt 22 complete CLI diagnostics and parity (2026-10-28)
+
+Started clean and synchronized after fetch at prompt 21 commit
+`e1f5538f669af4f926af355f2bba904da9478049`, on the same
+`promptset/tusb32x-implementation-20261023` branch. Read current instructions,
+full 22, the fixed CLI grammar/records, raw access/accounting/health and example
+boundaries, actual public APIs, registrations and shared sources. The prerequisite
+CLI/console/transcript tests passed before editing. Fresh peer revisions, exact
+paths and adopted/rejected choices are in [execution 22](audit/execution-22-peers.md).
+No sibling mutation/build or remote CI request occurred.
+
+Delivered the eleven remaining routes: all 55 fixed rows, canonical spellings,
+aliases and help topics now execute. Raw access delegates to public Sync methods;
+decoding delegates to the public decoder. No core source, register composer,
+operation engine, library version or tool pin changed. Independent review found
+missing configuration mismatch/acquisition output; CONFIG_DETAIL closes that gap
+with real nonzero/distinct observed evidence. Lead reviewed actual changes and
+ran the checks below rather than relying on agent summaries.
+
+Tools: GCC 15.1.0 MinGW-W64 x86_64 UCRT/MCF, CMake/CTest 4.0.1, Ninja 1.12.1,
+Python 3.12.10, Doxygen 1.13.2 and the installed managed PlatformIO Core
+6.1.19/native platform 1.2.1.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict framework-free Debug/Release | PASS | All 14 registered CTests in each configuration, active Release assertions, including affected prior core/consumer/version/launcher regressions; eight C++ suites, one transcript, positive/negative parity, portable consumer, version and Windows launcher tests |
+| CLI behavior and framing | PASS | 156,533 local/framing checks, 7,821 operation checks and 601,792 independent diagnostic checks (766,146 total); all canonical/alias/help routes, full invalid-input state preservation, zero cached/pure handler callbacks and independently progressing active work |
+| Raw safety and effects | PASS | Exactly zero/one callbacks for local denial/transport, all seven variants and every callback code plus invalid enum; signed INT32_MIN preserved, normalization, unchanged failed-read output, accepted-before-error writes, safe-image/owner/result gates and forbidden sequenced changes |
+| Accounting and health | PASS | All-source raw inclusion and managed exclusion, managed probe, OFFLINE recovery, saturation and exact equality rejection, idle-only reset invariance, retained failure detail/time validity, trust/effects and results preserved |
+| Actual device evidence | PASS | Literal staged 30% versus applied 50% IRQ ACK behavior, preserved pending latch for unrelated writes, explicit invalidation/forget fences, mismatch register 8/expected 64/observed 128/mask 192/acquisition time 200 and retained result |
+| Console and congestion | PASS | 24,146 checks including whole-record losses, short/zero writes, bounded drain/fairness; a failed raw write under a full queue invokes once, retains uncertain effects and never retries during 100 blocked turns |
+| Persistent transcript | PASS | 248 requests in one actual shared-source C++ process, two managed-fault sessions, four application-input modes and two raw-fault sessions; typed detail, source labels, statuses, effects and normal closure checked |
+| Executable parity and negatives | PASS | 55 rows/164 canonical, alias, topic and per-command help routes; actual syntax/metadata/required records/statuses and adapter callback/write deltas; deliberately broken alias and required-record-field dependencies reject; one shared help comparator and one transcript registration |
+| Bounds and appearance | PASS | All 33 schema maxima and actual formatter paths with 32-character nonce, full-width integers/enums, newline/NUL; unknown/reserved/not-applicable distinction, cyan/green grouped help, minimum 32-column syntax, verbosity/error visibility and exact color-off behavior |
+| Documentation and version | PASS | Strict Doxygen and XML visibility of 17 core structs/26 owner methods plus 10 Cli/12 Console callable methods; all three delivered Python modules have docstrings/style, local links/anchors and UTF-8/LF/whitespace checks; no-op version sync/check |
+| Package and ordinary consumption | PASS | Current 43-file source-equal archive, normal exclusion policy, matching IDF inclusion and guide links; renamed tests-OFF core and CLI C++17 consumers beneath unrelated Git build/link/run with no Python/Git/Doxygen/PIO on child PATH; zero local fake callbacks and sizeof(Cli)=9416 host-ABI bytes |
+| Native host environment | PASS | Ordinary standalone tests-OFF CMake and installed managed PlatformIO native consumers; no framework firmware claim |
+| Sanitizers and other compilers | BLOCKED | Fresh trivial ASan/UBSan link probes exit 1: missing -lasan/-lubsan. MSVC, Clang and clang-format unavailable |
+| Physical/framework qualification | NOT RUN | Serial/connector/CC/INT behavior, Arduino/native-IDF firmware links, adapter aggregate blocking/framing bounds, board RAM/stack, electrical power policy and stable-VDD recovery remain separate evidence |
+
+Actual lead commands:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript|cli_contract" --output-on-failure
+& build/native/test/Release/tusb32x_cli.exe
+& build/native/test/Release/tusb32x_console.exe
+python tools/check_cli_contract.py --host build/native/test/Release/tusb32x_cli_host.exe
+python tools/check_cli_contract.py --host build/native/test/Release/tusb32x_cli_host.exe --self-test-negative
+python tools/test_cli_transcript.py --host build/native/test/Release/tusb32x_cli_host.exe
+python -m py_compile tools/tusb32x_cli_contract.py tools/test_cli_transcript.py tools/check_cli_contract.py
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python build/p22-final-check.py
+cmake -S examples/host/basic -B build/host-basic -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/host-basic --config Release
+& build/host-basic/tusb32x_host_basic.exe
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p22.tar.gz
+python build/p22-package.py
+
+g++ -std=c++17 -fsanitize=address build/p20-sanitizer.cpp -o build/p22-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p20-sanitizer.cpp -o build/p22-ubsan.exe
+git diff --check
+```
+
+Both sanitizer availability probes exit 1; required available checks pass. The
+inspected session-only scripts in ignored build/ check public XML, text and the
+source-equal archive. Extracted consumer checks supply absolute compiler/CMake/
+Ninja paths and remove maintainer tools from child PATH. They are independent
+applications using the shipped example sources, not successful firmware stubs.
+Finite CTest timeouts and explicit built fixture paths remain registered, with
+13 tests on other hosts and the additional launcher test on Windows. Final Git
+commit/sync equality and clean-state evidence belongs in the handoff and next
+progress update, avoiding a self-referencing hash loop. Prompt 23 is unstarted.

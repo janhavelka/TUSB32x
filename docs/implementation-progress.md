@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 21 operation CLI end to end; later prompts remain separate.
+Current authorization: implement prompt 22 complete CLI diagnostics/parity; later prompts remain separate.
 
 ## Prompt status
 
@@ -31,7 +31,7 @@ Current authorization: implement prompt 21 operation CLI end to end; later promp
 | [19: owner-portability](prompts/19-owner-portability.md) | COMPLETE |
 | [20: cli-foundation](prompts/20-cli-foundation.md) | COMPLETE |
 | [21: cli-operation-control](prompts/21-cli-operation-control.md) | COMPLETE |
-| [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | NOT STARTED |
+| [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | COMPLETE |
 | [23: arduino-transport](prompts/23-arduino-transport.md) | NOT STARTED |
 | [24: arduino-examples](prompts/24-arduino-examples.md) | NOT STARTED |
 | [25: idf-transport](prompts/25-idf-transport.md) | NOT STARTED |
@@ -1554,3 +1554,56 @@ See [validation](validation.md#prompt-21-managed-cli-operations-2026-10-28) for 
 commands and limits. The lead commits/syncs this checked unit on the same execution
 branch and verifies equality/clean state in the handoff; record the resulting
 commit in the next progress update. Prompt 22 remains unstarted.
+
+## Prompt 22 execution (2026-10-28)
+
+Started clean after fetch at synchronized prompt 21 commit
+`e1f5538f669af4f926af355f2bba904da9478049`, on the same execution branch/base.
+Read current parent/local AGENTS, index, full 22, COMMON, workflow/maintainability,
+CLI grammar/records/ownership and core raw/accounting/health/example contracts.
+The prerequisite CLI/console/transcript CTests passed again. No local workflow
+exists; remote CI remains prompt 34 only.
+
+Fresh TMP1x2/24Cxx/SHT3x/LDC1614/INA228 revisions, clean state, exact declarations,
+diagnostic/help/alias/parity/runner/workflow paths and adopted/rejected conventions
+are in [execution 22](audit/execution-22-peers.md). No sibling edits or builds.
+Comparison with core declarations found eleven missing canonical routes: now 55
+complete rows, all through public core APIs or the opt-in application input hook.
+
+Delegation: gpt-6.1-sol/high owns independent diagnostic C++ cases; another owns
+Python schemas, the persistent fixture/transcript and executable parity checker.
+gpt-6-astra/high audits peers and reviews raw safety, accounting and coverage.
+Lead owns production/build/docs/integration/verification and all Git operations.
+
+Raw callback attempts use ATTEMPTED, including backend failures, rather than
+claiming unchanged hardware/configuration. Local gates remain bus-silent.
+The reviewer identified missing profile mismatch/acquisition evidence; the new
+bounded CONFIG_DETAIL exposes it. All-source totals and managed health have
+explicit source labels. Assertion saturation uses a private pure helper tested
+with copied limit values, not public test seeds. A failed accepted raw write under
+full-output congestion retains UNKNOWN trust/uncertainty and never retries.
+
+PASS: strict Debug and Release each run all 14 registered CTests. The combined CLI
+suites execute 766,146 checks; the console executes 24,146. Executable parity
+checks 55 rows/164 canonical, alias and help routes, plus deliberate broken alias
+and required-field dependencies. The transcript runs 248 requests in one process,
+two managed-fault sessions, four input-reader modes and two raw-fault sessions.
+All 33 schemas and real formatter paths retain maximum-width/newline/NUL bounds.
+
+PASS: strict Doxygen/XML visibility, Python docstrings/style, local links/anchors,
+UTF-8/LF/whitespace and deterministic version sync/check. The current 43-file
+package matches source bytes and excludes test/audit/reference/tooling artifacts.
+Renamed tests-OFF ordinary and CLI applications beneath unrelated Git compile,
+link and run C++17 without maintainer tools on child PATH. CLI object storage is
+9416 host-ABI bytes; board RAM/stack remains unqualified. Standalone CMake and
+installed managed PlatformIO native consumers pass. Core and version are unchanged.
+
+Fresh ASan/UBSan probes are BLOCKED by absent MinGW runtimes; MSVC/Clang/clang-format
+are unavailable. Framework firmware, serial/CC/INT, adapter aggregate timing and
+electrical qualification are NOT RUN. Remote CI remains prompt 34 only.
+Exact commands/results are in
+[validation](validation.md#prompt-22-complete-cli-diagnostics-and-parity-2026-10-28).
+
+The lead commits/syncs this complete checked unit on the same execution branch,
+verifies upstream equality and clean state, and reports the resulting commit in
+the handoff/next progress update. Prompt 23 remains unstarted.

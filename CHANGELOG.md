@@ -11,6 +11,13 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Complete 55-row shared CLI with one-callback safe raw access, public pure
+  decoding, cached IRQ, opt-in input reading, explicit invalidation and independently
+  sourced health/transport evidence. Raw errors retain ATTEMPTED and signed
+  detail instead of implying unchanged hardware. Configuration mismatch/time
+  details and validity remain visible. Executable canonical/alias/help parity
+  and broken-contract fixtures join the existing transcript registration.
+
 - Managed CLI routes for initialization, observation, apply/verify/reconciliation,
   IRQ ACK/service, reset and original-part recovery through canonical core APIs.
   One owner poll honors automatic/explicit zero/one/N budgets without double

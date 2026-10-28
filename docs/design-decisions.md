@@ -605,3 +605,24 @@ maintainer-only dependency. Hardware and framework claims require separate evide
   nonterminal owner-time sample remains visible and leaves the operation active.
   A completed operation failure stays in RESULT; successful take/step delivery
   remains separate from that payload outcome and possible hardware effects.
+
+## Prompt 22 diagnostic sources and parity (2026-10-28)
+
+- Keep the eleven remaining routes in the existing dispatcher/output unit. Raw
+  access uses core Sync methods and supplied-byte decoding uses the public decoder;
+  no write mask, protocol, target scan or second renderer is introduced.
+- Report raw callback invocation from the documented terminal Status domain:
+  OK/I2C_* means one actual callback; local admission errors mean zero. This remains
+  exact when source counters saturate. ATTEMPTED preserves possible failed-write
+  effects rather than implying UNCHANGED; transport detail stays signed/full-width.
+- Label XFER as all_callbacks and DRV/MANAGED as managed_callbacks. Reject any
+  saturated exact assertion without summing counters. CLI xfer_reset requires no
+  active work or retained result, narrower than the unrestricted core clear API.
+  A valid clear changes neither managed health nor device trust/effects/history.
+- Add CONFIG_DETAIL for acquisition and mismatch evidence. Separate decoder code
+  validity from paired port applicability and cached IRQ history from input levels.
+  Input reading is explicit, optional, nonblocking and never configures GPIO.
+- Use one executable parity checker against actual help/commands/records and
+  backend deltas, sharing its help comparison with the persistent transcript.
+  Negative alias/required-field dependencies must fail. No source-token-only
+  inventory or extra passing transcript registration replaces behavior checks.

@@ -76,6 +76,16 @@ const char* resetName(t::ResetState state) {
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+const char* healthName(t::DriverState state) {
+  switch (state) {
+    case t::DriverState::UNINIT: return "UNINIT";
+    case t::DriverState::READY: return "READY";
+    case t::DriverState::DEGRADED: return "DEGRADED";
+    case t::DriverState::OFFLINE: return "OFFLINE";
+  }
+  return "UNKNOWN";
+}
+
 uint16_t applicableFields(t::Variant variant) {
   if (variant == t::Variant::TUSB320 || variant == t::Variant::TUSB320I) return 0x9B;
   if (variant == t::Variant::TUSB322I) return 0x7F;
@@ -209,6 +219,8 @@ const char* sectionName(const char* topic) {
   if (std::strcmp(topic, "lifecycle") == 0) return "Lifecycle";
   if (std::strcmp(topic, "interrupt") == 0) return "Interrupt";
   if (std::strcmp(topic, "job") == 0) return "Job";
+  if (std::strcmp(topic, "registers") == 0) return "Registers";
+  if (std::strcmp(topic, "diagnostics") == 0) return "Diagnostics";
   return topic;
 }
 
@@ -282,7 +294,8 @@ void Cli::acknowledge(const Request& request, const Response& response) {
       " action=%s token=%" PRIu64 " staged_generation=%" PRIu32 " desired_generation=%" PRIu32
       " applied_generation=%" PRIu32 " configuration=%s", request.command,
       t::errorName(response.status.code), response.status.detail,
-      response.status.ok() || response.status.inProgress() ? response.action : "UNCHANGED",
+      response.status.ok() || response.status.inProgress() || response.callbacks != 0
+          ? response.action : "UNCHANGED",
       response.token.value,
       _stagedGeneration, config.desiredGeneration, config.verifiedGeneration,
       configurationName(config.state));
@@ -311,6 +324,17 @@ void Cli::payload(const Request& request, const Response& response) {
     case Payload::NONE: break;
     case Payload::JOB: jobOutput(request, response.status); break;
     case Payload::RESULT: break; // deliverResult owns reservation and the transient copied value.
+    case Payload::REGISTER: registerOutput(request, response); break;
+    case Payload::IRQ: interruptOutput(request, diagnostics.interrupt); break;
+    case Payload::PIN:
+      record(request, "PIN", "source=application available=%u value=%s",
+          response.inputAvailable ? 1U : 0U,
+          response.inputAvailable ? response.inputLevel ? "1" : "0" : UNKNOWN);
+      break;
+    case Payload::INVALIDATE: record(request, "INVALIDATE", "reason=%s", response.reason); break;
+    case Payload::DRV: healthOutput(request, response.health, diagnostics); break;
+    case Payload::DIAG: diagnosticsOutput(request, diagnostics, _driver.transportStats()); break;
+    case Payload::XFER: transportOutput(request, response, _driver.transportStats()); break;
     case Payload::VERSION:
       record(request, "VERSION", "library=%s", t::VERSION);
       record(request, "FIRMWARE", "git=%s tree=%s build=%s", _platform.identity.git,
@@ -368,6 +392,127 @@ void Cli::payload(const Request& request, const Response& response) {
       portOutput(request, _driver.portSnapshot(), _platform.nowMs(_platform.user));
       break;
   }
+}
+
+void Cli::registerOutput(const Request& request, const Response& response) {
+  const auto variant = std::strcmp(response.source, "write") == 0
+      ? _driver.diagnostics().identity.variant : response.decoded.variant;
+  record(request, "REG", "source=%s variant=%s address=%u value=%u", response.source,
+      variantName(variant), static_cast<unsigned>(response.reg), static_cast<unsigned>(response.value));
+  if (std::strcmp(response.source, "write") == 0) return; // Requested image, not readback/proof.
+  const auto& decoded = response.decoded;
+  const auto statusValid = [&decoded](t::PortField field) {
+    return (decoded.statusValidFields & static_cast<uint16_t>(field)) != 0;
+  };
+  record(request, "DECODE", "variant=%s address=%u value=%u profile_valid_fields=%u"
+      " status_valid_fields=%u attachment=%s orientation=%s detected_current=%s accessory=%s"
+      " active_cable=%s interrupt_pending=%s reset_requested=%s reset_valid=%u",
+      variantName(decoded.variant), static_cast<unsigned>(decoded.reg), static_cast<unsigned>(decoded.value),
+      static_cast<unsigned>(decoded.profileValidFields), static_cast<unsigned>(decoded.statusValidFields),
+      statusValid(t::PortField::ATTACHMENT) ? attachmentName(decoded.attachment) : "UNKNOWN",
+      statusValid(t::PortField::ORIENTATION) ? orientationName(decoded.orientation) : "UNKNOWN",
+      statusValid(t::PortField::DETECTED_CURRENT) ? detectedName(decoded.detectedCurrent) : "UNKNOWN",
+      statusValid(t::PortField::ACCESSORY) ? accessoryName(decoded.accessory) : "UNKNOWN",
+      statusValid(t::PortField::ACTIVE_CABLE) ? decoded.activeCable ? "1" : "0" : UNKNOWN,
+      statusValid(t::PortField::INTERRUPT_PENDING) ? decoded.interruptPending ? "1" : "0" : UNKNOWN,
+      decoded.resetValid ? decoded.resetRequested ? "1" : "0" : UNKNOWN, decoded.resetValid ? 1U : 0U);
+  const auto& profile = decoded.profileCodes;
+  const auto valid = [&decoded](t::ProfileField field) {
+    return (decoded.profileValidFields & static_cast<uint16_t>(field)) != 0;
+  };
+  const auto control = [&valid](t::ProfileField field, bool disabled) {
+    return valid(field) ? disabled ? "off" : "on" : UNKNOWN;
+  };
+  const auto disable = [&valid](t::ProfileField field, bool disabled) {
+    return valid(field) ? disabled ? "1" : "0" : UNKNOWN;
+  };
+  // Values come only from the public decoder; these are codes without paired port applicability.
+  record(request, "DECODE_PROFILE", "variant=%s address=%u valid_fields=%u"
+      " mode=%s current=%s duty=%s debounce=%s preference=%s ufpaccessory=%s termination=%s"
+      " rd_rp=%s disable_ufp_accessory=%s disable_term=%s disable_rd_rp=%s",
+      variantName(decoded.variant), static_cast<unsigned>(decoded.reg),
+      static_cast<unsigned>(decoded.profileValidFields),
+      valid(t::ProfileField::PORT_MODE) ? modeName(profile.portMode) : UNKNOWN,
+      valid(t::ProfileField::SOURCE_CURRENT) ? currentName(profile.sourceCurrent) : UNKNOWN,
+      valid(t::ProfileField::DRP_DUTY_CYCLE) ? dutyName(profile.drpDutyCycle) : UNKNOWN,
+      valid(t::ProfileField::CC_DEBOUNCE) ? debounceName(profile.ccDebounce) : UNKNOWN,
+      valid(t::ProfileField::SOURCE_PREFERENCE) ? preferenceName(profile.sourcePreference) : UNKNOWN,
+      control(t::ProfileField::DISABLE_UFP_ACCESSORY, profile.disableUfpAccessory),
+      control(t::ProfileField::DISABLE_TERM, profile.disableTerm),
+      control(t::ProfileField::DISABLE_RD_RP, profile.disableRdRp),
+      disable(t::ProfileField::DISABLE_UFP_ACCESSORY, profile.disableUfpAccessory),
+      disable(t::ProfileField::DISABLE_TERM, profile.disableTerm),
+      disable(t::ProfileField::DISABLE_RD_RP, profile.disableRdRp));
+}
+
+void Cli::interruptOutput(const Request& request, const t::InterruptSnapshot& interrupt) {
+  record(request, "IRQ", "source=managed_operation observed=%u pending_before=%s ack_attempted=%u"
+      " ack_confirmed=%u pending_after=%s pending_after_valid=%u",
+      interrupt.observationValid ? 1U : 0U,
+      interrupt.observationValid ? interrupt.pendingBefore ? "1" : "0" : UNKNOWN,
+      interrupt.acknowledgeAttempted ? 1U : 0U, interrupt.acknowledgeConfirmed ? 1U : 0U,
+      interrupt.pendingAfterValid ? interrupt.pendingAfter ? "1" : "0" : UNKNOWN,
+      interrupt.pendingAfterValid ? 1U : 0U);
+}
+
+void Cli::transportOutput(const Request& request, const Response& response, const t::TransportStats& stats) {
+  char attempts[11], success[11], failures[11];
+  record(request, "XFER", "source=all_callbacks attempts=%" PRIu32 " success=%" PRIu32
+      " failures=%" PRIu32 " last_code=%s last_detail=%" PRId32 " saturated=%u assertion=%s"
+      " expected_attempts=%s expected_success=%s expected_failures=%s", stats.totalAttempts,
+      stats.totalSuccess, stats.totalFailures, t::errorName(stats.lastStatus.code), stats.lastStatus.detail,
+      countersSaturated(stats) ? 1U : 0U, response.assertion,
+      optionalCount(response.expectedAttempts, response.asserting, attempts),
+      optionalCount(response.expectedSuccess, response.asserting && response.assertAll, success),
+      optionalCount(response.expectedFailures, response.asserting && response.assertAll, failures));
+}
+
+void Cli::healthOutput(const Request& request, const t::HealthSnapshot& health,
+    const t::DriverDiagnostics& diagnostics) {
+  record(request, "DRV", "source=managed_callbacks state=%s threshold=%" PRIu32 " bound=%u initialized=%u"
+      " configuration=%s effect=%s termination=%s reset=%s managed_streak=%" PRIu32,
+      healthName(health.state), health.offlineThreshold, diagnostics.bound ? 1U : 0U,
+      diagnostics.initialized ? 1U : 0U, configurationName(diagnostics.configurationState),
+      effectName(diagnostics.hardwareEffect), terminationName(diagnostics.terminationState),
+      resetName(diagnostics.resetState), health.evidence.consecutiveFailures);
+}
+
+void Cli::diagnosticsOutput(const Request& request, const t::DriverDiagnostics& diagnostics,
+    const t::TransportStats& stats) {
+  record(request, "DIAG", "bound=%u initialized=%u configuration=%s effect=%s termination=%s reset=%s"
+      " config_write_unresolved=%u recovery_unresolved=%u mode_unresolved=%u reset_acceptance_uncertain=%u"
+      " last_kind=%s last_code=%s last_detail=%" PRId32,
+      diagnostics.bound ? 1U : 0U, diagnostics.initialized ? 1U : 0U,
+      configurationName(diagnostics.configurationState), effectName(diagnostics.hardwareEffect),
+      terminationName(diagnostics.terminationState), resetName(diagnostics.resetState),
+      diagnostics.configurationWriteUnresolved ? 1U : 0U, diagnostics.recoverySequenceUnresolved ? 1U : 0U,
+      diagnostics.modeTransitionUnresolved ? 1U : 0U, diagnostics.resetAcceptanceUncertain ? 1U : 0U,
+      kindName(diagnostics.lastOperationKind), t::errorName(diagnostics.lastOperationStatus.code),
+      diagnostics.lastOperationStatus.detail);
+  const auto& managed = diagnostics.managedTransport;
+  record(request, "MANAGED", "source=managed_callbacks initialized=%u success=%" PRIu32
+      " failures=%" PRIu32 " streak=%" PRIu32 " last_code=%s last_detail=%" PRId32
+      " last_success_ms=%" PRIu64 " last_success_time_valid=%u last_failure_ms=%" PRIu64
+      " last_failure_time_valid=%u", managed.initialized ? 1U : 0U, managed.totalSuccess,
+      managed.totalFailures, managed.consecutiveFailures, t::errorName(managed.lastStatus.code),
+      managed.lastStatus.detail, managed.lastSuccessUptimeMs, managed.lastSuccessTimeValid ? 1U : 0U,
+      managed.lastFailureUptimeMs, managed.lastFailureTimeValid ? 1U : 0U);
+  record(request, "FAILURE", "code=%s detail=%" PRId32 " time_ms=%" PRIu64 " time_valid=%u",
+      t::errorName(diagnostics.lastFailedTransportStatus.code), diagnostics.lastFailedTransportStatus.detail,
+      diagnostics.lastFailedTransportUptimeMs, diagnostics.lastFailedTransportTimeValid ? 1U : 0U);
+  const auto& identity = diagnostics.identity;
+  char bytes[17]{};
+  for (std::size_t index = 0; index < 8; ++index)
+    std::snprintf(bytes + index * 2, 3, "%02X", static_cast<unsigned>(identity.rawIdentity[index]));
+  char revision[4];
+  record(request, "IDENTITY", "variant=%s address=%u identity_valid=%u identity_matches=%u bytes=%s"
+      " revision=%s revision_valid=%u revision_matches=%u", variantName(identity.variant),
+      static_cast<unsigned>(identity.address), identity.identityValid ? 1U : 0U,
+      identity.identityMatches ? 1U : 0U, identity.identityValid ? bytes : UNKNOWN,
+      rawByte(identity.rawRevision, identity.revisionValid, revision), identity.revisionValid ? 1U : 0U,
+      identity.revisionMatches ? 1U : 0U);
+  interruptOutput(request, diagnostics.interrupt);
+  transportOutput(request, Response{}, stats);
 }
 
 void Cli::jobOutput(const Request& request, const t::Status& status) {
@@ -438,8 +583,7 @@ void Cli::deliverResult(const Request& request, Response response) {
   close(request, response.status, response.token);
 }
 
-void Cli::profileOutput(const Request& request) {
-  const auto snapshot = _driver.configurationSnapshot();
+void Cli::configurationOutput(const Request& request, const t::ConfigurationSnapshot& snapshot) {
   char raw08[4], raw09[4], raw0a[4], raw45[4];
   record(request, "CONFIG", "raw_valid_mask=%u observed_valid_fields=%u has_desired=%u"
       " has_observed=%u has_applied=%u desired_generation=%" PRIu32
@@ -453,6 +597,20 @@ void Cli::profileOutput(const Request& request) {
       rawByte(snapshot.rawConfig0A, (snapshot.rawConfigValidMask & t::CONFIG_0A_VALID) != 0, raw0a),
       rawByte(snapshot.rawConfig45,
           (snapshot.rawConfigValidMask & t::CONFIG_45_VALID) != 0, raw45));
+  char reg[4], expected[4], observed[4], mask[4];
+  record(request, "CONFIG_DETAIL", "observed_ms=%" PRIu64 " observed_time_valid=%u termination=%s reset=%s"
+      " mismatch_valid=%u mismatch_register=%s mismatch_expected=%s mismatch_observed=%s mismatch_mask=%s",
+      snapshot.observedUptimeMs, snapshot.observedTimeValid ? 1U : 0U,
+      terminationName(snapshot.terminationState), resetName(snapshot.resetState), snapshot.mismatchValid ? 1U : 0U,
+      rawByte(snapshot.mismatchRegister, snapshot.mismatchValid, reg),
+      rawByte(snapshot.mismatchExpected, snapshot.mismatchValid, expected),
+      rawByte(snapshot.mismatchObserved, snapshot.mismatchValid, observed),
+      rawByte(snapshot.mismatchMask, snapshot.mismatchValid, mask));
+}
+
+void Cli::profileOutput(const Request& request) {
+  const auto snapshot = _driver.configurationSnapshot();
+  configurationOutput(request, snapshot);
   const t::Variant retainedVariant = _driver.diagnostics().identity.variant;
   const uint16_t stagedFields = applicableFields(_config.variant);
   const uint16_t retainedFields = applicableFields(retainedVariant);

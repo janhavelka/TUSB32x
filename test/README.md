@@ -40,7 +40,7 @@ executable has no build-only passing CTest. To run the implemented local subset:
 ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
 ```
 
-All 44 canonical local/managed rows, aliases and implemented help topics run through
+All 55 canonical rows, aliases and help topics run through
 the real shared example sources. Tests cover zero callback deltas, whole-command
 rejection, staged/core separation, cross-family target edits, retained effects,
 poison/CRLF/backspace, cumulative input 64/one command, queue 8192/record 512/drain 256,
@@ -59,6 +59,27 @@ behavior. Request 24 may complete after request 25 and a changed marker. The
 existing C++ suite additionally exercises maximum-width result formatting and
 continued owner progress after request exhaustion. The persistent transcript uses
 the actual shared C++ fixture and separate transport/readback fault sessions.
+
+Prompt 22 completes diagnostics in `cli/test_cli_diagnostics.cpp`: exact raw
+callback bounds/status normalization and signed detail, reserved/variant decode,
+safe-write effects and exclusion, all-source versus managed counters/health,
+idle-only clear and saturation rejection, input availability, invalidation/forget
+gates, profile mismatch/time evidence and color/verbosity parity. A failed raw
+write under full output retains uncertainty and never retries. Console checks
+keep full diagnostic records atomic through zero/short writes and loss recovery.
+
+The same `cli_transcript` registration now covers diagnostics and input/raw fault
+sessions. `cli_contract` and `cli_contract_negative` execute the sole checker with
+`$<TARGET_FILE:tusb32x_cli_host>` and finite 60-second timeouts. Its help comparison
+is reused by the transcript; a broken alias or required record field must fail.
+Windows has 14 registered CTests, other hosts 13. No build-only passing fixture
+or second transcript registration is added.
+
+```text
+ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript|cli_contract" --output-on-failure
+python tools/check_cli_contract.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/check_cli_contract.py --host build/native/test/Debug/tusb32x_cli_host.exe --self-test-negative
+```
 
 Set `-DCMAKE_BUILD_TYPE=Debug` at configure time for a single-configuration
 generator (for example Ninja). Repeat in `build/release` with Release selected

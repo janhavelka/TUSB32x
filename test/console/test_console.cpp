@@ -350,6 +350,46 @@ void markerInsertionAndCumulativeEvidence() {
   CHECK(console.droppedRecords() == 2);
 }
 
+void diagnosticRecordsStayWhole() {
+  Console console;
+  Sink sink;
+  sink.acceptLimit = 0;
+  const std::string failure = "TUSB ACK schema=1 nonce=01234567890123456789012345678901"
+      " request=18446744073709551615 command=wreg code=I2C_TIMEOUT detail=-2147483648"
+      " action=ATTEMPTED token=0 staged_generation=4294967295 desired_generation=4294967295"
+      " applied_generation=4294967295 configuration=UNKNOWN\n";
+  const std::string end = "TUSB END schema=1 nonce=01234567890123456789012345678901"
+      " request=18446744073709551615 command=wreg outcome=FAILED code=I2C_TIMEOUT"
+      " detail=-2147483648 token=0 callbacks=1\n";
+  CHECK(failure.size() + 1 <= 512 && end.size() + 1 <= 512);
+  const auto fill = record(511);
+  std::string accepted;
+  for (unsigned index = 0; index < 17 && console.available() >= fill.size(); ++index) {
+    CHECK(console.enqueue(fill.data(), fill.size()));
+    accepted += fill;
+  }
+  CHECK(console.available() < failure.size());
+  const auto queued = console.queued();
+  CHECK(!console.enqueue(failure.data(), failure.size()));
+  CHECK(console.queued() == queued && console.droppedRecords() == 1);
+  CHECK(console.droppedBytes() == failure.size());
+  for (unsigned turn = 0; turn < 32; ++turn) {
+    CHECK(console.drain(Sink::write, &sink) == 0);
+    CHECK(console.droppedRecords() == 1 && console.droppedBytes() == failure.size());
+  }
+  CHECK(sink.bytes.empty());
+  sink.acceptLimit = 7;
+  drainAll(console, sink);
+  const std::string loss = "TUSB LOSS schema=1 dropped_records=1 dropped_bytes=" +
+      std::to_string(failure.size()) + "\n";
+  CHECK(sink.bytes == accepted + loss);
+  CHECK(sink.bytes.find("command=wreg") == std::string::npos);
+  CHECK(console.enqueue(failure.data(), failure.size()) && console.enqueue(end.data(), end.size()));
+  drainAll(console, sink);
+  CHECK(sink.bytes == accepted + loss + failure + end);
+  CHECK(console.droppedRecords() == 1 && console.droppedBytes() == failure.size());
+}
+
 void saturationWithoutPublicStateSeeds() {
   using tusb32x_cli::console_detail::saturatingAdd;
   constexpr uint32_t maximum = std::numeric_limits<uint32_t>::max();
@@ -386,6 +426,7 @@ int main() {
   fullQueueAtomicLossAndWrap();
   markerInsertionAndCumulativeEvidence();
   saturationWithoutPublicStateSeeds();
+  diagnosticRecordsStayWhole();
   std::printf("console: %zu checks, %d failures\n", checks, failures);
   return failures == 0 ? 0 : 1;
 }

@@ -12,8 +12,8 @@ TUSB320/I dead-battery recovery, complete read-only port refresh with cached
 publication, explicit IRQ acknowledgement/bounded service, safe raw diagnostics
 and passive health. Prompt 18 closes core protocol coverage gaps. Framework
 adapters and physical qualification remain later work. Prompts 20–21 deliver
-the bounded local CLI plus managed operation/control/result routes; remaining
-diagnostic command coverage belongs to prompt 22.
+the bounded local CLI plus managed operation/control/result routes. Prompt 22
+completes all diagnostic commands and executable alias/help/record parity.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

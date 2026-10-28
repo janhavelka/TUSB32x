@@ -21,7 +21,7 @@ namespace t = TUSB32x;
 /// @details This fixture models only the acceptance needed by the transcript, not silicon timing,
 /// electrical behavior or hardware qualification. No production route controls its fault mode.
 struct Bus {
-  enum class Fault { NONE, TRANSPORT, READBACK };
+  enum class Fault { NONE, TRANSPORT, READBACK, WRITE };
   uint8_t registers[256]{};
   uint64_t clock = 100;
   uint32_t calls = 0;
@@ -31,6 +31,7 @@ struct Bus {
   Fault fault = Fault::NONE;
   bool injected = false;
   bool written = false;
+  int input = -1; ///< -1 absent, -2 failed, otherwise the explicit application input level.
 
   Bus() {
     constexpr uint8_t identity[] = {0x30, 0x32, 0x33, 0x42, 0x53, 0x55, 0x54, 0};
@@ -47,7 +48,7 @@ struct Bus {
   }
 
   t::Status outcome(bool reading) {
-    if (!injected && (fault == Fault::TRANSPORT ||
+    if (!injected && (fault == Fault::TRANSPORT || (fault == Fault::WRITE && !reading) ||
         (fault == Fault::READBACK && reading && written))) {
       injected = true;
       return t::Status::Error(t::Err::I2C_TIMEOUT, "explicit host fixture fault",
@@ -88,7 +89,7 @@ struct Bus {
     if ((address != 0x47 && address != 0x60 && address != 0x61 && address != 0x67) ||
         tx == nullptr || txLength != 1 || rx == nullptr || timeout == 0 || timeout > 20 ||
         !((tx[0] == 0 && rxLength == 8) || (rxLength == 1 &&
-          (tx[0] == 0x08 || tx[0] == 0x09 || tx[0] == 0x0A || tx[0] == 0x45 || tx[0] == 0xA0))))
+          (tx[0] <= 0x0A || tx[0] == 0x45 || tx[0] == 0xA0))))
       return bus.reject();
     const auto status = bus.outcome(true);
     if (status.ok()) std::memcpy(rx, bus.registers + tx[0], rxLength);
@@ -97,6 +98,13 @@ struct Bus {
 };
 
 uint64_t nowMs(void* user) { return static_cast<Bus*>(user)->clock; }
+/// @brief Return only the explicitly selected test input; no GPIO or transport work.
+bool readInput(bool& value, void* user) {
+  const auto input = static_cast<Bus*>(user)->input;
+  if (input < 0) return false;
+  value = input != 0;
+  return true;
+}
 tusb32x_cli::AdapterCounters counters(void* user) {
   const auto& bus = *static_cast<Bus*>(user);
   return {true, bus.writes, bus.reads};
@@ -128,6 +136,13 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--fault") == 0) {
       if (std::strcmp(argv[index + 1], "transport") == 0) bus.fault = Bus::Fault::TRANSPORT;
       else if (std::strcmp(argv[index + 1], "readback") == 0) bus.fault = Bus::Fault::READBACK;
+      else if (std::strcmp(argv[index + 1], "write") == 0) bus.fault = Bus::Fault::WRITE;
+      else return 2;
+    } else if (std::strcmp(argv[index], "--input") == 0) {
+      if (std::strcmp(argv[index + 1], "0") == 0) bus.input = 0;
+      else if (std::strcmp(argv[index + 1], "1") == 0) bus.input = 1;
+      else if (std::strcmp(argv[index + 1], "unavailable") == 0) bus.input = -1;
+      else if (std::strcmp(argv[index + 1], "failure") == 0) bus.input = -2;
       else return 2;
     } else return 2;
   }
@@ -141,6 +156,7 @@ int main(int argc, char** argv) {
   platform.nowMs = nowMs;
   platform.write = writeOutput;
   platform.counters = counters;
+  if (bus.input != -1) platform.readInput = readInput;
   platform.user = &bus;
   platform.identity.build = "host-fixture";
   platform.identity.framework = "host";

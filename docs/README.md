@@ -22,7 +22,8 @@
 - [Protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md):
   repository-only requirement-to-test matrix and host evidence limits.
 - [CLI and operations](CLI.md): bounded input/output, local staging, managed
-  operation routing, explicit retained-result delivery and schema 1 records.
+  operations, raw/pure diagnostics, health/counters, retained-result delivery and
+  schema 1 records; executable parity checks cover the complete fixed inventory.
 - [Examples](../examples/README.md): the current portable consumer.
 
 Repository-only [implementation prompts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts),

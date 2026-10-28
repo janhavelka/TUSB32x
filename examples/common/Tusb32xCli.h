@@ -3,6 +3,7 @@
 #pragma once
 
 #include <TUSB32x/TUSB32x.h>
+#include <TUSB32x/CommandTable.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -36,7 +37,9 @@ struct FirmwareIdentity {
 struct Platform {
   uint64_t (*nowMs)(void*) = nullptr; ///< Required fresh monotonic owner time; modulo uint64 domain.
   ConsoleBuffer::WriteFn write = nullptr; ///< Required nonblocking output; at most 256 offered per tick.
-  bool (*readInput)(bool&, void*) = nullptr; ///< Optional pin reader; unused by this local subset.
+  bool (*readInput)(bool&, void*) = nullptr;
+      ///< Optional nonblocking input-level reader for intpin; true publishes the output bool.
+      ///< False means unavailable, even if it modified the bool. No GPIO setup or I2C is allowed.
   AdapterCounters (*counters)(void*) = nullptr; ///< Optional cached adapter counters; zero I2C.
   TUSB32x::Status (*validateTarget)(const TUSB32x::DriverConfig&, void*) = nullptr;
       ///< Optional bus-silent borrowed-handle/address validation before target edit or bind.
@@ -58,13 +61,13 @@ struct CommandRow {
   const char* aliases; ///< Comma-separated aliases, or none; no arbitrary alias expansion.
   const char* topic; ///< Implemented help section, lowercase ASCII.
   const char* syntax; ///< Complete implemented syntax only, without the human padding field.
-  const char* execution; ///< CACHE_ONLY, PURE or CORE_JOB; no raw/framework handlers yet.
-  const char* effect; ///< NONE, LOCAL_STATE, READ_OBSERVATION or DEVICE_WRITE.
+  const char* execution; ///< CACHE_ONLY, PURE, CORE_JOB, RAW_I2C or PLATFORM_ACTION.
+  const char* effect; ///< NONE, LOCAL_STATE, READ_OBSERVATION, DEVICE_WRITE or PLATFORM_EFFECT.
   const char* description; ///< Static human explanation including cached/stage effect label.
   const char* prerequisites = "none"; ///< Local admission/evidence prerequisite, no startup action.
   const char* capability = "all"; ///< Required value/control capability, checked before staging.
   const char* records = "ACK,END"; ///< Payload types; exact required keys are frozen in host schemas.
-  uint8_t maxCallbacks = 0; ///< Maximum callbacks per owner poll; command admission remains silent.
+  uint8_t maxCallbacks = 0; ///< Per-poll ceiling for jobs, per-handler ceiling for raw Sync routes.
   uint8_t txBytes = 0; ///< Maximum TX bytes per callback, not a whole-operation transaction count.
   uint8_t rxBytes = 0; ///< Maximum RX bytes per callback; zero for local-only rows.
   const char* fixture = "host"; ///< Behavioral evidence fixture; no hardware qualification.
@@ -86,6 +89,8 @@ const CommandRow* commandRows(std::size_t& count);
 /// work. Basic Status callbacks require fresh time after each call, so even larger budgets invoke
 /// at most one callback. Staging enters core desired only at accepted apply admission.
 /// No ISR/concurrent access or callback reentry is supported. Results remain owned by core.
+/// Raw register routes invoke at most one core Sync callback in the handler; core excludes active
+/// work/results. Cached diagnostics/decoder are passive. intpin invokes only the opt-in input hook.
 class Cli {
  public:
   /// @brief Copy local configuration/hooks and borrow the serialized driver; zero callbacks.
@@ -144,7 +149,8 @@ class Cli {
     char nonce[33] = "none";
   };
   enum class Payload : uint8_t {
-    NONE, VERSION, BUS, CONSOLE, CAPABILITIES, TARGET, PROFILE, PORT, JOB, RESULT
+    NONE, VERSION, BUS, CONSOLE, CAPABILITIES, TARGET, PROFILE, PORT, JOB, RESULT,
+    REGISTER, IRQ, PIN, INVALIDATE, DRV, DIAG, XFER
   };
   struct Response {
     TUSB32x::Status status{};
@@ -155,6 +161,21 @@ class Cli {
     bool stagedReset = false;
     TUSB32x::OperationToken token{};
     bool take = false;
+    uint8_t callbacks = 0;
+    uint8_t reg = 0;
+    uint8_t value = 0;
+    const char* source = "supplied";
+    TUSB32x::RegisterDecode decoded{};
+    TUSB32x::HealthSnapshot health{};
+    bool inputAvailable = false;
+    bool inputLevel = false;
+    const char* reason = "none";
+    bool asserting = false;
+    bool assertAll = false;
+    uint32_t expectedAttempts = 0;
+    uint32_t expectedSuccess = 0;
+    uint32_t expectedFailures = 0;
+    const char* assertion = "NONE";
   };
   TUSB32x::TUSB32x& _driver;
   TUSB32x::DriverConfig _config;
@@ -208,6 +229,20 @@ class Cli {
   void announceCompletion();
   void announceCompletion(const TUSB32x::OperationResult& result);
   void deliverResult(const Request& request, Response response);
+  /// @brief Inspect copied callback totals; a saturated source cannot prove exact equality.
+  static bool countersSaturated(const TUSB32x::TransportStats& stats);
+  /// @brief Compare exact copied totals, rejecting any saturation; no callback, mutation or sum.
+  /// @return OK for equality, INVALID_PARAM for saturation or mismatch; detail zero/static text.
+  static TUSB32x::Status assertCounters(const TUSB32x::TransportStats& stats,
+      uint32_t attempts, uint32_t success, uint32_t failures, bool all);
+  void registerOutput(const Request& request, const Response& response);
+  void interruptOutput(const Request& request, const TUSB32x::InterruptSnapshot& interrupt);
+  void configurationOutput(const Request& request, const TUSB32x::ConfigurationSnapshot& snapshot);
+  void diagnosticsOutput(const Request& request, const TUSB32x::DriverDiagnostics& diagnostics,
+      const TUSB32x::TransportStats& stats);
+  void transportOutput(const Request& request, const Response& response, const TUSB32x::TransportStats& stats);
+  void healthOutput(const Request& request, const TUSB32x::HealthSnapshot& health,
+      const TUSB32x::DriverDiagnostics& diagnostics);
 };
 
 }  // namespace tusb32x_cli
