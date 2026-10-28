@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit and fix completed prompts 16-18; later prompts remain separate.
+Current authorization: implement prompt 19; CLI/framework prompts remain separate.
 
 ## Prompt status
 
@@ -28,7 +28,7 @@ Current authorization: independently audit and fix completed prompts 16-18; late
 | [16: interrupt-service](prompts/16-interrupt-service.md) | COMPLETE |
 | [17: diagnostics-health](prompts/17-diagnostics-health.md) | COMPLETE |
 | [18: protocol-conformance](prompts/18-protocol-conformance.md) | COMPLETE |
-| [19: owner-portability](prompts/19-owner-portability.md) | NOT STARTED |
+| [19: owner-portability](prompts/19-owner-portability.md) | COMPLETE |
 | [20: cli-foundation](prompts/20-cli-foundation.md) | NOT STARTED |
 | [21: cli-operation-control](prompts/21-cli-operation-control.md) | NOT STARTED |
 | [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | NOT STARTED |
@@ -1425,3 +1425,34 @@ remote CI remains prompt34. See [validation](validation.md#independent-prompts-1
 The lead commits and syncs this complete checked audit on the same branch and
 reports final commit/equality in the handoff. Prompts 16-18 remain complete;
 prompt19 is not started.
+
+## Prompt 19 execution (2026-10-28)
+
+Resumed the existing branch from clean, fetched, synchronized
+`4207107e5fc9bf2d5b8f7464bb4342f7763317b9` (0 ahead/0 behind). No branch change.
+The lead owns production/registration/integration and Git. Two coding agents own
+disjoint consumer and scheduler fixtures; a strong reasoning agent independently
+reviews timing and current peers. See [peer revisions](audit/execution-19-peers.md).
+
+Coverage gaps found: fixed-capacity external scheduling/backpressure, literal
+physical108/110/111 deadline scenario, generation boundary arithmetic and isolated
+all-method consumption with allocation traps. No production timing defect found.
+Existing behavior is preserved while both generation increments now use a small
+private saturating helper. Final verification and sync evidence follow below.
+
+PASS: nine registered CTests in both strict Debug and Release; 4,196 scheduler,
+369 isolated-consumer and20,493 owner checks, plus existing core regressions.
+Consumer check/allocation sentinel exits1/86/86 are verified in both builds.
+Independent review corrected inherited compile/link flag handling in the new
+harness; restricted Windows PATH and runtime DLL isolation now pass. The lead
+reviewed actual sources and results, not only agent summaries.
+
+PASS: Doxygen/visible API, links/anchors/hash/version consistency, current38-file
+package and extracted tests-OFF consumption, native PlatformIO consumer. ASan and
+UBSan remain BLOCKED by missing runtimes; firmware/hardware are NOT RUN. No remote
+CI request. Exact commands, counts and scoped limitations are in
+[validation](validation.md#prompt-19-owner-portability-2026-10-28).
+
+The lead commits/syncs this complete unit on the same execution branch and verifies
+upstream equality in the handoff. Prompt20 remains unstarted and requires its own
+execution request; no CLI or framework implementation was added here.

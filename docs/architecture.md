@@ -29,11 +29,13 @@ Prompt 17 adds safe one-callback raw access and pure passive health. The
 | src/TUSB32x.cpp | Bounded pure binding/profile validation |
 | src/TUSB32xOperations.cpp | Atomic binding/lifecycle/evidence management and one cooperative initialization/profile/apply/verify/reconcile/reset/recovery/port/IRQ engine with private phases, immutable deadlines, tokens and retained results |
 | src/TUSB32xDiagnostics.cpp | Safe one-callback raw facade using existing composition/transport, and pure health validation/projection |
-| src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic and saturating publication sequence |
+| src/TUSB32xOwnerTime.h | Private unsigned token/owner-time arithmetic and saturating publication sequence/generations |
 | src/TUSB32xProtocol.h/.cpp | Private mapped terminal callbacks, single accounting boundary, possible-write evidence and pure exact identity/revision comparisons |
 | src/TUSB32xCodecs.h/.cpp | Public pure decoder, private complete-port interpretation, typed encoder/comparison and one actual-state-qualified write composer; no transport calls |
 | CMakeLists.txt | Explicit source list, PUBLIC C++17/include directory, tests OFF by default; no external maintainer tools for core consumption |
 | test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp, test/test_operations.cpp, test/test_protocol_conformance.cpp, test/test_profile_observation.cpp, test/test_profile_application.cpp, test/test_reset_recovery.cpp, test/test_port.cpp, test/test_interrupt.cpp and test/test_diagnostics.cpp | Registered validator/protocol/codec/owner/port/IRQ/diagnostics suites, plus compile-only standalone-header/signature fixtures |
+| test/test_owner_scheduling.cpp | Fixed external two-target scheduler, bounded queues/results and independent late-callback timing; no core scheduler |
+| test/consumer/portable/, test/consumer/run_portable.py | Isolated linked public consumer with allocation/failure sentinels; Python only coordinates maintainer CTest |
 | examples/host/basic/ | Standalone multi-file consumer of real values, validators, decoder and pure health; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/planned_api.cpp | Compile-only delivered API signature inventory; the former future-declaration sketch is no longer needed |

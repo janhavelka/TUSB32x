@@ -20,6 +20,10 @@ Prompt 17 adds `tusb32x_diagnostics`: bounded raw access, safe-image/sequence
 rejection, pre-callback invalidation, all-source/managed accounting, retained
 effects and pure health projection. Debug and Release checks stay active.
 
+Prompt 19 adds fixed-capacity external owner scheduling and an isolated linked
+public consumer with allocation/failure sentinels. See the
+[owner portability matrix](../docs/owner-portability.md) for named cases and limits.
+
 Run from the repository root using CMake 3.16 or newer and a C++17 compiler:
 
 ```text
@@ -34,6 +38,10 @@ at configure/build/test time. Tests default OFF. Strict GNU/Clang/MSVC warnings
 are private; suite checks stay active with NDEBUG, and test targets also undefine
 NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites:
 
+- `tusb32x_portable_consumer`: copies public headers, the built library and two
+  consumer translation units into a fresh tree; builds/runs without repository or
+  framework dependencies. Checks all current public methods, allocation traps and
+  deliberate failure exits. See [consumer instructions](consumer/portable/README.md).
 - `tusb32x_compile_contracts`: executed passive/Status checks across two TUs.
 - `tusb32x_validators`: variant/address/callback/timeout checks, exhaustive valid
   profile combinations, invalid enum bytes, input preservation and zero counting

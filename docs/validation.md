@@ -2207,3 +2207,67 @@ The old units were extracted read-only from HEAD with `git show`; no tracked
 production file was reverted. Ignored probes and extraction/visibility scripts
 were inspected and run by the lead. Permanent regressions use existing public
 operations and fixed fixtures; no public state seeds or second engine were added.
+
+## Prompt 19: owner portability (2026-10-28)
+
+Started from synchronized `4207107e5fc9bf2d5b8f7464bb4342f7763317b9` on the
+existing execution branch. The [peer audit](audit/execution-19-peers.md) and
+[named coverage matrix](owner-portability.md) distinguish new executable evidence
+from retained timing, IRQ and diagnostics regressions. No production timing defect
+was found. Both generation increments now use one directly tested private helper.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict full Debug and Release | PASS | Nine registered CTests in each configuration, nonzero discovery; five independently included public headers and contract fixtures compile; six C++ suites plus isolated consumer and two tooling suites |
+| External owner scheduler | PASS | 4,196 checks; two distinct targets, alternating turns during recovery wait/failure/repeated IRQ, two queued requests and one delivery slot per owner, retained core result under backpressure, exact request/token correlation, 0/1/255 budgets |
+| Physical late-write case | PASS | Literal108 callback start/deadline110 clips timeout to2; callback physically returns111; pending success becomes TIMEOUT, all three backend error kinds remain primary with full detail and possible write effect |
+| Generation boundary | PASS | Exact production helper at0/MAX-1/MAX; both desired/verified increments use it; owner suite now20,493 checks |
+| Isolated public consumer | PASS | Two TUs, 369 checks, every current facade method and helper links/runs; only copied headers/library/fixture and inherited compile/link flags; child PATH excludes Git/Python/Doxygen/PlatformIO, with compiler runtime DLLs supplied separately |
+| Allocation and live-check sentinels | PASS | Normal consumer0; deliberate check1; armed C++ allocation86; armed C allocation86 in Debug and Release; C wrapping enabled. Guard covers exercised core paths including construction/destruction, not dynamic runtime DLL internals |
+| Existing regression counts | PASS | 8,602,548 codec; 161,758 protocol; 35,454 profile observation; 93,440 apply; 88,779 reset/recovery; 622 public conformance; 71,617 IRQ; 495,667 port; 75,426 diagnostics; 76,452 validator checks; passive/constexpr/TU checks; 18 version and 2 launcher tests |
+| Documentation | PASS | Strict Doxygen and visibility of17 public structs/26 owner methods; local links/anchors, source hashes, UTF-8/LF and no-op version sync/check |
+| Native PlatformIO | PASS | Existing VS Code-managed Core6.1.19, native1.2.1, real basic consumer builds/runs; zero fake callback attempts. Existing Core fetched its tool-scons4.40801.0 dependency; no second Core installed |
+| ASan / UBSan | BLOCKED | Fresh GNU15.1 link probes cannot find `-lasan` / `-lubsan`; no sanitizer run claimed. Imported-consumer flags now preserve required runtime flags on supported hosts |
+| Firmware / hardware | NOT RUN | No linked Arduino/IDF firmware, electrical timing/current resampling, IRQ wiring or physical qualification; existing silicon gates unchanged |
+| Remote CI | NOT RUN | Explicit prompt34 scope; no dispatch/poll/wait |
+
+Tool versions: GNU15.1.0 MinGW, CMake/CTest4.0.1, Ninja1.12.1, Python3.12.10,
+Doxygen1.13.2 and PlatformIO Core6.1.19. MSVC, Clang and clang-format are absent.
+
+Integration initially caught Windows environment casing and missing runtime DLLs
+in the new isolation harness. Both were corrected without widening its tool PATH.
+Independent review caught missing inherited compile/link flags, which are now
+copied through a CMake initial-cache file including configuration-specific flags.
+The final full builds above run the corrected harness, including Release NDEBUG
+sentinels. No test failure was suppressed or counted as a successful consumer.
+
+Commands (PowerShell, repository root):
+
+```powershell
+cmake -S . -B build/p19-owner -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p19-owner --config Debug
+ctest --test-dir build/p19-owner -C Debug -R 'tusb32x_(operations|portable_consumer)$' --output-on-failure
+ctest --test-dir build/p19-owner -C Debug --output-on-failure
+cmake --build build/p19-owner --config Release
+ctest --test-dir build/p19-owner -C Release --output-on-failure
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+g++ -std=c++17 -fsanitize=address build/p17-sanitizer.cpp -o build/p19-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p17-sanitizer.cpp -o build/p19-ubsan.exe
+git diff --check
+```
+
+The two sanitizer probes fail for the stated unavailable runtimes. The registered
+consumer test retains fresh directories under `build/p19-owner/test/portable-*`
+with commands and output in CTest's `Testing/Temporary/LastTest.log`. Session-only
+Doxygen/link/package scripts under ignored build directories are evidence helpers,
+not downstream dependencies. The public consumer and coordinator are checked in.
+
+Additional package regression PASS: `scripts/pio.cmd pkg pack . --output
+build/TUSB32x-p19.tar.gz` then `python build/p19-package.py` verified38 source-equal
+exported files, matching IDF selection and all exported relative guide links. A
+renamed extracted tests-OFF consumer built/linked/ran beneath an unrelated Git
+repository with no maintainer tools on child PATH. This checks the current
+package boundary; prompt32 still owns the final distribution matrix.

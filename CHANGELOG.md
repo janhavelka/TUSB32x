@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Core owner portability checks: fixed-capacity two-device scheduling, queue/result
+  backpressure, late callback timing/error retention and bounded generation
+  saturation. A registered isolated public consumer runs every current facade
+  method with allocation traps and deliberate failure sentinels in Debug/Release.
+  Ordinary consumers still need only CMake and a C++17 toolchain.
+
 - Independent prompts 16-18 audit: prevent stale TUSB322I DRP mode bits from
   entering raw or typed 0A writes after observing an equivalent 00/11 recoding.
   Keep semantic trust separate from literal write-image permission and renew the

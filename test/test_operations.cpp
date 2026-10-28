@@ -17,6 +17,7 @@ int runProfileObservationChecks();
 int runProfileApplicationChecks();
 int runResetRecoveryChecks();
 int runProtocolConformanceChecks();
+int runOwnerSchedulingChecks();
 
 namespace {
 
@@ -1029,6 +1030,10 @@ void tokenBoundaryArithmetic() {
   next = 123;
   CHECK(!t::detail::nextToken(MAX_TIME, next) && next == 123);
   // Bounded arithmetic fixture, with no mutable public token seed or exhaustion loop.
+  const auto maximumGeneration = std::numeric_limits<uint32_t>::max();
+  CHECK(t::detail::nextGeneration(0) == 1);
+  CHECK(t::detail::nextGeneration(maximumGeneration - 1) == maximumGeneration);
+  CHECK(t::detail::nextGeneration(maximumGeneration) == maximumGeneration);
 }
 
 } // namespace
@@ -1053,6 +1058,7 @@ int main() {
   failures += runProfileApplicationChecks();
   failures += runResetRecoveryChecks();
   failures += runProtocolConformanceChecks();
+  failures += runOwnerSchedulingChecks();
   if (failures != 0) {
     std::printf("FAIL %d of %zu owner checks\n", failures, checks);
     return 1;

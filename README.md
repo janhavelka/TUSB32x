@@ -19,6 +19,10 @@ The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/pro
 maps TI/software requirements to named host tests, including both legal addresses,
 ambiguous writes, interrupted recovery and retained observations. These tests
 verify software contracts; physical adapters and hardware remain unqualified.
+The [owner portability checks](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/owner-portability.md)
+add two-device fairness/backpressure, independent late-callback timing and an
+isolated two-translation-unit consumer exercising the public API with allocation
+traps. These are host checks; framework and electrical qualification remain separate.
 For TUSB322I, an observed equivalent DRP recoding retains semantic trust but
 requires fresh complete proof before using a literal 0A write image again.
 

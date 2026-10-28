@@ -104,7 +104,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
   and run the six C++ suites (including `tusb32x_protocol`,
-  `tusb32x_operations`, `tusb32x_port` and `tusb32x_diagnostics`) plus
+  `tusb32x_operations`, `tusb32x_port` and `tusb32x_diagnostics`), the isolated
+  `tusb32x_portable_consumer` with allocation/failure sentinels, plus
   `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only signature/header
   contracts are never behavioral tests.

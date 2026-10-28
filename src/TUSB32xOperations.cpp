@@ -8,7 +8,6 @@
 #include "TUSB32xOwnerTime.h"
 
 #include <cstring>
-#include <limits>
 
 namespace TUSB32x {
 namespace {
@@ -17,10 +16,6 @@ Status error(Err code) { return Status::Error(code, errorName(code)); }
 
 // TI SLLSEN9F Table7-7 p18; SLLSEP2D/SLLSEQ8D Table9 p18. V fault bit3 is separate.
 constexpr uint8_t IRQ_PENDING = 0x10;
-
-void increment(uint32_t& value) {
-  if (value != std::numeric_limits<uint32_t>::max()) ++value;
-}
 
 // Persistent masks exclude live/RO, IRQ W1C, reset command and internal45 bits.
 // TI SLLSEN9F Table 7-7; SLLSEP2D/SLLSEQ8D Tables8-10; SLLSEO5D Tables6-8..6-10.
@@ -322,7 +317,7 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
     for (uint8_t i = 0; i < count; ++i) _writes[i] = writes[i];
     _configuration.desiredProfile = *candidate;
     _configuration.hasDesiredProfile = true;
-    increment(_configuration.desiredGeneration);
+    _configuration.desiredGeneration = detail::nextGeneration(_configuration.desiredGeneration);
     _configuration.mismatchValid = false;
     _phase = baseMode ? Phase::BASE_PRECHECK :
         count != 0 ? Phase::APPLY_WRITE : Phase::IDENTITY;
@@ -652,7 +647,7 @@ Status TUSB32x::publishConfiguration() {
     _configuration.state = ConfigurationState::KNOWN;
     _configuration.verifiedProfile = _configuration.observedProfile;
     _configuration.hasVerifiedProfile = true;
-    increment(_configuration.verifiedGeneration);
+    _configuration.verifiedGeneration = detail::nextGeneration(_configuration.verifiedGeneration);
     _diagnostics.configurationWriteUnresolved = false;
     _rdRpWriteImageValid = info.hasRdRp && (_observing.rawConfig45 & 0x03U) == 0;
     _modeWriteImageValid = true;

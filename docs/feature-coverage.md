@@ -305,7 +305,7 @@ arithmetic and saturation without public test seeds. Health threshold1/default3/
 UINT32_MAX and invalid0 cases, OFFLINE explicit work, failed initialization,
 clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
-Prompt 18 completes the core protocol coverage audit. Owner portability, CLI,
+Prompt 18 completes the core protocol coverage audit. Prompt 19 completes the core owner portability checks. CLI,
 adapters and electrical qualification remain later work.
 
 ## Independent prompts 16-18 audit
@@ -316,3 +316,13 @@ observations. Semantic trust remains KNOWN; raw/typed 0A changes require complet
 proof again. The updated [conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
 links the new named cases to the registered suites. IRQ behavior, passive health
 and unresolved silicon gates are unchanged.
+
+## Prompt 19 owner portability
+
+The [host ownership matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/owner-portability.md)
+maps each time/lifetime/accounting requirement to named registered tests. Existing
+sub-ms wait, rollover, health and interruption cases are retained. New evidence
+covers two-target fairness during waits/errors/repeated IRQ service, finite queue
+and result capacity, explicit108/110/111 callback deadline handling, generation
+saturation and a public-only two-TU consumer with allocation traps. This adds
+host evidence without changing silicon gates or introducing a core scheduler.

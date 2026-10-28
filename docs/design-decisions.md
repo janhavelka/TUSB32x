@@ -543,3 +543,18 @@ Separate 322I failure/interruption tests are necessary because its DFP/UFP plan
 has no L/A wait and no 45 proof read. The existing LAI matrix did not exercise
 those branches. Keep literal scripts in the current fixture and reuse existing
 error normalization tests instead of multiplying the entire suite by every part.
+
+## Prompt 19: executable owner portability (2026-10-28)
+
+The [current peer audit](audit/execution-19-peers.md) and
+[coverage matrix](owner-portability.md) retain the single terminal-callback engine.
+A small test-owned fixed scheduler proves two physical targets can progress while
+one waits, fails or services a still-pending IRQ. Queue/result backpressure is an
+external owner responsibility; no production scheduling abstraction is added.
+
+Private `nextGeneration` now supplies both existing saturating increments so a
+bounded boundary fixture tests the exact production arithmetic without public
+seeds. Behavior is unchanged. The independent consumer imports built objects and
+public headers only, inherits required ABI/sanitizer flags, and executes allocation
+traps with checked negative sentinels. Its Python isolation coordinator remains a
+maintainer-only dependency. Hardware and framework claims require separate evidence.

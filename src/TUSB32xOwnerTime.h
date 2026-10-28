@@ -10,6 +10,13 @@ namespace detail {
 
 inline constexpr uint64_t HALF_RANGE = uint64_t{1} << 63; ///< Ambiguous uint64 clock distance.
 
+/// @brief Advance a desired/verified generation without wrapping or inventing uniqueness.
+/// @param[in] previous Prior generation, initially zero.
+/// @return Prior plus one, or UINT32_MAX unchanged; no mutation or callbacks.
+constexpr uint32_t nextGeneration(uint32_t previous) {
+  return previous == std::numeric_limits<uint32_t>::max() ? previous : previous + 1;
+}
+
 /// @brief Advance a publication count without wrapping; saturation does not identify an event.
 /// @param[in] previous Previous publication count, initially zero.
 /// @return Previous plus one, or UINT64_MAX unchanged; no callbacks or mutable state.

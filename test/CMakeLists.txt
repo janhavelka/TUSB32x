@@ -5,7 +5,8 @@ add_executable(tusb32x_validators test_validators.cpp)
 add_executable(tusb32x_protocol test_protocol.cpp test_codecs.cpp)
 target_include_directories(tusb32x_protocol PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 add_executable(tusb32x_operations test_operations.cpp test_profile_observation.cpp
-  test_profile_application.cpp test_reset_recovery.cpp test_protocol_conformance.cpp)
+  test_profile_application.cpp test_reset_recovery.cpp test_protocol_conformance.cpp
+  test_owner_scheduling.cpp)
 target_include_directories(tusb32x_operations PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 add_executable(tusb32x_port test_port.cpp test_interrupt.cpp)
 target_include_directories(tusb32x_port PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
@@ -40,6 +41,35 @@ tusb32x_strict_warnings(tusb32x_header_contracts)
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+# Imported objects must keep ABI/sanitizer flags in the downstream link.
+set(consumer_flags "${CMAKE_CURRENT_BINARY_DIR}/consumer-flags.cmake")
+file(WRITE "${consumer_flags}" "# Parent compile/link flags; no source or tool lookup.\n")
+set(consumer_configurations Debug Release RelWithDebInfo MinSizeRel
+  ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE})
+list(REMOVE_DUPLICATES consumer_configurations)
+set(consumer_flag_variables CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS)
+foreach(configuration IN LISTS consumer_configurations)
+  string(TOUPPER "${configuration}" configuration_upper)
+  list(APPEND consumer_flag_variables
+    CMAKE_CXX_FLAGS_${configuration_upper} CMAKE_EXE_LINKER_FLAGS_${configuration_upper})
+endforeach()
+foreach(variable IN LISTS consumer_flag_variables)
+  file(APPEND "${consumer_flags}"
+    "set(${variable} [==[${${variable}}]==] CACHE STRING \"Inherited consumer flags\" FORCE)\n")
+endforeach()
+add_test(NAME tusb32x_portable_consumer
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/consumer/run_portable.py"
+    --source "${CMAKE_CURRENT_SOURCE_DIR}/consumer/portable"
+    --include "${PROJECT_SOURCE_DIR}/include"
+    --library "$<TARGET_FILE:TUSB32x>"
+    --toolchain-flags "${consumer_flags}"
+    --output "${CMAKE_CURRENT_BINARY_DIR}"
+    --cmake "${CMAKE_COMMAND}"
+    --compiler "${CMAKE_CXX_COMPILER}"
+    --make-program "${CMAKE_MAKE_PROGRAM}"
+    --generator "${CMAKE_GENERATOR}"
+    --config "$<CONFIG>")
+set_tests_properties(tusb32x_portable_consumer PROPERTIES TIMEOUT 120)
 add_test(NAME tusb32x_version_sync
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_version_sync.py")
 set_tests_properties(tusb32x_version_sync PROPERTIES TIMEOUT 120)
