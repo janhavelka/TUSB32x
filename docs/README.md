@@ -11,6 +11,8 @@
   component registration and package contents.
 - [Transport](transport.md): implemented private framing, access, accounting and
   identity checks, with adapter and later owner limits.
+- [Arduino transport](arduino-transport.md): borrowed Wire callbacks, SDK limits,
+  aggregate deadline, controller retirement and S2/S3 build fixtures.
 - [Diagnostics and health](diagnostics.md): safe raw access, retained effects,
   all-source/managed callback accounting and pure health projection.
 - [Variants](variant-matrix.md), [register map](register-map.md) and

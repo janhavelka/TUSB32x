@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Example-only Arduino Wire callbacks with borrowed ownership, aggregate SDK
+  budget, shared nonblocking serialization, safe short-write handling, explicit
+  failed-receive controller retirement and native 64-bit owner time. S2/S3 link
+  fixtures and host contracts cover the adapter; board timing/electrical
+  qualification and complete board examples remain separate.
+
 - Independent CLI audit: group help into one contiguous section per topic, reject
   duplicate/late records after request closure, and cover take-response capacity
   when the original completion is still unannounced. Core ownership stays unchanged.

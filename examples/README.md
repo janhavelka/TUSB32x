@@ -15,7 +15,9 @@ The CLI and console suites plus a persistent Python transcript test this same
 processor; the complete diagnostic inventory and executable parity/negative
 contract checks also use it. These prove no firmware or hardware integration.
 
-Arduino and native ESP-IDF transport/owner examples arrive in later prompts.
-Current component registration is build plumbing only, with no linked firmware
-or hardware qualification claim. No empty firmware environment or successful
-hardware stub is provided. See [development metadata](../docs/development.md).
+The [Arduino Wire adapter](../docs/arduino-transport.md) is implemented, with host
+contract tests and separate S2/S3 SDK link fixtures. It borrows the application
+bus and enforces the documented SDK configuration, aggregate budget, shared gate
+and failed-receive retirement. Complete board examples/CLI wiring and native
+ESP-IDF transport remain later prompts. Builds do not qualify electrical
+behavior or application timing. See [development metadata](../docs/development.md).

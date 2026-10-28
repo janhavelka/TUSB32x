@@ -227,3 +227,13 @@ Portable CLI code will consume public values and the single pure register
 decoder. Framework transport/console adapters stay under examples. Host runners
 own repeated fixture sequences rather than adding another core scheduler. No
 framework adapter, CLI, runner or hardware test is implemented in this stage.
+
+## Arduino callback boundary
+
+The [Wire adapter](arduino-transport.md) is a separate example translation unit.
+Its single controller context borrows TwoWire and owns no bus lifecycle. The
+application supplies one gate shared by all controller users and qualifying setup
+facts; no framework type enters public core headers. The existing engine and CLI
+call the same DriverConfig callbacks. SDK-only retirement is independent of core
+health, configuration trust and results. SDK build fixtures live under test;
+complete board examples follow separately.

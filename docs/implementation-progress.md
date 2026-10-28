@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit and fix completed prompts 20-22; prompt 23 remains separate.
+Current authorization: implement prompt 23, the Arduino transport adapter.
 
 ## Prompt status
 
@@ -32,7 +32,7 @@ Current authorization: independently audit and fix completed prompts 20-22; prom
 | [20: cli-foundation](prompts/20-cli-foundation.md) | COMPLETE |
 | [21: cli-operation-control](prompts/21-cli-operation-control.md) | COMPLETE |
 | [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | COMPLETE |
-| [23: arduino-transport](prompts/23-arduino-transport.md) | NOT STARTED |
+| [23: arduino-transport](prompts/23-arduino-transport.md) | COMPLETE (qualified SDK subset; hardware not tested) |
 | [24: arduino-examples](prompts/24-arduino-examples.md) | NOT STARTED |
 | [25: idf-transport](prompts/25-idf-transport.md) | NOT STARTED |
 | [26: idf-cli-example](prompts/26-idf-cli-example.md) | NOT STARTED |
@@ -1642,3 +1642,49 @@ remain BLOCKED by missing link runtimes; framework/hardware evidence is NOT RUN.
 Full commands are in [validation](validation.md#independent-cli-audit-2026-10-28).
 Only the reviewed audit unit is committed and synchronized on the existing
 branch; final commit/equality is reported in the handoff. Prompt 23 is unstarted.
+
+
+## Prompt 23: Arduino transport (2026-10-28)
+
+Entry `eba12f2` is clean and synchronized on the existing execution branch.
+The previous CLI audit commit equals its upstream. Read prompt 23, root/parent
+rules, COMMON, transport/time/lifetime, chip framing and maintainability contracts.
+Two inherited-model agents independently audited peer adapters and the pinned
+SDK deadline/terminality paths. A third owns disjoint recording host fixtures;
+the peer auditor owns only the S2/S3 link fixtures. The lead owns the adapter,
+registration, integration, documentation and Git.
+
+Selected installed pioarduino 55.03.311 / Arduino 3.3.11 / IDF 5.5.5 commit
+b774170ff46. Support is deliberately narrow: S2/S3, globally disabled Arduino
+HAL locks, shared nonblocking gate, prewarmed devices, same initialization core,
+SDK logging disabled and a qualified application CPU/scheduling bound. Per-phase
+SDK waits/cleanup are reserved before traffic. The exact driver can retain a
+receive-state flag after failure, so a failed receive retires the whole controller
+until explicit application teardown/reinitialization. No adapter recovery/retry.
+Wire code 2 remains generic; read errors expose only returned length.
+
+
+Implemented example-only terminal callbacks, 64-bit native owner clock, saturating
+Wire-call/buffer counters and one shared gate. A fresh independent reviewer found
+and corrected a post-copy timeout edge; its regression fails against the old path.
+The adapter preserves output on failure, restores timeout on every acquired-session
+exit and rejects insufficient SDK envelopes before traffic. No custom driver,
+core framework include, retries, second CLI or bus lifecycle ownership was added.
+
+PASS: strict Debug/Release each ran all 16 registered CTests. Final focused runs
+cover the added publication regression and compile guards; adapter suites execute
+1,129 checks at 1000Hz and 1,106 at 100Hz. All prior core/CLI/consumer/tooling suites
+remain passing. The lead also rebuilt both actual SDK targets: S2 and S3 link
+C++17 core, real Wire/HAL and every adapter entry point. Compilation databases
+verify global lock/log flags. S2 uses 17,888 RAM/250,632 flash bytes; S3 uses
+22,968 RAM/288,413 flash bytes. These are build-fixture sizes, not complete apps.
+
+PASS: strict Doxygen/public visibility, links/anchors/provenance and no-op version
+checks; the expanded 46-file package matches source and IDF selection, excludes
+fixtures/reference code, and supports isolated tests-OFF core/CLI consumers without
+maintainer tools. Exact sources/choices are in [the audit](audit/execution-23-arduino.md)
+and commands/results in [validation](validation.md#prompt-23-arduino-transport-2026-10-28).
+Application scheduling qualification, physical timing/electrical tests and flashing
+are NOT RUN. Complete board examples and native IDF adapter remain later work.
+The lead commits/syncs this unit on the same execution branch and reports verified
+upstream equality in the handoff; no self-referencing hash update is required.

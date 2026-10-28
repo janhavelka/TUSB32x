@@ -43,6 +43,29 @@ foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_prot
   set_tests_properties(${suite} PROPERTIES TIMEOUT 30)
 endforeach()
 
+# Compile the real example adapter against recording SDK fixtures at two tick rates.
+foreach(rate IN ITEMS 1000 100)
+  set(wire_suite tusb32x_arduino_wire_${rate})
+  add_executable(${wire_suite} arduino_wire/test_wire.cpp ../examples/arduino/Tusb32xWire.cpp)
+  target_link_libraries(${wire_suite} PRIVATE TUSB32x)
+  target_include_directories(${wire_suite} PRIVATE arduino_wire/fakes ../examples/arduino)
+  target_compile_definitions(${wire_suite} PRIVATE CONFIG_DISABLE_HAL_LOCKS=1
+    CORE_DEBUG_LEVEL=0 configTICK_RATE_HZ=${rate})
+  if(rate EQUAL 1000)
+    target_compile_definitions(${wire_suite} PRIVATE CONFIG_IDF_TARGET_ESP32S2=1 CONFIG_IDF_TARGET_ESP32S3=0)
+  else()
+    target_compile_definitions(${wire_suite} PRIVATE CONFIG_IDF_TARGET_ESP32S2=0 CONFIG_IDF_TARGET_ESP32S3=1)
+  endif()
+  tusb32x_strict_warnings(${wire_suite})
+  if(MSVC)
+    target_compile_options(${wire_suite} PRIVATE /UNDEBUG)
+  else()
+    target_compile_options(${wire_suite} PRIVATE -UNDEBUG)
+  endif()
+  add_test(NAME ${wire_suite} COMMAND ${wire_suite})
+  set_tests_properties(${wire_suite} PROPERTIES TIMEOUT 30)
+endforeach()
+
 # Each header is the only include in its generated translation unit.
 set(header_contract_sources)
 foreach(header IN ITEMS Status Config TUSB32x CommandTable Version)

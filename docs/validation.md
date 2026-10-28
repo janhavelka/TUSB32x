@@ -2568,3 +2568,65 @@ it with an explicit UTF-8 read fixed the helper, and both extracted consumers
 then passed. These were local verification issues, not suppressed failures.
 Final commit/sync evidence is reported in the handoff without a self-referencing
 commit-hash update loop. Remote CI was not queried under the initial promptset rule.
+
+## Prompt 23: Arduino transport (2026-10-28)
+
+Delivered example-only terminal Wire callbacks with the source-audited SDK subset
+described in [integration](arduino-transport.md). Peer revisions, exact SDK source
+hashes and review decisions are in [the audit](audit/execution-23-arduino.md).
+No framework dependency was added to core or shared CLI compilation.
+
+Tools: host GCC15.1.0, CMake/CTest4.0.1, Ninja1.12.1, Python3.12.10, Doxygen1.13.2;
+managed PlatformIO6.1.19; pioarduino55.03.311; Arduino3.3.11;
+IDF5.5.5+sha.b774170ff46; target GCC14.2.0+20260121.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict Debug/Release host matrix | PASS | 16/16 registered tests in each, including all core/CLI/consumer regressions; assertions active in Release |
+| Adapter contract | PASS | Final focused runs: 1,129 checks at 1000Hz, 1,106 at 100Hz; actual adapter compiled against recording SDK headers |
+| Error and output edges | PASS | Exact pointer STOP/read STOP, short writes with flush/no transfer, partial/invalid receive retirement across target addresses, code2 generic and code5 timeout, signed detail, unchanged failed output, timeout restoration, no bus begin/end, gate contention and wrong-core/ISR rejection |
+| Aggregate envelope | PASS | Independent fake time consumes derived SDK wait/cleanup envelopes; preflight rejection, remaining-phase clipping, coarse ticks, cap width, native time across millis rollover, saturation and deliberately late backend failures |
+| Publication regression | PASS | Prior post-copy timeout path produces two expected failures; corrected path has no fallible check after copying caller output |
+| ESP32-S2 SDK link | PASS | esp32-s2-saola-1; 17,888 bytes RAM, 250,632 bytes flash; real Wire/HAL/core/adapter linked |
+| ESP32-S3 SDK link | PASS | esp32-s3-devkitc-1; 22,968 bytes RAM, 288,413 bytes flash; real Wire/HAL/core/adapter linked |
+| SDK configuration evidence | PASS | Compilation databases show C++17 and required lock/log flags on Wire and adapter, same global flags on HAL C; target nm confirms all four adapter entry points |
+| Documentation/version | PASS | Strict Doxygen and XML visibility of four adapter functions plus Context/WireStats; existing core visibility guards, local links/anchors, UTF-8/LF/whitespace, vendor hashes and no-op version check |
+| Distribution boundary | PASS | 46 source-equal archive files, matching IDF export selection; tests/fakes/SDK fixtures excluded; isolated tests-OFF C++17 core and CLI consumers link/run without maintainer tools |
+| Sanitizers | BLOCKED | Installed GCC lacks ASan/UBSan link runtimes; no sanitizer pass claimed |
+| Physical/application qualification | NOT RUN | No flash, board scheduling/CPU bound, CC/INT/VBUS behavior, electrical timing or cleanup acceptability measured |
+
+Actual commands:
+
+```powershell
+cmake -S . -B build/p23 -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p23 --config Debug
+ctest --test-dir build/p23 -C Debug --output-on-failure
+cmake --build build/p23 --config Release
+ctest --test-dir build/p23 -C Release --output-on-failure
+ctest --test-dir build/p23 -C Debug -R arduino_wire --output-on-failure
+ctest --test-dir build/p23 -C Release -R arduino_wire --output-on-failure
+& build/p23/test/Release/tusb32x_arduino_wire_1000.exe
+& build/p23/test/Release/tusb32x_arduino_wire_100.exe
+scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2 -e arduino_s3
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python scripts/generate_version.py check
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p23.tar.gz
+python build/p23-package.py
+git diff --check
+```
+
+Final focused checks were repeated after the publication regression and
+configuration guards were completed; the full preceding matrix had passed.
+Session-only source/hash/XML/package checks remain in ignored build output.
+The SDK fixture initially exposed Arduino macro collisions and a leftover SDK
+C++20 flag; it now avoids the unnecessary Arduino.h include and explicitly
+removes that flag before selecting C++17. Both real targets were rebuilt.
+
+The declared bound is conditional on the integration prerequisites, especially
+qualified whole-callback CPU/scheduling overhead and same-core exclusive ownership.
+Receive failure retires the entire controller until explicit application
+teardown/reinitialization; it does not silently recover. This conservative subset
+is usable without making an unmeasured hardware guarantee. Remote CI remains
+prompt34 only. Final commit/upstream equality is reported in the handoff.

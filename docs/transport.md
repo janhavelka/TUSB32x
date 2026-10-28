@@ -98,3 +98,10 @@ evidence, even for NACK_ADDR or I2C_BUSY. The fake proves that the same failure
 can occur before or after a device mutation. Callback success does not establish
 the final state or public HardwareEffect::CONFIRMED; later readback/owner policy
 must do that. See [accounting contracts](api-contracts.md#transport-accounting-and-passive-health).
+
+## Arduino integration
+
+The example-only [Wire adapter](arduino-transport.md) implements terminal callbacks
+for the pinned S2/S3 SDK. Its shared gate, configuration prerequisites, divided
+aggregate budget and failed-receive controller retirement are adapter constraints.
+Portable core code does not include Wire.

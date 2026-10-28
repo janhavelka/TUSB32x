@@ -53,7 +53,8 @@ their safe control image; apply requires known actual controls at admission.
 
 Prompt 9 implements the [private terminal transport](transport.md) and its host
 protocol checks. The facade and owner procedures through interrupt service are
-implemented in prompts 11-16. SDK adapters remain planned;
+implemented in prompts 11-16. The [Arduino adapter](arduino-transport.md) now
+implements the selected framing for a pinned SDK;
 physical framing/timing qualification is separate and has not been performed.
 
 Every logical read selects a one-byte pointer, including repeated reads of the

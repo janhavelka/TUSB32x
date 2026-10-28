@@ -408,3 +408,15 @@ presence. Transcript session tests reject records after closure, including local
 requests. The owner regression covers both five-versus-eight-record reservation
 outcomes before exact result take, keeping original completion and query delivery
 separate. No core method, silicon gate or framework support claim changes.
+
+## Arduino adapter (prompt 23)
+
+Example-only write/writeRead callbacks and ownerNowMs are implemented for the
+pinned S2/S3 SDK configuration. Actual host contract suites compile the adapter
+with recording backends at normal/coarse tick rates; real SDK fixtures link both
+targets. Explicit pointer STOP/read STOP, aggregate clipping, error detail,
+short transfers, shared gate/retirement, timeout restoration, 64-bit time and
+counter saturation have executable evidence. See [integration](arduino-transport.md)
+for the source-derived bound and application prerequisites. Core compilation and
+CLI dispatch are unchanged. Board scheduling/CPU qualification, electrical traces
+and complete board examples remain separate work.

@@ -17,7 +17,9 @@ Managed CLI operations now use the core engine, preserve request/nonce/token
 correlation and retain results until explicit take. All 55 contracted CLI rows now
 include raw diagnostics, pure decoding, cached health/counters and explicit external
 invalidation. Executable parity checks exercise the real shared C++ fixture;
-firmware adapters remain planned.
+the [Arduino Wire adapter](docs/arduino-transport.md) now provides terminal callbacks
+for a narrowly qualified pinned S2/S3 SDK configuration. Complete board examples
+and native-IDF integration remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 

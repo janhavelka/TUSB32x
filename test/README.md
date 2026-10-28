@@ -424,3 +424,16 @@ persistent transcript injects schema-valid duplicate/contradictory terminal and
 late payload records captured from the real fixture; request closure is separate
 from operation-token completion order. Existing alias/schema negatives remain in
 the same registered checker. See `docs/validation.md` for current results.
+
+## Arduino adapter checks
+
+The registered tusb32x_arduino_wire_1000 and tusb32x_arduino_wire_100 suites compile
+the actual example adapter against recording SDK headers at two tick rates.
+See [fixture details](arduino_wire/README.md). The Windows host total is now 16
+registered suites; Release checks remain active. Real framework links are separate:
+
+    scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2 -e arduino_s3
+
+The pinned fixtures link all adapter entry points with the core. They do not begin
+a bus, run a device demo or flash hardware. Application prerequisites and deadline
+qualification are in [the integration guide](../docs/arduino-transport.md).

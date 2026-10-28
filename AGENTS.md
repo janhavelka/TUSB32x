@@ -16,8 +16,10 @@ observation, explicit desired-profile apply/verification, read-only reconciliati
 explicit reset, original TUSB320/I dead-battery recovery and complete read-only
 port refresh with cached publication, plus explicit interrupt acknowledgement and
 bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
-diagnostics views and pure passive health projection. Framework firmware remains
-planned. The example-only common CLI implements bounded local help/identity,
+diagnostics views and pure passive health projection. The example-only Arduino
+Wire adapter has host contracts and S2/S3 SDK link fixtures; complete board
+examples and native-IDF integration remain planned. The example-only common CLI
+implements bounded local help/identity,
 cache/target/lifecycle queries and edits, and independent validated profile staging.
 Managed operation/control/result routes also use the core engine with one poll
 per turn and explicit retained-result take. The full 55-row shared CLI also provides
@@ -356,3 +358,14 @@ Do not create empty files or successful hardware stubs to fill the tree.
 - Handoff states the result, validation and limits, branch/commit and sync result,
   with links to useful files. Keep hardware qualification separate from software
   readiness and avoid claiming support beyond the evidence.
+
+## Arduino adapter checks
+
+Prompt 23 adds two registered recording-backend suites for the actual example
+adapter at 1000Hz and 100Hz ticks. The full Windows host matrix now has 16 tests.
+Run the real SDK fixtures with scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2
+-e arduino_s3. These link Arduino 3.3.11/IDF5.5.5 on pinned pioarduino 55.03.311;
+no flash or board qualification is implied. Read docs/arduino-transport.md before
+using the adapter: same initialization core, globally disabled HAL locks,
+shared gate, prewarmed handles, qualified CPU overhead and controller-wide
+retirement after a failed receive are required. Framework types stay outside core.
