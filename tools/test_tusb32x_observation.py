@@ -363,6 +363,40 @@ class ObservationInvocationTests(unittest.TestCase):
         for option in ("--suite", "--dry-run", "--run-timeout", "--expect-commit", "--out"):
             self.assertIn(option, output.getvalue())
 
+    def test_session_construction_cannot_renew_the_whole_run_deadline(self):
+        """Late Session setup fails before traffic under the original absolute run bound."""
+        from test_tusb32x_hil_runner import FakeClock, PlanPeer
+
+        clock = FakeClock()
+        peer = PlanPeer(clock)
+        peer.settings = {"port": "COM_TEST"}
+        original_session = runner.Session
+
+        def delayed_session(*args, **kwargs):
+            """Consume the complete run budget before entering the real Session/plan."""
+            clock.now += 2
+            return original_session(*args, clock=clock, **kwargs)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "evidence"
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()), \
+                    mock.patch.object(runner, "host_identity", return_value={}), \
+                    mock.patch.object(runner.time, "monotonic", side_effect=clock), \
+                    mock.patch.object(runner, "Session", side_effect=delayed_session), \
+                    mock.patch.object(runner, "open_serial", return_value=peer) as opened:
+                code = runner.main([
+                    "--port", "COM_TEST", "--out", str(directory),
+                    "--run-timeout", "1", "--command-timeout", "1"])
+            report = json.loads((directory / "report.json").read_text("utf-8"))
+        self.assertEqual(code, 1)
+        self.assertEqual(report["exit_code"], 1)
+        self.assertEqual(report["primary"], "FAIL")
+        self.assertEqual(report["checks"]["readonly"]["status"], "NOT RUN")
+        self.assertFalse(peer.writes)
+        self.assertEqual(peer.attempts, 0)
+        self.assertTrue(peer.closed)
+        opened.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

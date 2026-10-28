@@ -1678,6 +1678,39 @@ class ObservationExecutionTests(unittest.TestCase):
                 self.assert_failed_plan(fixture, "cached/rejected")
                 self.assertNotIn("profile.read", map(runner.canonical_command, peer.writes))
 
+    def test_readonly_requires_the_validated_current_edit_without_other_staging_changes(self):
+        """OK alone cannot prove staging changed exactly the requested local field."""
+        for changed in ({"current": "default"}, {"mode": "ufp"}):
+            with self.subTest(changed=changed):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+
+                def ignore_or_change(text, rows):
+                    """Ignore the first current edit or change an unrelated staged field."""
+                    if text == "current 1a5":
+                        peer.staged.update(changed)
+                        return [dict(row, **changed) if row["type"] == "PROFILE" and
+                                row["source"] == "staged" else row for row in rows]
+                    return rows
+
+                peer.response_hook = ignore_or_change
+                self.assert_failed_plan(fixture, "validated CLI staging")
+                self.assertFalse(any(text.startswith("apply") for text in peer.writes))
+                self.assertEqual(fixture[3].snapshot()["exit_code"], 1)
+
+    def test_unknown_extensions_do_not_become_required_profile_or_result_evidence(self):
+        """Changing extension telemetry is retained without changing known semantic proof."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        peer.response_hook = lambda text, rows: [
+            dict(row, extension_trace=str(peer.request)) if row["type"] in {
+                "CONFIG", "CONFIG_DETAIL", "PROFILE", "RESULT", "RESULT_DETAIL"} else row
+            for row in rows]
+        self.execute(fixture)
+        self.assertEqual(fixture[3].snapshot()["exit_code"], 0)
+        self.assertIn("extension_trace", fixture[3].metadata["local_before"]["profile"])
+        self.assertTrue(any(text == "result" for text in peer.writes))
+
     def test_staging_cannot_change_retained_core_profiles(self):
         """The independent stage check catches a CLI setter that also changes core desire."""
         fixture = self.make_plan_session()

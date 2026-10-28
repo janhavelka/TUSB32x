@@ -96,6 +96,8 @@ apply, reset or IRQ ACK. Explicit orientation, accessory, role-current and inter
 plans require identified fixtures, setup/identity/supply prerequisites and bounded
 operator observations. They use ordinary operations and conditional cleanup;
 unknown or failed effects are never automatically retried/restored.
+One absolute deadline covers selected suite groups. Actual acquisition masks and
+validated staging must support the complete candidate before device writes.
 [Hardware prerequisites](docs/hardware-validation.md)
 keep physical serial and Type-C qualification separate from native/fake-serial tests.
 

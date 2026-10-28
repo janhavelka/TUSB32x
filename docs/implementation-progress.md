@@ -2150,3 +2150,82 @@ reported no remaining production gap. Commit/sync this completed prompt on the
 same execution branch, verify upstream equality/zero ahead-behind and no task
 changes in the handoff; record its hash in the next progress update. Prompt31 is
 unstarted. No physical qualification is inferred from software PASS.
+
+## Independent audit of prompts 29 and 30 (2026-10-28)
+
+Started clean at completed prompt30 commit
+`770e4f6bb892de2df72fb712693d90759ca7c6cd` on
+`promptset/tusb32x-implementation-20261023`; fetch confirmed equal upstream and
+zero ahead/behind. Re-read both original prompts in full, current parent/local
+rules, COMMON, CLI/runner contracts, baseline observation/profile/IRQ/capability
+and owner/timing rules, maintainability and delegation instructions. Compared the
+actual implementation and tests with requirements rather than prior summaries.
+
+Fresh read-only peer review found these clean revisions:
+
+| Peer | HEAD |
+| --- | --- |
+| TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
+| 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` |
+| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` |
+
+Inspected each peer's root AGENTS and `.github/workflows/ci.yml`, public headers
+`include/TMP1x2/TMP1x2.h`, `include/EEPROM24Cxx/EEPROM24Cxx.h`,
+`include/LDC1614/LDC1614.h` and `include/INA228/INA228.h`, and shared CLI headers
+`examples/common/Tmp1x2Cli.h`, `examples/common/Eeprom24CxxCli.h` and
+`examples/common/Ldc1614Cli.h`. Re-read TMP1x2
+`tools/hil_tmp1x2_runner.py` and `tools/test_hil_tmp1x2_runner.py`,
+24Cxx `tools/hil_runner.py` and `tools/test_cli_transcript.py`, LDC1614
+`tools/ldc1614_hil_runner.py` and `tools/test_ldc1614_hil_runner.py`, and INA228
+`test/test_basic.cpp` transfer-budget/owner-exclusion cases. Revisited current
+TUSB `test/test_interrupt.cpp`, `test/test_profile_application.cpp`, public
+declarations, shared CLI, Python schemas/plans/session and CTest registration.
+The archived base/LI-HI/LAI-HAI TI tables were re-read; native literal vectors cite
+SLLSEQ8D Tables8/9 pp17-18. Adopt finite runs, saturation rejection, persistent
+actual CLI and independent observations/separate outcomes. Reject sensor bulk
+commands, EEPROM scratch restoration, textual PASS and peer-specific health or
+cleanup policies. No local workflow exists; no remote CI or sibling changes.
+
+Parallel independent reviewers used gpt-6.1-sol/high for prompt29 timing/plans
+and peer/requirements/native coverage, and gpt-6-astra/high for mutation safety,
+evidence and cleanup. After findings were confirmed, disjoint ownership covered
+observation/invocation tests, fixture tests and the native transcript. The lead
+owned production corrections, integration, final actual-diff review, docs and Git.
+
+Confirmed and fixed renewed whole-run deadlines after Session construction,
+mixed-suite duration rejection after earlier fixture work, and external fixture
+replies accepted after their individual transition deadline. One absolute bound
+now survives all groups without changing requested duration ceilings. Late true
+and false replies both fail. Runtime regressions reproduced the deadline defects
+before the correction and passed afterward.
+
+Confirmed false PASS paths from missing CONFIG acquisition/field proof and
+ignored/contradictory CLI staging. Require complete matching observed evidence,
+stage and validate the complete actual-derived candidate, and verify unchanged
+fields as well as requested changes. IRQ's 30%-staged/50%-actual experiment now
+proves the differing stage before ACK. Readonly similarly proves its exact local
+edit. Unknown extensions remain recorded without becoming semantic requirements;
+Session remains the single immutable known-result comparison. Native physical
+inputs now use independent literal bytes rather than the plan's expectations;
+two deliberately wrong expectation cases prove real C++ evidence rejects them.
+Updated stale guidance and affected guides; no core, adapter, CLI grammar,
+scheduler, firmware route or test registration was added.
+
+PASS: final full strict Debug63/63 and Release63/63 CTests, including237 Python
+runner cases, four complete native fixture plans and two independent native
+mismatch rejections. Fresh tests-OFF host runs;76 source-equal packed files and
+renamed extracted host/shared-CLI/public-owner consumers pass beneath unrelated
+Git without maintainer tools on child PATH (owner5487 checks/0failures).
+Readonly and four-suite portless dry-runs save actual exit2/hardware NOT RUN.
+Version/no-op sync, Doxygen/public XML, Python docs/style, links/vendor hashes and
+UTF-8/LF/whitespace checks pass. Exact commands and limitations are in the
+[validation audit](validation.md#independent-audit-of-prompts-29-and-30-2026-10-28).
+
+ASan/UBSan probes still fail for missing installed MinGW runtimes; alternative
+compilers/clang-format remain absent. Physical serial/I2C/CC/INT/current/supply/
+VBUS/VCONN and real adapter timing remain NOT RUN. No hardware or framework build
+claim follows from native model success. Prompt31 remains unstarted. The lead
+commits and syncs this complete checked audit on the same execution branch, then
+verifies fetched upstream equality, zero ahead/behind and no task changes before
+handoff; record that commit in the next progress update.

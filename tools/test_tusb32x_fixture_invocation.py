@@ -82,13 +82,15 @@ class FixtureInvocationTests(unittest.TestCase):
 
         def fixture(session, plan, *args, **kwargs):
             """Run the complete production fixture plan with finite external observations."""
-            evidence["groups"].append((plan.suites, clock(), clock() + plan.run_timeout))
+            evidence["groups"].append((plan.suites, clock(), kwargs.get(
+                "run_deadline", clock() + plan.run_timeout)))
             kwargs.update(clock=clock, sleep=sleep, transition=transition)
             return original_fixture(session, plan, *args, **kwargs)
 
         def observation(session, plan, *args, **kwargs):
             """Run complete observation groups under the same immutable whole-run bound."""
-            evidence["groups"].append((plan.suites, clock(), clock() + plan.run_timeout))
+            evidence["groups"].append((plan.suites, clock(), kwargs.get(
+                "run_deadline", clock() + plan.run_timeout)))
             kwargs.update(clock=clock, sleep=sleep)
             result = original_observation(session, plan, *args, **kwargs)
             if fault == "between-groups":
@@ -261,6 +263,25 @@ class FixtureInvocationTests(unittest.TestCase):
         self.assertEqual(len(evidence["groups"]), 1)
         self.assertFalse(peer.mutation_history)
         self.assertEqual(report["checks"]["orientation"]["status"], "NOT RUN")
+
+    def test_requested_soak_duration_is_clipped_after_a_completed_fixture_group(self):
+        """A duration ceiling equal to the run limit remains valid after earlier work."""
+        code, peer, report, _, opened, evidence = self.invoke(
+            suites=("orientation", "soak"),
+            extra=("--count", "1", "--duration-ms", "60000"))
+        self.assertEqual(code, 0)
+        opened.assert_called_once()
+        self.assertTrue(peer.closed)
+        self.assertEqual(report["primary"], "PASS")
+        self.assertEqual(report["metadata"]["selected_plan"]["duration_ms"], 60000)
+        self.assertEqual([group[0] for group in evidence["groups"]],
+                         [("orientation",), ("soak",)])
+        first, second = evidence["groups"]
+        self.assertGreater(second[1], first[1])
+        self.assertEqual(first[2], second[2])
+        self.assertLess(evidence["clock"](), first[2])
+        for suite in ("orientation", "soak"):
+            self.assertEqual(report["checks"][suite]["status"], "PASS")
 
     def test_separated_fixture_groups_retain_prior_physical_proof_and_cleanup(self):
         """A later fixture session cannot erase earlier passing orientation/cleanup evidence."""

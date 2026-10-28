@@ -545,3 +545,13 @@ The single hil_runner and cli_transcript registrations execute these tests with
 finite timeouts. TUSB322I fixture mutation plans are explicitly gated before
 traffic; no firmware command, core scheduler, register composer or power control
 was added. All physical serial/CC/INT/current/supply evidence remains NOT RUN.
+
+## Independent audit of prompts 29 and 30
+
+| Requirement | Corrected boundary | Runtime regression |
+| --- | --- | --- |
+| Immutable host timing | One absolute deadline shared across group and Session entry; original duration remains a ceiling | Delayed construction previously produced late PASS; completed orientation plus a full-run soak ceiling previously rejected; both now obey the original bound |
+| Finite external transition | Check the exact callback deadline before accepting either ready or missing input | Exact/late300s reply under1000s run cannot authorize mutation or become timely NOT RUN |
+| Actual/staged evidence | CONFIG masks/raw bytes agree with observed fields; complete validated candidate and raw controls precede mutation and match post-verify actual settings | Missing acquisition proof, ignored staging, changed unrelated fields and staged50/applied50 ACK experiment reject before further device work |
+| Schema extension compatibility | Compare only frozen known fields; reuse Session result-copy validation | Changing extension telemetry remains recorded without false state/result mismatch |
+| Independent native oracle | Literal named LAI input bytes, separate from decoded expectations | Four complete plans plus wrong-CC and wrong-current expectations against the persistent C++ CLI; both mismatches save FAIL and blocked cleanup |

@@ -10,6 +10,8 @@ from dataclasses import asdict, dataclass
 import math
 import time
 
+from tusb32x_cli_contract import SCHEMAS
+
 
 BASE_VARIANTS = {"tusb320", "tusb320i"}
 EXTENDED_VARIANTS = {"tusb320li", "tusb320hi", "tusb320lai", "tusb320hai"}
@@ -169,22 +171,43 @@ def _payload(response, kind, source=None):
 
 
 def _profile_values(response, include_staged=False):
-    """Copy core profile evidence independently of request IDs and CLI staging."""
-    return [{key: value for key, value in row.items() if key not in {"nonce", "request"}}
+    """Compare known profile evidence, excluding correlation and unknown extension fields."""
+    return [{key: row[key] for key in ("type", *SCHEMAS[row["type"]])
+             if key not in {"nonce", "request"}}
             for row in response.records if row["type"] in {"CONFIG", "CONFIG_DETAIL", "PROFILE"}
             and (include_staged or row.get("source") != "staged")]
 
 
-def run_plan(session, plan, expected=None, clock=time.monotonic, sleep=time.sleep):
+def _plan_deadline(started, plan, run_deadline):
+    """Clip the local run allowance to a finite caller-owned absolute monotonic deadline.
+
+    An expired bound stays expired even when session construction or another suite
+    consumed time before entry. Invalid explicit bounds raise before any session I/O.
+    """
+    if run_deadline is None:
+        return started + plan.run_timeout
+    try:
+        valid = (type(run_deadline) in (int, float) and math.isfinite(run_deadline))
+    except OverflowError:
+        valid = False
+    if not valid:
+        raise ValueError("run_deadline must be finite absolute monotonic seconds")
+    return min(started + plan.run_timeout, run_deadline)
+
+
+def run_plan(session, plan, expected=None, clock=time.monotonic, sleep=time.sleep, *,
+             run_deadline=None):
     """Run complete readonly/soak plans, save checks, restore local values and close framing.
 
     The caller owns I/O teardown. On failure, only verified local restoration is
     attempted, under the original whole-run deadline; no hardware rollback or
     result-take retry occurs. Fixed aggregates replace sample/transcript journals.
+    Optional run_deadline is the caller's absolute monotonic bound in seconds;
+    time spent before entry cannot extend it or change the requested duration ceiling.
     """
     artifacts = session.artifacts
     started = clock()
-    deadline = started + plan.run_timeout
+    deadline = _plan_deadline(started, plan, run_deadline)
     stage_deadline = deadline
     artifacts.metadata["plan"] = plan.describe()
     artifacts.metadata["observations"] = {"count": 0, "detached": 0, "last": None}
@@ -277,10 +300,9 @@ def run_plan(session, plan, expected=None, clock=time.monotonic, sleep=time.slee
         if not session.operation.complete:
             raise PlanFailure("operation exceeded 32 bounded service exchanges")
         result = session.wait_operation(min(end_by, command_deadline()))
-        copied = command("result", end_by=end_by)
-        if _payload(copied, "RESULT") != dict(result, request=copied.ack["request"],
-                                            nonce=copied.nonce):
-            raise PlanFailure("retained query changed original result")
+        # Session checks immutable schema fields against the original result;
+        # unknown extensions are recorded without becoming required evidence.
+        command("result", end_by=end_by)
         taken = session.take_result(min(end_by, command_deadline()))
         if taken.end["code"] != "OK":
             raise PlanFailure("result take rejected; owned slot retained, no automatic retry")
@@ -350,7 +372,11 @@ def run_plan(session, plan, expected=None, clock=time.monotonic, sleep=time.slee
             before = statistics()
             current = "1a5" if staged["current"] == "default" else "default"
             command("current " + current)
-            command("profile validate")
+            validated = _payload(command("profile validate"), "PROFILE", "staged")
+            expected_staged = dict(staged, current=current)
+            if any(validated[key] != expected_staged[key]
+                   for key in SCHEMAS["PROFILE"][3:] if key != "generation"):
+                raise PlanFailure("validated CLI staging differs from the intended current edit")
             if _profile_values(command("profile show")) != _profile_values(snapshot):
                 raise PlanFailure("CLI staging changed retained core profiles")
             has_desired = _payload(snapshot, "CONFIG")["has_desired"] == "1"

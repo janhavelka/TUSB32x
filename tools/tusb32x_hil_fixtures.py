@@ -9,7 +9,7 @@ The caller owns serial teardown; all waits include the immutable whole-run deadl
 import math
 import time
 
-from tusb32x_hil_plans import BASE_VARIANTS, PlanBlocked, PlanFailure, _payload
+from tusb32x_hil_plans import BASE_VARIANTS, PlanBlocked, PlanFailure, _payload, _plan_deadline
 from tusb32x_hil_fixture_setup import FIXTURE_SUITES, console_transition
 
 
@@ -24,6 +24,14 @@ ACCESSORIES = {
     "debug-local-dfp": "DEBUG_LOCAL_DFP", "debug-local-ufp": "DEBUG_LOCAL_UFP",
 }
 CURRENT = {"default": "DEFAULT", "1a5": "MA_1500", "3a0": "MA_3000"}
+
+
+def _controls_consistent(profile, fields):
+    """Require each applicable on/off control to agree with its raw disable flag."""
+    return all(not fields & PROFILE_COMMANDS[key][1] or (
+        profile[key] in {"on", "off"} and profile[raw] == ("0" if profile[key] == "on" else "1"))
+        for key, raw in (("ufpaccessory", "disable_ufp_accessory"),
+                         ("termination", "disable_term"), ("rd_rp", "disable_rd_rp")))
 
 
 class FixtureNotRun(PlanBlocked):
@@ -54,7 +62,7 @@ def fixture_prerequisite(plan, setup, expected):
 
 
 def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_transition,
-                     clock=time.monotonic, sleep=time.sleep):
+                     clock=time.monotonic, sleep=time.sleep, run_deadline=None):
     """Execute selected fixture suites, consuming each exact result once and saving outcomes.
 
     ``setup`` is validated by load_setup before opening. ``transition(step, deadline)``
@@ -64,9 +72,11 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
     a fresh detached fixture attestation, unchanged identity/target/supply, coherent
     port data and known actual settings. A failed/uncertain plan performs no device
     restoration; explicit later owner work must resolve its residual effects.
+    Optional run_deadline is an absolute monotonic host bound in seconds; session
+    construction and earlier suites cannot renew it.
     """
     artifacts = session.artifacts
-    deadline = clock() + plan.run_timeout
+    deadline = _plan_deadline(clock(), plan, run_deadline)
     previous_time = clock()
     dirty = False
     hardware_cleanup = "NOT RUN"
@@ -90,14 +100,14 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
     artifacts.check("fixture_cleanup", "NOT RUN", "device cleanup not established")
     artifacts.checkpoint()
 
-    def end_by():
+    def end_by(bound=deadline):
         """Check monotonic time and clip exchanges/confirmations to one whole-run bound."""
         nonlocal previous_time
         now = clock()
-        if not math.isfinite(now) or now < previous_time or now >= deadline:
-            raise PlanFailure("fixture whole-run deadline expired or clock regressed")
+        if not math.isfinite(now) or now < previous_time or now >= min(deadline, bound):
+            raise PlanFailure("fixture deadline expired or clock regressed")
         previous_time = now
-        return min(deadline, now + plan.command_timeout)
+        return min(deadline, bound, now + plan.command_timeout)
 
     def command(text, code="OK", limit=None):
         """Require exact delivery status; Session validates schemas and attribution."""
@@ -174,17 +184,23 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
         config = _payload(response, "CONFIG")
         actual = _payload(response, "PROFILE", "observed")
         artifacts.metadata["fixture_profile"] = {"config": config, "observed": actual}
+        # Public CONFIG validity bits back the same observed profile: 08/09/0A,
+        # and 45 when DISABLE_RD_RP is applicable. Unknown raw bytes cannot
+        # support a supposedly complete actual image without those observations.
+        required_raw = 0x07 | (0x08 if fields & 128 else 0)
         if (config["configuration"] != "KNOWN" or config["has_observed"] != "1" or
+                int(config["observed_valid_fields"]) != int(actual["valid_fields"]) or
+                int(config["raw_valid_mask"]) & required_raw != required_raw or
+                any(config[key] == "unknown" for key, bit in (
+                    ("raw08", 1), ("raw09", 2), ("raw0a", 4), ("raw45", 8))
+                    if required_raw & bit) or
                 actual["available"] != "1" or actual["variant"] != plan.variant or
                 int(actual["valid_fields"]) & fields != fields or
                 any(actual[key] == "unknown" for key, (_, bit) in PROFILE_COMMANDS.items()
                     if fields & bit)):
             raise PlanBlocked("complete known actual profile required; no defaults substituted")
-        for key, raw in (("ufpaccessory", "disable_ufp_accessory"),
-                         ("termination", "disable_term"), ("rd_rp", "disable_rd_rp")):
-            if fields & PROFILE_COMMANDS[key][1] and actual[raw] != (
-                    "0" if actual[key] == "on" else "1"):
-                raise PlanBlocked("contradictory observed termination/accessory controls")
+        if not _controls_consistent(actual, fields):
+            raise PlanBlocked("contradictory observed termination/accessory controls")
         return actual
 
     def sample(expect=None, extra_mask=0):
@@ -247,9 +263,9 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
             raise PlanFailure("invalid/expired fixture attestation: " + str(error)) from error
         if type(ready) is not bool:
             raise PlanFailure("fixture transition must return an explicit boolean attestation")
+        end_by(limit)  # Late input never establishes proof or becomes a timely missing fixture.
         if not ready:
             raise FixtureNotRun("fixture transition unavailable: " + name)
-        end_by()  # Late input never establishes proof.
         target()
         summary["transitions"] += 1
         artifacts.metadata["fixture_step"] = dict(step, acknowledged=True)
@@ -262,11 +278,17 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
         return port, detail
 
     def stage(values):
-        """Stage only applicable fields from a proved profile, never retained desired defaults."""
+        """Stage a complete proved candidate and check the reported values before applying it."""
         for key, (route, bit) in PROFILE_COMMANDS.items():
             if fields & bit and key in values:
                 command(route + " " + values[key])
-        command("profile validate")
+        staged = _payload(command("profile validate"), "PROFILE", "staged")
+        if (staged["available"] != "1" or staged["variant"] != plan.variant or
+                int(staged["valid_fields"]) & fields != fields or
+                not _controls_consistent(staged, fields) or
+                any(staged[key] != values[key] for key, (_, bit) in PROFILE_COMMANDS.items()
+                    if fields & bit)):
+            raise PlanFailure("validated CLI staging differs from the intended candidate")
 
     def apply(values, attachment="DETACHED"):
         """Refresh prerequisites immediately before one explicit apply and verify operation."""
@@ -279,12 +301,12 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
         if (candidate["mode"] != "ufp" and candidate["current"] == "3a0" and
                 setup["supply_mv"] < 3500):
             raise PlanBlocked("source-capable local 3 A requires measured VDD >=3500 mV")
-        stage(values)
+        stage(candidate)
         operation("apply", True)
         operation("verify")
         actual = profiles()
-        if any(actual[key] != value for key, value in values.items()
-               if key in PROFILE_COMMANDS and fields & PROFILE_COMMANDS[key][1]):
+        if any(actual[key] != candidate[key] for key, (_, bit) in PROFILE_COMMANDS.items()
+               if fields & bit):
             raise PlanFailure("verified actual profile differs from requested settings")
 
     def detached(name):
@@ -377,7 +399,7 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
         physical("irq-assert", "Trigger a connector event and observe wired active-low INT.",
                  {"attachment": "LOCAL_SINK", "irq": "1"}, 256)
         pin("0")
-        command("duty 30")
+        stage(dict(profiles(), duty="30"))
         _, acknowledged = operation("irq ack", True)
         if acknowledged["ack_attempted"] != "1" or acknowledged["ack_confirmed"] != "1":
             raise PlanFailure("IRQ ACK lacks explicit accepted-write evidence")

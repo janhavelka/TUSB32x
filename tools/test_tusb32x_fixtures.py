@@ -95,6 +95,7 @@ class FixturePeer(PlanPeer):
                        has_applied=int(self.applied_profile is not None),
                        desired_generation=self.desired_generation,
                        applied_generation=self.applied_generation,
+                       raw45=4 if self.core_profile["rd_rp"] == "off" else 0,
                        raw09=raw09 | (16 if self.irq_pending else 0)),
                 record("CONFIG_DETAIL", request, self.nonce)]
         for source, values in (("staged", self.staged), ("desired", self.desired_profile),
@@ -302,14 +303,16 @@ class FixtureExecutionTests(unittest.TestCase):
         plan = ObservationPlan(variant=variant, address=peer.address, suites=(suite,), **options)
         return session, peer, clock, artifacts, plan
 
-    def execute(self, fixture, *, setup="default", expected=EXPECTED, transition=None):
+    def execute(self, fixture, *, setup="default", expected=EXPECTED, transition=None,
+                run_deadline=None):
         """Call the real plan; all operator waiting uses an injected monotonic clock."""
         from tusb32x_hil_fixtures import run_fixture_plan
         session, peer, clock, _, plan = fixture
         setup = setup_for(plan.variant) if setup == "default" else setup
         return run_fixture_plan(session, plan, setup, expected,
                                 transition=transition or self.transitions(peer), clock=clock,
-                                sleep=lambda seconds: setattr(clock, "now", clock() + seconds))
+                                sleep=lambda seconds: setattr(clock, "now", clock() + seconds),
+                                run_deadline=run_deadline)
 
     def transitions(self, peer):
         """Return an explicit modeled fixture driver, filled with frozen named transitions."""
@@ -570,6 +573,67 @@ class FixtureExecutionTests(unittest.TestCase):
         self.assertEqual(fixture[1].adapter_writes, 0)
         self.assertEqual(fixture[3].snapshot()["exit_code"], 1)
 
+    def test_transition_expiry_cannot_use_remaining_whole_run_time(self):
+        """The plan rejects late external attestation even with a longer whole-run allowance."""
+        for lateness, ready in ((0, True), (0.001, True), (0, False), (0.001, False)):
+            with self.subTest(lateness=lateness, ready=ready):
+                fixture = self.make_session(run_timeout=1000)
+                peer, clock = fixture[1:3]
+                whole_deadline = clock() + 1000
+                transitions = []
+                def late(step, deadline):
+                    """Model an automated fixture adapter returning after its 300-second bound."""
+                    transitions.append(step["id"])
+                    self.assertAlmostEqual(deadline - clock(), 300)
+                    clock.now = deadline + lateness
+                    self.assertLess(clock(), whole_deadline)
+                    peer.physical("DETACHED")
+                    return ready
+                self.assert_nonpassing(fixture, transition=late)
+                self.assertEqual(transitions, ["initial-detached"])
+                self.assertFalse(fixture[3].metadata["fixture_step"]["acknowledged"])
+                self.assertNotIn("apply", peer.operation_history)
+                self.assertEqual(peer.adapter_writes, 0)
+                self.assertEqual(fixture[3].snapshot()["exit_code"], 1)
+
+    def test_invalid_absolute_run_deadline_rejects_before_session_io(self):
+        """Explicit caller deadlines must be finite numeric seconds, never booleans or text."""
+        for deadline in (True, False, float("nan"), float("inf"), -float("inf"),
+                         "120", 10 ** 400):
+            with self.subTest(deadline=deadline):
+                fixture = self.make_session()
+                with self.assertRaises(ValueError):
+                    self.execute(fixture, run_deadline=deadline)
+                self.assertFalse(fixture[1].writes)
+                self.assertEqual(fixture[1].attempts, 0)
+
+    def test_expired_caller_deadline_survives_deferred_fixture_entry(self):
+        """Time spent before entering this group cannot create a fresh run interval."""
+        fixture = self.make_session(run_timeout=1000)
+        deadline = fixture[2]() + 5
+        fixture[2].now = deadline
+        self.assert_nonpassing(fixture, run_deadline=deadline)
+        self.assertFalse(fixture[1].writes)
+        self.assertEqual(fixture[1].attempts, 0)
+        self.assertEqual(fixture[3].snapshot()["exit_code"], 1)
+
+    def test_transition_is_clipped_to_callers_remaining_run_deadline(self):
+        """A shared absolute deadline also bounds a transition after delayed group entry."""
+        fixture = self.make_session(run_timeout=1000)
+        deadline = fixture[2]() + 10
+        fixture[2].now += 5
+        def late(step, limit):
+            """Use up the original caller interval while the declared whole-run time remains."""
+            self.assertEqual(limit, deadline)
+            fixture[2].now = limit
+            fixture[1].physical("DETACHED")
+            return True
+        self.assert_nonpassing(fixture, transition=late, run_deadline=deadline)
+        self.assertFalse(fixture[3].metadata["fixture_step"]["acknowledged"])
+        self.assertNotIn("apply", fixture[1].operation_history)
+        self.assertEqual(fixture[1].adapter_writes, 0)
+        self.assertEqual(fixture[3].snapshot()["exit_code"], 1)
+
     def test_callback_failure_or_cancelled_mutation_is_never_replayed(self):
         """Failures around writes retain payload status and prohibit blind profile restoration."""
         for suite in ("orientation", "accessory", "role-current", "interrupt"):
@@ -672,6 +736,26 @@ class FixtureExecutionTests(unittest.TestCase):
         self.assertEqual(peer.operation_history.count("irq.service"), 1)
         self.assertEqual(fixture[3].metadata["irq_service"]["detail"]["irq_after"], "0")
 
+    def test_irq_preservation_requires_proved_distinct_staging_before_ack(self):
+        """An ignored 30% stage must not pass an ACK experiment with staged and actual both50%."""
+        fixture = self.make_session("interrupt")
+        peer = fixture[1]
+        ignored = []
+        def ignore_first_stage(text, rows):
+            """Return truthful unchanged staging after one setter incorrectly acknowledges OK."""
+            if text == "duty 30" and not ignored:
+                ignored.append(text)
+                peer.staged["duty"] = "50"
+                rows = [dict(row, duty="50") if row["type"] == "PROFILE" and
+                        row["source"] == "staged" else row for row in rows]
+            return rows
+        peer.response_hook = ignore_first_stage
+        self.assert_nonpassing(fixture)
+        self.assertEqual(ignored, ["duty 30"])
+        self.assertNotIn("irq.ack", peer.operation_history)
+        self.assertNotIn("irq.service", peer.operation_history)
+        self.assertEqual(fixture[3].metadata["hardware_cleanup"], "BLOCKED")
+
     def test_irq_recheck_still_pending_is_failed_and_not_serviced_again(self):
         """A bounded service with reassertion cannot count as deassertion or lossless edge proof."""
         fixture = self.make_session("interrupt")
@@ -749,6 +833,47 @@ class FixtureExecutionTests(unittest.TestCase):
         self.assertEqual(peer.staged["current"], "default")
         self.assertEqual(peer.staged["duty"], "30")
 
+    def test_apply_requires_complete_consistent_validated_staging(self):
+        """Successful validation status cannot substitute for usable matching candidate evidence."""
+        faults = ({"available": "0"}, {"variant": "tusb320li"}, {"valid_fields": "254"},
+                  {"mode": "dfp"}, {"disable_ufp_accessory": "1"},
+                  {"disable_term": "1"}, {"disable_rd_rp": "1"})
+        for fault in faults:
+            with self.subTest(fault=fault):
+                fixture = self.make_session()
+                peer = fixture[1]
+                def contradict_staging(text, rows):
+                    """Damage only the validation evidence after the actual setters have run."""
+                    return [dict(row, **fault) if text == "profile validate" and
+                            row["type"] == "PROFILE" and row["source"] == "staged" else row
+                            for row in rows]
+                peer.response_hook = contradict_staging
+                self.assert_nonpassing(fixture)
+                self.assertNotIn("apply", peer.operation_history)
+                self.assertEqual(peer.adapter_writes, 0)
+
+    def test_apply_verifies_unchanged_candidate_fields_after_successful_delivery(self):
+        """A reported change to an unrelated field cannot pass a partial edit's verification."""
+        fixture = self.make_session("interrupt")
+        peer = fixture[1]
+        changed = []
+
+        def alter_unrequested(text, rows):
+            """Change the first actual-profile report after the partial duty edit only."""
+            if text == "profile show" and len(peer.candidate_history) == 2 and not changed:
+                changed.append(True)
+                return [dict(row, current="1a5") if row["type"] == "PROFILE" and
+                        row["source"] == "observed" else row for row in rows]
+            return rows
+
+        peer.response_hook = alter_unrequested
+        self.assert_nonpassing(fixture)
+        self.assertTrue(changed)
+        self.assertEqual(peer.operation_history.count("apply"), 2)
+        self.assertEqual(peer.operation_history.count("irq.ack"), 1)
+        self.assertNotIn("irq.service", peer.operation_history)
+        self.assertEqual(fixture[3].metadata["hardware_cleanup"], "BLOCKED")
+
     def test_unknown_applicable_observed_field_blocks_before_mutation(self):
         """A validmask alone cannot turn unknown semantic profile evidence into settings."""
         fixture = self.make_session()
@@ -756,6 +881,29 @@ class FixtureExecutionTests(unittest.TestCase):
         self.assert_nonpassing(fixture)
         self.assertEqual(fixture[1].adapter_writes, 0)
         self.assertNotIn("apply", fixture[1].operation_history)
+
+    def test_actual_profile_requires_matching_config_validity_and_raw_evidence(self):
+        """Readable PROFILE values cannot override missing CONFIG field/raw acquisition proof."""
+        faults = [{"observed_valid_fields": "0"}, {"observed_valid_fields": "254"}]
+        faults += [{"raw_valid_mask": str(15 & ~bit)} for bit in (1, 2, 4, 8)]
+        faults += [{key: "unknown"} for key in ("raw08", "raw09", "raw0a", "raw45")]
+        for fault in faults:
+            with self.subTest(fault=fault):
+                fixture = self.make_session()
+                peer = fixture[1]
+                def contradict_config(_text, rows):
+                    """Keep observed PROFILE available and valid while removing underlying proof."""
+                    return [dict(row, **fault) if row["type"] == "CONFIG" else row
+                            for row in rows]
+                peer.response_hook = contradict_config
+                self.assert_nonpassing(fixture)
+                saved = fixture[3].metadata["fixture_profile"]
+                self.assertEqual(saved["observed"]["available"], "1")
+                self.assertEqual(saved["observed"]["valid_fields"], "255")
+                for key, value in fault.items():
+                    self.assertEqual(saved["config"][key], value)
+                self.assertNotIn("apply", peer.operation_history)
+                self.assertEqual(peer.adapter_writes, 0)
 
     def test_contradictory_observed_controls_block_before_mutation(self):
         """Semantic on/off values must agree with their independently reported raw disable bits."""

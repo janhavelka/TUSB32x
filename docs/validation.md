@@ -3330,3 +3330,71 @@ earlier linked images are not final-commit or hardware proof. The lead commits,
 pushes, fetches and verifies equal upstream commits, zero ahead/behind and no
 uncommitted task files before handoff. Record that hash in the next progress
 update. Prompt31 remains unstarted.
+
+## Independent audit of prompts 29 and 30 (2026-10-28)
+
+Entry HEAD `770e4f6bb892de2df72fb712693d90759ca7c6cd` was clean and fetched
+equal to upstream on `promptset/tusb32x-implementation-20261023`. Fresh peer
+revisions, exact sources, delegated scopes and confirmed defects are recorded in
+the [progress audit](implementation-progress.md#independent-audit-of-prompts-29-and-30-2026-10-28).
+The lead reviewed actual returned diffs and behavior. No sibling edit, hardware
+open, power control, flashing, framework rebuild or remote CI occurred.
+
+Tools: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GNU15.1.0 MinGW-W64
+x86_64-ucrt-mcf-seh, Doxygen1.13.2, Git2.52.0.windows.1 and managed PlatformIO
+Core6.1.19/native1.2.1. No package pin, library version or dependency changed.
+Optional pyserial remains3.5; deterministic tests need no pyserial.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Deadline regressions | PASS | Delayed Session construction and legal fixture-then-soak duration cases failed before correction; absolute run/transition boundaries now reject expired true/false replies without authorizing later writes |
+| Evidence/staging regressions | PASS | Missing/contradictory CONFIG raw/field proof, ignored/invalid staged candidates and unrequested post-apply field changes prevent PASS; exact IRQ staging difference is proved before ACK |
+| Extension compatibility | PASS | Changing unknown CONFIG/PROFILE/RESULT extension telemetry is retained without becoming required semantic evidence; known fields still use strict Session comparison |
+| Runner/session/artifacts | PASS | 237 deterministic Python cases through the existing hil_runner registration; injected serial/clock, no physical dependency or wall-clock sleeps |
+| Native persistent CLI | PASS | Existing248 requests, two strict sessions, three readonly plans, two owner-turn sessions and four full fixture plans retained; two new wrong orientation/current expectations fail against independent literal bytes, save failed evidence and prohibit automatic hardware cleanup |
+| Native regression/build | PASS | Final Debug63/63 and Release63/63 CTests, strict warnings and active Release assertions; finite existing runner/transcript timeouts and explicit built fixture paths unchanged |
+| CLI/dry-run | PASS | --help exit0; readonly LAI/0x47 and all four fixture suites save fresh reports under build/reaudit2930-readonly and build/reaudit2930-fixtures; actual subprocess exit2 and primary/hardware NOT RUN |
+| Ordinary/package consumers | PASS | Fresh tests-OFF Release host configure/build/run;76 source-equal exported files; renamed extracted host/shared-CLI/public-owner consumers beneath unrelated Git build/run without Git/Python/Doxygen/PlatformIO on child PATH; owner5487 checks/0failures |
+| Documentation/metadata | PASS | Version check and repeat no-op sync bytes/mtime, strict Doxygen/public XML,13 Python modules' full docstrings/100-column style, local links/vendor hashes, UTF-8/LF and diff whitespace |
+| Sanitizers/other compilers | BLOCKED | Fresh minimal address/undefined link probes fail for missing -lasan/-lubsan in installed MinGW; cl/clang++/clang-format absent; no suppressed tests or sanitizer claim |
+| Physical serial/I2C/CC/INT/current/supply/VBUS/VCONN | NOT RUN | No identified authorized target/port/fixture or electrical traces; literal model inputs and operator declarations do not qualify hardware or backend aggregate timing |
+
+Commands executed from the repository root:
+
+```text
+python tools/test_tusb32x_observation.py
+python tools/test_tusb32x_fixture_invocation.py
+python tools/test_tusb32x_fixtures.py
+python tools/test_tusb32x_hil_runner.py
+python tools/test_cli_transcript.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/tusb32x_hil_runner.py --help
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite readonly --out build/reaudit2930-readonly
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite orientation --suite accessory --suite role-current --suite interrupt --run-timeout 1800 --out build/reaudit2930-fixtures
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+cmake -S examples/host/basic -B build/reaudit2930-host -G Ninja -DCMAKE_BUILD_TYPE=Release -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/reaudit2930-host
+build/reaudit2930-host/tusb32x_host_basic.exe
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p30-final-check.py
+python build/p10-docs.py
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p30.tar.gz
+python build/p30-package.py
+git diff --check
+```
+
+The build/ helpers are local session checks, not new distributed validators.
+Package isolation artifacts are in build/p30-clean-parent-0cmxieba. Fresh minimal
+ASan/UBSan probes used g++ with -fsanitize=address/undefined and failed at link
+before any instrumented executable existed. The Python registration increased
+from225 to237 cases without a second suite or result store. Both native mismatch
+cases assert exact PlanFailure, unchanged literal raw evidence, saved FAIL/exit1
+and blocked cleanup/residual uncertainty, not a generic process failure. Hardware
+and unchanged firmware links remain separate evidence layers. The lead commits,
+pushes and fetches to verify upstream equality, zero ahead/behind and a clean task
+worktree before handoff. Prompt31 remains unstarted.

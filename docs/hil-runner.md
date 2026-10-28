@@ -217,7 +217,9 @@ required keys and typed values. Records are newline-delimited ASCII, schema=1;
 duplicate/missing keys, invalid enums, oversized values and ANSI inside records
 reject. CRLF is accepted. Bounded human/ANSI noise and echoes, including OK/PASS,
 are never evidence. Unknown extension fields are retained without replacing
-required fields or controlling singleton detection. Profile responses require
+required fields, controlling singleton detection or becoming profile/result
+equality requirements. Session owns immutable known-field result comparisons.
+Profile responses require
 all four explicit staged/desired/observed/applied sources, including unavailable
 values; unknown values do not become verified defaults.
 
@@ -345,6 +347,12 @@ flashing, a VBUS switch, autonomous retries or a change to board USB policy.
 Readonly remains the default. Consecutive observation and fixture groups retain
 selection order, one open transport and one immutable whole-run deadline. Each
 group finishes and restores local values before establishing the next session.
+The command-line owner passes the same absolute monotonic run deadline into each
+plan. Session construction and group entry consume that allowance; neither starts
+a new interval. A requested soak duration stays a ceiling, clipped to the original
+deadline rather than rejected because a previous group consumed time. Direct
+run_plan/run_fixture_plan callers can supply the optional run_deadline in absolute
+monotonic seconds; a nonfinite or nonnumeric explicit bound rejects before I/O.
 
 Every fixture run requires `--fixture <id> --fixture-config <path>` and expected
 flashed `--expect-commit`, `--expect-framework`, `--expect-target`. Unknown firmware
@@ -404,7 +412,9 @@ For real work add the operator-selected port, actual setup/fixture ID and expect
 firmware values using the variables in the earlier recipe. Use a fresh output
 directory. Set --run-timeout for the entire finite plan, including physical
 transitions and cleanup (maximum86400s). Each operator prompt has at most300s,
-clipped to that immutable deadline. On a local TTY, type exactly `ready` only
+clipped to that immutable deadline. The plan checks the exact transition deadline
+after any injected fixture callback returns, including a false/missing reply;
+remaining whole-run time cannot rescue a late reply. On a local TTY, type exactly `ready` only
 after performing and externally observing the displayed transition; it attests
 the same declared target, partner and measured supply. Type `skip` to leave proof
 NOT RUN, or Ctrl-C to save interruption130. There is no unbounded input/readline
@@ -440,7 +450,13 @@ raw/typed/validity/sequence/time evidence; no growing transcript journal is adde
 
 Before writes, capture firmware, configured target, observed profile/trust and
 generations, current coherent attachment and supply assumptions. Stage from the
-proved actual profile, not CLI defaults. Generations remain history. On successful
+proved actual profile, not CLI defaults. Generations remain history.
+CONFIG acquisition/field masks and known raw bytes must agree with the
+observed profile. Successful local validation must report the complete intended
+staging, including consistent raw disable flags, before apply or the staged30/
+actual50 ACK experiment. Verify the complete candidate after apply, including
+unchanged fields; status OK alone is insufficient. The same current-edit proof
+applies to readonly staging, which still never writes the device. On successful
 plans only, cleanup requires a new original-partner/supply attestation, fresh
 identity/target, detached port and known profile; restore the original actual
 profile through apply/verify. This restores settings, not past USB events or the

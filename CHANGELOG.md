@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Fixed
 
+- Python runner suite groups share the original absolute deadline without rejecting
+  valid soak duration ceilings after earlier work. Late fixture replies, incomplete
+  acquisition proof and ignored/contradictory staging cannot authorize mutations
+  or claim a successful IRQ preservation experiment. Unknown schema extensions
+  remain recorded without becoming required profile/result evidence.
+
 - Python sessions require final-marker and original JOB evidence, preserve owned
   work on expired public deadlines, and accept exact bus-silent parser rejections.
   Profile edits and restoration require complete applicable staging evidence;

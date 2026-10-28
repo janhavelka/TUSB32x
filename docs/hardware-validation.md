@@ -236,6 +236,13 @@ Record primary outcome, device cleanup, local cleanup and residual uncertainty
 independently; readback cannot undo a USB event. Missing cleanup proof prevents
 overall PASS. Timeout is FAIL, skip/absent fixture is NOT RUN, unsupported setup
 is BLOCKED; reports preserve all of them.
+Before any apply or staged-versus-applied IRQ experiment, the runner requires
+consistent CONFIG raw/field acquisition masks and a validated complete staged
+candidate. A successful setter status alone cannot prove the staged value.
+Injected fixture replies are checked against their exact transition deadline
+even when the overall run has time remaining. Native status-byte fixtures are
+independent of plan expectations; deliberately wrong orientation/current
+expectations fail without claiming physical evidence.
 
 All deterministic fixtures and the four persistent C++ plans exercise software
 evidence only. Their modeled assertion/attachment and fabricated **test** identity

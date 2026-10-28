@@ -795,3 +795,22 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   finish. Device cleanup, local cleanup, primary outcome and residual effects
   remain independent. Restoring original actual settings does not restore desired
   generation history or undo USB events; retain the original desired snapshot.
+
+## Independent prompts 29 and 30 audit
+
+- Pass a single absolute monotonic deadline into each selected plan. Rebuilding
+  relative intervals after Session construction can turn a late run into PASS;
+  shrinking the validated plan also incorrectly rejects a still-usable duration
+  ceiling after earlier work. Keep the requested plan and clip actual work to the
+  original bound. External fixture replies must also satisfy their exact limit.
+- Require acquisition masks/raw evidence to support observed profile values and
+  compare the full validated candidate before apply/IRQ acknowledgement and after
+  verification. An OK setter or typed field mask alone cannot establish that the
+  requested staging or underlying observation exists.
+- Keep one known-field result comparison in Session. Unknown extensions remain
+  recorded but do not become required semantic equality fields in observation
+  plans. Use the frozen CLI schema for profile comparisons too.
+- Native fixture input bytes come from independent named literal states, never
+  from the runner's expected decoded values. Wrong expectations must fail against
+  those same bytes; this strengthens modeled software proof without creating
+  physical connector/current qualification.

@@ -34,7 +34,9 @@ without product dependencies. Its runtime checks are registered as `tusb32x_host
 The Python session/evidence layer now supports strict framing, owned results,
 deadlines and local restoration with streamed artifacts. Its CLI runs complete
 readonly/soak and bounded mapped-register observations, plus portless dry-runs.
-Physical fixture mutation suites remain later work; no test opens hardware implicitly.
+Explicit orientation/accessory/role-current/interrupt fixture plans require declared
+setup, expected firmware identity and bounded operator observations. Ordinary tests
+use modeled hardware only; physical qualification remains separate.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to

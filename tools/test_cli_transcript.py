@@ -1101,6 +1101,41 @@ class ScriptedPhysicalFixture:
     writes to clear INT without the next ordinary CLI command reasserting it.
     """
 
+    # TI SLLSEQ8D Tables 8/9, pp17-18: literal LAI RO/IRQ inputs, independent
+    # of the plan's expected fields and the production decoder/composer.
+    STATES = {
+        "initial-detached": (0x00, 0x10),
+        "cleanup-detached": (0x00, 0x10),
+        "orientation-cc1": (0x00, 0x90),
+        "orientation-cc2": (0x00, 0xB0),
+        "orientation-detach": (0x00, 0x10),
+        "accessory-audio": (0x08, 0xD0),
+        "accessory-debug": (0x0C, 0xD0),
+        "accessory-charge-through": (0x0A, 0xD0),
+        "accessory-debug-local-dfp": (0x0C, 0xD0),
+        "accessory-debug-local-ufp": (0x0E, 0xD0),
+        "accessory-detach-audio": (0x00, 0x10),
+        "accessory-detach-debug": (0x00, 0x10),
+        "accessory-detach-charge-through": (0x00, 0x10),
+        "accessory-detach-debug-local-dfp": (0x00, 0x10),
+        "accessory-detach-debug-local-ufp": (0x00, 0x10),
+        "sink-default": (0x00, 0x90),
+        "sink-1a5": (0x10, 0x90),
+        "sink-3a0": (0x30, 0x90),
+        "sink-detach": (0x00, 0x10),
+        "source-connect": (0x00, 0x50),
+        "source-default": (0x00, 0x50),
+        "source-1a5": (0x00, 0x50),
+        "source-3a0": (0x00, 0x50),
+        "source-detach": (0x00, 0x10),
+        "drp-resolved": (0x00, 0x90),
+        "drp-detach": (0x00, 0x10),
+        "irq-assert": (0x00, 0x90),
+        "irq-reassert": (0x00, 0x90),
+        "irq-coalesced": (0x00, 0x90),
+        "irq-detach": (0x00, 0x10),
+    }
+
     def __init__(self, path):
         """Start detached with a pending modeled latch before the first session command."""
         self.path = path
@@ -1109,24 +1144,18 @@ class ScriptedPhysicalFixture:
         self.path.write_text("0 0 16\n", encoding="ascii")
 
     def __call__(self, step, deadline):
-        """Translate declared external observations into explicit, independent status bytes."""
+        """Publish literal LAI status bytes for the named fixture transition.
+
+        Expected decoded values belong to the production plan, so they cannot
+        determine these independent physical inputs. Writable profile bits are
+        preserved by the C++ model and remain controlled by actual driver writes.
+        """
         if time.monotonic() >= deadline:
             raise AssertionError("native scripted transition exceeded its finite deadline")
-        expect = step["expect"]
-        attachment = {"DETACHED": 0, "LOCAL_SOURCE": 0x40,
-                      "LOCAL_SINK": 0x80, "ACCESSORY": 0xC0}[expect["attachment"]]
-        direction = 0x20 if expect.get("orientation") == "CC2" else 0
-        detected = {"DEFAULT": 0, "MA_1500": 0x10,
-                    "MA_3000": 0x30}[expect.get("detected_current", "DEFAULT")]
-        accessory = {"NONE": 0, "AUDIO": 0x08, "CHARGE_THROUGH": 0x0A,
-                     "DEBUG_LOCAL_DFP": 0x0C,
-                     "DEBUG_LOCAL_UFP": 0x0E}[expect.get("accessory", "NONE")]
+        raw08, raw09 = self.STATES[step["id"]]
         self.version += 1
         self.steps.append(step["id"])
-        self.path.write_text(
-            f"{self.version} {detected | accessory} {attachment | direction | 0x10}\n",
-            encoding="ascii",
-        )
+        self.path.write_text(f"{self.version} {raw08} {raw09}\n", encoding="ascii")
         return True
 
 
@@ -1135,14 +1164,18 @@ def fixture_no_sleep(_duration):
 
 
 def exercise_fixture_plans(executable):
-    """Run all four complete production plans over real persistent CLI/core operations.
+    """Run four production plans and reject two wrong expectations through the real CLI/core.
 
     Only physical status inputs are scripted. Actual staging/apply/verify, 50% ACK
     preservation, unrelated duty-write latch preservation and service/recheck use
     the production operation engine and typed records. Saved reports explicitly
     identify all connector/CC/INT observations as modeled, with hardware NOT RUN.
     """
-    for suite in FIXTURE_SUITES:
+    scenarios = [(suite, None) for suite in FIXTURE_SUITES] + [
+        ("orientation", ("orientation-cc1", "orientation", "CC2", "CC1")),
+        ("role-current", ("sink-1a5", "detected_current", "MA_3000", "MA_1500")),
+    ]
+    for suite, damaged_expectation in scenarios:
         with tempfile.TemporaryDirectory(prefix="tusb32x-fixture-" + suite + "-") as temporary:
             root = Path(temporary)
             setup_path = root / "setup.json"
@@ -1173,11 +1206,50 @@ def exercise_fixture_plans(executable):
                 session = Session(io, artifacts)
                 expected = {"git": "0123456789abcdef0123456789abcdef01234567",
                             "framework": "host", "target": "native"}
-                summary = run_fixture_plan(
-                    session, ObservationPlan(suites=(suite,), run_timeout=20), setup, expected,
-                    transition=physical, sleep=fixture_no_sleep,
-                )
+
+                def transition(step, deadline):
+                    """Damage only the plan's expectation; literal physical inputs stay fixed."""
+                    if damaged_expectation and step["id"] == damaged_expectation[0]:
+                        step["expect"][damaged_expectation[1]] = damaged_expectation[2]
+                    return physical(step, deadline)
+
+                try:
+                    summary = run_fixture_plan(
+                        session, ObservationPlan(suites=(suite,), run_timeout=20), setup, expected,
+                        transition=transition, sleep=fixture_no_sleep,
+                    )
+                except PlanFailure as error:
+                    if not damaged_expectation:
+                        raise
+                    _, field, wanted, observed = damaged_expectation
+                    message = f"fixture {field}: expected {wanted}, observed {observed}"
+                    if str(error) != message:
+                        raise AssertionError("native oracle failed for unrelated reason") from error
+                else:
+                    if damaged_expectation:
+                        raise AssertionError("native physical inputs followed damaged expectation")
                 report = artifacts.snapshot()
+                saved = json.loads((artifacts.directory / "report.json").read_text("utf-8"))
+                if saved != report or saved["metadata"]["native_simulation"][
+                        "physical_hardware"] != "NOT RUN":
+                    raise AssertionError("native fixture report lost modeled/physical distinction")
+                if damaged_expectation:
+                    port = report["metadata"]["fixture_port"]["port"]
+                    raw08, raw09 = ScriptedPhysicalFixture.STATES[damaged_expectation[0]]
+                    if (report["primary"] != "FAIL" or artifacts.exit_code() != 1 or
+                            report["metadata"]["hardware_cleanup"] != "BLOCKED" or
+                            report["cleanup"] != "BLOCKED" or
+                            not report["residual_uncertainty"] or session.operation is not None or
+                            session.valid or int(port["raw08"]) & 0x3E != raw08 or
+                            int(port["raw09"]) & 0xF0 != raw09 or
+                            port[damaged_expectation[1]] != damaged_expectation[3] or
+                            physical.steps[-1] != damaged_expectation[0] or
+                            physical.steps.count(damaged_expectation[0]) != 1 or
+                            report["metadata"]["fixture_progress"]["mutation_requests"] != 1 or
+                            report["checks"][suite]["status"] != "FAIL"):
+                        raise AssertionError("native mismatch lost failed independent raw evidence")
+                    io.close()
+                    continue
                 if (report["primary"] != "PASS" or report["cleanup"] != "PASS" or
                         artifacts.exit_code() != 0 or report["residual_uncertainty"] or
                         report["metadata"]["hardware_cleanup"] != "PASS" or
@@ -1187,10 +1259,6 @@ def exercise_fixture_plans(executable):
                         summary["transitions"] != len(physical.steps) or
                         physical.steps[-1] != "cleanup-detached"):
                     raise AssertionError("native fixture plan skipped declared transitions/work")
-                saved = json.loads((artifacts.directory / "report.json").read_text("utf-8"))
-                if saved != report or saved["metadata"]["native_simulation"][
-                        "physical_hardware"] != "NOT RUN":
-                    raise AssertionError("native fixture report lost modeled/physical distinction")
                 if suite == "interrupt":
                     detail = report["metadata"]["irq_service"]["detail"]
                     if detail["irq_after"] != "0" or detail["ack_confirmed"] != "1":
@@ -1235,7 +1303,8 @@ def main() -> int:
         raise
     print(f"CLI transcript: {requests} persistent requests and damaged-record checks passed; "
           "2 strict sessions, 3 native readonly plans, 2 owner-turn sessions and "
-          "4 modeled physical-fixture plans passed; physical hardware NOT RUN")
+          "4 modeled physical-fixture plans and 2 independent mismatch rejections passed; "
+          "physical hardware NOT RUN")
     return 0
 
 

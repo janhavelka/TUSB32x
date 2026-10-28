@@ -1042,13 +1042,14 @@ def main(argv=None):
                 remaining = whole_deadline - time.monotonic()
                 if remaining <= 0:
                     raise SessionTimeout("whole-run deadline expired between selected suites")
-                group = replace(plan, suites=tuple(selected), run_timeout=remaining,
-                                command_timeout=min(plan.command_timeout, remaining))
+                group = replace(plan, suites=tuple(selected))
                 session = Session(io, artifacts, timeouts=timeouts, limits=limits)
                 if fixture_group:
-                    run_fixture_plan(session, group, setup, expected, clock=time.monotonic)
+                    run_fixture_plan(session, group, setup, expected, clock=time.monotonic,
+                                     run_deadline=whole_deadline)
                 else:
-                    run_plan(session, group, expected, clock=time.monotonic)
+                    run_plan(session, group, expected, clock=time.monotonic,
+                             run_deadline=whole_deadline)
     except KeyboardInterrupt:
         if artifacts:
             artifacts.interrupted = True
