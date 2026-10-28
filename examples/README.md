@@ -26,6 +26,8 @@ Default firmware is diagnostic-only until board readiness, cleanup acceptance
 and the adapter's timing bound are supplied. The [native IDF adapter](../docs/idf-transport.md)
 uses borrowed synchronous bus/device handles, a shared controller gate and
 source-derived timeout bounds. Its independent S2/S3 component fixtures link
-without Arduino or the CLI; the native CLI application remains later work.
+without Arduino or the CLI. The complete [native CLI application](esp_idf/basic/README.md)
+links that adapter, core and shared CLI for IDF5.5.5 on S2/S3, with exclusive UART0,
+explicit readiness, read-only startup ownership and checked bounded teardown.
 Builds do not qualify electrical behavior or application timing.
 See [development metadata](../docs/development.md).

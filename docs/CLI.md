@@ -474,7 +474,7 @@ and finite timeouts, retaining the single cli_transcript registration. All 33
 schemas include full-width record bounds including newline and C terminator.
 
 Prompts 20–22 complete the fixed shared CLI. The Arduino front ends below add
-actual SDK linkage. Native-IDF integration, serial/CC/INT fixtures and board
+actual SDK linkage. Native-IDF integration below also links S2/S3; serial/CC/INT fixtures and board
 memory/electrical qualification remain separate work; the native fixture is
 software evidence only.
 
@@ -508,3 +508,26 @@ of record. Whole-record drops use existing LOSS accounting. USB SDK transmission
 runs in a static worker behind a single copied mailbox; the owner never waits
 for USB readiness or drainage. Runtime identity and bus settings describe the
 actual firmware configuration, not proof of a connected fixture.
+
+## Native ESP-IDF front end
+
+The [IDF5.5.5 S2/S3 application](../examples/esp_idf/basic/README.md) compiles the
+same shared processor, without Arduino. The application's startup owner takes
+each read-only init/status result before admitting console commands. Startup
+failure leaves diagnostics available without retry or an unowned pending result.
+There is one owner poll per turn: startup's exact token or the CLI's usual tick.
+
+UART0 TX43/RX44, 115200 8N1, is deliberately selected on both targets. Native USB
+is not this console route. Only the pinned application task reads/writes its UART
+driver; SDK stdio/logging and additional readers/writers must remain disabled.
+Input suffixes survive one-command admission limits. UART stream/event loss stops
+new input instead of turning dropped bytes into a plausible command. FIFO output
+accepts a bounded prefix; the existing queue/loss accounting still owns records.
+
+Machine version/firmware/framework/protocol records use the same schemas as
+Arduino. Example-only Git/dirty/UTC/target identity regenerates on clean and
+incremental builds; unrelated enclosing Git identity stays unknown. Optional
+adapter counters remain unknown because native transmit/receive SDK totals are
+different units; core all-source/managed accounting remains available unchanged.
+Shutdown preserves/reports CLI results and effects before releasing owned handles.
+No native command aliases, protocol implementation or hardware policy are added.

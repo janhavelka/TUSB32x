@@ -17,7 +17,8 @@ It also implements safe one-callback raw diagnostics and pure health projection.
 The [shared example CLI](docs/CLI.md) implements strict parsing,
 bounded output, independent staging and core-owned managed operation/result flow.
 All contracted diagnostic routes are also implemented through public core APIs;
-framework adapters remain planned.
+Arduino and native-IDF adapters and complete S2/S3 example applications are
+implemented; physical board/timing qualification remains separate.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
@@ -35,9 +36,12 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Thirteen runtime CTest suites are registered on all hosts, plus
+active in Release. Sixty runtime CTests are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
+Native application builds use the pinned IDF5.5.5 environment and independent
+absolute build/SDKCONFIG paths, including on incremental builds. See the
+[native application guide](examples/esp_idf/basic/README.md) for wiring and commands.
 The protocol suite includes independent field tables, reserved-code validity,
 actual-versus-staged controls and procedure-proof rejections. Keep expected
 bytes independent of production codecs. Pure composition proves no timed job.

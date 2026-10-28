@@ -2822,3 +2822,117 @@ The additional enabled owner builds used
 That ignored configuration applies BOARD_READY=1, MAX_OVERHEAD_US=2000,
 ACCEPT_SDK_CLEANUP=1, IRQ=6/SECOND_IRQ=7 and RUN_MS=10000 solely to compile/link
 the enabled paths. Those synthetic values do not qualify a connected board.
+
+
+## Prompt 26 native IDF CLI application (2026-10-28)
+
+Started clean and synchronized after fetch at
+`4445cdc9a67aceed1347b8685aa2a2a347a79743` on the existing
+`promptset/tusb32x-implementation-20261023` branch. Current parent/local rules,
+full26, CLI/ownership, maintainability and native adapter contracts were read.
+Fresh TMP1x2/SHT3x revisions, clean state, exact native/common/CLI/test/runner/
+workflow/AGENTS paths and current official SDK examples/docs are in
+[execution26](audit/execution-26-peers.md). No sibling edits/builds, remote CI,
+flashing or hardware activity occurred.
+
+The actual application reuses the core, native adapter, shared CLI and startup
+owner. It owns UART0/controller0/device resources on the configured core0 main
+task. UART has explicit input/output routes; default hardware work is disabled
+until explicit board/timing/SDK-cleanup qualification. Startup only identifies
+and observes, taking each exact application result before CLI handoff. Shutdown
+ends borrowing, preserves/reports outcomes/effects and removes only owned handles.
+Independent review found and corrected possible UART error-event loss, repeated
+failed teardown and deletion before hardware FIFO completion. Source and tests
+were checked by the lead; agent reports were not substituted for integration.
+
+Tools actually used: host GCC15.1.0 MinGW UCRT/MCF, CMake/CTest4.0.1, Ninja1.12.1,
+Python3.12.10, Doxygen1.13.2 and installed managed PlatformIO6.1.19/native1.2.1.
+Real native builds use IDF5.5.5 at C:/pio/packages/framework-espidf (manifest
+3.50505), managed Python3.12.10 at C:/pio/penv/.espidf-5.5.5/Scripts/python.exe,
+Xtensa GCC14.2.0 esp-14.2.0_20260121, managed CMake4.0.3 and Ninja1.13.1.
+The existing managed environment lacks the standalone-IDF constraints cache;
+IDF_PYTHON_CHECK_CONSTRAINTS=no selects installed-requirements checking, not
+skipping Python dependency checks. No second Core or new SDK was installed.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Strict Debug/Release host matrix | PASS | 61/61 registered CTests in each; unchanged core/shared CLI/console/transcript/parity, native adapter at 1000/100Hz, Arduino prior regressions and isolated consumer/version/launcher checks |
+| Native application behavior | PASS | 28 registered actual-source scenarios: startup/exact takes/failure, blocked and partial output, persistent input suffixes, RX overflow before/after read and event saturation, IRQ absent/configured/setup failure, borrowed-controller denial, creation/deletion failures, uncertain raw error, active/result/startup teardown, runtime timeout and bounded FIFO completion |
+| Native configuration/identity fixtures | PASS | Four cases execute production generator and actual host CMake wiring/builds; clean/dirty/untracked/no Git/unrelated parent, target sanitation, renamed directory-derived component, SDKCONFIG/lock isolation, propagated settings and incremental source identity |
+| Real SDK application links | PASS | IDF5.5.5 S2/S3 configure/compile/link default and explicitly enabled illustration; saved images below. Actual symbols include app_main, native loop, shared Cli::tick, ExampleOwner::tick, core poll, native adapter/UART calls and enabled I2C creation APIs. Compile databases contain no Arduino/Wire/Serial sources |
+| Renamed-root actual SDK image | PASS | Separate copied renamed-lib root builds/links on S2; project metadata identifies component renamed-lib and library0.1.0-dev.1. Its incremental source edit rebuilds identity UTC from 20261028T173222Z to 20261028T173249Z while Git/tree correctly remain unknown |
+| Configuration isolation | PASS | Absolute build/p26-idf-s2/sdkconfig and build/p26-idf-s3/sdkconfig; both retain their target across the other's reconfiguration. Per-build dependencies.lock; no project-source sdkconfig/lock. CPU0, primary console NONE, HZ1000 and log maximum0 inspected; S3 secondary NONE, no S2 secondary-console choice |
+| SDKCONFIG byte hashes | PASS | S2 SHA256 485063A5070A2AC0BDAC240C3FE8AE9B48F6544A19D959D1FAB65D2A45571B85; S3 66B13892A1DB0068CA4685D917058B273212A3B7D09D81F2BF34A9585E00AA38; unchanged through target/board reconfiguration |
+| Source documentation | PASS | Strict Doxygen and XML visibility: 17 core structs/26 owner methods, 11 Cli/12 Console methods and three native lifecycle functions; new Python docstrings/style, local links/anchors, UTF-8/LF/whitespace and all eight vendor reference hashes |
+| Version/package/ordinary consumption | PASS | No-op sync/check; 73 source-equal selected archive files, matching IDF inclusion and shipped guide links; renamed tests-OFF core/CLI C++17 consumers beneath unrelated Git compile/link/run with Git/Python/Doxygen/PIO absent from child PATH; ordinary standalone CMake/native PlatformIO consumers also pass |
+| Sanitizers/other compilers | BLOCKED | Fresh trivial ASan/UBSan link probes exit1 for absent -lasan/-lubsan. MSVC/Clang/clang-format unavailable |
+| Physical qualification | NOT RUN | UART/bridge/serial delivery, native USB operation, optional IRQ levels, CC/VBUS/VCONN/electrical behavior, main stack margin and qualified scheduling/aggregate adapter bounds; no board/port authorization or flashing |
+
+Saved application images under ignored build/p26/artifacts:
+
+| Target | Diagnostic defaults | Enabled compile illustration |
+| --- | --- | --- |
+| ESP32-S2 | 236768 bytes (0x39ce0) | 243152 bytes (0x3b5d0) |
+| ESP32-S3 | 267280 bytes (0x41410) | 273600 bytes (0x42cc0) |
+
+Enabled settings were BOARD_READY=1, MAX_OVERHEAD_US=2000,
+ACCEPT_SDK_CLEANUP=1, IRQ=6, ENABLE=7 and RUN_MS=1000. They prove linked paths,
+not measured or authorized hardware readiness. The native guide records exact
+part supply, ADDR/enable, PORT/DIR, resistor-coupled VBUS_DET and 322I autonomous
+VCONN prerequisites, rechecked against archived TI tables. No access rule or
+silicon-write capability was expanded.
+
+Actual lead/native integration commands:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R 'tusb32x_idf_app|tusb32x_idf_example_config|tusb32x_idf_transport|tusb32x_cli|tusb32x_console|cli_transcript|cli_contract' --output-on-failure
+python -m py_compile scripts/idf_identity.py tools/test_idf_example.py
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python build/p26-final-check.py
+python build/p26-inspect.py
+cmake -S examples/host/basic -B build/host-basic -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/host-basic --config Release
+& build/host-basic/tusb32x_host_basic.exe
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p26.tar.gz
+python build/p26-package.py
+
+g++ -std=c++17 -fsanitize=address build/p20-sanitizer.cpp -o build/p26-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p20-sanitizer.cpp -o build/p26-ubsan.exe
+git diff --check
+```
+
+The inspected session-only native helper sets the exact installed SDK/Python/
+CMake/Ninja/toolchain environment, then invokes the actual IDF frontend. For each
+target the command is Python C:/pio/packages/framework-espidf/tools/idf.py with
+`-C examples/esp_idf/basic -B <absolute-build> -DSDKCONFIG=<absolute-build>/sdkconfig
+-DIDF_TARGET=esp32s2` (or esp32s3), plus explicit default/illustrative cache values
+and `build`. Exact reusable invocations actually run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File build/p26/run-idf.ps1 -Target esp32s2
+powershell -NoProfile -ExecutionPolicy Bypass -File build/p26/run-idf.ps1 -Target esp32s3
+powershell -NoProfile -ExecutionPolicy Bypass -File build/p26/run-idf.ps1 -Target esp32s2 -Qualified
+powershell -NoProfile -ExecutionPolicy Bypass -File build/p26/run-idf.ps1 -Target esp32s3 -Qualified
+powershell -NoProfile -ExecutionPolicy Bypass -File build/p26/run-idf.ps1 -Target esp32s2 -SourceRoot C:/Users/Honza/Documents/Projects/TUSB32x/build/p26-renamed/renamed-lib -BuildDirectory C:/Users/Honza/Documents/Projects/TUSB32x/build/p26-idf-renamed-s2
+```
+
+That process-scoped invocation changes no persistent execution policy. Checked
+logs are build/p26/logs/idf-{s2,s3}-{default,enabled}-final.log and
+idf-renamed-s2-{final,incremental}.log. The helper and XML/package/inspection
+scripts remain ignored local evidence, never consumer dependencies. Required
+available checks pass; the two sanitizer availability probes fail as recorded.
+Native links and recording SDK tests are distinct from hardware/serial proof.
+Final Git commit/upstream equality and clean-state evidence belongs in the
+handoff and next progress update, avoiding a self-referencing commit-ID loop.
+Prompt27 remains unstarted.

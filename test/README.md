@@ -484,8 +484,29 @@ ctest --test-dir build/native -C Debug -R tusb32x_idf_transport --output-on-fail
 scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3
 ```
 
-The full Windows host matrix has 32 registered suites. The independent
+The native adapter stage had 32 Windows host suites. The independent
 [native component consumer](idf_sdk/README.md) uses actual IDF5.5.5 headers,
 libraries and target linkers, with separate target configuration/build outputs.
 It links all adapter functions and the core without Arduino or CLI sources.
 Neither fake tests nor linked images prove physical timing or a qualified board.
+
+## Native IDF application checks
+
+The complete matrix now registers 61 tests on Windows (60 elsewhere). Twenty-eight
+application scenarios compile and execute the actual native lifecycle, core,
+adapter, shared CLI and startup owner through recording SDK boundaries. They
+cover default/qualified setup, absent/configured/failed IRQ, owned versus borrowed
+handles, exact startup takes, runtime/cancel/result shutdown, source/backend
+errors, short/zero UART writes, retained input suffixes, RX loss/saturated events,
+FIFO completion and failed cleanup without retry. See [fixture limits](idf_app/README.md).
+
+The four-case `tusb32x_idf_example_config` uses real host CMake compilation to
+check directory-derived component resolution, separate SDKCONFIG/dependency lock,
+propagated settings and clean/incremental firmware identity without borrowing
+parent Git metadata. It uses an isolated configuration fixture, not an SDK image.
+The actual S2/S3 application builds are separate evidence described in the
+[native guide](../examples/esp_idf/basic/README.md).
+
+```text
+ctest --test-dir build/native -C Debug -R "tusb32x_idf|tusb32x_cli|tusb32x_console|cli_transcript|cli_contract" --output-on-failure
+```

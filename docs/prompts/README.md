@@ -11,7 +11,8 @@ apply, desired verification, read-only reconciliation, explicit reset and origin
 TUSB320/I dead-battery recovery, complete read-only port refresh with cached
 publication, explicit IRQ acknowledgement/bounded service, safe raw diagnostics
 and passive health. Prompt 18 closes core protocol coverage gaps. Framework
-adapters and physical qualification remain later work. Prompts 20–21 deliver
+adapters and S2/S3 example applications are implemented in prompts 23–26;
+physical qualification remains separate. Prompts 20–21 deliver
 the bounded local CLI plus managed operation/control/result routes. Prompt 22
 completes all diagnostic commands and executable alias/help/record parity.
 

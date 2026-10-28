@@ -135,6 +135,58 @@ foreach(app IN ITEMS owner usb_sda usb_irq)
   endif()
 endforeach()
 
+# Exercise the actual native application with recording SDK boundaries. Each
+# scenario gets a fresh process because application-owned resources have one lifetime.
+foreach(app IN ITEMS owner diagnostic pin_conflict irq runtime)
+  set(app_suite tusb32x_idf_app_${app})
+  add_executable(${app_suite} idf_app/test_app.cpp
+    ../examples/esp_idf/Tusb32xIdf.cpp ../examples/common/ExampleOwner.cpp)
+  target_link_libraries(${app_suite} PRIVATE tusb32x_cli_support)
+  target_include_directories(${app_suite} PRIVATE idf_app/fakes
+    idf_transport/fakes ../examples/esp_idf)
+  target_compile_definitions(${app_suite} PRIVATE CONFIG_LOG_MAXIMUM_LEVEL=0
+    CONFIG_PM_ENABLE=0 CONFIG_I2C_ENABLE_DEBUG_LOG=0 configTICK_RATE_HZ=1000
+    CONFIG_IDF_TARGET_ESP32S2=0 CONFIG_IDF_TARGET_ESP32S3=1)
+  if(NOT app STREQUAL "diagnostic")
+    target_compile_definitions(${app_suite} PRIVATE TUSB32X_BOARD_READY=1
+      TUSB32X_MAX_OVERHEAD_US=2000 TUSB32X_ACCEPT_SDK_CLEANUP=1)
+  endif()
+  tusb32x_strict_warnings(${app_suite})
+  if(MSVC)
+    target_compile_options(${app_suite} PRIVATE /UNDEBUG)
+  else()
+    target_compile_options(${app_suite} PRIVATE -UNDEBUG)
+  endif()
+  if(app STREQUAL "owner")
+    foreach(scenario IN ITEMS startup startup-failure shutdown-active shutdown-startup
+        backpressure bus-failure device-failure uart-config-failure uart-pin-failure
+        uart-install-failure console-already-owned device-remove-failure bus-delete-failure
+        uart-delete-failure rx-overflow raw-error rx-overflow-after-read rx-event-flood
+        device-cleanup-failure teardown-fifo-pending teardown-fifo-stalled existing-bus)
+      add_test(NAME tusb32x_idf_app_${scenario} COMMAND ${app_suite} ${scenario})
+      set_tests_properties(tusb32x_idf_app_${scenario} PROPERTIES TIMEOUT 30)
+    endforeach()
+  elseif(app STREQUAL "irq")
+    target_compile_definitions(${app_suite} PRIVATE TUSB32X_IRQ=6)
+    foreach(scenario IN ITEMS irq-configured irq-config-failure irq-cleanup-failure)
+      add_test(NAME tusb32x_idf_app_${scenario} COMMAND ${app_suite} ${scenario})
+      set_tests_properties(tusb32x_idf_app_${scenario} PROPERTIES TIMEOUT 30)
+    endforeach()
+  else()
+    if(app STREQUAL "pin_conflict")
+      target_compile_definitions(${app_suite} PRIVATE TUSB32X_SDA=43)
+      set(scenario pin-conflict)
+    elseif(app STREQUAL "runtime")
+      target_compile_definitions(${app_suite} PRIVATE TUSB32X_RUN_MS=1000)
+      set(scenario run-timeout)
+    else()
+      set(scenario diagnostic)
+    endif()
+    add_test(NAME ${app_suite} COMMAND ${app_suite} ${scenario})
+    set_tests_properties(${app_suite} PROPERTIES TIMEOUT 30)
+  endif()
+endforeach()
+
 # Each public core header is independently includable.
 set(header_contract_sources)
 foreach(header IN ITEMS Status Config TUSB32x CommandTable Version)
@@ -150,6 +202,10 @@ tusb32x_strict_warnings(tusb32x_header_contracts)
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+add_test(NAME tusb32x_idf_example_config
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_idf_example.py"
+    --compiler "${CMAKE_CXX_COMPILER}" --cmake "${CMAKE_COMMAND}" --generator "${CMAKE_GENERATOR}")
+set_tests_properties(tusb32x_idf_example_config PROPERTIES TIMEOUT 120)
 add_test(NAME tusb32x_arduino_examples_config
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_arduino_examples.py"
     --compiler "${CMAKE_CXX_COMPILER}")

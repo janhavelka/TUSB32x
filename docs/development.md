@@ -94,9 +94,9 @@ prompt 33 work; a warning-free generation alone does not prove visibility.
 
 The PlatformIO export list contains public headers, five real C++ sources and their
 private protocol/codec/time headers, common CLI/owner/mailbox code, the Arduino
-adapter and two applications, the native IDF adapter, CMake, manifests, license,
+adapter and two applications, the native IDF adapter/application, CMake, manifests, license,
 selected guides and the real host consumer. The root PlatformIO configuration and its two required
-example build scripts are shipped. Reference/vendor artifacts, prompts, audits,
+example build scripts and native incremental-identity script are shipped. Reference/vendor artifacts, prompts, audits,
 progress/validation machinery, tests, other maintainer scripts and generated
 build output are excluded from ordinary archives. Maintainer commands
 require the source checkout. Links to repository-only evidence use source-host

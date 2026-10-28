@@ -30,7 +30,9 @@
 - [CLI and operations](CLI.md): bounded input/output, local staging, managed
   operations, raw/pure diagnostics, health/counters, retained-result delivery and
   schema 1 records; executable parity checks cover the complete fixed inventory.
-- [Examples](../examples/README.md): the current portable consumer.
+- [Examples](../examples/README.md): portable consumers and complete framework applications.
+- [Native CLI](../examples/esp_idf/basic/README.md): IDF5.5.5 S2/S3 builds, UART routes,
+  target-isolated configuration, board wiring and application resource ownership.
 
 Repository-only [implementation prompts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts),
 [audit evidence](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/audit)

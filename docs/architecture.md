@@ -20,6 +20,9 @@ Prompt 21 routes managed operations through one tick poll, retaining only reques
 correlation metadata; the sole result remains in core until explicit take.
 Prompt 22 adds raw Sync/public decoder routes and cached diagnostics,
 with no new protocol/composer/engine. Executable parity uses the actual fixture.
+The native [IDF application](../examples/esp_idf/basic/README.md) owns an exclusive
+UART console, native bus/device handles and read-only startup results, then hands
+the same core to that CLI. No framework dependency enters the core target.
 [API inventory](api-contracts.md) describes delivered methods and their contracts; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
@@ -27,6 +30,8 @@ with no new protocol/composer/engine. Executable parity uses the actual fixture.
 
 | File | Responsibility |
 | --- | --- |
+| examples/esp_idf/ExampleApp.h/.cpp, BoardConfig.h and basic/ | Pinned native lifecycle, exclusive UART0, exact borrowed device association, read-only startup and owned teardown; application CMake isolates SDKCONFIG/lock/target builds |
+| scripts/idf_identity.py and tools/test_idf_example.py | Incremental example-only identity and actual CMake/configuration fixtures, including renamed roots and unrelated Git |
 | include/TUSB32x/Status.h | Exact errors, static-message Status and one constexpr errorName |
 | include/TUSB32x/Config.h | Terminal callback types, borrowed binding description, variant/settings, semantic enums and callable pure validators |
 | include/TUSB32x/TUSB32x.h | Fixed operation/snapshot/result values and non-copyable owner facade; lifecycle, initialize, profile read/apply/verify/reconcile, reset/base recovery, port refresh, IRQ acknowledgement/service, raw Sync, pure health, token/result and cached methods are callable |

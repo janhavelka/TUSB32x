@@ -21,6 +21,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Complete native ESP-IDF 5.5.5 S2/S3 CLI application with explicit UART0 routes,
+  owned synchronous resources, read-only startup results and checked bounded
+  teardown. Input loss fails closed and output congestion cannot stall the owner.
+  Incremental firmware identity and isolated target/configuration fixtures cover
+  renamed component roots; physical serial/electrical timing remains unqualified.
+
 - Native ESP-IDF 5.5.5 adapter for ESP32-S2/S3 with borrowed bus/device handles,
   explicit pointer STOP/read STOP framing, shared serialization and aggregate
   timeout accounting. Host contracts cover errors, coarse ticks and controller

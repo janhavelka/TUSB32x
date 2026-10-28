@@ -684,3 +684,21 @@ Evidence and current peer revisions: [execution audit](audit/execution-24-arduin
   SDK boundaries; keep physical scheduling and linkage evidence separate.
 
 See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transport.md).
+
+## Prompt 26 native application boundaries (2026-10-28)
+
+- Reuse the shared CLI, startup owner and native adapter. IDF's core0-pinned main
+  task is sufficient; no extra scheduler, input task or command/result store.
+- Select exclusive UART0 TX43/RX44 on both S2/S3. Disable SDK stdio/secondary
+  console/logging, use zero-wait reads and available FIFO output, and retain the
+  unconsumed input suffix. UART mutex bounds depend on sole ownership, not merely
+  a zero wait argument. Stream errors or event saturation fail input closed.
+- Default to diagnostics until explicit board readiness, qualified positive CPU
+  overhead and SDK cleanup acceptance. Handle/address metadata is application
+  evidence; CLI edits cannot silently replace an opaque SDK device.
+- End binding and inspect/report exact results/effects before owned teardown.
+  Failed deletion preserves static resources and is never retried. Software queue
+  empty is not wire completion: a finite zero-wait FIFO check precedes deletion.
+- Isolate SDKCONFIG and the component-manager lock by absolute build directory,
+  resolve the directory-derived component name and regenerate example identity
+  every incremental build. Core consumers gain no Git/Python/framework dependency.

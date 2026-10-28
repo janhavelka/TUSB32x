@@ -23,7 +23,9 @@ two-device owner examples](docs/arduino-examples.md) use it with read-only start
 bounded console work and isolated USB transmission. Default builds keep hardware
 work disabled until explicit board/timing qualification. The [native IDF adapter](docs/idf-transport.md)
 now supplies borrowed synchronous callbacks with a bounded aggregate budget and
-independent ESP32-S2/S3 SDK link fixtures. Native CLI integration remains planned.
+independent ESP32-S2/S3 SDK link fixtures. The complete
+[native CLI application](examples/esp_idf/basic/README.md) also links for S2/S3,
+with an exclusive bounded UART console, read-only startup and checked teardown.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 

@@ -1,0 +1,2 @@
+# Only S3 has the SDK USB Serial/JTAG secondary-console choice.
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y

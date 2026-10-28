@@ -5,7 +5,9 @@
 the native master API. It does not wrap Arduino, create buses, change speed,
 retry transfers or implement USB policy. The root component still contains only
 the portable core. The independent SDK fixture and host tests are software
-evidence; native CLI integration is prompt 26 work.
+evidence. The complete [native CLI application](../examples/esp_idf/basic/README.md)
+now uses these callbacks with explicit UART routes, read-only startup and checked
+resource teardown. Its target builds and board prerequisites are documented there.
 
 ## Application setup and lifetime
 

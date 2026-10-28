@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 25, the native ESP-IDF transport adapter.
+Current authorization: implement prompt 26, the native ESP-IDF CLI application.
 
 ## Prompt status
 
@@ -35,7 +35,7 @@ Current authorization: implement prompt 25, the native ESP-IDF transport adapter
 | [23: arduino-transport](prompts/23-arduino-transport.md) | COMPLETE (qualified SDK subset; hardware not tested) |
 | [24: arduino-examples](prompts/24-arduino-examples.md) | COMPLETE (four SDK images; physical qualification not run) |
 | [25: idf-transport](prompts/25-idf-transport.md) | COMPLETE (two native SDK links; physical qualification not run) |
-| [26: idf-cli-example](prompts/26-idf-cli-example.md) | NOT STARTED |
+| [26: idf-cli-example](prompts/26-idf-cli-example.md) | COMPLETE |
 | [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | NOT STARTED |
 | [28: python-session](prompts/28-python-session.md) | NOT STARTED |
 | [29: observation-runners](prompts/29-observation-runners.md) | NOT STARTED |
@@ -1813,3 +1813,50 @@ Host fakes do not establish real scheduling or electrical timing. Board CPU
 overhead qualification, flash, serial and HIL remain NOT RUN. Native CLI remains
 prompt26; remote CI remains prompt34. Commit and verified sync are reported in
 the handoff rather than creating a self-referential commit-ID update.
+
+## Prompt 26: native ESP-IDF CLI application (2026-10-28)
+
+Started clean and synchronized after fetch at independent adapter/application
+review commit `4445cdc9a67aceed1347b8685aa2a2a347a79743` on the same execution
+branch. Read current parent/local rules, COMMON, full 26, CLI/ownership and native
+adapter contracts; prerequisites 1-25 are present. Fresh peer/SDK evidence is in
+[audit](audit/execution-26-peers.md). No sibling edits/builds, remote CI or hardware.
+
+The application uses the existing shared CLI, core, adapter and ExampleOwner.
+UART0 has explicit TX43/RX44 defaults on both targets; SDK stdio/secondary console
+and logging are disabled. One pinned core0 main task owns UART, I2C/device handles
+and copied metadata. Defaults keep I2C disabled until board readiness, qualified
+CPU overhead and SDK cleanup acceptance are supplied. Startup explicitly observes
+identity then port and consumes each exact owned result before CLI handoff.
+
+Delegation: gpt-6.1-sol/high owns application CMake/configuration, incremental
+identity and configuration fixtures; another owns recording native application
+fault tests. gpt-6-astra/high owns fresh peer/SDK audit and independent lifetime/
+console review. The lead owns production lifecycle, integration/docs and Git.
+Review already corrected UART event-queue saturation admission, repeated failed
+resource deletion and hardware-FIFO completion before console deletion. Final
+host checks pass in Debug and Release, with 61 registered tests each (28 native
+application scenarios and four native configuration/identity fixture cases).
+
+PASS: actual IDF5.5.5 S2/S3 default and qualified-path images plus renamed-root S2
+and its incremental source rebuild. The lead independently inspected real source
+lists, linked symbols, target/configuration and metadata. SDKCONFIG hashes remain
+unchanged across the other target's reconfiguration; dependency locks are also
+per-build. The renamed root uses component renamed-lib and unknown Git/tree.
+Defaults use the exclusive UART route; enabled-build numeric timing values are
+compile illustrations, not physical qualification.
+
+PASS: strict Doxygen/XML API visibility, Python docstrings/style, version/no-op,
+local links, reference hashes and UTF-8/LF/whitespace. The 73-file package matches
+source and IDF selection; isolated renamed tests-OFF core and CLI C++17 consumers
+build/run without maintainer tools. Standalone CMake and managed native host
+consumers pass. Core source lists, behavior and stable library version are unchanged.
+
+Fresh ASan/UBSan links are BLOCKED by missing MinGW runtimes; other host compilers
+and clang-format remain unavailable. Physical UART/USB-bridge/IRQ/CC/VBUS, board
+stack/CPU overhead, SDK aggregate timing and flashing/HIL remain NOT RUN. No
+identified board/port was authorized. Remote CI remains prompt34 only.
+See [validation](validation.md#prompt-26-native-idf-cli-application-2026-10-28)
+for exact commands, versions, artifact sizes and limits. The lead commits/syncs
+this complete checked unit on the same branch and verifies clean upstream equality
+in the handoff; record that commit in the next progress update. Prompt27 is unstarted.

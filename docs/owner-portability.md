@@ -4,6 +4,14 @@ Prompt 19 closes the core host checks before CLI and framework integration. The
 [peer audit](audit/execution-19-peers.md) records current sources and rejected
 assumptions. No new scheduler or clock belongs to the production library.
 
+The [native IDF application](../examples/esp_idf/basic/README.md) now demonstrates
+this owner split with real S2/S3 links. A pinned main task takes every read-only
+startup result, then hands command/result ownership to the shared CLI. Exclusive
+UART FIFO output and retained input suffixes keep console work bounded. Shutdown
+ends borrowing before deleting only the application's owned native handles;
+failed deletion preserves storage/evidence without retry. Physical adapter and
+serial timing remain separate qualification.
+
 ## Executable coverage
 
 | Contract | Named runtime evidence | Registered suite |

@@ -1,12 +1,13 @@
 # Feature, source and verification coverage
 
-Prompts 2-22, updated 2026-10-28. This matrix defines the capability boundary;
+Prompts 2-26, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
 read-only port refresh, explicit IRQ acknowledgement/bounded service, native
 builds, raw diagnostics, passive health, bounded local CLI and host checks exist.
-The fixed CLI inventory is complete; framework firmware and hardware qualification remain planned.
+The fixed CLI inventory and Arduino/native-IDF example firmware are implemented;
+physical hardware qualification remains separate.
 **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
@@ -458,3 +459,24 @@ The [native integration guide](idf-transport.md) states the source revision,
 exact configuration gates and required application qualification. Fake timing
 tests exercise the finite envelope, not physical ISR/waveform behavior. Native
 CLI, flashing, HIL and board timing/electrical qualification remain separate.
+
+## Native IDF CLI application (prompt 26)
+
+| Requirement | Actual application/API path | Executed evidence |
+| --- | --- | --- |
+| Native core + shared CLI without Arduino | basic/main source list, native ExampleApp + adapter | Real IDF5.5.5 S2/S3 default and qualified-path links; symbols/source lists inspected |
+| Isolated configuration and renamed roots | Project SDKCONFIG/dependency lock per absolute build directory; directory-derived REQUIRES | tusb32x_idf_example_config real host CMake fixture and renamed-root actual S2 image |
+| Explicit safe default wiring and readiness | Native BoardConfig, local validateTarget and exact copied SDK metadata | Diagnostic/pin-conflict, configured/absent IRQ and existing-owner cases |
+| Read-only startup ownership | Existing ExampleOwner initialize/refresh/exact take; CLI tick drains only during startup | Startup/failure/full-output cases; no write/ACK/reset/recovery; no unowned result fence |
+| Bounded native console | Exclusive UART0 RX64/turn, FIFO offer256, retained suffix, zero-wait SDK calls | Multiline/partial/zero output, before/after-read error and full-event-queue fail-closed cases |
+| Outcome/effect retention before deletion | startupOwner.stop/end, CLI snapshot, owned device then bus then console release | Active/startup/retained-result shutdown, creation/deletion failures, no cleanup retries, external bus preserved |
+| FIFO completion and finite teardown | uart_wait_tx_done(...,0), 64-turn cap plus optional failed-delete report phase | FIFO pending/stalled, backpressure, console-delete failure and configured-runtime scenarios |
+| Actual incremental firmware identity | Example-only custom build target; exact-root Git/dirty/UTC/target | Four Python configuration/identity cases; renamed archive reports unknown rather than parent Git |
+
+Twenty-eight application behavior scenarios are registered separately, all using
+actual application/shared/core sources. The full matrix has 61 Windows CTests
+(60 elsewhere), with unchanged shared CLI/console/transcript/parity registrations
+and both native adapter tick-rate suites. Host fakes and real linked images are
+separate proof layers; serial delivery, IRQ/CC/VBUS/electrical timing and board
+stack/overhead qualification remain NOT RUN. See the
+[native guide](../examples/esp_idf/basic/README.md) for commands and prerequisites.

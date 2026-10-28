@@ -20,7 +20,8 @@ diagnostics views and pure passive health projection. The example-only Arduino
 Wire adapter has host contracts and S2/S3 SDK link fixtures. Complete Arduino
 CLI and two-device owner examples share that adapter and have explicit S2/S3
 builds. The native-IDF adapter also has host contracts and independent S2/S3
-component link fixtures; the native CLI application remains planned. The
+component link fixtures. The complete native CLI application also has real S2/S3
+links, exclusive UART0, read-only startup ownership and checked resource teardown. The
 example-only common CLI implements bounded local help/identity,
 cache/target/lifecycle queries and edits, and independent validated profile staging.
 Managed operation/control/result routes also use the core engine with one poll
@@ -132,6 +133,9 @@ to each numbered implementation prompt and to completed maintenance work here.
   Arduino examples use `scripts/pio.cmd run -e esp32s2dev -e esp32s3dev
   -e esp32s2_owner_service -e esp32s3_owner_service`; board qualification and
   default diagnostic-only operation are in `docs/arduino-examples.md`.
+  Native application commands use IDF5.5.5 with separate absolute build and
+  SDKCONFIG paths; see `examples/esp_idf/basic/README.md`. Register/run the native
+  application fault cases and `tusb32x_idf_example_config` when changing this path.
 
 - **Initial promptset exception requested by the user:** remote CI belongs to
   prompt 34 only. Prompts 1–33 and 35–38 do not dispatch, poll, wait for or require
