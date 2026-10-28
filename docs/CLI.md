@@ -3,7 +3,9 @@
 The [Python observation runner](hil-runner.md) reuses these schemas for strict
 marker/request/token correlation, bounded evidence and explicit local restoration.
 Its serial entry point implements finite readonly/soak and mapped-register
-observation; physical fixture mutation plans remain later work. It owns only admitted tokens
+observation plus explicit orientation/accessory/role-current/interrupt fixture plans.
+The runner uses ordinary operations and separate physical attestations; there is
+no firmware fixture grammar or power control. It owns only admitted tokens
 from that run and never consumes another owner's retained result.
 
 The implemented CLI is example code in

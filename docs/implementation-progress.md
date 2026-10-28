@@ -2087,3 +2087,66 @@ Physical serial/I2C/CC/IRQ/VBUS and real adapter timing remain NOT RUN. See
 The lead commits and synchronizes this complete checked unit on the execution
 branch, then verifies upstream equality, zero ahead/behind and no task changes in
 the handoff. Record its hash in the next progress update. Prompt30 is unstarted.
+
+## Prompt 30: explicit port/current/interrupt fixture plans (2026-10-28)
+
+Started clean after fetch at synchronized prompt29 commit
+`1f0fb7604ad1696aea9f3067c320d3b3c2fca89e`, on the same execution branch/base.
+Read current parent/local rules, COMMON, full30, CLI runner/records, baseline
+port/IRQ/profile/capability and ownership contracts, maintainability and agent
+workflow. Fresh peer HEAD/dirty states, exact declarations/CLI/fixture tests/
+runners/AGENTS/workflow paths and adopted/rejected choices are recorded in
+[execution30](audit/execution-30-peers.md). Exact archived TI tables/prose and
+hashes were checked again; public sensor scratch/restore policy was rejected.
+No sibling edits/builds, real serial port, flash, physical fixture or remote CI.
+
+Delegation used gpt-6.1-sol/high for the read-only peer audit, strict setup and
+finite console helper/tests, independent fake-wire fixture cases, and launch-only
+C++ physical model/transcript plus command-line tests, with explicit disjoint
+files. gpt-6-astra/high independently reviewed capability ambiguities, physical
+evidence, reset/IRQ effects, timing and cleanup. The lead owned production plans,
+shared dispatch, integration, returned-diff review, docs/checks and Git. Actual
+source and behavior, rather than reports alone, confirmed each finding.
+
+Implemented all four named suites using ordinary CLI operations and the existing
+Session/parser/artifact layer. Strict fixture declarations/expected firmware and
+finite operator transitions precede physical work; no board power operation is
+implied. Capture known actual profile/trust/generations and current valid coherent
+port, stage from actual fields, take each exact owned result once and stop on
+failure. Conditional successful cleanup revalidates identity/target/original
+partner/supply/detach before restoring original actual settings. Failed work never
+retries uncertain writes or hardware restoration. Local staging/output/auto
+cleanup cannot certify device cleanup or erase failure/effects.
+
+Independent review corrected base charge-through support, extended debug-local
+interpretation/mode, CLI3a0 spelling, source-capable3A supply inheritance, missing
+INT preflight, unknown/contradictory raw/profile evidence, sticky cleanup-failure
+handling, queued operator input, inaccurate dry-run actions and mixed-group proof
+retention. Base current updates explicitly reset, revalidate and obtain a separate
+settled physical observation, retaining pre/post-reset evidence. All322 fixture
+mutation plans remain visibly gated before I2C. No core API/composer/scheduler or
+firmware grammar changed. Prompt31 is unstarted.
+
+PASS:225 deterministic Python tests (including33 fixture,18 setup/console and13
+entrypoint cases), all four complete production fixture plans against the actual
+persistent C++ CLI, full Debug63/63 and final Release63/63 CTests. Final affected
+Debug10/10 was repeated after terminal-consistency and evidence corrections.
+An initial three-assertion failure exposed a test hook that corrupted only copied
+results; strict original-result preservation was correct. Inject original and
+retained payloads consistently; keep assertions and rerun the complete registration.
+
+PASS: help and four-suite no-port dry-run with actual exit2/hardware NOT RUN,
+fresh tests-OFF host execution, version/no-op sync, strict Doxygen/public XML,
+Python docstrings/style, links/vendor hashes and UTF-8/LF. The76-file source-equal
+package passes renamed extracted host/shared-CLI/public-owner consumption beneath
+unrelated Git without maintainer tools in child PATH (owner5487 checks/0failures).
+Fresh ASan/UBSan probes fail for missing MinGW runtimes; alternative compilers/
+clang-format remain unavailable. Physical serial/I2C/CC/INT/current/VBUS/VCONN/
+supply and real adapter timing remain NOT RUN. Exact commands/versions/results:
+[validation](validation.md#prompt-30-fixture-plans-and-bounded-physical-evidence-2026-10-28).
+
+The lead reviewed the complete unit and independent final requirements review
+reported no remaining production gap. Commit/sync this completed prompt on the
+same execution branch, verify upstream equality/zero ahead-behind and no task
+changes in the handoff; record its hash in the next progress update. Prompt31 is
+unstarted. No physical qualification is inferred from software PASS.

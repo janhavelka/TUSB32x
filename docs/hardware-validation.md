@@ -1,7 +1,7 @@
 # Hardware observation prerequisites and evidence
 
 Physical serial, I2C, CC, IRQ, VBUS and adapter timing qualification are NOT RUN.
-The runnable `readonly`/`soak` plans and native/fake-serial tests establish software
+The runnable observation/explicit fixture plans and native/fake-serial tests establish software
 behavior. A dry-run, linked firmware image or host PASS does not qualify a board.
 This guide records prerequisites for an operator-authorized observation run; it
 does not authorize powering, flashing or changing a fixture's USB power policy.
@@ -186,3 +186,59 @@ The [variant guide](variant-matrix.md) records source conflicts, including
 SLAAE24 startup wording, exact-part operating ceilings and V fault semantics.
 Current source URLs and archived bytes have separate provenance; a later vendor
 revision requires a new review before changing the established contract.
+
+## Executable fixture plans and physical proof
+
+The [fixture runner instructions](hil-runner.md#explicit-physical-fixture-suites)
+define the strict setup JSON, expected firmware values, bounded ready/skip
+transitions and exact CLI sequences. Before choosing a mutation suite, record
+the actual board/full part, adapter/firmware, fixture/partner, ADDR and PORT
+straps, enable polarity, measured VDD, pull-ups, INT and resistor-coupled VBUS_DET.
+The operator owns power readiness and source/sink fixture policy; the runner
+controls no supply or VBUS hardware. Startup readiness is explicit. Original
+TUSB320/I source-capable startup also needs the separately completed qualified
+recovery procedure after VDD return and identity, not a guessed register history.
+
+Orientation needs the same identified reversible partner in both chip CC
+orientations and externally checked connector mapping. No cable means NOT RUN.
+Accessories need exact declared resistor/fixture types; base audio, charge-through
+and debug are supported, while extended debug local DFP/UFP interpretations are
+separate. A debug-local-UFP fixture uses local UFP mode. Unsupported capabilities
+block before callbacks; unknown raw codes remain unknown and cannot PASS.
+
+Role-current needs a controlled dual-role partner capable of the selected CC
+categories, fixture-owned safe VBUS and sufficient supply for each local source
+advertisement. The plan changes the same attached peer's advertisement and
+compares the current indication with physical fixture evidence. Original
+SLLSEN9F section7.3.1.2 p11 requires explicit software reset to update current;
+the mutation plan records each reset plus identity/profile/port revalidation.
+No such reset occurs in readonly/soak. Later variants' attached-current wording
+is not resolved by a timestamp or passing model. All local source-capable 3 A
+candidates, including cleanup, need VDD at least3.5V; a remote3A indication does
+not establish that local requirement or any measured current/PD contract.
+
+Interrupt needs a wired opt-in application reader checked before I2C/mutations,
+active-low assertion and deassertion, a second physical event and multiple events
+while the latch is pending. The plan records applied50/staged30 ACK preservation,
+an unrelated duty write retaining the pending latch and one bounded service's
+ACK/recheck. It cannot count every edge or infer fault clear from RCU. TUSB322I
+fixture mutation plans remain BLOCKED before I2C due unresolved09/fault/advertisement
+and return-to-DRP gates. Its required4.5..5.5V VDD, VBUS_DET and autonomous
+VCONN225/300/375mA min/typ/max remain applicable; typical300mA is no guarantee
+or software output permission.
+
+Cleanup requires an explicit original-partner/supply/target attestation, fresh
+matching firmware, coherent detached port and known profile. Successful plans
+may restore the original actual profile via apply/verify. Changed partner,
+target/supply, invalid data, failed or uncertain work prevents automatic device
+restoration. An old source role must never be restored onto a different partner.
+Record primary outcome, device cleanup, local cleanup and residual uncertainty
+independently; readback cannot undo a USB event. Missing cleanup proof prevents
+overall PASS. Timeout is FAIL, skip/absent fixture is NOT RUN, unsupported setup
+is BLOCKED; reports preserve all of them.
+
+All deterministic fixtures and the four persistent C++ plans exercise software
+evidence only. Their modeled assertion/attachment and fabricated **test** identity
+are labeled physical hardware NOT RUN. Actual serial/adapter timing, connector,
+INT, CC/current, VBUS/VCONN and supply/strap qualification remains NOT RUN until
+an authorized exact-part/board/firmware/fixture run saves physical observations.

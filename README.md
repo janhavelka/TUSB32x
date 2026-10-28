@@ -91,8 +91,12 @@ owned-result correlation, finite deadlines and streamed evidence with atomic
 reports. Local restoration requires available, valid saved staging and matching
 readback; missing terminal proof or an interrupted/failed save cannot produce PASS.
 The command-line runner implements complete readonly, finite soak and mapped
-register observation, plus portless dry-runs. It initializes and observes without
-apply, reset or IRQ ACK. [Hardware prerequisites](docs/hardware-validation.md)
+register observation, plus portless dry-runs. Those observation suites never
+apply, reset or IRQ ACK. Explicit orientation, accessory, role-current and interrupt
+plans require identified fixtures, setup/identity/supply prerequisites and bounded
+operator observations. They use ordinary operations and conditional cleanup;
+unknown or failed effects are never automatically retried/restored.
+[Hardware prerequisites](docs/hardware-validation.md)
 keep physical serial and Type-C qualification separate from native/fake-serial tests.
 
 ## Develop from a source checkout

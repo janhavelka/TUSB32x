@@ -14,6 +14,7 @@ import time
 BASE_VARIANTS = {"tusb320", "tusb320i"}
 EXTENDED_VARIANTS = {"tusb320li", "tusb320hi", "tusb320lai", "tusb320hai"}
 VARIANTS = BASE_VARIANTS | EXTENDED_VARIANTS | {"tusb322i"}
+SUITES = ("readonly", "soak", "orientation", "accessory", "role-current", "interrupt")
 MAX_RUN_SECONDS = 86400
 MAX_SEQUENCE = (1 << 64) - 1
 CACHE_COMMANDS = (
@@ -74,9 +75,9 @@ class ObservationPlan:
         if self.address not in ({0x60, 0x61} if self.variant in BASE_VARIANTS else {0x47, 0x67}):
             raise ValueError("address does not match variant")
         if (not isinstance(self.suites, (tuple, list)) or not self.suites or
-                any(not isinstance(suite, str) or suite not in {"readonly", "soak"}
+                any(not isinstance(suite, str) or suite not in SUITES
                     for suite in self.suites)):
-            raise ValueError("suites must select readonly and/or soak")
+            raise ValueError("select named observation or explicit fixture suites")
         object.__setattr__(self, "suites", tuple(dict.fromkeys(self.suites)))
         _integer(self.count, "count", 1, 100000)
         _integer(self.interval_ms, "interval_ms", 1, 3600000)
@@ -95,18 +96,20 @@ class ObservationPlan:
 
     def describe(self):
         """Return a concrete bounded JSON plan; hardware stays NOT RUN until execution."""
-        registers = list(range(0x0B))
-        if self.variant != "tusb322i":
+        observation = any(suite in {"readonly", "soak"} for suite in self.suites)
+        registers = list(range(0x0B)) if observation else []
+        if observation and self.variant != "tusb322i":
             registers.append(0x45)
-        if self.variant not in BASE_VARIANTS:
+        if observation and self.variant not in BASE_VARIANTS:
             registers.append(0xA0)
         actions = [
             "hilmark <fresh>; version; bus; capabilities; job status; console; profile show",
             "compare selected variant/address; bind only when ended and idle",
-            "job auto 0; color off and verbose 1 only when different from saved values",
-            "init <remaining command ms>; job step 0; at most 32 job step 1; "
-            "result; result take <owned>",
+            "select job auto 0, color off and verbose 1; retain actual saved local values",
         ]
+        if observation:
+            actions.append("init <remaining command ms>; job step 0; at most 32 job step 1; "
+                           "result; result take <owned>")
         if "readonly" in self.suites:
             actions.extend([
                 "idle cached routes: " + "; ".join(CACHE_COMMANDS),
@@ -115,11 +118,42 @@ class ObservationPlan:
                 "verify aliases: observe retained desired, or reject CONFIGURATION_UNKNOWN",
                 "profile read; read; sample; job auto 1; read under cached queries; job auto 0",
             ])
-        actions.append("one ordinary reg command per address: " +
-                       ",".join(f"0x{register:02X}" for register in registers))
+        if observation:
+            actions.append("one ordinary reg command per address: " +
+                           ",".join(f"0x{register:02X}" for register in registers))
         if "soak" in self.suites:
             actions.append(f"soak: {self.count} automatic read/sample operations; "
                            f"{self.interval_ms} ms quiet gaps")
+        fixture_actions = {
+            "orientation": "apply observed candidate as UFP; identified same source partner "
+                           "CC1 then CC2; compare local sink/peer source and orientation; detach",
+            "accessory": "for each declared supported accessory: detached apply DFP "
+                         "(UFP for debug-local-ufp); connect exact accessory; compare valid "
+                         "typed/raw evidence; detach",
+            "role-current": "UFP: same attached source peer default/1a5/3a0; " +
+                            ("explicit reset/reconcile/identity/profile/operator-settled sample "
+                             "after each changed "
+                             "peer advertisement; " if self.variant in BASE_VARIANTS else "") +
+                            "detach; DFP: sink fixture and stage/apply/verify default/1a5/3a0 "
+                            "with external CC observations; detach; DRP resolved as sink; detach",
+            "interrupt": "require opt-in INT input before work; apply duty50/DRP; "
+                         "assert/observe INT; stage30; ACK and prove actual50; reassert; "
+                         "apply30 with latch pending; multiple fixture events/coalescing; "
+                         "service once, verify ACK/recheck/deassertion; detach",
+        }
+        if any(suite in fixture_actions for suite in self.suites):
+            actions.append("fixture prerequisites: explicit ID/config, expected firmware "
+                           "commit/framework/target, supply/startup readiness; no 322I writes; "
+                           "init/read actual profile; attested initial detach")
+            actions.append("each fixture operation: admit once; at most 512 job step 1 turns "
+                           "with <=5ms waits; original RESULT/END and exact result take once; "
+                           "each operator transition <=300s and whole-run deadline; <=64 steps")
+        actions.extend(suite + ": " + fixture_actions[suite] for suite in self.suites
+                       if suite in fixture_actions)
+        if any(suite in fixture_actions for suite in self.suites):
+            actions.append("successful fixture cleanup only: original partner/target/supply "
+                           "attestation, fresh detached/profile proof, restore observed original "
+                           "profile via apply/verify; failed work never triggers device restore")
         actions.append("restore saved local staging/auto/output; hilmark <fresh>")
         return dict(asdict(self), suites=list(self.suites), registers=registers,
                     hardware="NOT RUN", actions=actions)

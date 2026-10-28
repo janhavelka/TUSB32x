@@ -37,6 +37,10 @@ struct Bus {
   bool injected = false;
   bool written = false;
   int input = -1; ///< -1 absent, -2 failed, otherwise the explicit application input level.
+  bool fixture = false; ///< Explicit launch-only physical model; never hardware evidence.
+  const char* fixtureState = nullptr; ///< Borrowed path to bounded external observations.
+  uint64_t fixtureVersion = 0; ///< Last applied observation; ACK must not reassert an old latch.
+  bool fixtureLoaded = false; ///< Distinguishes initial version zero from an unchanged file.
 
   Bus() {
     constexpr uint8_t identity[] = {0x30, 0x32, 0x33, 0x42, 0x53, 0x55, 0x54, 0};
@@ -45,6 +49,33 @@ struct Bus {
     registers[0x09] = 0x14; // Detached, 50% duty and a pending coalescing IRQ latch.
     registers[0x0A] = 0x30;
     registers[0xA0] = 2;
+  }
+
+  /// @brief Apply one independently scripted physical observation before a command line.
+  /// @details The decimal version/08/09 file changes only RO CC/attachment and IRQ evidence.
+  /// Writable profile fields remain owned by the actual driver's transport callbacks. Reading
+  /// the same version preserves a cleared W1C latch; malformed/regressing input fails closed.
+  bool observeFixture() {
+    if (!fixture) return true;
+    FILE* source = std::fopen(fixtureState, "rb");
+    if (!source) return false;
+    char text[128]{};
+    const auto size = std::fread(text, 1, sizeof(text) - 1, source);
+    const bool complete = !std::ferror(source) && std::feof(source);
+    const bool closed = std::fclose(source) == 0;
+    unsigned long long version = 0;
+    unsigned raw08 = 0;
+    unsigned raw09 = 0;
+    char extra = 0;
+    if (!complete || !closed || size == 0 ||
+        std::sscanf(text, "%llu %u %u %c", &version, &raw08, &raw09, &extra) != 3 ||
+        raw08 > 255 || raw09 > 255 || version < fixtureVersion) return false;
+    if (fixtureLoaded && version == fixtureVersion) return true;
+    fixtureVersion = static_cast<uint64_t>(version);
+    fixtureLoaded = true;
+    registers[0x08] = static_cast<uint8_t>((registers[0x08] & 0xC1) | (raw08 & 0x3E));
+    registers[0x09] = static_cast<uint8_t>((registers[0x09] & 0x07) | (raw09 & 0xF0));
+    return true;
   }
 
   t::Status reject() {
@@ -76,12 +107,14 @@ struct Bus {
     bus.written = true;
     const auto reg = data[0];
     if (reg == 0x09) {
-      // Explicit W1C acceptance: status bits persist; only observed duty is writable.
+      // Explicit W1C acceptance: status persists; only persistent controls are writable.
       const auto latch = static_cast<uint8_t>((data[1] & 0x10) ? 0 : bus.registers[reg] & 0x10);
-      bus.registers[reg] = static_cast<uint8_t>((bus.registers[reg] & 0xE0) | latch | (data[1] & 0x06));
+      bus.registers[reg] = static_cast<uint8_t>((bus.registers[reg] & 0xE0) | latch | (data[1] & 0x07));
     } else if (reg == 0x0A) {
       // The fixture accepts reset and supplies a settled image on later reads. Core owns the wait.
       bus.registers[reg] = static_cast<uint8_t>(data[1] & ~uint8_t{0x08});
+    } else if (reg == 0x08 && bus.fixture) {
+      bus.registers[reg] = static_cast<uint8_t>((bus.registers[reg] & 0x3F) | (data[1] & 0xC0));
     } else bus.registers[reg] = data[1];
     return status;
   }
@@ -105,7 +138,12 @@ struct Bus {
 uint64_t nowMs(void* user) { return static_cast<Bus*>(user)->clock; }
 /// @brief Return only the explicitly selected test input; no GPIO or transport work.
 bool readInput(bool& value, void* user) {
-  const auto input = static_cast<Bus*>(user)->input;
+  const auto& bus = *static_cast<Bus*>(user);
+  if (bus.fixture) {
+    value = (bus.registers[0x09] & 0x10) == 0;
+    return true;
+  }
+  const auto input = bus.input;
   if (input < 0) return false;
   value = input != 0;
   return true;
@@ -148,6 +186,13 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--observation") == 0) {
       if (std::strcmp(argv[index + 1], "1") != 0) return 2;
       observation = true;
+    } else if (std::strcmp(argv[index], "--fixture") == 0) {
+      if (std::strcmp(argv[index + 1], "1") != 0) return 2;
+      bus.fixture = true;
+      observation = true;
+    } else if (std::strcmp(argv[index], "--fixture-state") == 0) {
+      if (argv[index + 1][0] == '\0') return 2;
+      bus.fixtureState = argv[index + 1];
     } else if (std::strcmp(argv[index], "--input") == 0) {
       if (std::strcmp(argv[index + 1], "0") == 0) bus.input = 0;
       else if (std::strcmp(argv[index + 1], "1") == 0) bus.input = 1;
@@ -156,6 +201,7 @@ int main(int argc, char** argv) {
       else return 2;
     } else return 2;
   }
+  if (bus.fixture != (bus.fixtureState != nullptr)) return 2;
   TUSB32x::TUSB32x driver;
   TUSB32x::DriverConfig config;
   config.variant = TUSB32x::Variant::TUSB320LAI;
@@ -166,10 +212,16 @@ int main(int argc, char** argv) {
   platform.nowMs = nowMs;
   platform.write = writeOutput;
   platform.counters = counters;
-  if (bus.input != -1) platform.readInput = readInput;
+  if (bus.input != -1 || bus.fixture) platform.readInput = readInput;
   platform.user = &bus;
   platform.identity.build = "host-fixture";
   platform.identity.framework = "host";
+  if (bus.fixture) {
+    platform.identity.git = "0123456789abcdef0123456789abcdef01234567";
+    platform.identity.tree = "clean";
+    platform.identity.frameworkVersion = "test";
+    platform.identity.target = "native";
+  }
   tusb32x_cli::Cli cli(driver, config, platform);
   if (!cli.setup().ok()) return 3;
   tusb32x_cli::CliTestAccess::requestBase(cli, requestBase);
@@ -184,6 +236,7 @@ int main(int argc, char** argv) {
     // observe an older active operation before another bounded owner turn advances it.
     char line[193]{};
     while (std::fgets(line, sizeof(line), stdin) != nullptr) {
+      if (!bus.observeFixture()) return 8;
       const auto length = std::strlen(line);
       if (length == 0 || line[length - 1] != '\n') return 6;
       const bool denyTake = bus.fault == Bus::Fault::TAKE_FULL && !bus.injected &&

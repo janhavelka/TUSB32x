@@ -408,3 +408,15 @@ audited native IDF5.5.5 configuration only; read `docs/idf-transport.md` for cop
 handle metadata, synchronous mode, same-core task pinning, shared serialization,
 qualified overhead and controller retirement. Do not introduce Arduino into the
 native fixture or infer board timing qualification from a linked image.
+
+## Explicit fixture runner checks
+
+Prompt30 adds orientation/accessory/role-current/interrupt plans to the existing
+runner, with --fixture/--fixture-config and expected firmware commit/framework/
+target required for physical work. Read docs/hil-runner.md and hardware-validation.md.
+Use existing hil_runner (finite90s) and cli_transcript registrations; they exercise
+deterministic observations and the actual shared CLI/core only. No hardware is
+opened by ordinary tests. Missing equipment/input remains NOT RUN, closed silicon
+gates BLOCKED, failed evidence FAIL. A successful local restoration cannot certify
+device cleanup. Never retry uncertain mutations or restore an old source role
+after partner, target or supply assumptions change.

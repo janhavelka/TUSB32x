@@ -759,3 +759,39 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   slot. Stop with residual evidence. Restore only verified local values without
   hardware apply; lost sessions never replay restoration. Dry-run exits 2 because
   hardware was not run, even when its finite plan validation passes.
+
+## Prompt 30: explicit fixture evidence and conditional cleanup
+
+- Keep physical plans in a small current-responsibility module over the existing
+  Session/parser/artifacts. Use ordinary CLI operations, one owned token and exact
+  take; no firmware fixture command, register protocol, power controller or retry.
+- Require an explicit fixture and bounded strict setup, expected flashed identity,
+  current known actual profile and coherent port fields. Operator readiness is
+  recorded as an assumption beside typed evidence, never substituted for measured
+  hardware. Reject queued input before each finite prompt; no unbounded readline
+  or background input worker. Save physical proof per bounded suite group so a
+  later session cannot erase earlier PASS evidence.
+- Base audio charge-through is documented by SLLSEN9F7.3.3.1/code5, not an
+  extended-only feature. Extended debug code6 is DEBUG_LOCAL_DFP; code7 is
+  DEBUG_LOCAL_UFP and needs local UFP mode. Base code7 remains reserved. These
+  facts corrected early plan assumptions and have independent behavioral tests.
+- Gate every source-capable3A candidate, including cleanup and inherited actual
+  sink settings, on measured VDD>=3.5V. All TUSB320 VDD is2.7..5V; HI/HAI's
+  1.05..3.65V range belongs to EN. Do not impose local advertisement conditions
+  on remote current detection. All322 fixture mutation plans are currently
+  blocked before I2C because the complete plan/cleanup needs unresolved
+  advertisement/09/fault and return-to-DRP writes.
+- Original attached-current updates use explicit reset operations, then identity,
+  reconciliation/profile and a separate physical settle confirmation/read. Save
+  both pre-reset raw evidence and decisive post-reset current proof. Never hide
+  this reset in observation/soak or apply it to later variants.
+- Check the application's optional INT reader before mutations. ACK proves
+  actual50 despite staged30; an ordinary duty write leaves pending IRQ; service
+  result's recheck and physical deassertion are separate from the pre-ACK snapshot.
+  Multiple fixture events demonstrate coalescing, never lossless edge counting.
+- Restore device settings only after successful work and a new original-partner/
+  supply/target attestation with fresh known profile and detached port. A failed
+  or uncertain plan stops without hardware rollback, even when local cleanup can
+  finish. Device cleanup, local cleanup, primary outcome and residual effects
+  remain independent. Restoring original actual settings does not restore desired
+  generation history or undo USB events; retain the original desired snapshot.

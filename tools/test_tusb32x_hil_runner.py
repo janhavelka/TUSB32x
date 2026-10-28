@@ -2139,8 +2139,14 @@ def load_tests(loader, tests, pattern):
     """Register artifact failure coverage with this single runner test entrypoint."""
     import test_tusb32x_hil_artifacts
     import test_tusb32x_observation
+    import test_tusb32x_fixtures
+    import test_tusb32x_fixture_setup
+    import test_tusb32x_fixture_invocation
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_hil_artifacts))
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_observation))
+    tests.addTests(loader.loadTestsFromModule(test_tusb32x_fixtures))
+    tests.addTests(loader.loadTestsFromModule(test_tusb32x_fixture_setup))
+    tests.addTests(loader.loadTestsFromModule(test_tusb32x_fixture_invocation))
     return tests
 
 

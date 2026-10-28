@@ -561,3 +561,11 @@ ctest --test-dir build/native -C Debug -R "hil_runner|cli_transcript|cli_contrac
 Both registrations have finite timeouts; the transcript receives the explicit
 built executable path. See [session contracts](../docs/hil-runner.md). These are
 host software checks, not serial hardware or physical Type-C qualification.
+
+Prompt30 extends those same registrations with strict fixture setup/operator
+input, all four complete production fixture plans and mutation/cleanup failures.
+The persistent C++ fixture has launch-only modeled physical observations and
+test identity; production CLI grammar is unchanged. It proves actual core ACK
+preservation and pending-latch effects, not physical INT/CC behavior. hil_runner
+has a finite90s limit for the expanded atomic-artifact tests; cli_transcript
+retains30s. No ordinary test opens a physical port or needs pyserial.

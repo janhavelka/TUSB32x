@@ -8,6 +8,7 @@ the host is terminated on failure, and no serial device or physical bus is opene
 from __future__ import annotations
 
 import argparse
+import json
 import queue
 import subprocess
 import threading
@@ -20,6 +21,8 @@ from tusb32x_cli_contract import ROWS, SCHEMAS, parse_record, validate_record, v
 from tusb32x_hil_artifacts import Artifacts
 from tusb32x_hil_runner import Session, SessionBlocked
 from tusb32x_hil_plans import ObservationPlan, PlanFailure, run_plan
+from tusb32x_hil_fixtures import run_fixture_plan
+from tusb32x_hil_fixture_setup import FIXTURE_SUITES, load_setup
 
 
 class PersistentHost:
@@ -1090,6 +1093,117 @@ def exercise_session_turns(executable):
                 artifacts.close()
 
 
+class ScriptedPhysicalFixture:
+    """Supply independent CC/attachment/INT register inputs; never hardware evidence.
+
+    The launch-only file changes RO physical inputs, not requested profile controls.
+    Every version is applied once by the C++ fixture, allowing real W1C ACK/service
+    writes to clear INT without the next ordinary CLI command reasserting it.
+    """
+
+    def __init__(self, path):
+        """Start detached with a pending modeled latch before the first session command."""
+        self.path = path
+        self.version = 0
+        self.steps = []
+        self.path.write_text("0 0 16\n", encoding="ascii")
+
+    def __call__(self, step, deadline):
+        """Translate declared external observations into explicit, independent status bytes."""
+        if time.monotonic() >= deadline:
+            raise AssertionError("native scripted transition exceeded its finite deadline")
+        expect = step["expect"]
+        attachment = {"DETACHED": 0, "LOCAL_SOURCE": 0x40,
+                      "LOCAL_SINK": 0x80, "ACCESSORY": 0xC0}[expect["attachment"]]
+        direction = 0x20 if expect.get("orientation") == "CC2" else 0
+        detected = {"DEFAULT": 0, "MA_1500": 0x10,
+                    "MA_3000": 0x30}[expect.get("detected_current", "DEFAULT")]
+        accessory = {"NONE": 0, "AUDIO": 0x08, "CHARGE_THROUGH": 0x0A,
+                     "DEBUG_LOCAL_DFP": 0x0C,
+                     "DEBUG_LOCAL_UFP": 0x0E}[expect.get("accessory", "NONE")]
+        self.version += 1
+        self.steps.append(step["id"])
+        self.path.write_text(
+            f"{self.version} {detected | accessory} {attachment | direction | 0x10}\n",
+            encoding="ascii",
+        )
+        return True
+
+
+def fixture_no_sleep(_duration):
+    """Advance through real owner turns; the C++ fixture owns its simulated millisecond clock."""
+
+
+def exercise_fixture_plans(executable):
+    """Run all four complete production plans over real persistent CLI/core operations.
+
+    Only physical status inputs are scripted. Actual staging/apply/verify, 50% ACK
+    preservation, unrelated duty-write latch preservation and service/recheck use
+    the production operation engine and typed records. Saved reports explicitly
+    identify all connector/CC/INT observations as modeled, with hardware NOT RUN.
+    """
+    for suite in FIXTURE_SUITES:
+        with tempfile.TemporaryDirectory(prefix="tusb32x-fixture-" + suite + "-") as temporary:
+            root = Path(temporary)
+            setup_path = root / "setup.json"
+            setup_path.write_text(json.dumps({
+                "board": "native simulated board; no physical hardware",
+                "part": "modeled TUSB320LAI; no measured silicon",
+                "adapter": "C++ recording callbacks",
+                "wiring": "modeled CC1/CC2 and active-low INT; VBUS_DET modeled only",
+                "addr_strap": "modeled 0x47", "enable": "modeled active-low EN_N asserted",
+                "supply_mv": 5000, "partner": "modeled reversible source/sink/accessories",
+                "operator": "deterministic native test; no physical attestation",
+                "variant": "tusb320lai", "startup_ready": True,
+                "capabilities": ["orientation", "audio", "debug", "charge-through",
+                                 "debug-local-dfp", "debug-local-ufp", "role-current",
+                                 "interrupt"],
+            }), encoding="utf-8")
+            setup = load_setup(setup_path, "native-model", "tusb320lai", (suite,))
+            physical = ScriptedPhysicalFixture(root / "state.txt")
+            host = PersistentHost(executable, "--fixture", "1", "--fixture-state",
+                                  str(physical.path))
+            io = SessionFixtureIo(host)
+            artifacts = Artifacts(root / "evidence", time.monotonic)
+            artifacts.metadata["native_simulation"] = {
+                "physical_hardware": "NOT RUN",
+                "evidence": "modeled physical inputs; real CLI and core operation engine",
+            }
+            try:
+                session = Session(io, artifacts)
+                expected = {"git": "0123456789abcdef0123456789abcdef01234567",
+                            "framework": "host", "target": "native"}
+                summary = run_fixture_plan(
+                    session, ObservationPlan(suites=(suite,), run_timeout=20), setup, expected,
+                    transition=physical, sleep=fixture_no_sleep,
+                )
+                report = artifacts.snapshot()
+                if (report["primary"] != "PASS" or report["cleanup"] != "PASS" or
+                        artifacts.exit_code() != 0 or report["residual_uncertainty"] or
+                        report["metadata"]["hardware_cleanup"] != "PASS" or
+                        session.operation is not None or session.valid):
+                    raise AssertionError("native fixture plan lost successful owned cleanup proof")
+                if (summary["mutation_requests"] < 1 or summary["operations"] < 1 or
+                        summary["transitions"] != len(physical.steps) or
+                        physical.steps[-1] != "cleanup-detached"):
+                    raise AssertionError("native fixture plan skipped declared transitions/work")
+                saved = json.loads((artifacts.directory / "report.json").read_text("utf-8"))
+                if saved != report or saved["metadata"]["native_simulation"][
+                        "physical_hardware"] != "NOT RUN":
+                    raise AssertionError("native fixture report lost modeled/physical distinction")
+                if suite == "interrupt":
+                    detail = report["metadata"]["irq_service"]["detail"]
+                    if detail["irq_after"] != "0" or detail["ack_confirmed"] != "1":
+                        raise AssertionError("real bounded IRQ service failed to clear modeled INT")
+                io.close()
+            finally:
+                if host.process.poll() is None:
+                    host.process.kill()
+                    host.process.wait(timeout=3)
+                host.reader.join(timeout=3)
+                artifacts.close()
+
+
 def main() -> int:
     """Run the bounded transcript; return zero only after all records and fixture exit pass."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1113,13 +1227,15 @@ def main() -> int:
         exercise_observation_plans(args.host)
         exercise_plan_denied_take(args.host)
         exercise_session_turns(args.host)
+        exercise_fixture_plans(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()
             host.process.wait(timeout=3)
         raise
     print(f"CLI transcript: {requests} persistent requests and damaged-record checks passed; "
-          "2 strict sessions, 3 native readonly plans and 2 owner-turn sessions passed")
+          "2 strict sessions, 3 native readonly plans, 2 owner-turn sessions and "
+          "4 modeled physical-fixture plans passed; physical hardware NOT RUN")
     return 0
 
 

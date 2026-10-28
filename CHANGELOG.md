@@ -29,6 +29,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Explicit orientation, accessory, role-current and interrupt fixture plans with
+  strict setup/identity/supply prerequisites, finite operator transitions, exact
+  owned results and conditional device cleanup. Base attached-current changes
+  use explicit resets; unresolved TUSB322I fixture writes remain gated. Fake
+  serial and all four persistent C++ plans prove software behavior only.
+
 - Complete Python readonly/soak and bounded register observation plans with strict
   pre-open target/identity validation, portless dry-runs, immutable run deadlines,
   fresh port evidence, exact callback/result checks and local-only restoration.

@@ -530,3 +530,18 @@ The [runner guide](hil-runner.md) and [hardware prerequisites](hardware-validati
 describe concrete commands and the physical NOT RUN boundary. These source-checkout
 tools do not add Python to consumers or HIL to ordinary tests. No hardware mutation
 suite, firmware bulk scheduler, public C++ API or silicon capability was added.
+
+## Prompt 30 explicit fixture plans
+
+| Requirement | Implemented path | Executed software evidence |
+| --- | --- | --- |
+| Strict setup and finite transitions | Fixture JSON validation, explicit suite/fixture identity, expected firmware and bounded operator input | Pre-open malformed/absent/voltage/capability tests; Windows/POSIX readiness, queued input, late/frozen/regressed clock and typed attestation guards |
+| Orientation/accessory | Ordinary apply/verify/read, same reversible partner CC1/CC2, exact supported accessories and local mode | Reactive physical model plus complete persistent C++ plans; reserved/unknown/invalidation and base-versus-extended cases |
+| Role/current | Sink peer categories, explicit base reset/revalidation, source category apply/verify, resolved DRP | Fake base attached-current stays stale until reset; source supply gate includes retained sink3A and cleanup; native complete LAI plan |
+| IRQ preservation | Wired input preflight, actual50/staged30 ACK, unrelated duty30 write with latch pending, reassert/coalesced service | Independent latch and actual/staged profiles, native real core effects; missing input before I2C, ACK/service failures and pending recheck |
+| Safe cleanup/verdicts | Success-only attested detach and original actual profile apply/verify, local-only cleanup after failure | Mutation boundary failures/cancel/deadline, target/attachment changes, exact owned take, blocked device cleanup despite local success, report/interruption survival |
+
+The single hil_runner and cli_transcript registrations execute these tests with
+finite timeouts. TUSB322I fixture mutation plans are explicitly gated before
+traffic; no firmware command, core scheduler, register composer or power control
+was added. All physical serial/CC/INT/current/supply evidence remains NOT RUN.

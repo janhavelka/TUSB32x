@@ -1,9 +1,10 @@
-# Python observation plans, sessions and evidence
+# Python observation/fixture plans, sessions and evidence
 
 The executable `tools/tusb32x_hil_runner.py` runs finite `readonly` and `soak`
 plans from `tools/tusb32x_hil_plans.py`, using the existing Session and pure CLI
 contract. `tools/tusb32x_hil_artifacts.py` owns streamed capture and atomic reports.
-Physical fixture mutation suites remain later work. Native/fake-serial tests
+Explicit `orientation`, `accessory`, `role-current` and `interrupt` suites use
+`tools/tusb32x_hil_fixtures.py` and its bounded setup/operator helper. Native/fake-serial tests
 prove software behavior; physical serial, I2C timing, CC, VBUS and IRQ
 qualification remain separate and NOT RUN. Read the
 [hardware prerequisites](hardware-validation.md) before opening a physical port.
@@ -40,7 +41,7 @@ The runner compares the selected variant/address with firmware records. It
 does not change the target to make a plan fit; a mismatch blocks the run. It may
 bind an ended, idle owner to its already selected target, then explicitly run
 read-only initialization. A foreign active operation or retained result blocks
-work. No plan applies settings, resets, acknowledges IRQ or performs dead-battery
+work. Readonly/soak never apply settings, reset, acknowledge IRQ or perform dead-battery
 recovery. Firmware can advance already admitted work while handling cached input.
 
 Physical serial uses the optional pinned dependency `pyserial==3.5`, checked against its
@@ -334,3 +335,125 @@ completion following a newer query retain executable protocol coverage. A
 fixture-injected I2C_TIMEOUT retains INT32_MIN detail and a failed payload under
 delivery OK and good cleanup. This is simulated software evidence; physical
 serial/I2C/CC/IRQ/VBUS qualification remains NOT RUN.
+
+## Explicit physical fixture suites
+
+Repeat `--suite orientation`, `--suite accessory`, `--suite role-current` and
+`--suite interrupt` to select this work. There is no `--all` or implicit mutation.
+Selection authorizes the listed ordinary CLI mutations, not power control,
+flashing, a VBUS switch, autonomous retries or a change to board USB policy.
+Readonly remains the default. Consecutive observation and fixture groups retain
+selection order, one open transport and one immutable whole-run deadline. Each
+group finishes and restores local values before establishing the next session.
+
+Every fixture run requires `--fixture <id> --fixture-config <path>` and expected
+flashed `--expect-commit`, `--expect-framework`, `--expect-target`. Unknown firmware
+identity blocks physical transitions and writes. Missing equipment or operator
+input reported as skip/EOF is NOT RUN; unsupported variant/setup is BLOCKED.
+Contradictory observations, late input or failed operation payloads FAIL. These
+outcomes cannot become PASS through cleanup.
+
+Setup is strict UTF-8 JSON, at most 16KiB, with no duplicate/extra/missing keys.
+The example below is an operator-edited declaration, **not executed evidence**.
+Replace each identity, wiring/strap, measured supply and capability with the
+actual authorized setup; save it outside shipped core as a local JSON file.
+
+```json
+{
+  "board": "operator-supplied exact board and revision",
+  "part": "operator-supplied full assembled part number",
+  "variant": "tusb320lai",
+  "adapter": "operator-supplied adapter and firmware identity",
+  "wiring": "exact SDA/SCL/INT/CC and resistor-coupled VBUS_DET connections",
+  "addr_strap": "actual ADDR strap selecting 0x47",
+  "enable": "actual EN_N active-low wiring and asserted level",
+  "supply_mv": 5000,
+  "partner": "identified controlled reversible dual-role partner/fixture kit",
+  "operator": "responsible operator and declared power/fixture assumptions",
+  "capabilities": ["orientation", "audio", "debug", "role-current", "interrupt"],
+  "startup_ready": true,
+  "base_recovery_complete": false
+}
+```
+
+Strings are printable ASCII, at most 256 characters (wiring 1024). Fixture IDs
+use 1..64 letters/digits/`_.-`. Capability names are exactly `orientation`, `audio`,
+`debug`, `charge-through`, `debug-local-dfp`, `debug-local-ufp`, `role-current`,
+`interrupt`; no duplicate names. The two readiness booleans are optional in JSON
+but startup_ready must be true to run. Original TUSB320/I also requires the
+application's base_recovery_complete declaration after stable VDD and identity;
+the runner does not perform dead-battery recovery or infer it from a register.
+Wiring must explicitly describe VBUS_DET; parsing that text cannot prove safety.
+See [electrical prerequisites](hardware-validation.md) for the actual pad limits.
+
+All TUSB320 VDD is 2700..5000mV; HI/HAI's 1050..3650mV range describes EN,
+not VDD. TUSB322I VDD is 4500..5500mV. Role-current setup requires at least3500mV
+because it includes local 3 A advertisement. Every source-capable apply,
+including cleanup, separately checks the candidate current and measured VDD;
+an existing sink profile with 3 A cannot bypass this check by changing mode.
+Remote current detection has no local 3 A advertisement prerequisite.
+
+This saves a concrete plan without opening a port; exit2 and hardware NOT RUN are
+expected, including when equipment/setup is missing:
+
+```text
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite orientation --suite accessory --suite role-current --suite interrupt --out build/fixture-plan --run-timeout 1800
+```
+
+For real work add the operator-selected port, actual setup/fixture ID and expected
+firmware values using the variables in the earlier recipe. Use a fresh output
+directory. Set --run-timeout for the entire finite plan, including physical
+transitions and cleanup (maximum86400s). Each operator prompt has at most300s,
+clipped to that immutable deadline. On a local TTY, type exactly `ready` only
+after performing and externally observing the displayed transition; it attests
+the same declared target, partner and measured supply. Type `skip` to leave proof
+NOT RUN, or Ctrl-C to save interruption130. There is no unbounded input/readline
+thread: Windows key polling and POSIX ready reads accept at most64 characters,
+with at most50ms waits and checked monotonic time. Local prompt output assumes
+the host output sink returns; OS console/serial-open blocking still needs host
+qualification. A host or firmware report cannot replace physical CC/INT evidence.
+
+| Suite | Required fixture and finite work |
+| --- | --- |
+| orientation | Identified reversible source partner; detached baseline, UFP apply/verify, both CC1 and CC2 with valid local-sink/peer-source fields, then detach |
+| accessory | Each explicitly declared exact accessory type/wiring; detached DFP apply (UFP for debug-local-ufp), valid typed accessory/raw bytes, detach after each. Base audio/debug/charge-through supported; base debug-local variants denied before traffic |
+| role-current | Controlled same dual-role peer and selected safe power capability; sink detects externally varied default/1.5A/3A while attached; detach, source advertises each category through stage/apply/verify and external CC observation; detach, DRP resolves as sink; detach |
+| interrupt | Wired, opt-in application INT input checked before I2C; applied50/staged30 ACK preserves50; explicit reassertion; unrelated duty30 apply leaves latch pending; multiple physical events show coalescing; one service proves ACK/recheck and INT deassertion; detach |
+
+Original TUSB320/I uses **explicit reset operations** after each attached peer
+advertisement change (SLLSEN9F7.3.1.2p11), followed by identity, reconciliation,
+profile and port evidence. A read alone cannot prove that current update.
+Later variants do not inherit these resets. Their successful register observation
+still does not resolve all TI wording about physical attached-current tracking.
+CC categories are neither measured load nor PD contract nor authorization to draw
+power. TUSB322I fixture plans are BLOCKED before initialization/I2C: advertisement,
+mixed09/fault-clear and return-to-DRP gates prevent this complete mutation/cleanup
+plan. Its read-only observation remains separately available with access context.
+
+Each operation admits once, uses at most512 explicit job-step1 exchanges with
+at most5ms sleeps, and takes the exact owned original result once. The command
+deadline includes admission, waits and take. Rejected admission, late callback,
+cancellation, failed payload or BUSY take stops the plan; no uncertain write,
+ACK, reset, cancel or take is automatically retried. Port reads retain the CLI's
+fixed1000ms owner timeout. Up to64 physical steps save bounded attestation plus
+raw/typed/validity/sequence/time evidence; no growing transcript journal is added.
+
+Before writes, capture firmware, configured target, observed profile/trust and
+generations, current coherent attachment and supply assumptions. Stage from the
+proved actual profile, not CLI defaults. Generations remain history. On successful
+plans only, cleanup requires a new original-partner/supply attestation, fresh
+identity/target, detached port and known profile; restore the original actual
+profile through apply/verify. This restores settings, not past USB events or the
+original desired-profile generation. The original desired snapshot is preserved
+in the report; cleanup never blindly reapplies it. Refuse cleanup if the partner,
+target or power assumptions changed. Never restore an old source role on another
+partner. Device failure/uncertainty stops without automatic hardware restoration.
+
+`metadata.hardware_cleanup`, primary outcome and local restoration are separate.
+`fixture_progress` counts confirmed transitions, consumed operations and
+mutation_requests (including no-op/rejected requests), not writes or bus transactions.
+Successful Session.finish restores staging/auto/color/verbose and cannot overwrite
+BLOCKED device cleanup. Residual effects, owned tokens and historical observations
+remain saved; an explicit later owner decision must resolve them. Missing cleanup
+proof prevents overall PASS. Transcript fixture reports label modeled observations
+and physical hardware NOT RUN; real connector/INT/electrical evidence is separate.

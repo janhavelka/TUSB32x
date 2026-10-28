@@ -3248,3 +3248,85 @@ Unchanged framework images were not rebuilt for these Python/test/documentation
 changes; earlier firmware links are not claimed as final-commit evidence. Commit,
 push and final fetched upstream equality are verified in the handoff and recorded
 in the next progress update. Prompt30 remains unstarted.
+
+## Prompt 30 fixture plans and bounded physical evidence (2026-10-28)
+
+Entry HEAD `1f0fb7604ad1696aea9f3067c320d3b3c2fca89e` was clean and fetched
+equal to upstream on `promptset/tusb32x-implementation-20261023`. Fresh peer
+revisions/dirty states, exact inspected files, current workflow/AGENTS conventions
+and archived TI tables are in [execution30](audit/execution-30-peers.md).
+Only this repository was edited. No serial port, flash, board-power operation,
+physical fixture or remote CI was invoked.
+
+Tools: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GNU15.1.0
+MinGW-W64 x86_64-ucrt-mcf-seh, Doxygen1.13.2, Git2.52.0.windows.1,
+VS-Code-managed PlatformIO Core6.1.19/native1.2.1. No dependencies/pins changed.
+The optional serial dependency remains pyserial3.5; tests need no pyserial.
+
+| Layer | Result | Actual evidence/limits |
+| --- | --- | --- |
+| Fixture/setup/operator/session software | PASS | 225 Python tests in the single hil_runner registration: prior161 plus33 fixture,18 setup/console and13 invocation cases; fake serial/clock, no wall sleeps or hardware |
+| Four complete native fixture plans | PASS | Persistent C++ shared CLI/core with launch-only independent physical inputs; actual apply/verify/IRQ W1C effects, exact result takes, conditional cleanup; all modeled physical hardware explicitly NOT RUN |
+| Prior native regressions | PASS | Full Debug63/63; full final Release63/63 with strict warnings and active assertions; final affected Debug10/10 after the last corrections |
+| CLI entry/help/dry-run | PASS | --help exit0; all four explicit LAI/0x47 fixture suites saved under build/p30-fixtures-verified; actual Python exit2 and primary/hardware NOT RUN, no serial I/O, no raw register list falsely advertised |
+| Ordinary consumer | PASS | Fresh separate tests-OFF Release configure/build/run; meaningful simulated owner assertions, no framework/sibling paths or maintainer requirement |
+| Package isolation | PASS | 76 source-equal exported files, matched IDF selection; renamed extracted host/shared-CLI/public-owner consumers beneath unrelated Git with Git/Python/Doxygen/PlatformIO absent from child PATH; owner5487 checks/0failures |
+| Documentation/metadata | PASS | Version sync/check/no-op stability, strict Doxygen/XML public visibility,13 Python modules' full docstrings/100-column style,133 Markdown files/810 links, vendor hashes, UTF-8/LF and diff whitespace |
+| Sanitizers/other compilers | BLOCKED | Fresh address/undefined probe links fail because installed MinGW lacks -lasan/-lubsan; cl/clang++/clang-format absent. No sanitizer claim or weakened checks |
+| Physical serial/I2C/CC/INT/current/VBUS/VCONN/supply | NOT RUN | No exact authorized port/target/fixture or physical traces; operator declarations/model bytes are not electrical qualification |
+
+Commands executed from the repository root:
+
+```text
+python tools/test_tusb32x_hil_runner.py
+python tools/test_tusb32x_fixture_setup.py
+python tools/test_tusb32x_fixture_invocation.py
+python tools/test_tusb32x_fixtures.py
+python tools/test_cli_transcript.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/test_cli_transcript.py --host build/native/test/Release/tusb32x_cli_host.exe
+python tools/tusb32x_hil_runner.py --help
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite orientation --suite accessory --suite role-current --suite interrupt --run-timeout 1800 --out build/p30-fixtures-verified
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R "^(tusb32x_protocol|tusb32x_operations|tusb32x_port|tusb32x_diagnostics|tusb32x_cli|tusb32x_console|cli_transcript|hil_runner|cli_contract|cli_contract_negative)$" --output-on-failure
+cmake -S examples/host/basic -B build/p30-host-basic -G Ninja -DCMAKE_BUILD_TYPE=Release -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/p30-host-basic
+build/p30-host-basic/tusb32x_host_basic.exe
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p30-final-check.py
+python build/p10-docs.py
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p30.tar.gz
+python build/p30-package.py
+git diff --check
+```
+
+The build/ helpers are session-only checks, not future distributed validators.
+hil_runner's finite timeout is90s for expanded atomic-artifact coverage; the
+existing cli_transcript remains30s and receives the explicit built fixture path.
+No new registration, physical test trigger or firmware command was introduced.
+
+Review found and corrected concrete capability, source-voltage inheritance,
+accessory-mode, INT-preflight, raw/profile validity, operator freshness, base
+reset-settling and mixed-group evidence defects. Three newly added negative
+assertions initially failed because their test hook changed only a copied result;
+the strict Session correctly preserved the original token. Fault injection was
+moved to original/retained payload construction, preserving the assertions.
+Both focused consistency regressions and final225-test registration then passed;
+final Release was rerun to63/63 and affected Debug suites to10/10. No contract or
+assertion was weakened. Successful mutation needs confirmed effect evidence;
+reset also needs COMPLETED. CodeOK cannot conceal uncertain effects.
+
+Device cleanup is success-only and separately evidenced; local restoration cannot
+erase blocked hardware cleanup. Setup and every source-capable candidate retain
+supply/partner/target assumptions; base current changes explicitly reset and save
+the settled post-reset proof. TUSB322I mutation plans remain gated before I2C.
+Unchanged framework firmware was not rebuilt for host tooling/test/docs changes;
+earlier linked images are not final-commit or hardware proof. The lead commits,
+pushes, fetches and verifies equal upstream commits, zero ahead/behind and no
+uncommitted task files before handoff. Record that hash in the next progress
+update. Prompt31 remains unstarted.

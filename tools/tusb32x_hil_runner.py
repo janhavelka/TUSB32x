@@ -1,13 +1,14 @@
-"""Bounded serial sessions and finite read-only observation command-line plans.
+"""Bounded serial sessions and explicit finite observation/physical-fixture plans.
 
 I/O is injected as read(size, timeout)/write(bytes, timeout); time is injected in
 monotonic seconds. Only this run's admitted token may be controlled or consumed.
-Readonly/soak plans use ordinary shared CLI routes, not device mutation suites.
+Readonly/soak stay read-only; explicitly selected fixture suites use ordinary CLI operations.
 Optional pyserial is imported only when an explicit physical port is opened.
 """
 
 import argparse
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
+from itertools import groupby
 import math
 from pathlib import Path
 import re
@@ -922,13 +923,15 @@ def host_identity(root):
 
 
 def main(argv=None):
-    """Run finite readonly/soak observations or save a no-I/O dry-run; return 0/1/2/130.
+    """Run finite selected observations/fixture plans or save dry-run; return 0/1/2/130.
 
-    Opening is explicit and may reset the board. Physical fixture mutation suites
-    are separate work. Invocation failures before capture creation return 2;
+    Opening is explicit and may reset the board. Fixture suites require declared
+    setup and bounded physical confirmations. Invocation failures before capture return 2;
     later exceptions/interruption checkpoint evidence before closing the port.
     """
-    from tusb32x_hil_plans import ObservationPlan, run_plan
+    from tusb32x_hil_plans import ObservationPlan, SUITES, run_plan
+    from tusb32x_hil_fixture_setup import FIXTURE_SUITES, load_setup
+    from tusb32x_hil_fixtures import fixture_prerequisite, run_fixture_plan
 
     def unsigned(text):
         """Convert an entire unsigned decimal token, rejecting signs, spaces and suffixes."""
@@ -950,7 +953,11 @@ def main(argv=None):
     parser.add_argument("--write-timeout", type=float, default=1.0)
     parser.add_argument("--variant", default="tusb320lai")
     parser.add_argument("--address", type=address, default=0x47)
-    parser.add_argument("--suite", action="append", choices=("readonly", "soak"))
+    parser.add_argument("--suite", action="append", choices=SUITES,
+                        help="repeat explicit suites; default readonly; fixture suites may write")
+    parser.add_argument("--fixture", help="explicit identified physical fixture (no power control)")
+    parser.add_argument("--fixture-config", type=Path,
+                        help="bounded JSON board/part/wiring/supply/partner/operator prerequisites")
     parser.add_argument("--count", type=unsigned, default=10, help="soak observations: 1..100000")
     parser.add_argument("--interval-ms", type=unsigned, default=1000,
                         help="minimum gap between soak observations: 1..3600000 ms")
@@ -996,10 +1003,16 @@ def main(argv=None):
                     name == "tree" and value not in {"clean", "dirty"} or
                     name == "git" and not re.fullmatch(r"[0-9a-fA-F]{40}", value)):
                 raise InvocationError("invalid expected firmware identity: " + name)
+        if bool(args.fixture) != bool(args.fixture_config):
+            raise InvocationError("--fixture and --fixture-config must be supplied together")
+        setup = (load_setup(args.fixture_config, args.fixture, plan.variant, plan.suites)
+                 if args.fixture else None)
         artifacts = Artifacts(args.output, time.monotonic, capture_limits)
         artifacts.metadata["host"] = host_identity(Path(__file__).resolve().parents[1])
         artifacts.metadata["plan"] = plan.describe()
         artifacts.metadata["expected_firmware"] = expected
+        if any(suite in FIXTURE_SUITES for suite in plan.suites):
+            artifacts.metadata["fixture"] = setup
         artifacts.metadata["serial_requested"] = {
             "port": args.port, "baud": args.baud, "dtr": args.dtr, "rts": args.rts,
             "open_may_reset": True, "open_deadline_supported": False}
@@ -1009,14 +1022,33 @@ def main(argv=None):
             artifacts.checkpoint()
             print(f"Dry-run saved to {args.output}; hardware NOT RUN")
         else:
+            for suite in plan.suites:
+                artifacts.check(suite, "NOT RUN", "selected plan not completed")
+            if any(suite in FIXTURE_SUITES for suite in plan.suites):
+                fixture_prerequisite(plan, setup, expected)
             artifacts.check("session", "NOT RUN", "read-only framing/identity exchange")
             artifacts.check("end_marker", "NOT RUN", "end marker not yet observed")
             artifacts.checkpoint()
             io = open_serial(args.port, timeouts=timeouts, dtr=args.dtr, rts=args.rts,
                              baud=args.baud)
             artifacts.metadata["serial"] = io.settings
-            session = Session(io, artifacts, timeouts=timeouts, limits=limits)
-            run_plan(session, plan, expected, clock=time.monotonic)
+            whole_deadline = time.monotonic() + plan.run_timeout
+            artifacts.metadata["selected_plan"] = plan.describe()
+            # Consecutive plan groups share one immutable deadline and one open
+            # transport. Each closes its session before another begins; no active
+            # operation/result or changed local state crosses that boundary.
+            for fixture_group, selected in groupby(
+                    plan.suites, key=lambda suite: suite in FIXTURE_SUITES):
+                remaining = whole_deadline - time.monotonic()
+                if remaining <= 0:
+                    raise SessionTimeout("whole-run deadline expired between selected suites")
+                group = replace(plan, suites=tuple(selected), run_timeout=remaining,
+                                command_timeout=min(plan.command_timeout, remaining))
+                session = Session(io, artifacts, timeouts=timeouts, limits=limits)
+                if fixture_group:
+                    run_fixture_plan(session, group, setup, expected, clock=time.monotonic)
+                else:
+                    run_plan(session, group, expected, clock=time.monotonic)
     except KeyboardInterrupt:
         if artifacts:
             artifacts.interrupted = True
