@@ -4084,3 +4084,49 @@ affected push-triggered checks after this tool correction is committed.
 Physical serial/I2C/CC/INT/supply/timing remains **NOT RUN**. No board, port,
 flash, fixture power, registry or publication operation occurred. Native images
 and fake-serial tests establish software handling only.
+
+### Audit push exposed the complete transcript's suite limit
+
+Checked correction `ac211e03a60f4b70a9005d07d6b6dde6f9927c1e` was committed,
+pushed and fetched; local/upstream equality and zero ahead/behind were verified
+with a clean worktree. Its [push run 40781392477](https://github.com/janhavelka/TUSB32x/actions/runs/40781392477)
+passes all five strict host rows (including sanitizers), workflow, Doxygen,
+package and four native image rows. The Python job is **FAIL**: actual JUnit and
+LastTest.log show cli_transcript killed at 30.0201 seconds. It had emitted no
+partial progress. The other six Python registrations pass: runner 312 cases in
+138.589s, validator/CI 43, firmware 24, version 18 and both example-config suites.
+This host is substantially slower than the earlier runner's 93.180s and complete
+transcript's 20.680s. No timeout failure is reclassified as PASS.
+
+Failed artifact 12856604145 (54,409 bytes) has verified ZIP SHA-256
+`62168c8293ff54e1028efc1ffe220834228430636aeb456af8b16a580281b91d`;
+`build/audit-33-34-new-ci/python-LastTest.log` retains the original failure.
+The correction changes only the finite whole-suite CPU/filesystem allowance to
+60 seconds and emits four bounded flushed phase messages after their assertions
+pass. It preserves every inner deadline, simulated time check, fixture case and
+assertion. Local focused reconfiguration/CTest uses the same existing registration
+and built fixture; no second transcript suite or remote retry policy is added.
+
+The same run's real package has 76 files, 302,524 bytes, SHA-256
+`836669fbaf334ed992710198af00247100f5d2a4fd4a0424e589b4fc7e64623b`.
+Its Linux package-origin test executes all four consumers, including the clean
+Multi-Config case, in 4.36 seconds. Available native artifacts are independently
+rehashed (20 ELF/BIN/map/sdkconfig/lock files), with 11 extracted project sources
+and five public headers each, correct target/configuration isolation and native
+symbols without Arduino. SDK 5.5.5 checks 203 dependency paths; 6.1 checks 205.
+Evidence is retained under `build/audit-33-34-new-ci`; later results stay tied to
+their actual commit rather than being assigned to a reporting revision.
+
+All eight image artifacts from that run are now independently verified: 32
+ELF/BIN/map/config/lock hashes match and all use the same archive and exact SHA.
+The four Arduino rows contain 11 project sources, five public headers and
+193/194 approved dependencies each. The run is **FAIL (13/14 jobs passed)**
+because of the retained transcript timeout; successful firmware links do not
+erase it. The unchanged firmware matrix needs no additional source-build pass.
+
+Focused correction check **PASS**: the actual registered CLI transcript completes
+in 10.86s locally, with all 248 persistent requests, session/fixture/failure cases
+and four progress checkpoints. Fresh CTest JSON and check_ci.py confirm all 72
+registrations still have their exact owners and finite timeouts. Python syntax,
+version ownership and diff whitespace checks remain valid. The next affected
+push-triggered Python result will be recorded with its own tested commit.

@@ -2730,3 +2730,19 @@ project sources. This audit does not transfer that result to new commits.
 The lead will commit/sync this checked correction and inspect the existing
 push-triggered checks affected by these validator/tool changes. No manual
 dispatch, HIL, flashing, publication or sibling mutation is involved.
+
+The correction was committed as `ac211e03a60f4b70a9005d07d6b6dde6f9927c1e`
+and synchronized with clean worktree and zero ahead/behind. Its existing push
+[run 40781392477](https://github.com/janhavelka/TUSB32x/actions/runs/40781392477)
+passes host/ASan/UBSan, docs, workflow, package and native image checks. The
+Python owner exposed a separate registration limit: cli_transcript timed out
+at 30.0201s without emitted progress. The other six Python registrations pass,
+including all 312 runner cases in 138.589s (earlier checkpoint: 93.180s).
+The failed artifact and JUnit remain retained; this is not a green full run.
+
+The single complete transcript registration now has a finite 60-second suite
+budget and four flushed phase checkpoints after successful assertions. Existing
+command, write, marker, core operation, cleanup and simulated-clock deadlines are
+unchanged, as are all cases and assertions. Focused transcript verification and
+the next affected push result are recorded in validation; no unrelated source
+firmware matrix is run locally.

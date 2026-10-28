@@ -233,7 +233,9 @@ set_tests_properties(tusb32x_arduino_examples_config PROPERTIES TIMEOUT 60)
 add_test(NAME cli_transcript
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_cli_transcript.py"
     --host "$<TARGET_FILE:tusb32x_cli_host>")
-set_tests_properties(cli_transcript PROPERTIES TIMEOUT 30)
+# The complete multi-plan transcript exceeded 30s on the audited CI host. This
+# CPU/filesystem margin does not change its per-command or operation deadlines.
+set_tests_properties(cli_transcript PROPERTIES TIMEOUT 60)
 add_test(NAME hil_runner
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_tusb32x_hil_runner.py" -v)
 # The integrated 312-case suite exceeded 90s after 278 successful cases on CI.

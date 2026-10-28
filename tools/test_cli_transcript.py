@@ -1961,7 +1961,11 @@ def exercise_base_power_epoch(executable):
 
 
 def main() -> int:
-    """Run the bounded transcript; return zero only after all records and fixture exit pass."""
+    """Run the bounded transcript, reporting phases before its final success.
+
+    Progress survives a parent CTest timeout; only completed assertions earn a
+    phase message. Return zero after all records and fixture exits pass.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", required=True, help="Compiled persistent C++ fixture")
     args = parser.parse_args()
@@ -1975,6 +1979,7 @@ def main() -> int:
         maximum_width_records(host.samples)
         requests = host.request
         host.close()
+        print("CLI transcript: local, operation and diagnostic records PASS", flush=True)
         for mode in ("transport", "readback"):
             exercise_fault(args.host, mode)
         exercise_diagnostic_fixtures(args.host)
@@ -1983,10 +1988,13 @@ def main() -> int:
         exercise_observation_plans(args.host)
         exercise_plan_denied_take(args.host)
         exercise_session_turns(args.host)
+        print("CLI transcript: faults, sessions and observation plans PASS", flush=True)
         exercise_fixture_plans(args.host)
+        print("CLI transcript: port/current/interrupt fixture plans PASS", flush=True)
         exercise_reset_recovery_success(args.host)
         exercise_recovery_interruptions(args.host)
         exercise_recovery_failures(args.host)
+        print("CLI transcript: reset/recovery failure boundaries PASS", flush=True)
         exercise_termination_controls(args.host)
         exercise_reset_take_backpressure(args.host)
         exercise_reconnect_framing(args.host)
