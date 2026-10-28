@@ -1,12 +1,12 @@
 # Feature, source and verification coverage
 
-Prompts 2-18, updated 2026-10-27. This matrix defines the capability boundary;
+Prompts 2-20, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
 read-only port refresh, explicit IRQ acknowledgement/bounded service, native
-builds, raw diagnostics, passive health and host checks exist. CLI and hardware
-qualification remain planned.
+builds, raw diagnostics, passive health, bounded local CLI and host checks exist.
+CLI operation/device routes, framework firmware and hardware qualification remain planned.
 **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
@@ -305,8 +305,7 @@ arithmetic and saturation without public test seeds. Health threshold1/default3/
 UINT32_MAX and invalid0 cases, OFFLINE explicit work, failed initialization,
 clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
-Prompt 18 completes the core protocol coverage audit. Prompt 19 completes the core owner portability checks. CLI,
-adapters and electrical qualification remain later work.
+Prompt 18 completes the core protocol coverage audit. Prompt 19 completes the core owner portability checks. CLI operation/device routes, adapters and electrical qualification remain later work.
 
 ## Independent prompts 16-18 audit
 
@@ -326,3 +325,21 @@ covers two-target fairness during waits/errors/repeated IRQ service, finite queu
 and result capacity, explicit108/110/111 callback deadline handling, generation
 saturation and a public-only two-TU consumer with allocation traps. This adds
 host evidence without changing silicon gates or introducing a core scheduler.
+
+## Prompt 20 local CLI and console
+
+The [local CLI guide](CLI.md) defines the implemented grammar and schemas. All 27
+canonical rows and their aliases/help topics execute zero transport callbacks.
+Help/version/color/verbose/markers, cache queries, atomic ended target edits,
+bind/end/forget-evidence and validated independent profile staging are delivered.
+Core desired/observed/applied provenance and raw/field validity remain separate.
+
+The registered `tusb32x_cli` and `tusb32x_console` suites exercise rejection,
+poison/fragment/budget/record bounds, backpressure/loss, target/effect fences,
+variant-specific staging, source attribution and request/generation limits.
+`cli_transcript` uses one persistent `tusb32x_cli_host` process, validates real
+records, executes help parity against the Python rows and rejects damaged frames.
+The fixture has no separate passing build-only CTest. Queue 8192/record 512/drain 256
+and input 192/token 12/payload 32/turn 64 remain explicit. Lost SESSION notices retain
+their reason until capacity returns. Operation/control routes belong to prompt 21;
+device coverage to 22, framework front ends and electrical qualification later.

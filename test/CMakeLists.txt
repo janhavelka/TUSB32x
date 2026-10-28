@@ -13,9 +13,26 @@ target_include_directories(tusb32x_port PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../
 add_executable(tusb32x_diagnostics test_diagnostics.cpp)
 target_include_directories(tusb32x_diagnostics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
+# Example-only code is linked by CLI tests/fixture, never by the core target.
+add_library(tusb32x_cli_support STATIC
+  ../examples/common/Tusb32xCli.cpp ../examples/common/Tusb32xCliOutput.cpp)
+target_link_libraries(tusb32x_cli_support PUBLIC TUSB32x)
+target_include_directories(tusb32x_cli_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
+tusb32x_strict_warnings(tusb32x_cli_support)
+add_executable(tusb32x_cli cli/test_cli.cpp)
+target_link_libraries(tusb32x_cli PRIVATE tusb32x_cli_support)
+add_executable(tusb32x_console console/test_console.cpp)
+target_include_directories(tusb32x_console PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
+target_compile_features(tusb32x_console PRIVATE cxx_std_17)
+add_executable(tusb32x_cli_host cli/cli_host.cpp)
+target_link_libraries(tusb32x_cli_host PRIVATE tusb32x_cli_support)
+tusb32x_strict_warnings(tusb32x_cli_host)
+
 foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol
-    tusb32x_operations tusb32x_port tusb32x_diagnostics)
-  target_link_libraries(${suite} PRIVATE TUSB32x)
+    tusb32x_operations tusb32x_port tusb32x_diagnostics tusb32x_cli tusb32x_console)
+  if(NOT suite STREQUAL "tusb32x_console")
+    target_link_libraries(${suite} PRIVATE TUSB32x)
+  endif()
   tusb32x_strict_warnings(${suite})
   if(MSVC)
     target_compile_options(${suite} PRIVATE /UNDEBUG)
@@ -41,6 +58,10 @@ tusb32x_strict_warnings(tusb32x_header_contracts)
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+add_test(NAME cli_transcript
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_cli_transcript.py"
+    --host "$<TARGET_FILE:tusb32x_cli_host>")
+set_tests_properties(cli_transcript PROPERTIES TIMEOUT 30)
 # Imported objects must keep ABI/sanitizer flags in the downstream link.
 set(consumer_flags "${CMAKE_CURRENT_BINARY_DIR}/consumer-flags.cmake")
 file(WRITE "${consumer_flags}" "# Parent compile/link flags; no source or tool lookup.\n")

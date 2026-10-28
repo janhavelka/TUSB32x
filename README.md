@@ -11,7 +11,9 @@ evidence, read-only initialization, profile observation, explicit profile apply,
 desired-profile verification, read-only reconciliation, explicit reset and
 original TUSB320/I dead-battery recovery, complete read-only port refresh and
 explicit interrupt acknowledgement/bounded service, one-callback raw diagnostics
-and pure passive health projection. Firmware adapters remain planned.
+and pure passive health projection. An [example-only CLI](docs/CLI.md) now
+implements bounded local queries, target/lifecycle edits and independent staging.
+Operation-control and device-command CLI routes and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -171,7 +173,8 @@ output preservation and evidence lifetime.
 Tests ON require Python 3.10+. For single-config generators also select
 `-DCMAKE_BUILD_TYPE=Debug` at configure time. The registered checks cover C++
 contracts, validators, transport/codecs, owner operations, port publication,
-raw safety/accounting/passive health and isolated generator fixtures. Run `doxygen Doxyfile`
+raw safety/accounting/passive health, local CLI/console/transcript behavior and
+isolated generator fixtures. Run `doxygen Doxyfile`
 for strict current API documentation. On Windows use the existing VS Code Core
 through `scripts/pio.cmd`; do not install another Core.
 

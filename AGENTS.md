@@ -17,7 +17,9 @@ explicit reset, original TUSB320/I dead-battery recovery and complete read-only
 port refresh with cached publication, plus explicit interrupt acknowledgement and
 bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
 diagnostics views and pure passive health projection. Framework firmware remains
-planned.
+planned. The example-only common CLI implements bounded local help/identity,
+cache/target/lifecycle queries and edits, and independent validated profile staging.
+Operation-control and live-device CLI commands remain prompts 21–22.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -103,8 +105,9 @@ to each numbered implementation prompt and to completed maintenance work here.
   `ctest --test-dir build/native -C Debug --output-on-failure`. Also build/run
   `examples/host/basic` separately with tests OFF; see its README. CMake requires
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
-  and run the six C++ suites (including `tusb32x_protocol`,
-  `tusb32x_operations`, `tusb32x_port` and `tusb32x_diagnostics`), the isolated
+  and run the eight C++ suites (including `tusb32x_protocol`,
+  `tusb32x_operations`, `tusb32x_port`, `tusb32x_diagnostics`, `tusb32x_cli` and
+  `tusb32x_console`), the persistent `cli_transcript` against `tusb32x_cli_host`, the isolated
   `tusb32x_portable_consumer` with allocation/failure sentinels, plus
   `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only signature/header

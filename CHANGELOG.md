@@ -11,6 +11,15 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Bounded example-only local CLI with strict whole-command parsing, atomic target
+  edits, explicit evidence forgetting and validated independent profile staging.
+  The fixed console preserves poisoned input through newline and queues complete
+  records only, with 8192 output bytes, 512-byte formatted storage and one 256-byte
+  nonblocking drain per turn. Help is incremental; machine records carry typed
+  status/detail, request/nonce correlation and nonwrapping exhaustion evidence.
+  Registered CLI/console suites and a persistent C++/Python transcript execute the
+  actual shared sources. Device commands and firmware front ends remain later work.
+
 - Core owner portability checks: fixed-capacity two-device scheduling, queue/result
   backpressure, late callback timing/error retention and bounded generation
   saturation. A registered isolated public consumer runs every current facade

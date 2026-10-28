@@ -1,7 +1,8 @@
 # Concrete CLI and runner contract
 
-This is an implementation specification, not a claim that these commands exist
-yet. Prompts 20–22 implement it; 23–26 integrate the same processor; 28–31 test
+This is an implementation specification. Prompt 20 delivers its local subset in
+[the CLI guide](../CLI.md); operation/device routes remain prompts 21–22. Prompts
+23–26 integrate the same processor; 28–31 test
 and use it; 32–34 package it and finish check registration. Read [COMMON.md](COMMON.md),
 [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) and
 [MAINTAINABILITY.md](MAINTAINABILITY.md). Keep the resulting `docs/CLI.md` beside

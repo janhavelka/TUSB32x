@@ -558,3 +558,28 @@ seeds. Behavior is unchanged. The independent consumer imports built objects and
 public headers only, inherits required ABI/sanitizer flags, and executes allocation
 traps with checked negative sentinels. Its Python isolation coordinator remains a
 maintainer-only dependency. Hardware and framework claims require separate evidence.
+
+## Prompt 20 local CLI ownership and framing (2026-10-28)
+
+- Keep the CLI example-only. One fixed dispatcher, staging value and console
+  borrow core/platform callbacks; no core code or source list gains a CLI dependency.
+  No setup command, automatic bind/init or device poll exists in this local stage.
+- Validate complete syntax, candidate values, target pair and optional borrowed-handle
+  constraints before mutation. Target edits require ended/idle/no result and cannot
+  discard unresolved core effects. Accepted part changes stage common validated
+  defaults; address changes preserve staging. Explicit forget uses the core method.
+- Show core profiles with their retained association and exact observed validity;
+  local target selection cannot add valid defaults to historical core records.
+  Source variant is explicit. Staging validity does not grant capability-gated writes.
+- Separate framing from presentation. Feed consumes at most 64 bytes and one command
+  per turn, with sticky poison and CRLF coalescing. Whole-line processCommand uses
+  the same one-command fence for already collected input. Output is 8192 bytes,
+  maximum record storage512 including NUL, one nonblocking drain at most 256.
+- Keep one finite help cursor retaining request/nonce; new local commands remain
+  responsive. Help rows advertise only implemented routes. Static Python rows are
+  checked by executing C++ help and every canonical/alias route, never by generation.
+- Request IDs do not wrap. SESSION/LOSS are explicit uncorrelated schema exceptions;
+  retain the exhaustion reason across congestion and retry only when space exists.
+  Machine code/detail never depend on human text; injected status text is bounded
+  and sanitized before presentation. Host-only friend access covers mathematical
+  limits without public seed setters or production commands.

@@ -2271,3 +2271,85 @@ exported files, matching IDF selection and all exported relative guide links. A
 renamed extracted tests-OFF consumer built/linked/ran beneath an unrelated Git
 repository with no maintainer tools on child PATH. This checks the current
 package boundary; prompt32 still owns the final distribution matrix.
+
+## Prompt 20 bounded local CLI (2026-10-28)
+
+Implemented from clean synchronized `c07e4e5473ffd5719b81f0451c79f3b15fa41532`, the
+completed prompt 19, on the same execution branch. Read full prompt 20 and current common,
+ownership, CLI grammar/parser/appearance/record contracts, public core methods and
+test registration. Fresh source inspection is in
+[execution 20](audit/execution-20-peers.md). The lead reopened malformed-control and
+short/zero-write tests and verified rejected output-readiness polling pauses against
+actual peer code. No sibling changes/builds or remote CI requests occurred.
+
+Delivered one example-only dispatcher/staging value, fixed console and output/help
+unit. All 27 local rows are complete and bus-silent; no startup command, device
+handler, core poll or second engine was added. Private friend access in host fixtures
+exercises mathematical limits without public seed setters or production commands.
+Independent strong review and lead inspection corrected profile association masks,
+base accessory capability, bounded string scanning, exhaustion admission/retry,
+split-CRLF direct admission and complete row response metadata. Failed commands
+report action=UNCHANGED, enforced by C++ rejection and Python schema tests. Kept existing core
+behavior and extended the required registrations, not a build-only passing test.
+
+Tools: GCC 15.1.0 MinGW-W64 UCRT/MCF, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2 and installed VS Code-managed PlatformIO Core 6.1.19/native 1.2.1.
+The native Core run fetched its existing configured SCons tool 4.40801.0; no second
+PlatformIO Core was installed. No tool/dependency pin or library version changed.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict Debug/Release | PASS | Twelve registered CTests each, active C++ checks in Release, independent public headers and prior portable allocation/failure sentinels |
+| CLI routes and state | PASS | 133,669 checks: 27 canonical rows, listed aliases/topics, zero callback deltas, complete syntax/state preservation, candidate/core separation, desired discard, variant-specific controls and atomic LAI/0x47 to base/0x60 changes with 118/133 ms selections reset to 168 ms |
+| Ownership/evidence | PASS | Bound/active/retained-result and unresolved-effect target fences; explicit forget only; borrowed-handle validation; local target edits retain old core profile attribution/masks rather than manufacture controls |
+| Console | PASS | 17,787 console checks: all byte classifications, 191-byte line payload, sticky overflow/NUL/control poison, delete/CRLF fragmentation, queue 8192/record 512/drain 256, short/zero/wrapped writes, whole-record losses and saturation; CLI checks additionally enforce 12 tokens/32-byte token payload and cumulative input 64/one command |
+| Framing/output | PASS | Real formatter maximum-width platform/ACK/PROFILE/PORT records with 32-character nonce, full counters/times/enums; all 17 schema maxima incl newline/NUL; plain machine records, minimum 32-column colored help, coloroff and bounded/sanitized application messages with full signed detail |
+| Session/help fairness | PASS | New marker/stage requests interleave with finite original help and preserve its old request/nonce/one END; ID/generation exhaustion never wraps; full-queue exhaustion reason eventually emits, repeated blocked ticks do not add repeated loss |
+| Persistent transcript | PASS | 51 requests in one actual shared-C++ process; firmware identity supplied as host-fixture/unknown, real HELP metadata parity with Python rows; missing/duplicate/invalid keys, bad statuses/values, nonce/request/closure contradictions, framing loss and maximum-width fixtures |
+| Documentation/version | PASS | Strict Doxygen without suppressed warnings; XML shows 17 public core structs/26 owner methods plus 10 Cli and 12 Console callable methods; local links/anchors, UTF-8/LF/whitespace, Python docstrings/style and deterministic version sync/check |
+| Package/consumer | PASS | 43 source-equal selected files, IDF inclusion parity and guide links; renamed ordinary tests-OFF and CLI applications beneath unrelated Git compile/link/run C++17 without Python/Git/Doxygen/PIO on child PATH; CLI has zero callbacks and 9280 host-ABI object bytes |
+| Ordinary/native host | PASS | Standalone tests-OFF CMake and installed native PlatformIO consumer run with zero fake callbacks; common CLI is absent from core's unchanged explicit five-source compilation |
+| Sanitizers | BLOCKED | Fresh GCC trivial-link probes cannot find -lasan/-lubsan; no sanitizer execution claimed. MSVC/Clang/clang-format unavailable |
+| Separate evidence | NOT RUN | Arduino/native-IDF firmware, S2/S3 linked memory/stack budgets, physical console/I2C/IRQ/electrical behavior and adapter aggregate blocking bounds. These remain later integration/qualification work; remote CI belongs to 34 |
+
+Lead commands:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Release -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
+& build/native/test/Release/tusb32x_cli.exe
+& build/native/test/Release/tusb32x_console.exe
+python tools/test_cli_transcript.py --host build/native/test/Release/tusb32x_cli_host.exe
+python -m py_compile tools/tusb32x_cli_contract.py tools/test_cli_transcript.py
+
+cmake -S examples/host/basic -B build/host-basic -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/host-basic --config Release
+& build/host-basic/tusb32x_host_basic.exe
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p20.tar.gz
+python build/p20-package.py
+python build/p20-final-check.py
+
+g++ -std=c++17 -fsanitize=address build/p20-sanitizer.cpp -o build/p20-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p20-sanitizer.cpp -o build/p20-ubsan.exe
+git diff --check
+```
+
+Both sanitizer availability probes exit1 for absent runtime libraries; all required
+available checks pass. Session-only scripts under ignored `build/` were inspected
+and run by the lead. XML inspection additionally checked named public Cli/Console
+methods and their visible briefs. The package check supplies absolute compiler/
+CMake/Ninja paths and strips maintainer tools from the child PATH. It checks an
+independent application linking the shipped CLI sources as well as ordinary core
+consumption; it is neither a framework stub nor a firmware result. Later operation,
+device-command, runner/HIL and full omission-guard stages are not claimed here.

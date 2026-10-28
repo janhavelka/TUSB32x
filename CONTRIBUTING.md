@@ -14,7 +14,9 @@ profile observation, explicit apply, desired-profile verification, read-only
 reconciliation, explicit reset, original TUSB320/I dead-battery recovery and
 complete read-only port refresh and explicit IRQ acknowledgement/bounded service.
 It also implements safe one-callback raw diagnostics and pure health projection.
-Framework adapters remain planned.
+The example CLI implements the [local subset](docs/CLI.md) with strict parsing,
+bounded output and independent validated staging. Device-command/operation CLI
+routes and framework adapters remain planned.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add
@@ -32,7 +34,7 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Seven runtime CTest suites are registered on all hosts, plus
+active in Release. Eleven runtime CTest suites are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
 The protocol suite includes independent field tables, reserved-code validity,

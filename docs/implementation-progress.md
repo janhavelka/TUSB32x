@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 19; CLI/framework prompts remain separate.
+Current authorization: implement prompt 20 local CLI end to end; later prompts remain separate.
 
 ## Prompt status
 
@@ -29,7 +29,7 @@ Current authorization: implement prompt 19; CLI/framework prompts remain separat
 | [17: diagnostics-health](prompts/17-diagnostics-health.md) | COMPLETE |
 | [18: protocol-conformance](prompts/18-protocol-conformance.md) | COMPLETE |
 | [19: owner-portability](prompts/19-owner-portability.md) | COMPLETE |
-| [20: cli-foundation](prompts/20-cli-foundation.md) | NOT STARTED |
+| [20: cli-foundation](prompts/20-cli-foundation.md) | COMPLETE |
 | [21: cli-operation-control](prompts/21-cli-operation-control.md) | NOT STARTED |
 | [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | NOT STARTED |
 | [23: arduino-transport](prompts/23-arduino-transport.md) | NOT STARTED |
@@ -1456,3 +1456,50 @@ CI request. Exact commands, counts and scoped limitations are in
 The lead commits/syncs this complete unit on the same execution branch and verifies
 upstream equality in the handoff. Prompt20 remains unstarted and requires its own
 execution request; no CLI or framework implementation was added here.
+
+## Prompt 20 execution (2026-10-28)
+
+Started clean and synchronized after fetch at
+`c07e4e5473ffd5719b81f0451c79f3b15fa41532` (completed prompt 19), on the same
+execution branch/base. Read current parent/local AGENTS, prompt index, COMMON,
+full prompt 20, workflow/maintainability, CLI grammar/appearance/records/bounds and relevant
+core baseline/ownership rules. Actual public methods/tests verify prerequisites.
+No local workflow exists; remote CI remains prompt 34 only.
+
+Fresh TMP1x2/24Cxx/SHT3x/LDC1614 revisions, clean state, exact source/test/CLI/
+runner/build/instruction/workflow paths, malformed-input/backpressure cases and
+accepted/rejected conventions are in [execution 20](audit/execution-20-peers.md).
+No sibling edits, builds or Git mutations. Core silicon/access behavior is unchanged;
+staging uses existing validators rather than copying register conversion.
+
+Delegation: gpt-6.1-sol/high owned ConsoleBuffer/console tests, then the disjoint
+output/schema/CLI guide; another gpt-6.1-sol/high owned CLI tests, persistent fixture
+and transcript. gpt-6-astra/high independently audited peers and reviewed bounds/
+ownership/framing read-only. Lead owns shared signatures/dispatch, registration,
+integration/docs/verification and Git. No branch/worktree per agent.
+
+All 27 local canonical rows/aliases are implemented; no future hardware handlers.
+Review corrected core-profile attribution after local part changes, base accessory
+capability, bounded printHelp/status-text scanning, exhaustion admission and pending
+notice preservation, split-CRLF direct-input admission and response metadata.
+Failed acknowledgements report UNCHANGED rather than a successful staging action;
+both the C++ behavior and Python schema reject misleading failure labels.
+Regressions exercise actual code and maximum-width formatter paths. PASS: strict
+Debug/Release 12/12 CTests each; 133,669 CLI checks, 17,787 console checks and 51
+persistent C++ transcript requests with typed schema/closure negatives. Positive
+interleaved help/marker/staging keeps the original request/nonce and one END.
+Strict Doxygen and XML visibility show the documented core plus Cli/Console APIs;
+version/no-op, links/anchors/UTF-8/LF and current 43-file package checks pass.
+
+PASS: ordinary tests-OFF CMake/native PlatformIO consumers, and extracted ordinary
+and CLI C++17 applications beneath unrelated Git without maintainer tools on child
+PATH. CLI object storage is 9280 host-ABI bytes including the 8192-byte queue;
+this is not linked board-RAM evidence. Core source lists and behavior are unchanged.
+ASan/UBSan fresh link probes are BLOCKED by missing MinGW runtime libraries;
+MSVC/Clang/clang-format are unavailable. Firmware/hardware are NOT RUN; remote CI
+remains prompt 34. Exact commands and limits are in
+[validation](validation.md#prompt-20-bounded-local-cli-2026-10-28).
+
+The lead commits/syncs this checked complete unit on the same execution branch,
+verifies upstream equality and clean state, and reports final commit in the
+handoff/next progress update. Prompt 21 remains unstarted.

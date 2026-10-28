@@ -1,4 +1,4 @@
-# Native contract, validator, protocol, owner, port, diagnostics and version checks
+# Native core, local CLI, console, transcript and version checks
 
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
@@ -31,6 +31,22 @@ cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
 cmake --build build/native --config Debug
 ctest --test-dir build/native -C Debug --output-on-failure
 ```
+
+Prompt 20 also registers `tusb32x_cli`, `tusb32x_console` and `cli_transcript`.
+The last runs one persistent `tusb32x_cli_host` process through Python; the fixture
+executable has no build-only passing CTest. To run the implemented local subset:
+
+```text
+ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
+```
+
+All 27 canonical local commands, aliases and implemented help topics run through
+the real shared example sources. Tests cover zero callback deltas, whole-command
+rejection, staged/core separation, cross-family target edits, retained effects,
+poison/CRLF/backspace, cumulative input 64/one command, queue 8192/record 512/drain 256,
+whole-record loss and fairness, maximum-width formatter paths, unsafe injected
+messages, request exhaustion and typed schema/closure negatives. The Python rows
+are compared with executed C++ HELP records. See the [implemented CLI](../docs/CLI.md).
 
 Set `-DCMAKE_BUILD_TYPE=Debug` at configure time for a single-configuration
 generator (for example Ninja). Repeat in `build/release` with Release selected
