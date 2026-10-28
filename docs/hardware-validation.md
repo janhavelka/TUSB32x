@@ -269,7 +269,11 @@ sequence. A new power epoch invalidates earlier recovery readiness. Original-par
 recovery experiments require a fresh coherent detached port before the first write.
 Supply attestation alone does not establish current attachment. Base fault
 power-cycle plans stop with blocked cleanup when source startup needs new recovery;
-there is no automatic second recovery. Original-part console tests require
+there is no automatic second recovery. A sink-only UFP fault plan can finish
+without presenting Rp, while its saved base_recovery_required fact still blocks
+later source-capable suites until newly qualified explicit recovery. This fact
+survives session changes and cannot be replaced by the original setup declaration.
+Original-part console tests require
 continuous target VDD across the separately authorized MCU reboot.
 
 Authorize NACK/disconnect/power-cycle and serial backpressure/reconnect/reboot

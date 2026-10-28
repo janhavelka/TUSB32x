@@ -590,3 +590,14 @@ and checked; extracted Arduino basic/owner S2/S3 and native CLI S2/S3 images sup
 framework link evidence. See [package commands](development.md#archive-and-clean-consumers).
 The checker is maintainer tooling, not a core dependency or arbitrary-code sandbox.
 No install/export, release publication or physical hardware qualification is claimed.
+
+## Independent prompts 31/32 audit
+
+Recovery readiness is a saved run fact across suite/session groups: a base UFP
+power-cycle experiment cannot authorize a later source apply. Both base variants
+exercise separate/combined groups and fresh explicit recovery in runtime tests;
+the persistent C++ path checks the same owner fence without claiming POR behavior.
+Package proof checks actual compiler header dependencies against extracted,
+fixture and toolchain roots. tusb32x_package_origins runs the complete positive
+consumer and rejects injected checkout and unrelated outside headers. Directory
+properties and translation-unit names alone cannot prove header provenance.

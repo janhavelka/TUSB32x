@@ -611,3 +611,20 @@ provenance must remain under the renamed extraction/workspace. Builds live outsi
 the source checkout, even when --out points into build/. See printed absolute
 paths and package-report.json; temporary evidence is preserved. No install/export
 contract is added. Extracted firmware links remain a separate explicit check.
+
+
+The prompts31/32 independent regressions also run through the same hil_runner and
+cli_transcript registrations. Both base variants exercise fault UFP completion
+followed by a source-capable suite, combined plans and explicit new recovery.
+Persistent actual C++ processes prove the later suite rejects before callbacks;
+the retained UFP fixture image is not a claimed power-on register image.
+
+`tusb32x_package_origins` (120s) invokes
+`python tools/test_check_package.py --consumer-origins` with explicit registered
+CMake/compiler/build-tool/generator/config arguments. It runs the complete checker
+once on a valid copied package, then on packages with an absolute checkout header
+and an unrelated sibling header. Both negatives must fail specifically at the
+compiler dependency guard. The positive consumer must still compile/link/run.
+The standalone default package unit tests require no build tools; dependency
+parsing cases accompany the archive negatives. Compiler and dependency reports
+are retained in the printed private workspace for review.

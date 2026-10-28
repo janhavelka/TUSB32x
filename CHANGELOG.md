@@ -20,6 +20,13 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Fixed
 
+- Base TUSB320/I fixture power cycles revoke prior recovery readiness across later
+  suite sessions and within combined plans. Only a newly qualified explicit
+  recovery permits later source-capable settings; declarations and reads do not.
+- Package checks audit compiler header dependencies as well as translation units,
+  rejecting checkout/sibling/outside headers while allowing the toolchain's
+  system headers. Real positive and injected-header negative consumers are tested.
+
 - Python runner suite groups share the original absolute deadline without rejecting
   valid soak duration ceilings after earlier work. Late fixture replies, incomplete
   acquisition proof and ignored/contradictory staging cannot authorize mutations

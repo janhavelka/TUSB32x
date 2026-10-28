@@ -2,6 +2,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(TUSB32xPackageConsumer LANGUAGES CXX)
 
+# Record compiler/SDK search roots, independently of the library's target includes.
+# The checker compares these with the headers actually read by the compiler.
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/package-toolchain-includes.txt" "")
+foreach(directory IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+  get_filename_component(directory "${directory}" REALPATH)
+  file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/package-toolchain-includes.txt" "${directory}\n")
+endforeach()
+
 # Check before CACHE PATH can normalize a caller-supplied relative value.
 if(DEFINED TUSB32X_PACKAGE_ROOT AND NOT IS_ABSOLUTE "${TUSB32X_PACKAGE_ROOT}")
   message(FATAL_ERROR "TUSB32X_PACKAGE_ROOT must be supplied as an absolute path")

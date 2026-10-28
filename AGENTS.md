@@ -450,8 +450,19 @@ then compiles/links/runs a copied public consumer in a renamed external workspac
 This is not a sandbox for arbitrary CMake; only trusted locally packed sources
 are built. Child core consumption requires no Git/Python/Doxygen/PlatformIO and
 uses add_subdirectory/target TUSB32x; no install/export API is claimed.
-CTest also registers tusb32x_package_safety (60s) and tusb32x_package_consumer
-(120s); the latter creates a real test tar without requiring PIO. There are64
-runtime tests on all hosts plus the Windows launcher, with compile-only headers
+CTest also registers tusb32x_package_safety (60s), tusb32x_package_consumer
+(120s) and tusb32x_package_origins (120s). The consumer creates a real test tar
+without requiring PIO; origins rejects injected checkout/outside compiler headers.
+There are65 runtime tests on all hosts plus the Windows launcher, with compile-only headers
 kept separate. The selected extracted Arduino/native-IDF S2/S3 rows are recorded
 in validation; full remote matrix remains prompt34 and hardware remains separate.
+
+
+The prompts31/32 independent audit requires actual compiler dependency provenance,
+not only compile_commands/source directory checks. Keep detected compiler/SDK
+include roots and used dependency evidence with the clean consumer. Base fixture
+power-cycle intent sets a durable base_recovery_required run fact before the
+operator step; carry it across suite sessions, and clear it only after a newly
+qualified explicit typed recovery. UFP fault success and old startup declarations
+cannot grant later source-capable work. These are host evidence guards, not a core
+scheduler or automatic recovery policy.

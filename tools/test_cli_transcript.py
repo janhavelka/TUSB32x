@@ -21,7 +21,7 @@ from collections.abc import Callable, Mapping, Sequence
 from tusb32x_cli_contract import ROWS, SCHEMAS, parse_record, validate_record, validate_exchange
 from tusb32x_hil_artifacts import Artifacts
 from tusb32x_hil_runner import ProtocolError, Session, SessionBlocked
-from tusb32x_hil_plans import ObservationPlan, PlanFailure, run_plan
+from tusb32x_hil_plans import ObservationPlan, PlanBlocked, PlanFailure, run_plan
 from tusb32x_hil_fixtures import run_fixture_plan
 from tusb32x_hil_fixture_setup import load_setup
 
@@ -1862,6 +1862,104 @@ def exercise_recovery_fixture_plans(executable):
                 artifacts.close()
 
 
+def exercise_base_power_epoch(executable):
+    """Keep revoked startup proof across real CLI sessions after a modeled VDD epoch.
+
+    The original-part image deliberately retains a typed UFP setting across the
+    operator's power-cycle attestation; this is not a POR or electrical model.
+    Only the runner's evidence epoch changes. Old setup readiness must not admit
+    a later accessory plan that could apply a source-capable profile.
+    """
+    for variant in ("tusb320", "tusb320i"):
+        with tempfile.TemporaryDirectory(prefix="tusb32x-base-epoch-") as temporary:
+            root = Path(temporary)
+            physical = ScriptedRecoveryFixture(root / "state.txt")
+            trace = root / "callbacks.txt"
+            host = PersistentHost(executable, "--fixture", "1", "--fixture-state",
+                                  str(physical.path), "--variant", variant,
+                                  "--trace", str(trace))
+            artifacts = Artifacts(root / "evidence", time.monotonic)
+            artifacts.metadata["native_simulation"] = {
+                "physical_hardware": "NOT RUN",
+                "evidence": "retained original-part UFP image; modeled VDD attestation only",
+            }
+            setup = {
+                "board": "native simulated board", "part": "modeled " + variant,
+                "adapter": "actual C++ CLI/core recording callbacks",
+                "wiring": "modeled detached CC and VBUS_DET; no electrical qualification",
+                "addr_strap": "modeled 0x60", "enable": "modeled active-low EN_N",
+                "operator": "native model", "variant": variant, "supply_mv": 5000,
+                "partner": "modeled detached partner", "startup_ready": True,
+                "base_recovery_complete": True, "capabilities": ["fault", "audio"],
+                "authorized_actions": ["nack", "disconnect", "power-cycle"],
+                "nack_code": "I2C_NACK_ADDR", "disconnect_code": "I2C_BUS",
+            }
+            setup_path = root / "setup.json"
+            setup_path.write_text(json.dumps(setup), encoding="utf-8")
+            setup = load_setup(setup_path, "native-base-epoch", variant, ("fault", "accessory"))
+            expected = {"git": "0123456789abcdef0123456789abcdef01234567",
+                        "framework": "host", "target": "native"}
+
+            def transition(step, deadline):
+                """Attest a new supply epoch without inventing a base POR register image."""
+                if step["id"] != "fault-power-cycle":
+                    return physical(step, deadline)
+                if time.monotonic() >= deadline:
+                    raise AssertionError("base power attestation exceeded its finite deadline")
+                physical.version += 1
+                physical.steps.append(step["id"])
+                physical.path.write_text(f"{physical.version} 0 16\n", encoding="ascii")
+                return True
+
+            try:
+                host.command("bind", "bind")
+                for text in ("init 2147483647", "apply 2147483647"):
+                    if text.startswith("apply"):
+                        for route in ("current 3a0", "debounce 133", "mode ufp"):
+                            host.command(route, route.split()[0])
+                    records = native_turn_operation(host, text)
+                    token = payload(records, "RESULT")["token"]
+                    host.command("result take " + token, "result.take")
+                profiles = host.command("profile show", "profile.show")
+                if next(row for row in profiles if row["type"] == "PROFILE" and
+                        row["source"] == "observed")["mode"] != "ufp":
+                    raise AssertionError("typed native setup did not establish UFP")
+                io = SessionFixtureIo(host)
+                session = Session(io, artifacts)
+                start = len(callback_trace(trace))
+                run_fixture_plan(session, ObservationPlan(
+                    variant=variant, address=0x60, suites=("fault",), run_timeout=20),
+                    setup, expected, transition=transition, sleep=fixture_no_sleep)
+                report = artifacts.snapshot()
+                if (report["checks"]["fault"]["status"] != "PASS" or session.valid or
+                        session.operation or not report["metadata"].get("base_recovery_required") or
+                        any(row["direction"] == "W" for row in callback_trace(trace)[start:])):
+                    raise AssertionError("native UFP fault plan lost its new recovery obligation")
+                callbacks, requests = trace.read_bytes(), io.writes
+                try:
+                    run_fixture_plan(Session(io, artifacts), ObservationPlan(
+                        variant=variant, address=0x60, suites=("accessory",), run_timeout=20),
+                        setup, expected, transition=transition, sleep=fixture_no_sleep)
+                except PlanBlocked as error:
+                    if str(error) != (
+                            "owner supply/startup readiness and base recovery proof required"):
+                        raise AssertionError(
+                            "later native plan blocked for unrelated reason") from error
+                else:
+                    raise AssertionError(
+                        "old startup declaration admitted a new source-capable plan")
+                if (trace.read_bytes() != callbacks or io.writes != requests or
+                        not artifacts.metadata["base_recovery_required"]):
+                    raise AssertionError("blocked new epoch wrote bytes or erased recovery proof")
+                io.close()
+            finally:
+                if host.process.poll() is None:
+                    host.process.kill()
+                    host.process.wait(timeout=3)
+                host.reader.join(timeout=3)
+                artifacts.close()
+
+
 def main() -> int:
     """Run the bounded transcript; return zero only after all records and fixture exit pass."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1893,6 +1991,7 @@ def main() -> int:
         exercise_reset_take_backpressure(args.host)
         exercise_reconnect_framing(args.host)
         exercise_recovery_fixture_plans(args.host)
+        exercise_base_power_epoch(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()
@@ -1902,7 +2001,8 @@ def main() -> int:
           "2 strict sessions, 3 native readonly plans, 2 owner-turn sessions and "
           "4 modeled physical-fixture plans, 2 independent mismatch rejections, "
           "reset/recovery byte/timing/failure/effect checks, 3 reconnect cases and "
-          "5 complete modeled reset/fault/console plans and actual output-loss rejection passed; "
+          "5 complete modeled reset/fault/console plans, actual output-loss rejection and "
+          "2 original-part cross-session power-epoch guards passed; "
           "physical hardware NOT RUN")
     return 0
 

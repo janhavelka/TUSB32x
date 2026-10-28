@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """Exercise archive rejection before extraction with bounded synthetic fixtures.
 
-Run directly with Python 3.10+. No framework, network, build tool, or hardware is
-used. Every fixture and sentinel lives beneath a fresh temporary test directory;
-the production checker creates its own private workspace within that directory.
+Run ordinary unit tests with Python 3.10+; no build tool or hardware is used.
+The explicit --consumer-origins mode runs three bounded builds with supplied host
+tools, retains temporary evidence, and checks actual header provenance. No mode
+uses a framework, network or hardware. Fixtures live in fresh temporary roots.
 """
 
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+import argparse
 import gzip
 import hashlib
 import io
 from pathlib import Path
 import tarfile
 import tempfile
+import shutil
+import subprocess
 import sys
 import unittest
 from unittest import mock
@@ -395,5 +399,102 @@ class ArchiveContracts(unittest.TestCase):
         self.reject(source, {"a.txt"})
 
 
+class DependencyContracts(unittest.TestCase):
+    """Check the compiler's Make dependency quoting without requiring a compiler."""
+
+    def test_make_spaces_and_continuations(self) -> None:
+        """A continued rule preserves escaped spaces as part of a header path."""
+        self.assertEqual(package.make_dependencies(
+            "obj.o: /root/source.cpp \\\n /root/with\\ space/header.h\n"),
+            ["/root/source.cpp", "/root/with space/header.h"])
+
+    def test_make_special_characters_and_drive_paths(self) -> None:
+        """Drive colons, escaped hashes/backslashes and doubled dollars survive."""
+        self.assertEqual(package.make_dependencies(
+            "C:/build/obj.o: C:/src/main.cpp /a/\\#file.h /a/$$file.h /a/back\\\\slash.h"),
+            ["C:/src/main.cpp", "/a/#file.h", "/a/$file.h", "/a/back\\slash.h"])
+
+    def test_make_missing_rule_is_rejected(self) -> None:
+        """Missing dependency syntax cannot become an empty successful check."""
+        with self.assertRaises(package.PackageError):
+            package.make_dependencies("not a dependency rule")
+
+    def test_make_windows_native_source_path(self) -> None:
+        """MinGW emits native backslashes in the source prerequisite, unescaped."""
+        self.assertEqual(package.make_dependencies(
+            r"obj.o: C:\work\src\main.cpp C:/toolchain/header.h"),
+            [r"C:\work\src\main.cpp", "C:/toolchain/header.h"])
+
+
+def consumer_origins(argv):
+    """Run a real positive and two escaped-header negatives; return zero only on PASS.
+
+    Copy trusted exports, checker and fixture into an owned temporary checkout.
+    Each full checker invocation is bounded to 35 seconds (105 seconds total).
+    Keep stdout/stderr and builds under the printed evidence root for inspection.
+    Explicit host tools are required; unavailable tools are invocation errors.
+    """
+    parser = argparse.ArgumentParser(description=consumer_origins.__doc__)
+    parser.add_argument("--cmake", default=shutil.which("cmake"))
+    parser.add_argument("--compiler", default=shutil.which("g++") or shutil.which("cl"))
+    parser.add_argument("--make-program", default=shutil.which("ninja"))
+    parser.add_argument("--generator", default="Ninja")
+    parser.add_argument("--config", choices=("Debug", "Release"), default="Release")
+    args = parser.parse_args(argv)
+    for key in ("cmake", "compiler", "make_program"):
+        tool = getattr(args, key)
+        resolved = shutil.which(tool) if tool else None
+        if resolved is None:
+            parser.error(f"missing required build tool: {key}: {tool}")
+        setattr(args, key, str(Path(resolved).resolve()))
+    checkout = Path(__file__).resolve().parents[1]
+    evidence = Path(tempfile.mkdtemp(prefix="tusb32x-package-origins-")).resolve()
+    copied = evidence / "trusted-copy"
+    names = package.package_files(checkout) + [
+        "tools/check_package.py", "test/package_consumer/CMakeLists.txt",
+        "test/package_consumer/main.cpp"]
+    try:
+        for name in names:
+            destination = copied / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(checkout / name, destination)
+        source = copied / "src/TUSB32xOperations.cpp"
+        original = source.read_text(encoding="utf-8")
+        include = '#include "TUSB32xOwnerTime.h"'
+        if original.count(include) != 1:
+            raise package.PackageError("owner-time negative fixture include changed")
+        sibling = evidence / "sibling" / "OwnerTime.h"
+        sibling.parent.mkdir()
+        shutil.copyfile(copied / "src/TUSB32xOwnerTime.h", sibling)
+        for label, header in (("clean", None),
+                              ("checkout-header", copied / "src/TUSB32xOwnerTime.h"),
+                              ("sibling-header", sibling)):
+            source.write_text(original if header is None else original.replace(
+                include, f'#include "{header.as_posix()}"'), encoding="utf-8")
+            command = [sys.executable, str(copied / "tools/check_package.py"),
+                       "--test-archive", "--out", str(evidence / label)]
+            for key in ("cmake", "compiler", "make_program", "generator", "config"):
+                command.extend(["--" + key.replace("_", "-"), getattr(args, key)])
+            result = subprocess.run(command, capture_output=True, text=True, timeout=35)
+            output = result.stdout + result.stderr
+            (evidence / f"{label}.log").write_text(output, encoding="utf-8")
+            if header is None:
+                if result.returncode != 0 or '"consumer": "PASS"' not in output:
+                    raise package.PackageError(f"clean consumer failed: {output}")
+            elif (result.returncode != 1 or
+                  "compiler dependency outside clean sources/toolchain:" not in output):
+                raise package.PackageError(f"escaped header was not rejected: {label}: {output}")
+            print(f"PASS: {label}", flush=True)
+        print(f"Compiler origin evidence: {evidence}")
+        return 0
+    except (package.PackageError, OSError, subprocess.SubprocessError) as error:
+        print(f"FAIL: {error}\nCompiler origin evidence: {evidence}")
+        return 1
+
+
 if __name__ == "__main__":
+    if "--consumer-origins" in sys.argv:
+        arguments = sys.argv[1:]
+        arguments.remove("--consumer-origins")
+        raise SystemExit(consumer_origins(arguments))
     unittest.main()

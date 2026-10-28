@@ -36,7 +36,7 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Sixty-four runtime CTests are registered on all hosts, plus
+active in Release. Sixty-five runtime CTests are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
 The simulated ordinary host consumer is also a runtime CTest. Generic owner
@@ -126,8 +126,8 @@ scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz
 python tools/check_package.py --archive build/TUSB32x.tar.gz --out build/package-check
 ```
 
-The two registered package suites run safety fixtures and a real test-archive
-consumer; PlatformIO packing is a separate explicit maintainer command. Keep
+The three registered package suites run safety fixtures, a real test-archive
+consumer and complete injected-header provenance negatives; PlatformIO packing is a separate explicit maintainer command. Keep
 exports literal and identical in library.json/idf_component.yml. Preserve both
 example identity scripts, licenses and all shared/frontend sources. Never add
 local sdkconfig, locks, build outputs, private evidence or vendor artifacts.
@@ -145,3 +145,10 @@ genuine native-IDF S2/S3 consumers with independent SDKCONFIG paths. The selecte
 rows and commands are in [development](docs/development.md#archive-and-clean-consumers)
 and [validation](docs/validation.md). Prompt34 owns the full supported CI matrix;
 no tag, registry upload or release publication is implied by package checks.
+
+For recovery plan edits, test base power-cycle readiness across separate session
+groups as well as within one combined plan. The saved run fact takes precedence
+over the initial fixture declaration; fresh typed recovery must still require its
+physical readiness/authorization and verified completion. Do not clear that fact
+on raw reads, initialization, reconciliation or reset. Keep positive and negative
+native transcript evidence visibly simulated.

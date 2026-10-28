@@ -289,6 +289,89 @@ def run(command, environment):
     subprocess.run(command, env=environment, check=True, timeout=60)
 
 
+def make_dependencies(text):
+    """Decode one compiler Make depfile, including escaped spaces, hashes and dollars.
+
+    Return prerequisite paths, excluding the object target. Only the single-rule
+    depfiles emitted by the consumer's GNU/Clang CMake builds are accepted.
+    """
+    text = text.replace("\\\n", "")
+    separator = re.search(r":\s", text)
+    if separator is None:
+        raise PackageError("missing compiler dependency rule")
+    text = text[separator.end():]
+    paths = []
+    token = ""
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if (char == "\\" and index + 1 < len(text)
+                and (text[index + 1].isspace() or text[index + 1] in "\\#:")):
+            index += 1
+            token += text[index]
+        elif char == "$" and text[index:index + 2] == "$$":
+            token += "$"
+            index += 1
+        elif char.isspace():
+            if token:
+                paths.append(token)
+                token = ""
+        else:
+            token += char
+        index += 1
+    if token:
+        paths.append(token)
+    return paths
+
+
+def check_dependencies(root, fixture, build, args, environment, compile_count):
+    """Reject actual compiler inputs outside the copied sources or compiler/SDK roots.
+
+    Read Ninja's dependency database or GNU/Clang Make depfiles after the build.
+    Require one nonempty dependency record per compiled source; unsupported or
+    missing dependency evidence fails rather than certifying header provenance.
+    The Ninja query has the same 60-second subprocess bound as the build.
+    """
+    if args.generator in ("Ninja", "Ninja Multi-Config"):
+        result = subprocess.run(
+            [args.make_program, "-C", str(build), "-t", "deps"],
+            env=environment, text=True, capture_output=True, check=True, timeout=60)
+        records = []
+        for line in result.stdout.splitlines():
+            if line.startswith("    "):
+                if not records:
+                    raise PackageError("unexpected Ninja dependency output")
+                records[-1].append(line[4:])
+            elif line:
+                if not re.fullmatch(r".+: #deps [0-9]+, deps mtime [0-9]+ \(VALID\)", line):
+                    raise PackageError(f"invalid Ninja dependency record: {line}")
+                records.append([])
+    elif args.generator in ("Unix Makefiles", "MinGW Makefiles"):
+        depfiles = sorted(build.rglob("*.o.d")) + sorted(build.rglob("*.obj.d"))
+        records = [make_dependencies(path.read_text(encoding="utf-8")) for path in depfiles]
+    else:
+        raise PackageError(f"compiler dependency inspection unsupported: {args.generator}")
+    if len(records) != compile_count or any(not record for record in records):
+        raise PackageError("missing or incomplete compiler dependency records")
+    approved = [root.resolve(), fixture.resolve()]
+    for directory in (build / "package-toolchain-includes.txt").read_text(
+            encoding="utf-8").splitlines():
+        path = Path(directory)
+        if not path.is_absolute():
+            raise PackageError("nonabsolute compiler include root")
+        approved.append(path.resolve())
+    dependencies = set()
+    for record in records:
+        for name in record:
+            path = Path(name)
+            path = (path if path.is_absolute() else build / path).resolve(strict=True)
+            if not any(path.is_relative_to(directory) for directory in approved):
+                raise PackageError(f"compiler dependency outside clean sources/toolchain: {path}")
+            dependencies.add(str(path))
+    (build / "package-compiler-dependencies.txt").write_text(
+        "\n".join(sorted(dependencies)) + "\n", encoding="utf-8")
+
+
 def consume(root, checkout, args):
     """Copy only the public consumer fixture, build/run, and verify extracted origins."""
     workspace = root.parent
@@ -341,9 +424,12 @@ def consume(root, checkout, args):
     for value in (origin, compiles):
         if str(checkout).replace("\\", "/").casefold() in value.replace("\\", "/").casefold():
             raise PackageError("consumer used source-checkout paths")
-    for entry in json.loads(compiles):
+    entries = json.loads(compiles)
+    for entry in entries:
         if not Path(entry["file"]).resolve().is_relative_to(workspace):
             raise PackageError("compiled source outside clean workspace")
+    check_dependencies(root, fixture, build, args, environment,
+                       len({entry["file"] for entry in entries}))
     filename = "tusb32x_package_consumer" + (".exe" if os.name == "nt" else "")
     executable = build / filename
     if not executable.exists():

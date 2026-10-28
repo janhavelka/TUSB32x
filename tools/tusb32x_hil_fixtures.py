@@ -39,10 +39,16 @@ class FixtureNotRun(PlanBlocked):
     """Missing fixture/operator evidence prevents execution; NOT RUN, CLI exit 2."""
 
 
-def fixture_prerequisite(plan, setup, expected):
-    """Reject missing physical setup and closed variant gates before serial/device traffic."""
+def fixture_prerequisite(plan, setup, expected, *, base_recovery_required=None):
+    """Reject missing setup/gates before traffic, using current-run base startup proof.
+
+    None uses the initial operator declaration. A bool supersedes that declaration
+    after this run's power cycle or qualified typed recovery; it is not USB policy.
+    """
     if not setup:
         raise FixtureNotRun("explicit --fixture and --fixture-config required")
+    if base_recovery_required is not None and type(base_recovery_required) is not bool:
+        raise PlanBlocked("current-run base recovery evidence must be a boolean")
     if not expected or not {"git", "framework", "target"} <= expected.keys():
         raise PlanBlocked("fixture plans require expected flashed commit/framework/target")
     if setup["variant"] != plan.variant:
@@ -76,8 +82,10 @@ def fixture_prerequisite(plan, setup, expected):
                               "across MCU reboot")
     if required_actions - set(setup.get("authorized_actions", [])):
         raise PlanBlocked("fixture actions require separate explicit setup authorization")
+    base_ready = (setup.get("base_recovery_complete") if base_recovery_required is None
+                  else not base_recovery_required)
     if not setup.get("startup_ready") or (plan.variant in BASE_VARIANTS and
-            "reset-termination" not in plan.suites and not setup.get("base_recovery_complete")):
+            "reset-termination" not in plan.suites and not base_ready):
         raise PlanBlocked("owner supply/startup readiness and base recovery proof required")
 
 
@@ -296,6 +304,10 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
             dirty = True
             artifacts.metadata["device_cleanup_required"] = True
             artifacts.metadata["external_intent"] = name
+            if name == "fault-power-cycle" and plan.variant in BASE_VARIANTS:
+                # B SLLSEN9F section 7.4.3 p14: VDD return revokes the old Rp
+                # recovery proof, including across later sessions in this run.
+                artifacts.metadata["base_recovery_required"] = True
         artifacts.metadata["fixture_step"] = dict(step, acknowledged=False)
         artifacts.checkpoint()
         limit = min(deadline, clock() + min(300, plan.run_timeout))
@@ -342,6 +354,10 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
         target()
         sample({"attachment": attachment})
         candidate = dict(profiles(), **values)
+        if (plan.variant in BASE_VARIANTS and candidate["mode"] != "ufp" and
+                artifacts.metadata.get("base_recovery_required")):
+            raise PlanBlocked("new original-part VDD epoch requires explicit qualified recovery "
+                              "before source-capable settings; no old readiness replay")
         # SLLSEN9F 6.5 p7 / SLLSEQ8D 6.5 p5, footnote 1: local 3 A
         # needs VDD >=3.5 V. This applies to every source-capable candidate,
         # including baseline restoration; remote sink detection is independent.
@@ -645,7 +661,8 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
         detached("console-detach")
 
     try:
-        fixture_prerequisite(plan, setup, expected)
+        fixture_prerequisite(plan, setup, expected, base_recovery_required=(
+            artifacts.metadata.get("base_recovery_required")))
         session.begin(expected, end_by())
         if session.identity is None or not session.identity.known:
             raise PlanBlocked("known firmware identity required for fixture actions")
@@ -691,6 +708,8 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
             if (detail["completed_time_valid"] != "1" or not 31 <= elapsed < 1 << 63 or
                     detail["termination"] != "ENABLED" or diag["recovery_unresolved"] != "0"):
                 raise PlanFailure("recovery lacks qualified sequence/wait/termination evidence")
+            artifacts.metadata["base_recovery_required"] = False
+            artifacts.checkpoint()
             reconcile()
         baseline = dict(profiles())
         artifacts.metadata["fixture_baseline"] = {

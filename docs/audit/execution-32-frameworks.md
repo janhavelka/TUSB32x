@@ -212,3 +212,104 @@ instruction. Partial outputs/logs remain under C:/Temp/tusb32x-p32-final-firmwar
 that attempt is CANCELLED / NOT RUN to completion and supplies no final success
 claim. No cached outputs from either earlier attempt were reused by the final
 delivery matrix.
+
+## 2026-10-28 independent prompts 31/32 audit verification
+
+Repeated the six extracted framework links after the independent audit corrected
+runner power-epoch readiness and added actual compiler-header provenance to the
+clean package consumer. Core, adapters, firmware configurations and SDK pins did
+not change. Historical proof above remains attached to its original artifacts.
+This audit's frozen managed-Core archive is
+`build/TUSB32x-audit31-32.tar.gz`, SHA-256
+`35082d9163f1c0568d267ed057d51d964a3fcdb89143771b601327a4b3099a24`.
+
+The exact renamed extraction is
+`C:/Temp/tusb32x-audit31-32-distribution/package-wwpctqie/renamed-tusb32x`.
+The lead supplied its source-equal 76-file package and created the unrelated
+enclosing Git fixture at C:/Temp/tusb32x-audit31-32-distribution, HEAD
+`e69f18061efe9cd336bd81f960361c537b623629`. The extracted library has no .git.
+Fresh build, identity, configuration, dependency and evidence outputs reside in
+`C:/Temp/tusb32x-audit31-32-firmware`; no earlier build/cache was reused.
+
+The existing bounded run_build.py and verify_images.py helpers were copied into
+that output root with only artifact/root path substitutions. Each build retained
+the 1800-second process and 16MiB log bounds. The actual commands were:
+
+```powershell
+$packageRoot = 'C:/Temp/tusb32x-audit31-32-distribution/package-wwpctqie/renamed-tusb32x'
+$firmwareRoot = 'C:/Temp/tusb32x-audit31-32-firmware'
+$env:PLATFORMIO_CORE_DIR = 'C:\pio'
+$env:CCACHE_DISABLE = '1'
+$env:PLATFORMIO_WORKSPACE_DIR = "$firmwareRoot/arduino-workspace"
+$env:PLATFORMIO_BUILD_DIR = "$firmwareRoot/arduino-build"
+$env:PLATFORMIO_LIBDEPS_DIR = "$firmwareRoot/arduino-libdeps"
+& "$packageRoot/scripts/pio.cmd" run -d $packageRoot -j 4 -e esp32s2dev -e esp32s3dev -e esp32s2_owner_service -e esp32s3_owner_service
+$env:IDF_PATH = 'C:\pio\packages\framework-espidf'
+$env:IDF_PYTHON_ENV_PATH = 'C:\pio\penv\.espidf-5.5.5'
+$env:IDF_PYTHON_CHECK_CONSTRAINTS = 'no'
+$env:IDF_PY_BUILD_JOBS = '4'
+$env:ESP_ROM_ELF_DIR = 'C:\pio\packages\tool-esp-rom-elfs'
+$env:PATH = 'C:\pio\packages\tool-cmake\bin;C:\pio\packages\tool-ninja;C:\pio\packages\toolchain-xtensa-esp-elf\bin;C:\pio\penv\.espidf-5.5.5\Scripts;' + $env:PATH
+$idfPython = 'C:\pio\penv\.espidf-5.5.5\Scripts\python.exe'
+& $idfPython "$env:IDF_PATH/tools/idf.py" -C "$packageRoot/examples/esp_idf/basic" -B "$firmwareRoot/idf-s2" "-DSDKCONFIG=$firmwareRoot/idf-s2/sdkconfig" -DIDF_TARGET=esp32s2 -DCCACHE_ENABLE=0 build
+& $idfPython "$env:IDF_PATH/tools/idf.py" -C "$packageRoot/examples/esp_idf/basic" -B "$firmwareRoot/idf-s3" "-DSDKCONFIG=$firmwareRoot/idf-s3/sdkconfig" -DIDF_TARGET=esp32s3 -DCCACHE_ENABLE=0 build
+python "$firmwareRoot/verify_images.py"
+python "$firmwareRoot/verify_dependencies.py"
+```
+
+Installed versions were rechecked: managed Core 6.1.19, pioarduino 55.03.311,
+Arduino 3.3.11 with IDF libraries 5.5.5+sha.b774170ff46, native IDF 5.5.5,
+native Python 3.12.10, CMake 4.0.3, Ninja 1.13.1 and Xtensa GCC 14.2.0
+esp-14.2.0_20260121. No SDK/Core/tool installation or pin change occurred.
+
+The Arduino four-environment command exited 0 in 70.78s; native S2 and S3
+exited 0 in 72.27s and 74.14s. arduino.log, idf-s2.log and idf-s3.log are
+45863, 141065 and 147730 bytes. Matching row JSON files retain exact command,
+environment, duration, exit code and log SHA-256. Image verification passed all
+six rows, including the unchanged archive hash and all 76 extraction names/bytes.
+
+| Repeated extracted consumer | Result | Linked ELF SHA-256 |
+| --- | --- | --- |
+| Arduino esp32s2dev | PASS | `40dfc441533f652850d9336918f2bce15eef6b907b776591bea52fd0f79dda4f` |
+| Arduino esp32s3dev | PASS | `67a00abd69f9cb72110fd754f452a1c91352aae3f427266c3f2714757df2883c` |
+| Arduino esp32s2_owner_service | PASS | `8d29931f9eea41ddb2f92a7b13915d29d35dd92c645ef5dc4d18e43ff51bfff3` |
+| Arduino esp32s3_owner_service | PASS | `312451892a04d181d107e47513264877b6eb88e12b15507a491d7d7924cb93d2` |
+| Native IDF S2 | PASS | `0de58b70a67e6da291de125ad4ff7fa90e76162a6bf8a587550ee1fb737898c9` |
+| Native IDF S3 | PASS | `f195009a6132eb77de0fc8f5b5bcf636027c98d12965b781d17256b9b9e46370` |
+
+image-evidence.json beneath the output root records every ELF/BIN/map hash,
+generated identity, source evidence, required symbols and native configuration/
+lock hashes. All six Git/tree tokens remain unknown beneath the unrelated parent
+repository. Each Arduino row's 11 application/core/shared compilation units name
+the exact extraction as their compilation directory. Native compile databases
+identify the 11 extracted sources and renamed-tusb32x component, while the
+linked images contain app_main, native loopExample/writeRead, shared CLI tick,
+core poll and UART/I2C APIs. Native symbol lists contain no Arduino, TwoWire,
+HardwareSerial or USBSerial linkage. Separate absolute S2/S3 SDKCONFIG and lock
+paths, target values, CPU0 affinity, console NONE and HZ1000 were checked again.
+Source maps, metadata and dependency records contain no source-checkout path.
+
+Actual header dependency verification supplements source/compilation-directory
+inspection. verify_dependencies.py reads each Arduino source's compiler-produced
+Make depfile and each native source's valid Ninja dependency record. All 11 records
+per row are nonempty. The Make parser preserves GCC-escaped filenames; native
+queries use the actual compile database object target. Compiler include-search
+probes detect the target compiler's standard include roots and save the full
+probe output. The checker resolves every recorded path, including symlinks, and
+requires it beneath the exact extraction, that row's generated build directory,
+the selected installed SDK roots or the detected compiler include roots.
+Missing dependency records or outside paths fail this check. Arduino GCC Make
+depfiles report non-system dependencies; native Ninja records additionally
+include system headers. The report does not imply Arduino's depfiles enumerate
+every standard-library header.
+
+All six dependency checks passed: Arduino S2 rows each recorded 193 distinct used
+paths, Arduino S3 rows 194, and native S2/S3 each 203. dependency-evidence.json
+indexes the per-row *-actual-dependencies.json files, which preserve approved
+roots, object records and resolved used paths with evidence hashes. Target
+*-compiler-include-probe.txt files retain detected compiler search roots.
+These evidence helpers and their output remain outside the shipped extraction.
+
+No exported file, Git state, sibling, hardware, firmware image on a board or
+remote CI was changed by this delegated verification. Hardware qualification
+remains NOT RUN; linked images establish software consumption/linkage only.

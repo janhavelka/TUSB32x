@@ -126,7 +126,8 @@ and 2 for invocation errors or missing build tools. Every child has a finite
 60-second timeout. Its JSON report records the archive SHA-256, fresh extracted
 path and counts. Evidence remains in a fresh private workspace; when `--out`
 is inside the checkout, compilation uses the system temporary directory and
-reports that external path. No unrelated tree is moved or deleted. These commands do not publish an archive or run hardware.
+reports that external path. No unrelated tree is moved or deleted. These commands
+do not publish an archive or run hardware.
 
 Before extraction, portable ASCII names (240 characters, 16 segments, 100 per
 segment), case/prefix collisions, Windows aliases, duplicate headers and all
@@ -143,14 +144,23 @@ CMake: only packages made from this trusted checkout are built.
 The copied standalone fixture uses `add_subdirectory()` and target `TUSB32x` in a
 renamed extraction, directly includes every public header and runs simulated
 cooperative initialization with exact tokens and effects. It checks source/include
-origins, tests OFF, compile commands and a child PATH without Git, Python,
+origins, tests OFF, compile commands, actual compiler header dependencies and a
+child PATH without Git, Python,
 Doxygen or PlatformIO. The checker itself uses Python; consuming core does not.
-There is no install/export or `find_package(TUSB32x)` contract.
+Headers must come from the extracted library, copied fixture or CMake's detected
+compiler/SDK implicit include roots. Source/include directory properties alone
+cannot establish which header bytes the compiler used. Dependency evidence is
+retained alongside the origin report. There is no install/export or
+`find_package(TUSB32x)` contract.
 
 CTest registers `tusb32x_package_safety` and `tusb32x_package_consumer`. The latter
 creates a real test tar from the literal content list, then extracts, compiles,
 links and executes; ordinary host tests do not require PlatformIO. Separately,
-the actual managed-Core archive is checked with the command above. Extracted
+the actual managed-Core archive is checked with the command above.
+`tusb32x_package_origins` additionally runs the complete checker on a valid copy
+and injected checkout/outside header dependencies; both injected builds must be
+rejected after compilation. It has a finite 120-second limit and needs the same
+maintainer tools. Extracted
 Arduino builds use the four root environments. Native builds use the archived
 `examples/esp_idf/basic` and separate absolute build/SDKCONFIG paths for S2/S3;
 see its [commands](../examples/esp_idf/basic/README.md). Firmware identity remains

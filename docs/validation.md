@@ -3569,3 +3569,94 @@ Python AST/docstrings and100-column/UTF-8/LF/whitespace checks pass for both new
 modules; Doxygen/XML and no-op version sync remain clean. Full Debug/Release
 65/65 evidence above precedes only these focused extraction regressions and
 excluded validation/progress text; all affected registrations were rerun.
+
+## Independent audit of prompts 31 and 32, 2026-10-28
+
+Re-read both original prompts in full and audited actual commits
+b8eb52f..458706a and458706a..c76e101, not the previous handoff. Starting HEAD
+c76e101cfc6339a48572573093233efdefb1c55d and upstream were equal after fetch;
+index/worktree clean on promptset/tusb32x-implementation-20261023. Fresh strong
+reviewers independently examined recovery/effects and archive/provenance, with a
+separate requirements/peer/test review. The lead reproduced and reviewed both
+confirmed findings. Current peer revisions/paths and adopted/rejected choices
+are recorded in [progress](implementation-progress.md). Siblings remain clean.
+
+| Confirmed finding | Correction and independent regression |
+| --- | --- |
+| Base fault UFP completion could carry old recovery readiness into a later source-capable suite | Checkpoint base_recovery_required before power-cycle intent; preserve it across groups/sessions; block source apply; clear only after newly qualified typed recovery. Both base variants cover separate/combined groups, fresh recovery and absent initial readiness. Native C++ processes prove zero later callbacks/commands; their retained UFP images do not claim POR behavior. |
+| Source/include properties and compile_commands missed absolute outside headers | Record compiler/SDK implicit roots before adding the library; validate actual Ninja dependencies or GNU/Clang Make depfiles. Complete copied-checkout consumers reject both original-checkout and arbitrary sibling header imports specifically at that guard. |
+
+Archived TI SLLSEN9F section7.4.3, printed page14, was re-opened: VDD return
+requires qualified04/wait30ms/00 before Rp. The runner records this requirement;
+it does not operate supplies or add a second operation engine. Only the existing
+typed core recovery can establish new proof. Neither software reset nor fresh
+identity/reconciliation/reads clear the run fact. Boolean evidence is validated.
+The shared fake's absent desired mode now stays independent of mutable actual
+mode, matching unavailable desired storage in the real CLI.
+
+| Verification | Result | Actual command/evidence |
+| --- | --- | --- |
+| Strict Debug build and full registrations | PASS | cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON; cmake --build build/native --config Debug; ctest --test-dir build/native -C Debug --output-on-failure;66/66 in112.52s; build/audit31-32-debug-ctest.log |
+| Strict Release build and full registrations | PASS | cmake -S . -B build/release -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release; cmake --build build/release --config Release; ctest --test-dir build/release -C Release --output-on-failure;66/66 in121.57s; build/audit31-32-release-ctest.log; runtime checks active |
+| Session/runner/recovery suite | PASS | Existing hil_runner executes311tests in66.449s Debug/68.207s Release, including all74recovery tests and both-variant regressions; no sleeps in fake-clock parsing tests |
+| Actual persistent C++ transcript | PASS | Existing cli_transcript receives built host path;12.00s Debug/17.35s Release, retains all earlier plans and adds2base power-epoch guards; modeled hardware NOT RUN |
+| Archive/parser unit suite | PASS | python tools/test_check_package.py;39tests, including35archive negatives/positives and4compiler depfile parsing cases |
+| Complete header-origin consumers | PASS | tusb32x_package_origins registered120s; clean copy succeeds, checkout/sibling imports fail after compile at actual dependency guard;5.46s Debug/8.69s Release |
+| Additional generator coverage | PASS | Same3origin cases with Ninja Release, Ninja Multi-Config Debug and MinGW Makefiles Release; actual Make .d files exercised, not only synthetic text |
+| Real managed-Core package | PASS | scripts/pio.cmd pkg pack . --output build/TUSB32x-audit31-32.tar.gz;295925bytes,76regular source-equal files; matching literal IDF/PlatformIO lists |
+| Renamed clean package consumption | PASS | python tools/check_package.py --archive build/TUSB32x-audit31-32.tar.gz --out C:/Temp/tusb32x-audit31-32-distribution; actual compile/link/run, all public headers, tests OFF, no Git/Python/Doxygen/PIO on child PATH, actual used-header origins |
+| Extracted framework images | PASS | Four Arduino basic/owner S2/S3 plus2genuine native-IDF CLI images from fresh outputs; exact commands/hashes in framework audit |
+| Stable metadata/documentation | PASS | Version sync/check and no-op byte/mtime stability; doxygen Doxyfile +17public struct/26owner method XML visibility;136Markdown files/831local or own-source links before final audit links; final count below;173package links |
+| Changed Python modules | PASS | All5modules parse, every function/class has docstrings;100columns, UTF-8/noBOM/LF/final newline/no trailing whitespace; scoped Git diff checks |
+| Tests-OFF ordinary host example | PASS | cmake --build build/p32-host-basic --config Release and tusb32x_host_basic.exe; simulated owner/invalidation/reconciliation checks pass; initial CMake fixture configured Release/tests OFF |
+| Physical hardware | NOT RUN | No port/board/fixture authorization or physical action. Fake/native evidence does not qualify serial/I2C/CC/INT/supply/reset timing. |
+| Full supported remote CI matrix | NOT RUN | Prompt34 only; no remote CI dispatch/query or SDK pin change. |
+| Other host compilers/sanitizers | NOT RUN | cl/clang++/clang-format unavailable; previously probed MinGW ASan/UBSan runtimes unavailable; no core C++ changed. Unix Makefiles parser supported but no Unix runtime exercised here. |
+
+Final audited archive SHA-256:
+`35082d9163f1c0568d267ed057d51d964a3fcdb89143771b601327a4b3099a24`.
+Fresh image extraction is
+C:/Temp/tusb32x-audit31-32-distribution/package-wwpctqie/renamed-tusb32x;
+final clean consumer rerun is package-ee_73pgh/renamed-tusb32x under that same
+parent. The parent is an unrelated temporary Git repository with fixture HEAD
+e69f18061efe9cd336bd81f960361c537b623629. Every image reports unknown Git/tree;
+no enclosing identity is borrowed. The archived example identity scripts remain
+present but are never invoked by core consumer configuration/linkage. Stable
+Version.h and version truth remain unchanged; no source Git data or generation
+step is needed for consuming core.
+
+Six-image output root C:/Temp/tusb32x-audit31-32-firmware retains image-evidence.json,
+row command/environment/exit/log JSON, actual dependency reports and compiler
+include probes. The lead independently rehashed all18ELF/BIN/map artifacts and
+6dependency reports and compared all76extracted bytes with source. Each row has
+11actual project-source dependency records: Arduino193/194unique used inputs,
+native203. Arduino Make records cover non-system dependencies; native Ninja
+records include system headers. System compiler roots are separately detected.
+All recorded paths resolve under the exact extraction, selected SDK/toolchain or
+that row's generated build outputs. Native app_main, core/shared CLI and UART/I2C
+APIs are linked with no Arduino/Wire/Serial symbols; independent absolute S2/S3
+SDKCONFIG/lock paths remain isolated. See
+[the dated framework evidence](audit/execution-32-frameworks.md#2026-10-28-independent-prompts-3132-audit-verification).
+
+Tools were rechecked unchanged: Python3.12.10, host CMake/CTest4.0.1,
+Ninja1.12.1, GNU15.1.0 MCF/UCRT, Doxygen1.13.2, Git2.52.0.windows.1;
+managed Core6.1.19, pioarduino55.03.311, Arduino3.3.11 with IDF libraries
+5.5.5+sha.b774170ff46. Genuine native SDK5.5.5 uses CMake4.0.3, Ninja1.13.1,
+managed Python3.12.10 and Xtensa14.2.0 esp-14.2.0_20260121. The existing native
+IDF_PYTHON_CHECK_CONSTRAINTS=no setting handles the absent standalone constraints
+cache while installed SDK requirements remain checked. No second Core/SDK was
+installed. No source-checkout firmware matrix was duplicated; fresh extracted
+links supply the package and firmware evidence together.
+
+Red-before-green proof is retained: prior recovery code admitted later source
+work in6subcases; old package code returned PASS with an absolute outside header.
+The new positive/negative tests execute actual production helpers and the complete
+checker, not source-token searches. Independent final review found no remaining
+confirmed defect. No assertion, required suite, output-loss rule or cleanup
+contract was weakened. The lead commits/syncs this coherent audited unit on the
+existing execution branch and verifies upstream equality before handoff.
+
+Final documentation consistency after the audit evidence was written:136Markdown
+files/834local or own-source links/anchors PASS; all173archived guide links still
+resolve. Final Git whitespace and changed-module docstring/format checks pass.
+No exported payload changed after the audited archive was frozen.

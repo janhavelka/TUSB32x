@@ -855,3 +855,14 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   Arduino images are separate link evidence, with independent SDKCONFIG paths
   and unknown Git identity beneath unrelated repositories. No electrical support
   claim, release publication or full SDK matrix follows from these checks.
+
+## Independent recovery/package audit corrections
+
+- A base-part power-cycle intent invalidates old recovery readiness before the
+  operator action. Keep that fact with the run artifacts across session groups;
+  only qualified explicit typed recovery clears it. A safe UFP fault outcome,
+  fresh read/reconcile or old setup declaration cannot authorize later Rp work.
+- Package provenance includes actual compiler header dependencies. Declared
+  source/include properties and compile_commands omit absolute header imports.
+  Accept only extracted/fixture headers or detected compiler/SDK include roots,
+  and prove rejection with complete injected-header consumer builds.

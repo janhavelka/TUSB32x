@@ -52,6 +52,7 @@ class RecoveryPeer(FixturePeer):
         self.recovery_unresolved = False
         self.bad_elapsed = False
         self.console_drops = 0
+        self.absent_desired_mode = self.core_profile["mode"]
 
     def _profile(self, request):
         """Publish independent aggregate termination evidence from both actual controls."""
@@ -63,6 +64,10 @@ class RecoveryPeer(FixturePeer):
                 row["termination"] = ("DISABLED" if any(self.core_profile[key] == "off"
                                                        for key in ("termination", "rd_rp"))
                                       else "ENABLED")
+            elif (row["type"] == "PROFILE" and row["source"] == "desired" and
+                  row["available"] == "0"):
+                # Reset changes actual mode; absent desired storage stays untouched.
+                row["mode"] = self.absent_desired_mode
         return rows
 
     def _console(self, request):
@@ -561,6 +566,16 @@ class RecoveryPlanGuardTests(unittest.TestCase):
                 with self.subTest(suite=suite, expected=expected):
                     self.rejected_setup(suite, recovery_setup(), expected=expected)
 
+    def test_runtime_recovery_readiness_requires_exact_boolean_evidence(self):
+        """Falsy integers or strings cannot substitute for this run's typed recovery proof."""
+        from tusb32x_hil_fixtures import fixture_prerequisite
+
+        plan = ObservationPlan(variant="tusb320", address=0x60, suites=("fault",))
+        for value in (0, 1, "false", [], {}):
+            with self.subTest(value=value), self.assertRaises(PlanBlocked):
+                fixture_prerequisite(plan, recovery_setup("tusb320"), EXPECTED,
+                                     base_recovery_required=value)
+
     def test_missing_declared_capability_rejects_each_new_suite_before_io(self):
         """An action authorization cannot supply an absent fixture capability."""
         for suite in RECOVERY_SUITES:
@@ -1024,6 +1039,117 @@ class RecoveryPlanExecutionTests(unittest.TestCase):
         self.assertEqual(fixture[3].snapshot()["exit_code"], 0)
         self.assertFalse(any(text.startswith(("recover-dead-battery", "reset", "apply"))
                              for text in fixture[1].writes))
+
+    def follow_group(self, fixture, suite, setup):
+        """Start another real plan session on the same target and run evidence."""
+        from test_tusb32x_fixtures import FixtureExecutionTests
+        from tusb32x_hil_fixtures import run_fixture_plan
+
+        _, peer, clock, artifacts, _ = fixture
+        epoch = len(peer.writes)
+        nonces = iter(f"group_{epoch}_{index}" for index in range(1000))
+        session = runner.Session(peer, artifacts, clock=clock,
+                                 nonce_factory=lambda: next(nonces))
+        plan = ObservationPlan(variant=peer.variant, address=peer.address, suites=(suite,))
+        ordinary = FixtureExecutionTests().transitions(peer)
+
+        def transition(step, deadline):
+            """Model the explicitly selected recovery readiness or ordinary fixture step."""
+            if step["id"] == "recovery-ready":
+                return clock() < deadline
+            return ordinary(step, deadline)
+
+        return run_fixture_plan(session, plan, setup, EXPECTED, transition=transition,
+                                clock=clock, sleep=lambda seconds: setattr(
+                                    clock, "now", clock() + seconds))
+
+    def test_new_base_power_epoch_blocks_later_groups_with_old_readiness(self):
+        """A sink-only fault PASS cannot reuse pre-cycle readiness for another group."""
+        for variant in ("tusb320", "tusb320i"):
+            for suite in ("accessory", "role-current"):
+                with self.subTest(variant=variant, suite=suite):
+                    fixture = self.fixture("fault", variant)
+                    peer, artifacts = fixture[1], fixture[3]
+                    peer.core_profile["mode"] = "ufp"
+                    self.execute(fixture)
+                    self.assertEqual(artifacts.snapshot()["exit_code"], 0)
+                    setup = recovery_setup(variant)
+                    setup["capabilities"].extend(("audio", "role-current"))
+                    boundary = len(peer.writes)
+                    with self.assertRaises(PlanBlocked):
+                        self.follow_group(fixture, suite, setup)
+                    self.assertFalse(any(text.startswith(("apply", "recover-dead-battery"))
+                                         for text in peer.writes[boundary:]))
+                    self.assertNotEqual(artifacts.snapshot()["exit_code"], 0)
+
+    def test_new_base_power_epoch_accepts_only_new_explicit_recovery(self):
+        """Qualified recovery after power loss permits a later source accessory plan."""
+        for variant in ("tusb320", "tusb320i"):
+            with self.subTest(variant=variant):
+                fixture = self.fixture("fault", variant)
+                peer, artifacts = fixture[1], fixture[3]
+                peer.core_profile["mode"] = "ufp"
+                self.execute(fixture)
+                setup = recovery_setup(variant)
+                setup["capabilities"].append("audio")
+                boundary = len(peer.writes)
+                self.follow_group(fixture, "reset-termination", setup)
+                recovery = next(index for index, text in enumerate(peer.writes[boundary:])
+                                if text.startswith("recover-dead-battery"))
+                self.follow_group(fixture, "accessory", setup)
+                mutations = peer.writes[boundary:]
+                self.assertLess(recovery, mutations.index("mode dfp"))
+                self.assertEqual(sum(text.startswith("recover-dead-battery")
+                                     for text in mutations), 1)
+                self.assertEqual(artifacts.snapshot()["exit_code"], 0)
+
+    def test_new_base_power_epoch_blocks_source_apply_within_same_group(self):
+        """A combined fixture call cannot bypass the new supply-epoch guard."""
+        from test_tusb32x_fixtures import FixtureExecutionTests
+        from tusb32x_hil_fixtures import run_fixture_plan
+
+        for variant in ("tusb320", "tusb320i"):
+            with self.subTest(variant=variant):
+                session, peer, clock, artifacts, _ = self.fixture("fault", variant)
+                peer.core_profile["mode"] = "ufp"
+                setup = recovery_setup(variant)
+                setup["capabilities"].append("audio")
+                plan = ObservationPlan(variant=variant, address=peer.address,
+                                       suites=("fault", "accessory"))
+                ordinary = FixtureExecutionTests().transitions(peer)
+
+                def transition(step, deadline):
+                    """Induce declared transport failures and attest the new power epoch."""
+                    name = step["id"]
+                    if name in {"fault-nack", "fault-disconnect"}:
+                        peer.fail_operation = "profile.read"
+                        peer.fail_code = ("I2C_NACK_ADDR" if name == "fault-nack"
+                                          else "I2C_ERROR")
+                    elif name in {"fault-nack-restore", "fault-disconnect-restore"}:
+                        peer.fail_operation = None
+                    elif name != "fault-power-cycle":
+                        return ordinary(step, deadline)
+                    return clock() < deadline
+
+                with self.assertRaises(PlanBlocked):
+                    run_fixture_plan(session, plan, setup, EXPECTED, transition=transition,
+                                     clock=clock, sleep=lambda seconds: setattr(
+                                         clock, "now", clock() + seconds))
+                self.assertFalse(any(text.startswith(("apply", "recover-dead-battery"))
+                                     for text in peer.writes))
+                self.assertNotEqual(artifacts.snapshot()["exit_code"], 0)
+
+    def test_new_explicit_base_recovery_supersedes_initial_missing_readiness(self):
+        """A completed typed recovery supplies evidence absent from the initial setup."""
+        for variant in ("tusb320", "tusb320i"):
+            with self.subTest(variant=variant):
+                fixture = self.fixture("reset-termination", variant)
+                setup = recovery_setup(variant)
+                setup["base_recovery_complete"] = False
+                setup["capabilities"].append("audio")
+                self.follow_group(fixture, "reset-termination", setup)
+                self.follow_group(fixture, "accessory", setup)
+                self.assertEqual(fixture[3].snapshot()["exit_code"], 0)
 
     def test_late_completion_evidence_cannot_certify_reset_or_original_recovery(self):
         """A successful code without the documented elapsed-time proof fails independently."""

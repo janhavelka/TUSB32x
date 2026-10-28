@@ -2365,3 +2365,73 @@ was performed. Prompt33 remains unstarted. Lead commits and syncs this complete
 checked unit on the existing branch and verifies fetched upstream equality,
 zero ahead/behind and no remaining task edits before handoff. Record its completed
 commit hash in the next progress entry, avoiding a self-referencing hash loop.
+
+## Independent audit of prompts 31 and 32 complete, 2026-10-28
+
+Starting synchronized HEAD c76e101cfc6339a48572573093233efdefb1c55d, the completed
+prompt32 commit, on promptset/tusb32x-implementation-20261023; clean index/worktree,
+fetch showed0ahead/behind. Read both original prompts fully, current contracts,
+actual b8eb52f..458706a and458706a..c76e101 diffs and actual implementation/tests.
+No new branch/worktree, remote CI or physical work. Prompt33 remains unstarted.
+
+Fresh parallel reviewers: gpt-6-astra/high for recovery/effects and archive safety;
+gpt-6.1-sol/high for coverage/peers/actual artifact verification. Lead independently
+verifies findings and owns production runner/docs/integration/Git. After review,
+disjoint coding scopes are recovery unit tests; package checker/tests/consumer
+CMake; and native transcript cases. Core/public C++ and SDK/tool pins are unchanged.
+
+Current TMP1x2 bafc34067530eb340e55c42dae3fad4eb795b6e9,24Cxx
+936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e,INA228
+b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b,OPT4001
+dab818e575fc25a0949d962bc0df600eb2ed5200,LDC1614
+1db38b63cb93a561b6e0bea51017ab94102ebd24 andINA3221
+41b6184b75f3c152611d4236f7ea41a5ce77bc2c are all clean and unchanged. Reviewed
+TMP1x2 runner cleanup tests/check_package/version generation,24Cxx hil_runner
+and tests/check_package_contents,INA228 test_basic/owner example and public API,
+OPT4001 clean package checker,LDC1614/INA3221 native CMake/application sources
+and all their AGENTS/workflow definitions. Keep exact owned results, primary
+failure, safe conditional cleanup and real renamed consumer/image links; reject
+unbounded extraction, automatic replay/restore and consumer version generation.
+No checked-in TUSB workflows exist yet; no remote run was queried.
+
+Confirmed P1: a base fault plan ending safely in UFP could carry its original
+startup declaration into a later source-capable suite without fresh recovery.
+Archived TI SLLSEN9F7.4.3p14 re-opened: after VDD returns,04/wait30ms/00 precedes
+Rp. A checkpointed base_recovery_required fact now survives session/group changes;
+only newly qualified explicit recovery clears it. Both base variants have red
+then green cross-group/combined-group and positive fresh-recovery regressions.
+No recovery is automatic and no board power policy was added.
+
+Confirmed P2: compile_commands/directory assertions did not detect an absolute
+header from outside extraction. A full copied-checkout experiment returned PASS
+while Ninja recorded the escaped dependency. The package check now audits actual
+compiler header dependencies against extracted/fixture and detected toolchain
+roots, with complete positive and injected-header negative consumers. Remaining
+verification and new archive/image evidence follow below.
+
+Final audit verification: strict Debug66/66 and Release66/66 CTests PASS, including
+311session/runner tests,39package unit cases and actual complete header-provenance
+consumers. Native persistent CLI checks both base variants' retained recovery
+obligation across sessions, with zero later callback/command deltas. New CTest
+package_origins executes a clean package and two specifically rejected outside
+header imports; Ninja, Ninja Multi-Config and real MinGW Make depfiles pass.
+Independent final strong review found no further confirmed defect.
+
+Fresh managed-Core archive SHA256
+35082d9163f1c0568d267ed057d51d964a3fcdb89143771b601327a4b3099a24 has76source-equal
+regular files and173local links. A renamed clean public consumer compiles, links
+and runs with no maintainer tools on child PATH, now checking actual headers.
+All6fresh extracted Arduino/native-IDF S2/S3 image links and actual dependency
+checks pass; unknown Git identity beneath unrelated parent, native APIs/noArduino
+and separate build/SDKCONFIG/locks are verified. The lead hashes actual artifacts
+and source bytes; detailed commands/paths/versions are in
+[validation](validation.md#independent-audit-of-prompts-31-and-32-2026-10-28).
+Version stability, strict Doxygen/visibility, Markdown and changed-module complete
+Python docstrings/style checks pass. No core API/code, version or SDK pin changed.
+
+Physical serial/I2C/CC/INT/VDD/VBUS/VCONN/reset timing remain NOT RUN. No hardware
+or remote CI was invoked. The library still has one transport/composer/engine;
+runner readiness and compiler dependency guards add no scheduler or product policy.
+The lead reviews/stages/commits and syncs this audited unit on the same branch,
+verifying fetched upstream equality,0ahead/behind and no remaining task edits.
+Record the completed audit commit in the next progress entry, avoiding a hash loop.

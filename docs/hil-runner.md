@@ -524,6 +524,14 @@ After a source-capable original-part power cycle, previous base recovery readine
 is invalid: cleanup stays BLOCKED with manual typed-recovery facts. A clear45 byte
 and fresh identity cannot prove the historical procedure. This limitation cannot
 be overridden by the initial base_recovery_complete declaration.
+Before a base power-cycle action, the report checkpoints
+`metadata.base_recovery_required=true`. That run fact survives new Session and
+suite groups even if the fault plan safely finishes in sink-only UFP. A later
+source-capable apply, including combined-plan work, cannot use old startup proof.
+Only a separately selected, qualified typed recovery with the required wait and
+completion/termination evidence clears it. Fresh identity, reads, reconciliation
+and reset do not. Completed recovery can also establish proof absent from the
+initial declaration; operator readiness and authorization remain required.
 
 Console requires all three console actions and an application/backend arrangement
 that can arm finite backpressure for the next help response. Release it within
