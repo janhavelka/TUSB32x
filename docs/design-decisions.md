@@ -626,3 +626,22 @@ maintainer-only dependency. Hardware and framework claims require separate evide
   backend deltas, sharing its help comparison with the persistent transcript.
   Negative alias/required-field dependencies must fail. No source-token-only
   inventory or extra passing transcript registration replaces behavior checks.
+
+
+## Arduino application integration, prompt 24
+
+- Share one portable CLI queue for both command and APP diagnostics. A copied
+  256-byte mailbox isolates SDK USB waits in a static worker; no SDK transmit
+  call runs in the device owner. This is required by the pinned S2 TinyUSB mutex
+  paths, not a general asynchronous framework.
+- Application startup owns and consumes only its init/refresh tokens. It never
+  depends on CLI result-response capacity. The primary hands off to the CLI;
+  a secondary fixed owner shares the same controller Context and has a reserved
+  address. IRQ signals are coalesced and retained through startup.
+- Keep actual board settings in examples/arduino/BoardConfig.h; common owner and
+  mailbox code stays portable. Default diagnostic-only firmware cannot invent a
+  qualified timing bound or resolve TI's enable-polarity startup conflict.
+- Retain static USB resources after local bus shutdown. Stop admission, preserve
+  result/effect evidence, end both bindings and only then release exclusive Wire.
+
+Evidence and current peer revisions: [execution audit](audit/execution-24-arduino-examples.md).

@@ -419,4 +419,18 @@ short transfers, shared gate/retirement, timeout restoration, 64-bit time and
 counter saturation have executable evidence. See [integration](arduino-transport.md)
 for the source-derived bound and application prerequisites. Core compilation and
 CLI dispatch are unchanged. Board scheduling/CPU qualification, electrical traces
-and complete board examples remain separate work.
+remain separate work.
+
+## Arduino applications (prompt 24)
+
+| Requirement / capability | Implementation | Executable evidence |
+| --- | --- | --- |
+| Read-only startup, exact result ownership, failure without retry | ExampleOwner; primary hands off to shared Cli | tusb32x_example_owner, tusb32x_example_integration |
+| Fixed two-target fairness and deferred explicit IRQ service | Secondary ExampleOwner, shared Context, alternating application turns | tusb32x_example_owner; four SDK images |
+| USB backpressure independent of owner progress | OutputMailbox; static worker; one CLI ConsoleBuffer | tusb32x_output_mailbox concurrent blocked worker; tusb32x_cli applicationRecordOrdering; tusb32x_example_integration |
+| Local shutdown and retained external results | ExampleOwner::stop, ExampleApp shutdown before Wire.end | tusb32x_example_owner, tusb32x_example_integration; actual SDK linkage |
+| Explicit variant/address/pins, no universal enable pulse | BoardConfig and board qualification gate | Compile-time/runtime validation; SDK images; physical fixture NOT RUN |
+| Existing core/CLI and adapter semantics | Same engine, command table and terminal Wire callbacks | Registered core/CLI/console/adapter regressions |
+
+See [Arduino integration](arduino-examples.md) for exact supply/strap/current,
+VBUS_DET and VCONN requirements. Host/SDK checks do not qualify physical behavior.

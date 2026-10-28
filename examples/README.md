@@ -18,6 +18,11 @@ contract checks also use it. These prove no firmware or hardware integration.
 The [Arduino Wire adapter](../docs/arduino-transport.md) is implemented, with host
 contract tests and separate S2/S3 SDK link fixtures. It borrows the application
 bus and enforces the documented SDK configuration, aggregate budget, shared gate
-and failed-receive retirement. Complete board examples/CLI wiring and native
-ESP-IDF transport remain later prompts. Builds do not qualify electrical
+and failed-receive retirement. The [interactive Arduino CLI](01_basic_bringup_cli/README.md)
+and [two-device owner service](02_owner_service/README.md) share the same processor,
+read-only startup owner and static USB output mailbox. Both have explicit S2/S3
+environments; see [wiring and build instructions](../docs/arduino-examples.md).
+Default firmware is diagnostic-only until board readiness, cleanup acceptance
+and the adapter's timing bound are supplied. Native ESP-IDF transport remains
+later work. Builds do not qualify electrical
 behavior or application timing. See [development metadata](../docs/development.md).

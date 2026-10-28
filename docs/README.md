@@ -13,6 +13,8 @@
   identity checks, with adapter and later owner limits.
 - [Arduino transport](arduino-transport.md): borrowed Wire callbacks, SDK limits,
   aggregate deadline, controller retirement and S2/S3 build fixtures.
+- [Arduino examples](arduino-examples.md): CLI and two-device owner applications,
+  explicit wiring/qualification, USB isolation, source-filtered S2/S3 builds and shutdown.
 - [Diagnostics and health](diagnostics.md): safe raw access, retained effects,
   all-source/managed callback accounting and pure health projection.
 - [Variants](variant-matrix.md), [register map](register-map.md) and

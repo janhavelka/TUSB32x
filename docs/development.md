@@ -1,9 +1,9 @@
 # Development metadata and version tools
 
 `library.json` is version truth. The current `0.1.0-dev.1` marks an incomplete
-driver: values, Status helpers, local validators, public decoding and private
-transport/identity/codecs/composition are implemented; device operations,
-adapters and firmware qualification remain planned. Version text
+library: portable values, validators, decoding, cooperative operations, the shared
+CLI and Arduino S2/S3 examples are implemented. Native-IDF integration and
+physical qualification remain separate work. Version text
 identifies the package, never the firmware flashed on a board.
 
 ## Version workflow
@@ -24,7 +24,9 @@ versions, the component version and Doxygen PROJECT_NUMBER. Never hand-edit the
 generated header. Equal bytes are left untouched, including mtimes. The script
 uses its own location, not the working directory, Git or an enclosing repository.
 Dirty examples do not affect the stable package header. Firmware build identity
-belongs to later example tooling.
+is generated separately by `scripts/arduino_identity.py` for Arduino builds.
+It records the actual checkout HEAD/dirty state, UTC build time and environment;
+missing Git or an unrelated parent repository produces unknown provenance.
 
 All commands require the exact arguments shown; `bump` also accepts minor/major.
 Strict ASCII SemVer permits prerelease/build suffixes; numeric core and numeric
@@ -43,7 +45,9 @@ leave a partial sync. Repair the failure and rerun the intended command.
 
 Plain host builds need CMake 3.16+ and a C++17 toolchain. Tests default OFF and
 consumers never discover Python, Git, Doxygen or PlatformIO. Tests ON find Python
-3.10+ for the registered tusb32x_version_sync suite alongside the three C++ suites.
+3.10+ for registered tool/contract suites alongside the C++ suites. The Arduino
+metadata fixture also uses Git in isolated temporary repositories; the mailbox
+concurrency fixture links the host thread library. These are tests-ON dependencies.
 Windows additionally registers tusb32x_pio_launcher; its temporary CMD fixtures
 need no Core installation. Run them directly with `python tools/test_pio_launcher.py -v`.
 See [native checks](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md) in a source checkout.
@@ -73,7 +77,9 @@ pins. The real host consumer uses `platformio/native@1.2.1`, whose
 [official manifest](https://github.com/platformio/platform-native/blob/v1.2.1/platform.json)
 requires Core 6. Native uses the application's installed host toolchain, as the
 [PlatformIO guide](https://docs.platformio.org/en/latest/platforms/native.html)
-documents. No board pin, USB flag or future firmware environment is introduced.
+documents. The root firmware environments and their explicit board/USB flags are
+described in [Arduino examples](arduino-examples.md); they do not affect the
+ordinary CMake consumer.
 
 Run `doxygen Doxyfile` for public documentation under build/doxygen. The current
 configuration extracts documented public API and enables missing-comment,
@@ -84,10 +90,12 @@ prompt 33 work; a warning-free generation alone does not prove visibility.
 ## Package and ownership boundaries
 
 The PlatformIO export list contains public headers, five real C++ sources and their
-private protocol/codec/time headers, the four current common CLI files, CMake,
-manifests, license, selected guides and the real host consumer. Reference/vendor
-artifacts, prompts, audits, progress/validation machinery, tests, scripts and
-generated build output are excluded from ordinary archives. Maintainer commands
+private protocol/codec/time headers, common CLI/owner/mailbox code, the Arduino
+adapter and two applications, CMake, manifests, license, selected guides and the
+real host consumer. The root PlatformIO configuration and its two required
+example build scripts are shipped. Reference/vendor artifacts, prompts, audits,
+progress/validation machinery, tests, other maintainer scripts and generated
+build output are excluded from ordinary archives. Maintainer commands
 require the source checkout. Links to repository-only evidence use source-host
 URLs; links between shipped guides remain relative.
 The IDF manifest excludes all files and explicitly re-includes the same consumer

@@ -223,10 +223,10 @@ historical observation carries validity/provenance. Independent interrupted
 recovery, mode and reset facts survive result consumption. Optional health only
 projects managed transport evidence; it neither repairs trust nor controls work.
 
-Portable CLI code will consume public values and the single pure register
+Portable CLI code consumes public values and the single pure register
 decoder. Framework transport/console adapters stay under examples. Host runners
-own repeated fixture sequences rather than adding another core scheduler. No
-framework adapter, CLI, runner or hardware test is implemented in this stage.
+own repeated fixture sequences rather than adding another core scheduler.
+Arduino applications use the same CLI; physical testing remains separate.
 
 ## Arduino callback boundary
 
@@ -235,5 +235,15 @@ Its single controller context borrows TwoWire and owns no bus lifecycle. The
 application supplies one gate shared by all controller users and qualifying setup
 facts; no framework type enters public core headers. The existing engine and CLI
 call the same DriverConfig callbacks. SDK-only retirement is independent of core
-health, configuration trust and results. SDK build fixtures live under test;
-complete board examples follow separately.
+health, configuration trust and results. SDK build fixtures live under test.
+
+The [Arduino applications](arduino-examples.md) share `ExampleApp.cpp`, with one
+selected setup/loop per source-filtered image. Portable `ExampleOwner` owns only
+application-started tokens and consumes their terminal results independently of
+console output. The primary hands control to the existing CLI after read-only
+startup; the secondary is a separate fixed owner. Both borrow one bus Context.
+
+`OutputMailbox` copies one bounded chunk to a static USB worker. The worker may
+block in TinyUSB but never holds owner state or calls the core/transport. One
+ConsoleBuffer orders CLI and `APP` diagnostics, so partial writes cannot mix
+records from separate queues. No task, framework or scheduler enters the core.

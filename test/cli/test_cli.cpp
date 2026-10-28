@@ -888,7 +888,34 @@ void diagnosticFormatterAndSaturationBounds() {
   }
 }
 
+void applicationRecordOrdering() {
+  Fixture fixture;
+  fixture.writeLimit = 3;
+  CHECK(fixture.cli.enqueueApplicationRecord("APP startup=OK\n", 15));
+  CHECK(fixture.cli.processCommand("version"));
+  fixture.cli.tick();
+  CHECK(fixture.output == "APP");
+  CHECK(fixture.cli.enqueueApplicationRecord("APP next=OK\n", 12));
+  fixture.writeLimit = 256;
+  fixture.flush();
+  CHECK(fixture.output.rfind("APP startup=OK\n", 0) == 0);
+  const auto end = fixture.output.find("TUSB END ");
+  CHECK(end != std::string::npos);
+  CHECK(fixture.output.find("APP next=OK\n") > end);
+  CHECK(fixture.bus.calls == 0);
+  fixture.writeLimit = 0;
+  const std::string record = "APP " + std::string(500, 'x') + "\n";
+  for (unsigned i = 0; i < 20; ++i)
+    (void)fixture.cli.enqueueApplicationRecord(record.data(), record.size());
+  CHECK(fixture.cli.console().droppedRecords() > 0);
+  fixture.writeLimit = 256;
+  fixture.flush();
+  CHECK(fixture.output.find("TUSB LOSS ") != std::string::npos);
+  CHECK(fixture.bus.calls == 0);
+}
+
 int main() {
+  applicationRecordOrdering();
   {
     Fixture interleaved;
     CHECK(interleaved.cli.processCommand("help all"));

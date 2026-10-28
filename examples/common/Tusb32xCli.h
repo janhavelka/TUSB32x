@@ -117,8 +117,20 @@ class Cli {
   /// @brief Poll at most once, announce completion, advance finite help and drain once; no waits.
   /// @note Automatic stepping defaults on for CLI-admitted work. job step replaces that turn's
   /// budget, including zero. Polling/deadlines continue during backpressure and session exhaustion.
-  /// The application must not also poll the same driver in this serialized CLI owner turn.
+  /// When the CLI owns an operation, the application must not also poll that driver in this turn.
+  /// Before any CLI input/admission, application-owned startup may poll its own token and use
+  /// tick only for output: automatic stepping cannot advance that externally admitted token.
   void tick();
+  /// @brief Queue one application diagnostic record in the same ordered output stream.
+  /// @param[in] data Borrowed complete newline-terminated record; copied before return.
+  /// @param[in] length Record bytes, at most 511, excluding any terminating NUL.
+  /// @return True when queued after setup; false on invalid input or whole-record drop.
+  /// @note Serialized owner only; zero I2C, no command execution or result consumption.
+  /// Use an application prefix such as APP, never impersonate correlated TUSB replies.
+  /// ConsoleBuffer accounts overflow; tick remains the only bounded output drain.
+  bool enqueueApplicationRecord(const char* data, std::size_t length) {
+    return _setup && _console.enqueue(data, length);
+  }
   /// @brief Request ordinary incremental help through the same turn/request rules.
   /// @param[in] topic Implemented topic/command or all; default all. Scan is bounded to 33 bytes.
   /// @return Whether the help request was accepted; null/empty/over 32-byte arguments return false.

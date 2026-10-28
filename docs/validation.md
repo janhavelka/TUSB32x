@@ -2630,3 +2630,75 @@ Receive failure retires the entire controller until explicit application
 teardown/reinitialization; it does not silently recover. This conservative subset
 is usable without making an unmeasured hardware guarantee. Remote CI remains
 prompt34 only. Final commit/upstream equality is reported in the handoff.
+
+
+## Prompt 24: Arduino applications (2026-10-28)
+
+The [example guide](arduino-examples.md) documents usable CLI and two-device owner
+applications, exact wiring/qualification, USB behavior and build commands.
+The [audit](audit/execution-24-arduino-examples.md) records current peer and SDK evidence.
+Core and adapter implementation remain unchanged; one example-only CLI record
+hook shares the existing ordered bounded output queue.
+
+Tools: GCC15.1.0, CMake/CTest4.0.1, Ninja1.12.1, Python3.12.10, Doxygen1.13.2;
+VS Code-managed PlatformIO6.1.19; pioarduino55.03.311, Arduino3.3.11,
+IDF5.5.5+sha.b774170ff46, target GCC14.2.0+20260121.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Complete strict host matrix | PASS | Debug 20/20; Release 20/20, checks active; includes prior core/CLI/console/adapter suites |
+| Application owner | PASS | 924 checks: exact startup reads/results, every read failure, no retry, budgets, rollover/deadline, shared-bus fairness and shutdown |
+| Startup/CLI handoff | PASS | 277 checks: full/stalled console cannot prevent startup take, no duplicate poll, later CLI result retained, shutdown preserves external result |
+| USB mailbox | PASS | 1574 checks: copied lifetime, bounds, short writes, order, real worker blocked while producer returns, two-second test watchdog |
+| Firmware identity/configuration | PASS | Seven Python cases, five valid and 25 negative real header compilations; temporary Git clean/dirty/untracked HEAD, unrelated parent and missing Git |
+| ESP32-S2 interactive CLI | PASS | esp32s2dev, real SDK/core/CLI/adapter link; one setup/loop |
+| ESP32-S3 interactive CLI | PASS | esp32s3dev, real SDK/core/CLI/adapter link; one setup/loop |
+| ESP32-S2 owner service | PASS | esp32s2_owner_service, separate source filter and main |
+| ESP32-S3 owner service | PASS | esp32s3_owner_service, separate source filter and main |
+| Enabled setup/IRQ/shutdown linkage | PASS | Separate S2/S3 owner builds with synthetic readiness/cleanup/overhead and IRQ/run-time overrides; compile evidence only |
+| Documentation and sources | PASS | Strict Doxygen and existing public visibility checker; links/anchors, UTF-8/LF, provenance hashes, no-op version check and diff whitespace |
+| Distribution boundary | PASS | 60 source-equal exported files, matching IDF inclusion, local links resolve; isolated extracted tests-OFF core/CLI consumers under unrelated Git with maintainer tools absent from PATH |
+| Flash / serial / HIL | NOT RUN | No identified authorized board; no physical USB disconnect, GPIO/IRQ level, CC/VBUS, bus-cleanup or whole-callback timing qualification |
+
+Actual commands (PowerShell):
+
+```powershell
+cmake -S . -B build/p24 -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p24 --config Debug
+ctest --test-dir build/p24 -C Debug --output-on-failure
+cmake --build build/p24 --config Release
+ctest --test-dir build/p24 -C Release --output-on-failure
+scripts/pio.cmd run -e esp32s2dev -e esp32s3dev -e esp32s2_owner_service -e esp32s3_owner_service
+scripts/pio.cmd run -c build/p24-enabled.ini -e esp32s2_owner_service -e esp32s3_owner_service
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python scripts/generate_version.py check
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p24.tar.gz
+python build/p24-package.py
+git diff --check
+```
+
+The ignored enabled-path configuration copies root platformio.ini, sets a separate
+`.pio/p24_enabled` build directory and appends these compile-only definitions:
+`TUSB32X_BOARD_READY=1`, `TUSB32X_MAX_OVERHEAD_US=2000`,
+`TUSB32X_ACCEPT_SDK_CLEANUP=1`, `TUSB32X_IRQ=6`, `TUSB32X_SECOND_IRQ=7`,
+`TUSB32X_RUN_MS=10000`. The 2000us value is synthetic and is not a qualified
+fixture bound. Do not flash that artifact as evidence of qualification.
+SDK logs and generated FirmwareBuild.h files preserve actual environment,
+UTC, revision and dirty state; implementation builds reported entry HEAD with
+a dirty tree, rather than pretending to be clean firmware.
+
+The first SDK pass exposed Arduino's cli() macro and the S2 compiler's lack of
+an always-lock-free atomic<bool>. The global processor name and standard
+atomic_flag handoff corrected these issues. Flags use one operation, never a
+spin loop; the S2 SDK helper masks interrupts for the small exchange, while S3
+uses word exchange. Subsequent actual images link successfully. Initial strict
+Doxygen findings were corrected with complete macro/getter comments and explicit
+constructor types, without suppressing warnings. Application review additionally
+corrected startup IRQ loss, input validity before pin setup, raw configuration
+narrowing and outcome/admission reporting.
+
+Native software and linked SDK evidence do not establish physical qualification.
+The prior unavailable host sanitizer runtimes remain a separate recorded limit;
+this prompt does not claim a sanitizer run. No remote CI was required or queried.

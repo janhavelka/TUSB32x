@@ -429,7 +429,7 @@ the same registered checker. See `docs/validation.md` for current results.
 
 The registered tusb32x_arduino_wire_1000 and tusb32x_arduino_wire_100 suites compile
 the actual example adapter against recording SDK headers at two tick rates.
-See [fixture details](arduino_wire/README.md). The Windows host total is now 16
+See [fixture details](arduino_wire/README.md). The Windows host total is now 20
 registered suites; Release checks remain active. Real framework links are separate:
 
     scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2 -e arduino_s3
@@ -437,3 +437,30 @@ registered suites; Release checks remain active. Real framework links are separa
 The pinned fixtures link all adapter entry points with the core. They do not begin
 a bus, run a device demo or flash hardware. Application prerequisites and deadline
 qualification are in [the integration guide](../docs/arduino-transport.md).
+
+## Arduino application checks
+
+`tusb32x_example_owner` links the real core to a fixed application-owned fake bus
+and tests startup, exact take, failure without retries, periodic/IRQ service,
+two-device fairness and bus-silent shutdown. `tusb32x_example_integration` links
+the same helper and real shared CLI; a full/stalled output queue cannot stall
+startup, cause a second poll or consume a CLI-owned result.
+
+`tusb32x_output_mailbox` tests copied lifetime, 256-byte bounds, partial output
+and a real worker thread blocked in its backend while the owner makes progress.
+The worker has a bounded test watchdog; no SDK is faked into a firmware claim.
+`tusb32x_arduino_examples_config` executes actual compiler positive/negative
+BoardConfig cases and checks firmware identity in temporary real Git repos,
+unrelated parent repos and with Git unavailable. Pass the active compiler when
+running it directly: `python tools/test_arduino_examples.py --compiler g++`.
+
+Run the focused tests with:
+
+```text
+ctest --test-dir build/native -C Debug -R "tusb32x_(example|output|arduino_examples|cli|console)" --output-on-failure
+```
+
+The four real SDK builds are in [Arduino examples](../docs/arduino-examples.md).
+Default images are diagnostic-only until board qualification is supplied.
+Separate build-only enabled configurations exercise setup/IRQ/shutdown linkage;
+their synthetic compile settings are never physical timing qualification.

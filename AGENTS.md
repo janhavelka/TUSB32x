@@ -17,8 +17,9 @@ explicit reset, original TUSB320/I dead-battery recovery and complete read-only
 port refresh with cached publication, plus explicit interrupt acknowledgement and
 bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
 diagnostics views and pure passive health projection. The example-only Arduino
-Wire adapter has host contracts and S2/S3 SDK link fixtures; complete board
-examples and native-IDF integration remain planned. The example-only common CLI
+Wire adapter has host contracts and S2/S3 SDK link fixtures. Complete Arduino
+CLI and two-device owner examples share that adapter and have explicit S2/S3
+builds; native-IDF integration remains planned. The example-only common CLI
 implements bounded local help/identity,
 cache/target/lifecycle queries and edits, and independent validated profile staging.
 Managed operation/control/result routes also use the core engine with one poll
@@ -124,9 +125,12 @@ to each numbered implementation prompt and to completed maintenance work here.
   stay aligned. No consumer build runs the generator. `doxygen Doxyfile` is the
   current documentation command; the complete omission guard remains prompt 33.
 - On Windows use `scripts/pio.cmd` with the installed VS Code-managed Core.
-  The implemented PlatformIO environment is the native host consumer only:
+  The native host consumer command is:
   `scripts\pio.cmd run -d examples/host/basic -e native -t exec`. See
   [development metadata](docs/development.md) for pins and package-content policy.
+  Arduino examples use `scripts/pio.cmd run -e esp32s2dev -e esp32s3dev
+  -e esp32s2_owner_service -e esp32s3_owner_service`; board qualification and
+  default diagnostic-only operation are in `docs/arduino-examples.md`.
 
 - **Initial promptset exception requested by the user:** remote CI belongs to
   prompt 34 only. Prompts 1–33 and 35–38 do not dispatch, poll, wait for or require

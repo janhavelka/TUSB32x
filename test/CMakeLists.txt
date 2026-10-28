@@ -22,6 +22,16 @@ tusb32x_strict_warnings(tusb32x_cli_support)
 add_executable(tusb32x_cli cli/test_cli.cpp cli/test_cli_operations.cpp cli/test_cli_diagnostics.cpp)
 target_link_libraries(tusb32x_cli PRIVATE tusb32x_cli_support)
 add_executable(tusb32x_console console/test_console.cpp)
+add_executable(tusb32x_example_owner test_example_owner.cpp
+  ../examples/common/ExampleOwner.cpp)
+target_include_directories(tusb32x_example_owner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
+add_executable(tusb32x_example_integration test_example_integration.cpp
+  ../examples/common/ExampleOwner.cpp)
+target_link_libraries(tusb32x_example_integration PRIVATE tusb32x_cli_support)
+add_executable(tusb32x_output_mailbox test_output_mailbox.cpp)
+find_package(Threads REQUIRED)
+target_link_libraries(tusb32x_output_mailbox PRIVATE Threads::Threads)
+target_include_directories(tusb32x_output_mailbox PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
 target_include_directories(tusb32x_console PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
 target_compile_features(tusb32x_console PRIVATE cxx_std_17)
 add_executable(tusb32x_cli_host cli/cli_host.cpp)
@@ -29,7 +39,8 @@ target_link_libraries(tusb32x_cli_host PRIVATE tusb32x_cli_support)
 tusb32x_strict_warnings(tusb32x_cli_host)
 
 foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol
-    tusb32x_operations tusb32x_port tusb32x_diagnostics tusb32x_cli tusb32x_console)
+    tusb32x_operations tusb32x_port tusb32x_diagnostics tusb32x_cli tusb32x_console
+    tusb32x_example_owner tusb32x_example_integration tusb32x_output_mailbox)
   if(NOT suite STREQUAL "tusb32x_console")
     target_link_libraries(${suite} PRIVATE TUSB32x)
   endif()
@@ -81,6 +92,10 @@ tusb32x_strict_warnings(tusb32x_header_contracts)
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+add_test(NAME tusb32x_arduino_examples_config
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_arduino_examples.py"
+    --compiler "${CMAKE_CXX_COMPILER}")
+set_tests_properties(tusb32x_arduino_examples_config PROPERTIES TIMEOUT 60)
 add_test(NAME cli_transcript
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_cli_transcript.py"
     --host "$<TARGET_FILE:tusb32x_cli_host>")

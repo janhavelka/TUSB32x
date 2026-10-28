@@ -11,11 +11,19 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Complete Arduino CLI and two-device owner examples for ESP32-S2/S3, with
+  explicit source filters and build identity, read-only startup result ownership,
+  shared controller serialization, deferred IRQ service and orderly shutdown.
+  A fixed USB mailbox isolates SDK transmit stalls from owner progress. New host
+  tests cover startup/CLI handoff, output backpressure, fairness and shutdown.
+  Board readiness, SDK cleanup acceptance and timing qualification are explicit;
+  default images provide diagnostics without assuming a connected fixture.
+
 - Example-only Arduino Wire callbacks with borrowed ownership, aggregate SDK
   budget, shared nonblocking serialization, safe short-write handling, explicit
   failed-receive controller retirement and native 64-bit owner time. S2/S3 link
   fixtures and host contracts cover the adapter; board timing/electrical
-  qualification and complete board examples remain separate.
+  qualification remains separate from the complete board examples above.
 
 - Independent CLI audit: group help into one contiguous section per topic, reject
   duplicate/late records after request closure, and cover take-response capacity

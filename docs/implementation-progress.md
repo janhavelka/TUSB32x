@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 23, the Arduino transport adapter.
+Current authorization: implement prompt 24, the Arduino CLI and owner examples.
 
 ## Prompt status
 
@@ -33,7 +33,7 @@ Current authorization: implement prompt 23, the Arduino transport adapter.
 | [21: cli-operation-control](prompts/21-cli-operation-control.md) | COMPLETE |
 | [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | COMPLETE |
 | [23: arduino-transport](prompts/23-arduino-transport.md) | COMPLETE (qualified SDK subset; hardware not tested) |
-| [24: arduino-examples](prompts/24-arduino-examples.md) | NOT STARTED |
+| [24: arduino-examples](prompts/24-arduino-examples.md) | COMPLETE (four SDK images; physical qualification not run) |
 | [25: idf-transport](prompts/25-idf-transport.md) | NOT STARTED |
 | [26: idf-cli-example](prompts/26-idf-cli-example.md) | NOT STARTED |
 | [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | NOT STARTED |
@@ -1688,3 +1688,51 @@ Application scheduling qualification, physical timing/electrical tests and flash
 are NOT RUN. Complete board examples and native IDF adapter remain later work.
 The lead commits/syncs this unit on the same execution branch and reports verified
 upstream equality in the handoff; no self-referencing hash update is required.
+
+
+## Prompt 24: Arduino CLI and owner examples (2026-10-28)
+
+Continued from synchronized `eace1c3a33961bfad83798af4c15ae1ecb9b6d68` on the same
+execution branch. The fresh [peer/SDK audit](audit/execution-24-arduino-examples.md)
+records TMP1x2 and LSM6DS3TR revisions, actual examples/tests/runners/CI definitions,
+and accepted/rejected conventions. Official USB documentation was checked against
+pinned Arduino3.3.11 and bundled TinyUSB implementation.
+
+Delivered both source-filtered S2/S3 applications, one shared processor and
+unchanged adapter. Application startup owns read-only init/port results and takes
+its exact tokens independently of output. The secondary owner shares the one
+controller gate and retirement state, alternates turns and accepts deferred
+coalesced IRQ requests. CLI results remain explicit-take. Shutdown stops admission,
+ends bindings and retains/report effects before releasing application-owned Wire.
+The static USB worker stays alive; no SDK TX call can hold up an owner turn.
+
+The board configuration remains Arduino-specific under examples/arduino rather
+than the baseline's prospective common BoardConfig path. Portable owner/mailbox
+helpers and the shared CLI remain under common. One narrow application-record
+queue method avoids a second output queue and record interleaving. No additional
+command parser, core scheduler, transport implementation or power policy was added.
+
+Three inherited-capability agents handled independent peer/USB reviews, portable
+owner/mailbox helpers and tests, and Arduino application/build integration with
+disjoint files; the lead reviewed source, fixed integration findings, registered
+checks and owns Git. Confirmed fixes include the Arduino cli macro collision,
+S2 atomic flag handoff, raw override narrowing checks, startup IRQ retention,
+configured-input validity, enable/IRQ pin ownership and distinct terminal/admission status reporting.
+
+PASS: Debug and Release each execute 20 registered suites. New owner/integration/
+mailbox suites execute 924/277/1574 checks; metadata/configuration tests execute
+seven cases including five positive and 25 rejected real C++ compilations. All
+prior core, CLI, console, adapter, consumer and metadata regressions pass.
+All four real SDK images link; two additional enabled-path owner images also link.
+Strict Doxygen, visibility, links, version, provenance and diff checks pass.
+The 60-file package matches source/IDF selection; extracted core and CLI consumers
+build/run without maintainer tools. Exact commands and limits are in
+[validation](validation.md#prompt-24-arduino-applications-2026-10-28).
+
+Default images intentionally require explicit board readiness, SDK cleanup
+acceptance and a qualified whole-callback overhead before I2C setup. Synthetic
+values in enabled-path build checks are not board qualification. Flash, serial,
+HIL, electrical/USB-level measurements and timing qualification are NOT RUN.
+No identified board was authorized. Native-IDF work remains prompt 25.
+Commit/sync and final upstream equality are reported in the handoff without a
+self-referencing commit-hash update. Remote CI remains prompt 34 only.

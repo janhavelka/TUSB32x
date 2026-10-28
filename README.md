@@ -18,8 +18,11 @@ correlation and retain results until explicit take. All 55 contracted CLI rows n
 include raw diagnostics, pure decoding, cached health/counters and explicit external
 invalidation. Executable parity checks exercise the real shared C++ fixture;
 the [Arduino Wire adapter](docs/arduino-transport.md) now provides terminal callbacks
-for a narrowly qualified pinned S2/S3 SDK configuration. Complete board examples
-and native-IDF integration remain planned.
+for a narrowly qualified pinned S2/S3 SDK configuration. The [Arduino CLI and
+two-device owner examples](docs/arduino-examples.md) use it with read-only startup,
+bounded console work and isolated USB transmission. Default builds keep hardware
+work disabled until explicit board/timing qualification. Native-IDF integration
+remains planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 
@@ -195,5 +198,5 @@ each completed unit. Remote CI is confined to prompt 34 in this first execution.
 Project code is MIT, owned by Thymos Solution s.r.o with Jan Havelka as maintainer.
 Archived vendor references retain their original terms and are excluded from
 normal library packages. Native tests prove software values and linkage;
-Arduino/native-IDF firmware, full distribution qualification and physical
-hardware evidence remain separate later work.
+Arduino firmware linkage is checked separately; native-IDF integration, full
+distribution qualification and physical hardware evidence remain separate work.

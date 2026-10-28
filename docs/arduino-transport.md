@@ -4,8 +4,9 @@
 pioarduino 55.03.311, Arduino 3.3.11 and ESP-IDF 5.5.5 commit `b774170ff46`, on
 ESP32-S2/S3. It is example code, separate from the portable core and shared CLI.
 Version/configuration guards reject unsupported builds, including power management
-and I2C debug logging. SDK link fixtures are
-build checks, not complete board examples or physical qualification.
+and I2C debug logging. SDK link fixtures are build checks. Complete CLI/owner
+applications are described in the [Arduino examples guide](arduino-examples.md);
+neither kind of build proves physical qualification.
 
 ## Application prerequisites
 
@@ -143,4 +144,5 @@ scripts/pio.cmd run -d test/arduino_sdk -e arduino_s3
 ```
 
 No flashing or physical role, clock, cleanup, CPU bound or electrical qualification
-is claimed. Complete board/CLI examples belong to prompt 24.
+is claimed. The [board/CLI examples](arduino-examples.md) apply these prerequisites
+and isolate USB transmission from owner progress.

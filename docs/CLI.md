@@ -473,9 +473,10 @@ CTest registers cli_contract and cli_contract_negative with explicit fixture pat
 and finite timeouts, retaining the single cli_transcript registration. All 33
 schemas include full-width record bounds including newline and C terminator.
 
-Prompts 20–22 complete the fixed shared CLI. Framework front ends, serial/CC/INT
-fixtures and board memory/electrical qualification remain later work; the native
-fixture is software evidence only.
+Prompts 20–22 complete the fixed shared CLI. The Arduino front ends below add
+actual SDK linkage. Native-IDF integration, serial/CC/INT fixtures and board
+memory/electrical qualification remain separate work; the native fixture is
+software evidence only.
 
 ## Independent prompts 20-22 audit
 
@@ -490,3 +491,20 @@ five maximum records; if the original completion remains unannounced, eight are
 reserved for both responses. Tests cover successful and refused takes in that
 state, original/query nonce separation and one original RESULT/END pair. This
 adds evidence to the existing ownership rule without a second result store.
+
+## Arduino front ends
+
+The [S2/S3 examples](arduino-examples.md) use this same processor and command
+table. Their application-owned read-only startup consumes only its own results;
+commands are admitted after startup completes or fails. Startup never ACKs,
+applies, resets or recovers the device. CLI results remain pending until explicit
+take, including when output is congested. The owner-service environment reserves
+the secondary physical target against primary CLI retargeting.
+
+`enqueueApplicationRecord` copies bounded `APP` diagnostics into the existing
+console queue. It does not execute a command, call I2C, consume results or create
+a correlated TUSB response. Partial output preserves ordering across both kinds
+of record. Whole-record drops use existing LOSS accounting. USB SDK transmission
+runs in a static worker behind a single copied mailbox; the owner never waits
+for USB readiness or drainage. Runtime identity and bus settings describe the
+actual firmware configuration, not proof of a connected fixture.
