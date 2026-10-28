@@ -19,7 +19,8 @@ bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
 diagnostics views and pure passive health projection. Framework firmware remains
 planned. The example-only common CLI implements bounded local help/identity,
 cache/target/lifecycle queries and edits, and independent validated profile staging.
-Operation-control and live-device CLI commands remain prompts 21–22.
+Managed operation/control/result routes also use the core engine with one poll
+per turn and explicit retained-result take. Remaining device diagnostics are prompt 22.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to

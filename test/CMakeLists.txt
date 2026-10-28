@@ -19,7 +19,7 @@ add_library(tusb32x_cli_support STATIC
 target_link_libraries(tusb32x_cli_support PUBLIC TUSB32x)
 target_include_directories(tusb32x_cli_support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")
 tusb32x_strict_warnings(tusb32x_cli_support)
-add_executable(tusb32x_cli cli/test_cli.cpp)
+add_executable(tusb32x_cli cli/test_cli.cpp cli/test_cli_operations.cpp)
 target_link_libraries(tusb32x_cli PRIVATE tusb32x_cli_support)
 add_executable(tusb32x_console console/test_console.cpp)
 target_include_directories(tusb32x_console PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../examples/common")

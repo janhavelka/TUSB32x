@@ -1,5 +1,5 @@
 /// @file Tusb32xCli.cpp
-/// @brief Strict local command dispatch, target admission and independent staging; zero transport.
+/// @brief Strict dispatch, independent staging and one core-owned operation poll per turn.
 #include "Tusb32xCli.h"
 
 #include <cstring>
@@ -11,8 +11,8 @@ namespace t = TUSB32x;
 constexpr char SESSION_EXHAUSTED[] =
     "TUSB SESSION schema=1 code=TOKEN_EXHAUSTED detail=0 reason=request_exhausted\n";
 
-// These are executable rows, not future routes. Shared zero callback/byte bounds
-// are intentional: all handlers in prompt20 are local and tick never polls core.
+// Admission is always bus-silent. Nonzero bounds describe one owner poll's
+// callback ceiling and per-callback bytes, not physical transactions or an entire job.
 constexpr CommandRow ROWS[] = {
     {"help", "?", "common", "help [topic|command]", "CACHE_ONLY", "NONE",
      "[cached] Incremental help for implemented commands", "none", "all", "ACK,HELP,END"},
@@ -88,6 +88,59 @@ constexpr CommandRow ROWS[] = {
     {"rd-rp", "none", "profile", "rd-rp [on|off]", "PURE", "LOCAL_STATE",
      "[stage] Separate 45 Rd/Rp control; absent on TUSB322I",
      "none", "has_45", "ACK,CONFIG,PROFILE,END"},
+    {"init", "initialize,probe", "connection", "init [timeout_ms]", "CORE_JOB", "READ_OBSERVATION",
+     "[live read] Identify/observe only; never reset or replay staging",
+     "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"read", "status", "port", "read", "CORE_JOB", "READ_OBSERVATION",
+     "[live read] Refresh port without IRQ acknowledgement",
+     "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"profile.read", "none", "profile", "profile read [timeout_ms]", "CORE_JOB", "READ_OBSERVATION",
+     "[live read] Observe profile; no desired adoption or write replay",
+     "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"apply", "none", "profile", "apply [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+     "[device write] Admit staged candidate; change/prove actual fields",
+     "known_actual", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"verify", "selfcheck,selftest", "profile", "verify [timeout_ms]", "CORE_JOB", "READ_OBSERVATION",
+     "[live read] Compare retained desired; not board certification",
+     "retained_desired", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"reconcile", "none", "profile", "reconcile [timeout_ms]", "CORE_JOB", "READ_OBSERVATION",
+     "[live read] Reconcile current proof without replay or cleanup",
+     "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"irq.read", "none", "interrupt", "irq read", "CORE_JOB", "READ_OBSERVATION",
+     "[live read] Refresh port/IRQ evidence; no W1C acknowledgement",
+     "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"irq.ack", "none", "interrupt", "irq ack [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+     "[device write] ACK using actual controls, never staged settings",
+     "bound", "irq_ack", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"irq.service", "none", "interrupt", "irq service [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+     "[device write] Bounded observe/ACK/recheck; events may coalesce",
+     "bound", "irq_ack", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"reset", "none", "lifecycle", "reset [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+     "[device write] Explicit reset/proof; no desired reapply",
+     "bound", "all", "ACK,JOB,RESULT,RESULT_DETAIL,END", 1, 2, 8, "host", "operation_routes"},
+    {"recover-dead-battery", "none", "lifecycle", "recover-dead-battery [timeout_ms]",
+     "CORE_JOB", "DEVICE_WRITE",
+     "[device write] Original 320/I source startup; application proves stable VDD",
+     "base_stable_vdd", "base_only", "ACK,JOB,RESULT,RESULT_DETAIL,END",
+     1, 2, 8, "host", "operation_routes"},
+    {"job.status", "progress", "job", "job [status]", "CACHE_ONLY", "NONE",
+     "[cached] Core progress, immutable deadline and retained-result fence",
+     "none", "all", "ACK,JOB,END", 0, 0, 0, "host", "operation_routes"},
+    {"job.auto", "none", "job", "job auto [0|1]", "PURE", "LOCAL_STATE",
+     "[cached] Query/change automatic stepping; default one callback per turn",
+     "none", "all", "ACK,JOB,END", 0, 0, 0, "host", "operation_routes"},
+    {"job.step", "none", "job", "job step [0..255]", "CORE_JOB", "DEVICE_WRITE",
+     "[device write] Advance admitted work; may read/write; zero suppresses traffic",
+     "represented_operation", "all", "ACK,JOB,END", 1, 2, 8, "host", "operation_routes"},
+    {"cancel", "stop,job.cancel", "job", "cancel [token]", "PURE", "LOCAL_STATE",
+     "[cached] Cancel matching work locally; possible effects survive",
+     "represented_operation", "all", "ACK,END", 0, 0, 0, "host", "operation_routes"},
+    {"result", "job.result", "job", "result [token]", "CACHE_ONLY", "NONE",
+     "[cached] Repeat immutable core result without consuming it",
+     "retained_result", "all", "ACK,RESULT,RESULT_DETAIL,END", 0, 0, 0, "host", "operation_routes"},
+    {"result.take", "none", "job", "result take <token>", "PURE", "LOCAL_STATE",
+     "[cached] Exact-token delivery; reserve response before releasing core slot",
+     "retained_result", "all", "ACK,RESULT,RESULT_DETAIL,END", 0, 0, 0, "host", "operation_routes"},
 };
 
 bool equal(const char* a, const char* b) { return std::strcmp(a, b) == 0; }
@@ -145,6 +198,20 @@ bool number(const char* text, uint32_t maximum, uint32_t& out, bool hex = false)
     value = value * base + digit;
   }
   out = value;
+  return true;
+}
+
+bool operationToken(const char* text, t::OperationToken& out) {
+  uint64_t value = 0;
+  if (*text == '\0') return false;
+  for (; *text != '\0'; ++text) {
+    if (*text < '0' || *text > '9') return false;
+    const auto digit = static_cast<uint64_t>(*text - '0');
+    if (value > (std::numeric_limits<uint64_t>::max() - digit) / 10) return false;
+    value = value * 10 + digit;
+  }
+  if (value == 0) return false;
+  out.value = value;
   return true;
 }
 
@@ -250,6 +317,23 @@ bool Cli::processCommand(const char* line) {
 
 void Cli::tick() {
   if (!_setup) return;
+  const auto progress = _driver.progress();
+  t::Status pollStatus{};
+  if (progress.state == t::OperationState::ACTIVE &&
+      (_stepExplicit || (_automatic && progress.token.value == _operationToken.value))) {
+    // This is the only poll call site. Basic callbacks always return to the owner
+    // for fresh time, even when an explicit budget is larger than one.
+    pollStatus = _driver.poll(progress.token, _platform.nowMs(_platform.user), _stepExplicit ? _stepBudget : 1);
+  }
+  const bool pollRejected = !pollStatus.ok() && !pollStatus.inProgress() &&
+      _driver.progress().state == t::OperationState::ACTIVE;
+  if (_stepReport) {
+    jobOutput(_stepRequest, pollStatus);
+    close(_stepRequest, pollRejected ? pollStatus : t::Status::Ok(), _driver.progress().token);
+    _stepReport = false;
+  } else if (pollRejected) jobOutput(_operationRequest, pollStatus);
+  _stepExplicit = false;
+  announceCompletion();
   helpStep();
   _console.drain(_platform.write, _platform.user);
   sessionNotice();
@@ -326,12 +410,16 @@ void Cli::execute(const char* line, bool poisoned) {
   if (poisoned || !tokenize(line, tokens, count) || count == 0)
     response.status = error(t::Err::INVALID_PARAM);
   else response = dispatch(tokens, count, request);
+  if (response.payload == Payload::RESULT) {
+    deliverResult(request, response);
+    return;
+  }
   if (response.marker) {
     std::memcpy(request.nonce, _nonce, sizeof(_nonce));
     record(request, "MARK", "");
   } else acknowledge(request, response);
-  if (response.status.ok()) payload(request, response);
-  if (!response.deferred) close(request, response.status);
+  if (response.status.ok() || response.status.inProgress()) payload(request, response);
+  if (!response.deferred) close(request, response.status, response.token);
 }
 
 Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& request) {
@@ -348,11 +436,105 @@ Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& 
     else if (count == 2 && equal(tokens[1], "reset")) row = findRow("profile.reset");
     else if (count == 2 && equal(tokens[1], "discard")) row = findRow("profile.discard");
     else if (count == 2 && equal(tokens[1], "validate")) row = findRow("profile.validate");
+    else if ((count == 2 || count == 3) && equal(tokens[1], "read")) row = findRow("profile.read");
     else return invalid();
+  } else if (equal(tokens[0], "irq")) {
+    if (count >= 2 && equal(tokens[1], "read")) row = findRow("irq.read");
+    else if (count >= 2 && equal(tokens[1], "ack")) row = findRow("irq.ack");
+    else if (count >= 2 && equal(tokens[1], "service")) row = findRow("irq.service");
+    else return invalid();
+  } else if (equal(tokens[0], "job")) {
+    if (count == 1 || (count == 2 && equal(tokens[1], "status"))) row = findRow("job.status");
+    else if (count >= 2 && equal(tokens[1], "auto")) row = findRow("job.auto");
+    else if (count >= 2 && equal(tokens[1], "step")) row = findRow("job.step");
+    else if (count >= 2 && equal(tokens[1], "cancel")) row = findRow("cancel");
+    else if (count >= 2 && equal(tokens[1], "result")) row = findRow("result");
+    else return invalid();
+  } else if (equal(tokens[0], "result") && count >= 2 && equal(tokens[1], "take")) {
+    row = findRow("result.take");
   } else if (std::strchr(tokens[0], '.') == nullptr) row = findRow(tokens[0]);
   if (row == nullptr) return invalid();
   const char* command = row->command;
   request.command = command;
+
+  if (equal(row->execution, "CORE_JOB") && !equal(command, "job.step")) {
+    const bool nested = equal(tokens[0], "profile") || equal(tokens[0], "irq");
+    const std::size_t arguments = nested ? 2U : 1U;
+    const bool noTimeout = equal(command, "read") || equal(command, "irq.read");
+    uint32_t timeout = 1000;
+    if (count < arguments || count > arguments + (noTimeout ? 0U : 1U) ||
+        (count > arguments && (!number(tokens[arguments], 2147483647U, timeout) || timeout == 0)))
+      return invalid();
+    const uint64_t now = _platform.nowMs(_platform.user);
+    const t::OperationTiming timing{now, now + timeout};
+    if (equal(command, "init")) response.status = _driver.startInitialize(timing, response.token);
+    else if (equal(command, "read") || equal(command, "irq.read"))
+      response.status = _driver.startRefreshPort(timing, response.token);
+    else if (equal(command, "profile.read")) response.status = _driver.startReadProfile(timing, response.token);
+    else if (equal(command, "apply")) response.status = _driver.startApplyProfile(_staged, timing, response.token);
+    else if (equal(command, "verify")) response.status = _driver.startVerifyProfile(timing, response.token);
+    else if (equal(command, "reconcile")) response.status = _driver.startReconcile(timing, response.token);
+    else if (equal(command, "irq.ack")) response.status = _driver.startAcknowledgeInterrupt(timing, response.token);
+    else if (equal(command, "irq.service")) response.status = _driver.startServiceInterrupt(timing, response.token);
+    else if (equal(command, "reset")) response.status = _driver.startReset(timing, response.token);
+    else response.status = _driver.startRecoverDeadBattery(timing, response.token);
+    if (response.status.inProgress()) {
+      _operationRequest = request;
+      _operationToken = response.token;
+      _completionAnnounced = false;
+      response.action = "ADMITTED";
+      response.deferred = true;
+      response.payload = Payload::JOB;
+    }
+    return response;
+  }
+  if (equal(command, "job.status") || equal(command, "job.auto") || equal(command, "job.step")) {
+    const bool nested = equal(tokens[0], "job");
+    const std::size_t arguments = nested && count > 1 ? 2U : 1U;
+    const bool status = equal(command, "job.status");
+    if (status && count != arguments) return invalid();
+    if (!status && (count < arguments || count > arguments + 1)) return invalid();
+    response.payload = Payload::JOB;
+    response.token = _driver.progress().token;
+    if (equal(command, "job.auto") && count > arguments) {
+      bool value = false;
+      if (!boolean(tokens[arguments], value, false)) return invalid();
+      _automatic = value;
+      response.action = "LOCAL";
+    } else if (equal(command, "job.step")) {
+      uint32_t budget = 1;
+      if (count > arguments && !number(tokens[arguments], 255, budget)) return invalid();
+      if (!response.token.valid()) {
+        response.status = error(t::Err::RESULT_NOT_AVAILABLE);
+        return response;
+      }
+      _stepExplicit = true;
+      _stepBudget = static_cast<uint8_t>(budget);
+      _stepRequest = request;
+      _stepReport = true;
+      response.action = "LOCAL";
+      response.payload = Payload::NONE;
+      response.deferred = true;
+    }
+    return response;
+  }
+  if (equal(command, "cancel") || equal(command, "result") || equal(command, "result.take")) {
+    const bool take = equal(command, "result.take");
+    const std::size_t arguments = take || equal(tokens[0], "job") ? 2U : 1U;
+    if (count < arguments || count > arguments + 1 || (take && count != arguments + 1))
+      return invalid();
+    response.token = _driver.progress().token;
+    if (count > arguments && !operationToken(tokens[arguments], response.token)) return invalid();
+    if (equal(command, "cancel")) {
+      response.status = _driver.cancel(response.token);
+      response.action = "LOCAL";
+    } else {
+      response.payload = Payload::RESULT;
+      response.take = take;
+      response.action = take ? "LOCAL" : "QUERY";
+    }
+    return response;
+  }
 
   if (equal(command, "help")) {
     if (count > 2) return invalid();

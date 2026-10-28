@@ -14,9 +14,9 @@ profile observation, explicit apply, desired-profile verification, read-only
 reconciliation, explicit reset, original TUSB320/I dead-battery recovery and
 complete read-only port refresh and explicit IRQ acknowledgement/bounded service.
 It also implements safe one-callback raw diagnostics and pure health projection.
-The example CLI implements the [local subset](docs/CLI.md) with strict parsing,
-bounded output and independent validated staging. Device-command/operation CLI
-routes and framework adapters remain planned.
+The [shared example CLI](docs/CLI.md) implements strict parsing,
+bounded output, independent staging and core-owned managed operation/result flow.
+Remaining diagnostic routes and framework adapters remain planned.
 Add public callable
 declarations with real definitions and link checks;
 keep future facade signatures in documentation/compile-only fixtures. Do not add

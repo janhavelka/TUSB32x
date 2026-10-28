@@ -15,7 +15,9 @@ read-only port refresh and cached publication through that same engine. Prompt 1
 adds explicit IRQ acknowledgement and bounded observe/ACK/recheck service.
 Prompt 17 adds safe one-callback raw access and pure passive health. Prompts
 18–19 strengthen conformance/ownership evidence. Prompt 20 adds a bounded local
-CLI in example code, with no core scheduler or transitive core dependency. The
+CLI in example code, with no core scheduler or transitive core dependency.
+Prompt 21 routes managed operations through one tick poll, retaining only request
+correlation metadata; the sole result remains in core until explicit take. The
 [API inventory](api-contracts.md) describes delivered methods and their contracts; the
 [engineering baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md) fixes their names.
 
@@ -38,9 +40,10 @@ CLI in example code, with no core scheduler or transitive core dependency. The
 | test/CMakeLists.txt, test/test_validators.cpp, test/test_protocol.cpp, test/test_codecs.cpp, test/test_operations.cpp, test/test_protocol_conformance.cpp, test/test_profile_observation.cpp, test/test_profile_application.cpp, test/test_reset_recovery.cpp, test/test_port.cpp, test/test_interrupt.cpp and test/test_diagnostics.cpp | Registered validator/protocol/codec/owner/port/IRQ/diagnostics suites, plus compile-only standalone-header/signature fixtures |
 | test/test_owner_scheduling.cpp | Fixed external two-target scheduler, bounded queues/results and independent late-callback timing; no core scheduler |
 | test/consumer/portable/, test/consumer/run_portable.py | Isolated linked public consumer with allocation/failure sentinels; Python only coordinates maintainer CTest |
-| examples/common/Tusb32xCli.h/.cpp, Tusb32xCliOutput.cpp and ConsoleBuffer.h | Example-only local dispatcher/staging, fixed record output/help and bounded console; injected platform hooks, no I2C/poll or framework dependency |
+| examples/common/Tusb32xCli.h/.cpp, Tusb32xCliOutput.cpp and ConsoleBuffer.h | Example-only dispatcher/staging, fixed output/help and bounded console; bus-silent admission and one core poll in tick, injected platform hooks, no framework dependency or second result store |
 | test/cli/test_cli.cpp, cli_host.cpp, test/console/test_console.cpp and tools/test_cli_transcript.py | Registered local CLI/console behavior and Python-to-persistent-real-C++ transcript; fixture executable is not itself a behavioral CTest |
 | tools/tusb32x_cli_contract.py | Frozen implemented rows and typed record parsing; behavioral parity executes actual help |
+| test/cli/test_cli_operations.cpp | Managed-route admission, one-poll timing/budgets, core-retained result ownership, reservation and literal device-effect vectors; part of the existing CLI suite |
 | examples/host/basic/ | Standalone multi-file consumer of real values, validators, decoder and pure health; explicitly failing fake callbacks |
 | test/test_compile_contracts.cpp and test/consumer/status_other_tu.cpp | Real-header default/type/constexpr and multiple-translation-unit link checks |
 | test/contract/planned_api.cpp | Compile-only delivered API signature inventory; the former future-declaration sketch is no longer needed |
@@ -87,8 +90,9 @@ and pure codecs/composition, plus lifecycle/token/result handling and read-only
 initialization, profile observation, explicit apply, desired-profile verification
 and read-only reconciliation, explicit reset, base dead-battery recovery and
 complete read-only port refresh and explicit IRQ acknowledgement/service.
-Raw diagnostics, passive health and the local CLI subset are implemented; CLI
-operation/device routes and framework adapters remain later work.
+Raw diagnostics, passive health, local CLI staging and managed operation/control/
+result routes are implemented; remaining CLI diagnostics and framework adapters
+remain later work.
 Prompt 8 implements package/version metadata and checks a real PlatformIO archive;
 full archive/firmware consumption qualification remains prompt 32. CMake install
 exports remain outside the current implementation.

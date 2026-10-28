@@ -22,7 +22,7 @@ struct CliTestAccess {
     std::memcpy(request.nonce, "01234567890123456789012345678901", 33);
     request.command = "profile.show";
     cli.profileOutput(request);
-    cli.record(request, "ACK", "command=profile.validate code=CONFIGURATION_UNKNOWN detail=-2147483648 action=UNCHANGED staged_generation=4294967295 desired_generation=4294967295 applied_generation=4294967295 configuration=UNCONFIGURED");
+    cli.record(request, "ACK", "command=profile.validate code=CONFIGURATION_UNKNOWN detail=-2147483648 action=UNCHANGED token=18446744073709551615 staged_generation=4294967295 desired_generation=4294967295 applied_generation=4294967295 configuration=UNCONFIGURED");
   }
   static void maximumPort(Cli& cli, const TUSB32x::PortSnapshot& port, uint64_t nowMs) {
     Cli::Request request;
@@ -30,6 +30,16 @@ struct CliTestAccess {
     std::memcpy(request.nonce, "01234567890123456789012345678901", 33);
     request.command = "sample";
     cli.portOutput(request, port, nowMs);
+  }
+  static void maximumResult(Cli& cli, const TUSB32x::OperationResult& result) {
+    Cli::Request request;
+    request.id = std::numeric_limits<uint64_t>::max();
+    std::memcpy(request.nonce, "01234567890123456789012345678901", 33);
+    request.command = "recover-dead-battery";
+    cli._operationRequest = request;
+    cli._operationToken = result.token;
+    cli.resultOutput(request, result);
+    cli.close(request, result.status, result.token, result.transfers, result.state);
   }
 };
 }  // namespace tusb32x_cli
@@ -221,21 +231,25 @@ void routesAndAliases() {
   f.rejected("profile discard", "CONFIGURATION_UNKNOWN", "profile.discard");
   std::size_t count = 0;
   const auto* rows = tusb32x_cli::commandRows(count);
-  CHECK(count == 27);
+  CHECK(count == 44);
   for (std::size_t index = 0; index < count; ++index) {
-    CHECK(rows[index].maxCallbacks == 0 && rows[index].txBytes == 0 && rows[index].rxBytes == 0);
+    const bool managed = std::strcmp(rows[index].execution, "CORE_JOB") == 0;
+    CHECK(rows[index].maxCallbacks == (managed ? 1 : 0) &&
+        rows[index].txBytes == (managed ? 2 : 0) && rows[index].rxBytes == (managed ? 8 : 0));
     const auto help = f.command((std::string("help ") + rows[index].command).c_str());
     CHECK(help.find("outcome=SUCCEEDED") != std::string::npos);
   }
-  for (const auto* topic : {"all", "common", "connection", "port", "profile", "lifecycle", "?", "ver", "model", "settings", "snapshot", "unbind"}) {
+  for (const auto* topic : {"all", "common", "connection", "port", "profile", "lifecycle",
+      "interrupt", "job", "?", "ver", "model", "settings", "snapshot", "unbind",
+      "initialize", "probe", "status", "selfcheck", "selftest", "stop", "job.cancel", "job.result"}) {
     const auto help = f.command((std::string("? ") + topic).c_str());
     CHECK(help.find("outcome=SUCCEEDED") != std::string::npos);
   }
   f.command("color off");
   auto text = f.command("help");
   CHECK(text.find('\x1b') == std::string::npos);
-  CHECK(text.find("init ") == std::string::npos && text.find("irq ack") == std::string::npos &&
-      text.find("wreg ") == std::string::npos && text.find("job step") == std::string::npos);
+  CHECK(text.find("init ") != std::string::npos && text.find("irq ack") != std::string::npos &&
+      text.find("wreg ") == std::string::npos && text.find("job step") != std::string::npos);
   f.command("color on");
   text = f.command("help");
   CHECK(text.find("\x1b[36m") != std::string::npos && text.find("\x1b[32m") != std::string::npos);
@@ -341,7 +355,7 @@ void malformedAndPoisonedInput() {
       "addr -1", "addr +71", "addr 0x", "addr 0x47g", "addr 256", "addr 99999999999999999999999999999999",
       "variant TUSB320LAI", "variant lai", "variant tusb320lai 0x47 extra", "profile invalid",
       "profile show extra", "profile reset extra", "profile validate extra", "cfg extra", "color yes", "verbose on",
-      "ufpaccessory 1", "termination false", "rd-rp 0", "help all extra", "help interrupt", "help job", "help registers",
+      "ufpaccessory 1", "termination false", "rd-rp 0", "help all extra", "help unknown", "help raw", "help registers",
       "help diagnostics", "hilmark none", "hilmark a.b", "hilmark", "hilmark abc extra", "bind extra", "end extra",
       "forget-evidence extra", "version extra", "bus extra", "sample extra", "freshness extra",
       "profile.show", "a a a a a a a a a a a a a", "12345678901234567890123456789012345"};
@@ -680,7 +694,7 @@ void portFormatterAndStatusMessageBounds() {
     const auto text = f.command("addr 0x67");
     CHECK(text.find("Message omitted; inspect typed code and detail") != std::string::npos);
     CHECK(text.find("code=INVALID_CONFIG detail=-2147483648") != std::string::npos);
-    CHECK(text.find("command=addr outcome=FAILED code=INVALID_CONFIG detail=-2147483648 callbacks=0") !=
+    CHECK(text.find("command=addr outcome=FAILED code=INVALID_CONFIG detail=-2147483648 token=0 callbacks=0") !=
         std::string::npos);
     CHECK(text.find('\033') == std::string::npos);
     CHECK(f.cli.targetConfig().address == t::DeviceAddress::ADDR_LOW_0X47);
@@ -688,6 +702,59 @@ void portFormatterAndStatusMessageBounds() {
   }
 }
 }  // namespace
+
+void operationFormatterAndExhaustionBounds() {
+  Fixture maximum;
+  t::OperationResult result;
+  result.token.value = std::numeric_limits<uint64_t>::max();
+  result.kind = t::OperationKind::ACKNOWLEDGE_INTERRUPT;
+  result.state = t::OperationState::FAILED;
+  result.status = t::Status::Error(t::Err::CONFIGURATION_MISMATCH, "literal formatter fixture",
+      std::numeric_limits<int32_t>::min());
+  result.hardwareEffect = t::HardwareEffect::INDETERMINATE;
+  result.transfers = std::numeric_limits<uint32_t>::max();
+  result.startedUptimeMs = result.completedUptimeMs = std::numeric_limits<uint64_t>::max();
+  result.completedTimeValid = true;
+  result.configuration.desiredGeneration = result.configuration.verifiedGeneration =
+      std::numeric_limits<uint32_t>::max();
+  result.configuration.terminationState = t::TerminationState::DISABLED;
+  result.configuration.resetState = t::ResetState::MAY_BE_PENDING;
+  result.interrupt = {true, true, true, true, true, true};
+  tusb32x_cli::CliTestAccess::maximumResult(maximum.cli, result);
+  maximum.flush();
+  CHECK(maximum.output.find("origin_request=18446744073709551615 token=18446744073709551615") !=
+      std::string::npos);
+  CHECK(maximum.output.find("callbacks=4294967295") != std::string::npos);
+  CHECK(maximum.output.find("detail=-2147483648") != std::string::npos);
+  CHECK(maximum.cli.console().droppedRecords() == 0 && maximum.bus.calls == 0);
+  std::size_t lines = 0;
+  for (std::size_t start = 0; start < maximum.output.size();) {
+    const auto end = maximum.output.find('\n', start);
+    CHECK(end != std::string::npos);
+    if (end == std::string::npos) break;
+    CHECK(end - start + 2 <= 512);
+    ++lines;
+    start = end + 1;
+  }
+  CHECK(lines == 3);
+
+  Fixture active;
+  active.command("bind");
+  active.bus.expectRead(0x47, 9, 1).rx[0] = 0;
+  active.bus.expectRead(0x47, 8, 1).rx[0] = 0;
+  active.bus.expectRead(0x47, 9, 1).rx[0] = 0;
+  tusb32x_cli::CliTestAccess::requestBase(active.cli, std::numeric_limits<uint64_t>::max() - 1);
+  CHECK(active.cli.processCommand("read"));
+  active.cli.tick();
+  CHECK(!active.cli.processCommand("version") && active.cli.exhausted());
+  active.flush();
+  CHECK(active.bus.calls == 3 && active.bus.complete() && active.driver.progress().resultPending);
+  CHECK(active.output.find("request=18446744073709551615 command=read outcome=SUCCEEDED") !=
+      std::string::npos);
+  CHECK(active.output.find("request=0 ") == std::string::npos);
+}
+
+int runCliOperationTests();
 
 int main() {
   {
@@ -715,6 +782,7 @@ int main() {
   routesAndAliases(); setupAndAppearanceContracts(); stagingAndAtomicTargets(); malformedAndPoisonedInput();
   retainedEvidenceAndNoPoll(); outputAndSessionBoundaries();
   portFormatterAndStatusMessageBounds();
+  operationFormatterAndExhaustionBounds();
   std::printf("CLI: %u checks, %u failures\n", checks, failures);
-  return failures == 0 ? 0 : 1;
+  return runCliOperationTests() == 0 && failures == 0 ? 0 : 1;
 }

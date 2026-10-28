@@ -1,12 +1,12 @@
 # Feature, source and verification coverage
 
-Prompts 2-20, updated 2026-10-28. This matrix defines the capability boundary;
+Prompts 2-21, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
 read-only port refresh, explicit IRQ acknowledgement/bounded service, native
 builds, raw diagnostics, passive health, bounded local CLI and host checks exist.
-CLI operation/device routes, framework firmware and hardware qualification remain planned.
+Remaining CLI diagnostics, framework firmware and hardware qualification remain planned.
 **Planned** means the
 source boundary is established and implementation/testing is still due.
 **Gated** means the named dependent operation/claim remains unavailable.
@@ -305,7 +305,7 @@ arithmetic and saturation without public test seeds. Health threshold1/default3/
 UINT32_MAX and invalid0 cases, OFFLINE explicit work, failed initialization,
 clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
-Prompt 18 completes the core protocol coverage audit. Prompt 19 completes the core owner portability checks. CLI operation/device routes, adapters and electrical qualification remain later work.
+Prompt 18 completes the core protocol coverage audit. Prompt 19 completes the core owner portability checks. Remaining CLI diagnostics, adapters and electrical qualification remain later work.
 
 ## Independent prompts 16-18 audit
 
@@ -341,5 +341,31 @@ variant-specific staging, source attribution and request/generation limits.
 records, executes help parity against the Python rows and rejects damaged frames.
 The fixture has no separate passing build-only CTest. Queue 8192/record 512/drain 256
 and input 192/token 12/payload 32/turn 64 remain explicit. Lost SESSION notices retain
-their reason until capacity returns. Operation/control routes belong to prompt 21;
-device coverage to 22, framework front ends and electrical qualification later.
+their reason until capacity returns. Prompt 21 adds operation/control/result
+routes below; remaining device coverage belongs to 22, framework qualification later.
+
+## Prompt 21 managed CLI coverage
+
+All 44 implemented rows and help metadata run through the same shared sources.
+The added routes below use the existing core engine and retained result. Their
+handlers admit/query/cancel locally; tick makes the sole owner poll. The
+[CLI guide](CLI.md) gives grammar, time bounds and schemas. Named test functions
+are in `test/cli/test_cli_operations.cpp`, executed by `tusb32x_cli`.
+
+| CLI grammar / aliases | Core API or evidence | Executed checks |
+| --- | --- | --- |
+| init / initialize / probe | startInitialize | admissionAndAliases; successfulReadOnlyRoutesAndReset: no reset/ACK/replay, exact identity/profile reads |
+| read / status; irq read | startRefreshPort | admissionAndAliases; budgetsAndAutomaticProgress; retained historical/invalidated port evidence |
+| profile read; reconcile | startReadProfile; startReconcile | successfulReadOnlyRoutesAndReset: read-only, unchanged desired, pending IRQ retained |
+| apply; verify / selfcheck / selftest | startApplyProfile; startVerifyProfile | admissionAndAliases; irqAndApplyEffects; failuresAndVariantGates: desired capture, verification/failure, 322I changed-field gates |
+| irq ack / service | startAcknowledgeInterrupt; startServiceInterrupt | irqAndApplyEffects: actual 50% versus staged/desired 30%, exact W1C bytes and bounded recheck |
+| reset; recover-dead-battery | startReset; startRecoverDeadBattery | successfulReadOnlyRoutesAndReset; immutableTimeAndLateSuccess; failuresAndVariantGates: literal reset command, base-only 04/wait31/00, admission denial |
+| job / status / progress; job auto / step | progress; one tick poll | budgetsAndAutomaticProgress; rejectedOwnerClockSamples: zero/one/255, explicit overrides auto, one callback, no hidden clock errors |
+| cancel / job cancel / stop | cancel; retained effects | admissionAndAliases; irqAndApplyEffects: no rollback after possible write, configuration UNKNOWN |
+| result / job result; result take | resultSnapshot; takeResult | retainedResultsAndCorrelation; outputLossAndTakeReservation: origin/nonce, request 24 after 25, stale token, repeated query, take once and pre-consumption reservation |
+
+The existing CLI suite also executes real full-width RESULT/RESULT_DETAIL/END
+formatting and completion after request exhaustion. `cli_transcript` validates
+178 requests in one persistent process plus two fault sessions, all 44 executed
+help rows and terminal payload/closure negatives. This is host protocol/logic
+evidence, not serial/CC/INT, electrical power policy or firmware qualification.

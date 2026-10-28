@@ -13,7 +13,9 @@ original TUSB320/I dead-battery recovery, complete read-only port refresh and
 explicit interrupt acknowledgement/bounded service, one-callback raw diagnostics
 and pure passive health projection. An [example-only CLI](docs/CLI.md) now
 implements bounded local queries, target/lifecycle edits and independent staging.
-Operation-control and device-command CLI routes and firmware adapters remain planned.
+Managed CLI operations now use the core engine, preserve request/nonce/token
+correlation and retain results until explicit take. Remaining diagnostic routes
+and firmware adapters remain planned.
 The development version is defined in library.json; it is not a release or
 hardware-support claim.
 

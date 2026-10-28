@@ -1,7 +1,8 @@
 # Concrete CLI and runner contract
 
-This is an implementation specification. Prompt 20 delivers its local subset in
-[the CLI guide](../CLI.md); operation/device routes remain prompts 21–22. Prompts
+This is an implementation specification. Prompts 20–21 deliver local staging,
+managed operations and retained-result flow in [the CLI guide](../CLI.md).
+Remaining device diagnostics are prompt 22. Prompts
 23–26 integrate the same processor; 28–31 test
 and use it; 32–34 package it and finish check registration. Read [COMMON.md](COMMON.md),
 [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) and

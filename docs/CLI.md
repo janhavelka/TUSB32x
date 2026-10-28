@@ -1,11 +1,12 @@
-# Local CLI
+# CLI and cooperative operations
 
 The implemented CLI is example code in
 [examples/common](../examples/common/Tusb32xCli.h). It accepts local queries,
-target/lifecycle edits and independently staged profiles. Every implemented
-handler performs **zero I2C callbacks**. Neither setup nor opening a console
-binds, initializes, resets, applies settings or acknowledges an interrupt.
-The application still owns and advances any driver operation.
+target/lifecycle edits, independently staged profiles and explicit managed operations.
+Command handlers and admission perform **zero I2C callbacks**. Only `tick()` polls
+the existing core once per owner turn. Neither setup nor opening a console binds,
+initializes, resets, applies settings or acknowledges an interrupt. The application
+serializes access and must not separately poll the same driver in that CLI turn.
 
 `Cli` borrows a driver, transport configuration and platform hooks. Call `setup()`
 once, then feed input before `tick()` in each serialized owner turn. Setup validates
@@ -50,8 +51,8 @@ An omitted control value queries CLI staging. Setters change staging only.
 | profile | `termination [on\|off]` | — | Extended 0x0A disableTerm control |
 | profile | `rd-rp [on\|off]` | — | Separate 0x45 disableRdRp control |
 
-Implemented help topics are `common`, `connection`, `lifecycle`, `port`, `profile`
-and `all`. Help also accepts a canonical command ID or a listed alias; `profile`
+Implemented help topics are `common`, `connection`, `lifecycle`, `port`, `profile`,
+`interrupt`, `job` and `all`. Help also accepts a canonical command ID or a listed alias; `profile`
 selects its complete topic, and `profile.show` selects that single help row.
 Internal IDs such as `profile.show` name machine responses; input uses `profile show`.
 Unknown topics and later-stage commands reject as `INVALID_PARAM`.
@@ -74,6 +75,81 @@ that does not match the proposed target, before any selection or bind mutation.
 reset/termination evidence and terminal results survive according to the core
 contract. `forget-evidence` is an explicit local loss of that evidence, never bus
 recovery or a token/counter reset. Binding and target selection do not invoke it.
+
+## Managed operations and retained results
+
+These routes use the canonical core API shown; none implements register sequencing.
+Optional timeouts are complete decimal values from 1 through 2147483647 ms,
+default 1000 ms. Read/status and irq read take no timeout argument. Admission
+samples owner time once and supplies the immutable uint64 `now + timeout` deadline,
+including natural rollover. Core clips each callback to remaining time.
+
+| Grammar | Aliases | Core API / local action |
+| --- | --- | --- |
+| `init [timeout_ms]` | `initialize`, `probe` | `startInitialize`: read identity and actual profile only |
+| `read` | `status` | `startRefreshPort`: read-only complete port acquisition |
+| `profile read [timeout_ms]` | — | `startReadProfile`: observe, never adopt desired |
+| `apply [timeout_ms]` | — | `startApplyProfile(staged)`: capture desired only on accepted admission |
+| `verify [timeout_ms]` | `selfcheck`, `selftest` | `startVerifyProfile`: compare retained desired, not board certification |
+| `reconcile [timeout_ms]` | — | `startReconcile`: observe/prove without replay or cleanup |
+| `irq read` | — | `startRefreshPort`: sample IRQ with port; no W1C ACK |
+| `irq ack [timeout_ms]` | — | `startAcknowledgeInterrupt`: fresh actual controls, explicit ACK |
+| `irq service [timeout_ms]` | — | `startServiceInterrupt`: bounded observe/ACK/recheck, coalescing events |
+| `reset [timeout_ms]` | — | `startReset`: explicit command/wait/proof, no desired reapply |
+| `recover-dead-battery [timeout_ms]` | — | `startRecoverDeadBattery`: original TUSB320/I only |
+| `job [status]` | `progress` | Cached core progress and scheduler mode |
+| `job auto [0\|1]` | — | Query/set automatic stepping, default on |
+| `job step [0..255]` | — | Select this turn's one poll, default budget one |
+| `cancel [token]` | `job cancel [token]`, `stop [token]` | `cancel`: local, no rollback |
+| `result [token]` | `job result [token]` | `resultSnapshot`: repeat retained result |
+| `result take <token>` | — | Exact-token `takeResult`, with complete response reservation |
+
+Tokens are complete nonzero decimal uint64 values; zero, signs, overflow, hex and
+junk reject before effects. Omitted query/cancel tokens use represented core work.
+Dotted IDs such as `profile.read`, `job.status`, `job.cancel` and `result.take`
+are metadata/help identities; command input uses the spaced grammar above.
+
+One active operation and one immutable retained result remain in core. CLI stores
+only the admitted request/nonce/token association and whether its spontaneous
+completion was announced. A matching terminal snapshot emits one RESULT,
+RESULT_DETAIL and END for the original request/nonce, even after newer queries or
+markers. Loss drops complete records and marks the announcement attempted once;
+the core result remains queryable. Repeated queries have their own request/nonce
+and the same origin_request. Externally admitted, unattributed results use origin 0.
+
+Automatic stepping advances only CLI-admitted work. An explicit job step can
+advance represented application work by request, and replaces that turn's automatic
+budget, including zero. Basic callbacks stop after at most one invocation even
+with budget 255: fresh owner time is required afterward. A zero-budget turn can
+validate time, expire a deadline, arm/finish a wait or publish pending success.
+No callback loop, clock wait, retry, reset/resume policy or extra result slot exists.
+Cached or invalid commands never suppress an older automatic job. Output congestion
+and request exhaustion also leave polling, deadlines, cancellation and end active.
+
+The step ACK accepts the local budget. Its JOB/END follow the sole poll. JOB
+code/detail expose that poll's status; an invalid backward/ambiguous owner clock
+causes a failed step END while preserving active work without traffic. An automatic
+poll rejection emits a JOB on the original request. A terminal operation failure
+still produces its original RESULT; step/take delivery OK does not rewrite it.
+
+Before result take, serialized dispatch reserves five maximum records (2555 bytes):
+ACK, optional human status, RESULT, RESULT_DETAIL and END. A still-unannounced
+original completion adds three records (4088 bytes total). Insufficient capacity
+returns BUSY and retains both core slot and loss evidence; the take is not deferred.
+Reservation rejection alone does not increment loss counters. Its actual BUSY
+records queue normally; only records that cannot queue count as dropped records.
+Wrong/stale tokens never consume a slot. No new operation replaces an untaken result.
+
+Initialization and reconciliation do not reset, acknowledge or replay staging.
+IRQ ACK preserves actual observed/trusted duty/control bits even when staging or
+desired differ; unrelated apply writes keep W1C zero. Missing/reserved actual
+evidence never means equality. TUSB322I fault-ACK/advertisement writes remain gated;
+unchanged proved advertisement permits independently supported profile changes.
+Recovery is explicit original-part source-startup work: the application establishes
+stable VDD and decides it is needed. Later variants reject without traffic. Cancel,
+timeout and end retain possible writes, disabled termination and reset/recovery
+evidence; they do not undo electrical effects. Autonomous TUSB322I VCONN and board
+power policy remain separate from software delivery and communication success.
 
 ## Staging and cached evidence
 
@@ -195,8 +271,11 @@ key lists are shown. ACK/END and helper records fit 512-byte storage with a
 
 | Type | Required keys after the common prefix |
 | --- | --- |
-| ACK | `command code detail action staged_generation desired_generation applied_generation configuration` |
-| END | `command outcome code detail callbacks` |
+| ACK | `command code detail action token staged_generation desired_generation applied_generation configuration` |
+| END | `command outcome code detail token callbacks` |
+| JOB | `token kind state phase code detail callbacks last_poll_callbacks deadline_ms waiting ready_at_ms ready_at_valid result_pending auto` |
+| RESULT | `origin_request token kind state code detail effect callbacks desired_generation applied_generation configuration` |
+| RESULT_DETAIL | `origin_request token started_ms completed_ms completed_time_valid termination reset irq_observed irq_before ack_attempted ack_confirmed irq_after irq_after_valid` |
 | MARK | none |
 | SESSION | `schema code detail reason` |
 | LOSS | `schema dropped_records dropped_bytes` |
@@ -213,26 +292,41 @@ key lists are shown. ACK/END and helper records fit 512-byte storage with a
 | PORT_DETAIL | `advertised_current accessory active_cable interrupt_pending config_generation configuration coherence` |
 | HELP | `canonical aliases topic execution effect prerequisites capability records max_callbacks tx_bytes rx_bytes fixture test` |
 
-ACK `action` is QUERY, LOCAL, UNCHANGED or STAGED; every failed command reports
-UNCHANGED. Local END `outcome` is SUCCEEDED
-for OK and FAILED otherwise, with `callbacks=0`. `code` is the exact public Err
-spelling and `detail` retains signed int32. Configuration is UNCONFIGURED, APPLYING,
+ACK `action` is QUERY, LOCAL, UNCHANGED, STAGED or ADMITTED. An admitted operation
+uses IN_PROGRESS and a nonzero token; failed admission uses token 0, UNCHANGED
+and immediate END with no terminal operation result. Local failures are UNCHANGED.
+Local END has SUCCEEDED for OK and FAILED otherwise, with callbacks 0; operation
+END carries exact SUCCEEDED/FAILED/CANCELLED/TIMED_OUT and its callback count.
+Result query/take END reports delivery independently of the copied payload failure.
+Token 0 denotes a local response without an associated operation. `code` is the
+exact public Err spelling and `detail` retains signed int32. Configuration is UNCONFIGURED, APPLYING,
 KNOWN or UNKNOWN. Profile `source` is staged/desired/observed/applied; generation
-zero means no attributed generation, including observed records.
+zero means no attributed generation, including observed records. RESULT state is
+the exact terminal core state; effect NONE/CONFIRMED/PARTIAL/INDETERMINATE is
+independent. RESULT_DETAIL time values require completed_time_valid; zero or a
+previous poll timestamp never substitutes for unknown completion. Its IRQ flags
+belong to that operation, not a prior ACK. JOB phase is coarse public progress,
+and ready_at_ms is meaningful only with ready_at_valid. No physical transaction
+or byte count is inferred from callback counts.
 
 HELP is executable metadata for the advertised subset: canonical ID/aliases,
 topic, execution/effect, prerequisites/capability, record types, callback/TX/RX
-bounds and host fixture/test. Rows use CACHE_ONLY or PURE and NONE or LOCAL_STATE;
-all callback/TX/RX bounds are zero. Human descriptions preserve the distinction
-between cached queries and local staging.
+bounds and host fixture/test. Rows use CACHE_ONLY, PURE or CORE_JOB, with explicit
+effect classes. Managed rows
+and job step advertise one callback per owner poll, at most two TX/eight RX bytes
+per callback. These are ceilings, not physical transaction counts or whole-job
+bounds. Job step conservatively advertises DEVICE_WRITE because already-admitted
+work may write. All admission and other local handler callback bounds remain zero.
+Core operation totals and timing remain in the procedure/API guides. Human
+descriptions distinguish cached queries, staging, live reads and device writes.
 
 Example correlation (illustrative, not hardware evidence):
 
 ```text
 TUSB MARK schema=1 nonce=case_a request=1
-TUSB END schema=1 nonce=case_a request=1 command=hilmark outcome=SUCCEEDED code=OK detail=0 callbacks=0
-TUSB ACK schema=1 nonce=case_a request=2 command=mode code=OK detail=0 action=STAGED staged_generation=2 desired_generation=0 applied_generation=0 configuration=UNCONFIGURED
-TUSB END schema=1 nonce=case_a request=2 command=mode outcome=SUCCEEDED code=OK detail=0 callbacks=0
+TUSB END schema=1 nonce=case_a request=1 command=hilmark outcome=SUCCEEDED code=OK detail=0 token=0 callbacks=0
+TUSB ACK schema=1 nonce=case_a request=2 command=mode code=OK detail=0 action=STAGED token=0 staged_generation=2 desired_generation=0 applied_generation=0 configuration=UNCONFIGURED
+TUSB END schema=1 nonce=case_a request=2 command=mode outcome=SUCCEEDED code=OK detail=0 token=0 callbacks=0
 TUSB LOSS schema=1 dropped_records=2 dropped_bytes=534
 TUSB SESSION schema=1 code=TOKEN_EXHAUSTED detail=0 reason=request_exhausted
 ```
@@ -253,8 +347,8 @@ path and link `TUSB32x`; core never links the CLI. The normal package includes
 the four common files and this guide, while Python contracts/tests remain
 source-checkout tools. No consumer linkage invokes Python or Git.
 
-The host ABI measures `sizeof(Cli)=9280` bytes, including 8192 output bytes;
-this is fixed object storage, not a firmware RAM/link qualification. Board-specific
+The current x86-64 host ABI measures `sizeof(Cli)=9416` bytes, including the
+8192-byte output queue; this is not firmware RAM/link qualification. Board-specific
 placement, front-end stack budgets and linked S2/S3 memory evidence arrive with
 the actual firmware examples. No smaller unproved queue is substituted here.
 
@@ -264,7 +358,7 @@ sources. `tusb32x_cli_host` is a persistent, explicitly fake-bus fixture used by
 for bounded host fixtures at uint64 request/uint32 generation limits. There is
 no public seed setter or production boundary-manipulation command.
 
-Operation admission/control/result routes belong to prompt 21. Live device,
-register/IRQ/reset/recovery/diagnostic command coverage belongs to prompt 22.
-Framework front ends and hardware fixtures are later work. These routes are not
-advertised or handled by this implemented local subset.
+Prompt 21 completes operation admission/control/result routes. Prompt 22 adds
+remaining cached IRQ/input-pin, invalidation, register/decode and diagnostic routes.
+These remaining routes are not advertised or handled yet. Framework front ends,
+serial/CC/INT fixtures and board memory/electrical qualification remain later work.

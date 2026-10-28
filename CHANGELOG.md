@@ -11,6 +11,15 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Managed CLI routes for initialization, observation, apply/verify/reconciliation,
+  IRQ ACK/service, reset and original-part recovery through canonical core APIs.
+  One owner poll honors automatic/explicit zero/one/N budgets without double
+  stepping. Origin request/nonce/token survives later queries and markers; core
+  retains its sole result until explicit take with complete output reservation.
+  JOB poll errors and RESULT payload outcomes remain distinct from delivery OK.
+  Shared C++/Python tests cover deadlines, ambiguous writes, cancellation, output
+  loss and actual IRQ/control effects. Serial and electrical proof remain separate.
+
 - Bounded example-only local CLI with strict whole-command parsing, atomic target
   edits, explicit evidence forgetting and validated independent profile staging.
   The fixed console preserves poisoned input through newline and queues complete

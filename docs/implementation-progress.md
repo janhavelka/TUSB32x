@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 20 local CLI end to end; later prompts remain separate.
+Current authorization: implement prompt 21 operation CLI end to end; later prompts remain separate.
 
 ## Prompt status
 
@@ -30,7 +30,7 @@ Current authorization: implement prompt 20 local CLI end to end; later prompts r
 | [18: protocol-conformance](prompts/18-protocol-conformance.md) | COMPLETE |
 | [19: owner-portability](prompts/19-owner-portability.md) | COMPLETE |
 | [20: cli-foundation](prompts/20-cli-foundation.md) | COMPLETE |
-| [21: cli-operation-control](prompts/21-cli-operation-control.md) | NOT STARTED |
+| [21: cli-operation-control](prompts/21-cli-operation-control.md) | COMPLETE |
 | [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | NOT STARTED |
 | [23: arduino-transport](prompts/23-arduino-transport.md) | NOT STARTED |
 | [24: arduino-examples](prompts/24-arduino-examples.md) | NOT STARTED |
@@ -1503,3 +1503,54 @@ remains prompt 34. Exact commands and limits are in
 The lead commits/syncs this checked complete unit on the same execution branch,
 verifies upstream equality and clean state, and reports final commit in the
 handoff/next progress update. Prompt 21 remains unstarted.
+
+## Prompt 21 execution (2026-10-28)
+
+Started clean after fetch at synchronized prompt 20 commit
+`072015c5b5d977bfe81d42978bbb587b5b8e2fea`, on the same execution branch/base.
+Read parent/local AGENTS, index, COMMON, full 21, workflow/maintainability,
+CLI grammar/staging/records/ownership and core cooperative/time/trust/silicon
+contracts. The three prerequisite CLI/console/transcript CTests passed again.
+There is no local workflow; remote CI remains prompt 34 only.
+
+Fresh read-only TMP1x2/24Cxx/LDC1614/INA228 revisions, status, exact declarations,
+dispatch, cleanup tests, runner, budget and workflow evidence are recorded in
+[execution 21](audit/execution-21-peers.md). Keep core result ownership rather than
+copying the peers' automatic take/cached-result designs. Basic callbacks still
+require a fresh owner turn even when an explicit budget exceeds one.
+
+Delegation: gpt-6.1-sol/high owns disjoint operation test vectors; another owns
+the persistent fixture/Python schema/transcript. gpt-6-astra/high audits peers
+and independently reviews ownership/timing/effects. The lead owns production,
+integration, registration, guides/checks and all Git. No sibling edits or builds.
+
+Implementation uses existing start APIs, one tick poll and request/nonce/token
+metadata only. Explicit result take reserves its complete bounded response before
+core consumption. Review found and corrected hidden owner-time poll rejection;
+the JOB schema exposes poll status separately from terminal operation status.
+Final review also corrected successful result delivery without its required
+payload, contradictory cancelled/timed-out schemas, misleading step effects and
+synthetic loss accounting on refused take reservation. Near-full refusal delivers
+BUSY without inventing a dropped record; actual failed enqueues retain LOSS.
+
+PASS: all 12 CTests in strict Debug/Release, followed by affected CLI/console/
+transcript checks after the final accounting fix. Counts: 149,227 local/framing
+and 7,801 operation checks, 17,787 console checks, 178 persistent requests plus two
+fault sessions. Exact byte/fixture effects cover ACK versus staged/desired,
+unrelated W1C preservation, write/readback errors, late/invalid time, reset and
+qualified base recovery. Full output does not prevent cancel/end or expiry;
+request exhaustion does not stop previously admitted work.
+
+PASS: strict Doxygen/XML API visibility, Python docstrings/style, local links,
+UTF-8/LF, deterministic version check, current 43-file package and renamed core/
+CLI C++17 consumers beneath unrelated Git without maintainer tools on child PATH.
+Standalone CMake and managed native PlatformIO host consumers also pass. CLI
+object size is 9416 bytes on this host ABI; board RAM/stack is unqualified.
+Fresh ASan/UBSan probes remain BLOCKED by missing runtimes; MSVC/Clang/clang-format
+are unavailable. Serial/CC/INT, physical stable-VDD recovery, framework firmware
+and adapter aggregate timing remain NOT RUN. No remote CI request.
+
+See [validation](validation.md#prompt-21-managed-cli-operations-2026-10-28) for exact
+commands and limits. The lead commits/syncs this checked unit on the same execution
+branch and verifies equality/clean state in the handoff; record the resulting
+commit in the next progress update. Prompt 22 remains unstarted.

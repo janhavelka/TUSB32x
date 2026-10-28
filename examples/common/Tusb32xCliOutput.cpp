@@ -1,5 +1,5 @@
 /// @file Tusb32xCliOutput.cpp
-/// @brief Bounded local CLI records, cached profile/port rendering and incremental help.
+/// @brief Bounded records, core-owned result delivery, profile/port output and incremental help.
 #include "Tusb32xCli.h"
 
 #include <TUSB32x/Version.h>
@@ -36,6 +36,44 @@ const char* configurationName(t::ConfigurationState value) {
     case t::ConfigurationState::UNKNOWN: return "UNKNOWN";
   }
   return "UNKNOWN";
+}
+
+const char* kindName(t::OperationKind kind) {
+  constexpr const char* names[] = {"NONE", "INITIALIZE", "READ_PROFILE", "APPLY_PROFILE",
+      "VERIFY_PROFILE", "RECONCILE", "REFRESH_PORT", "ACKNOWLEDGE_INTERRUPT",
+      "SERVICE_INTERRUPT", "RESET", "RECOVER_DEAD_BATTERY"};
+  const auto index = static_cast<unsigned>(kind);
+  return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
+}
+
+const char* operationStateName(t::OperationState state) {
+  constexpr const char* names[] = {"IDLE", "ACTIVE", "SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT"};
+  const auto index = static_cast<unsigned>(state);
+  return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
+}
+
+const char* phaseName(t::OperationPhase phase) {
+  constexpr const char* names[] = {"NONE", "READING", "WRITING", "WAITING", "FINISHING"};
+  const auto index = static_cast<unsigned>(phase);
+  return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
+}
+
+const char* effectName(t::HardwareEffect effect) {
+  constexpr const char* names[] = {"NONE", "CONFIRMED", "PARTIAL", "INDETERMINATE"};
+  const auto index = static_cast<unsigned>(effect);
+  return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
+}
+
+const char* terminationName(t::TerminationState state) {
+  constexpr const char* names[] = {"UNKNOWN", "ENABLED", "DISABLED"};
+  const auto index = static_cast<unsigned>(state);
+  return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
+}
+
+const char* resetName(t::ResetState state) {
+  constexpr const char* names[] = {"NONE", "MAY_BE_PENDING", "COMPLETED"};
+  const auto index = static_cast<unsigned>(state);
+  return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
 uint16_t applicableFields(t::Variant variant) {
@@ -169,6 +207,8 @@ const char* sectionName(const char* topic) {
   if (std::strcmp(topic, "port") == 0) return "Port";
   if (std::strcmp(topic, "profile") == 0) return "Profile";
   if (std::strcmp(topic, "lifecycle") == 0) return "Lifecycle";
+  if (std::strcmp(topic, "interrupt") == 0) return "Interrupt";
+  if (std::strcmp(topic, "job") == 0) return "Job";
   return topic;
 }
 
@@ -239,10 +279,11 @@ void Cli::human(const char* format, ...) {
 void Cli::acknowledge(const Request& request, const Response& response) {
   const auto config = _driver.configurationSnapshot();
   record(request, "ACK", "command=%s code=%s detail=%" PRId32
-      " action=%s staged_generation=%" PRIu32 " desired_generation=%" PRIu32
+      " action=%s token=%" PRIu64 " staged_generation=%" PRIu32 " desired_generation=%" PRIu32
       " applied_generation=%" PRIu32 " configuration=%s", request.command,
       t::errorName(response.status.code), response.status.detail,
-      response.status.ok() ? response.action : "UNCHANGED",
+      response.status.ok() || response.status.inProgress() ? response.action : "UNCHANGED",
+      response.token.value,
       _stagedGeneration, config.desiredGeneration, config.verifiedGeneration,
       configurationName(config.state));
   if (!response.status.ok() || _verbose) {
@@ -255,16 +296,21 @@ void Cli::acknowledge(const Request& request, const Response& response) {
   }
 }
 
-void Cli::close(const Request& request, const t::Status& status) {
-  record(request, "END", "command=%s outcome=%s code=%s detail=%" PRId32 " callbacks=0",
-      request.command, status.ok() ? "SUCCEEDED" : "FAILED", t::errorName(status.code),
-      status.detail);
+void Cli::close(const Request& request, const t::Status& status, t::OperationToken token,
+    uint32_t callbacks, t::OperationState state) {
+  const char* outcome = state == t::OperationState::IDLE
+      ? status.ok() ? "SUCCEEDED" : "FAILED" : operationStateName(state);
+  record(request, "END", "command=%s outcome=%s code=%s detail=%" PRId32
+      " token=%" PRIu64 " callbacks=%" PRIu32, request.command, outcome,
+      t::errorName(status.code), status.detail, token.value, callbacks);
 }
 
 void Cli::payload(const Request& request, const Response& response) {
   const auto diagnostics = _driver.diagnostics();
   switch (response.payload) {
     case Payload::NONE: break;
+    case Payload::JOB: jobOutput(request, response.status); break;
+    case Payload::RESULT: break; // deliverResult owns reservation and the transient copied value.
     case Payload::VERSION:
       record(request, "VERSION", "library=%s", t::VERSION);
       record(request, "FIRMWARE", "git=%s tree=%s build=%s", _platform.identity.git,
@@ -322,6 +368,74 @@ void Cli::payload(const Request& request, const Response& response) {
       portOutput(request, _driver.portSnapshot(), _platform.nowMs(_platform.user));
       break;
   }
+}
+
+void Cli::jobOutput(const Request& request, const t::Status& status) {
+  const auto progress = _driver.progress();
+  record(request, "JOB", "token=%" PRIu64 " kind=%s state=%s phase=%s code=%s detail=%" PRId32
+      " callbacks=%" PRIu32
+      " last_poll_callbacks=%u deadline_ms=%" PRIu64 " waiting=%u ready_at_ms=%" PRIu64
+      " ready_at_valid=%u result_pending=%u auto=%u", progress.token.value,
+      kindName(progress.kind), operationStateName(progress.state), phaseName(progress.phase),
+      t::errorName(status.code), status.detail,
+      progress.transfers, static_cast<unsigned>(progress.lastPollTransfers), progress.deadlineMs,
+      progress.waiting, progress.readyAtMs, progress.readyAtValid, progress.resultPending, _automatic);
+}
+
+void Cli::resultOutput(const Request& request, const t::OperationResult& result) {
+  const uint64_t origin = result.token.value == _operationToken.value ? _operationRequest.id : 0;
+  record(request, "RESULT", "origin_request=%" PRIu64 " token=%" PRIu64
+      " kind=%s state=%s code=%s detail=%" PRId32 " effect=%s callbacks=%" PRIu32
+      " desired_generation=%" PRIu32 " applied_generation=%" PRIu32 " configuration=%s",
+      origin, result.token.value, kindName(result.kind), operationStateName(result.state),
+      t::errorName(result.status.code), result.status.detail, effectName(result.hardwareEffect),
+      result.transfers, result.configuration.desiredGeneration, result.configuration.verifiedGeneration,
+      configurationName(result.configuration.state));
+  record(request, "RESULT_DETAIL", "origin_request=%" PRIu64 " token=%" PRIu64
+      " started_ms=%" PRIu64 " completed_ms=%" PRIu64 " completed_time_valid=%u"
+      " termination=%s reset=%s irq_observed=%u irq_before=%u ack_attempted=%u"
+      " ack_confirmed=%u irq_after=%u irq_after_valid=%u", origin, result.token.value,
+      result.startedUptimeMs, result.completedUptimeMs, result.completedTimeValid,
+      terminationName(result.configuration.terminationState), resetName(result.configuration.resetState),
+      result.interrupt.observationValid, result.interrupt.pendingBefore,
+      result.interrupt.acknowledgeAttempted, result.interrupt.acknowledgeConfirmed,
+      result.interrupt.pendingAfter, result.interrupt.pendingAfterValid);
+}
+
+void Cli::announceCompletion(const TUSB32x::OperationResult& result) {
+  if (_completionAnnounced || result.token.value != _operationToken.value) return;
+  // Output loss never consumes the core slot or causes repeated terminal announcements.
+  _completionAnnounced = true;
+  resultOutput(_operationRequest, result);
+  close(_operationRequest, result.status, result.token, result.transfers, result.state);
+}
+
+void Cli::announceCompletion() {
+  if (!_operationToken.valid() || _completionAnnounced) return;
+  t::OperationResult result;
+  if (_driver.resultSnapshot(_operationToken, result).ok()) announceCompletion(result);
+}
+
+void Cli::deliverResult(const Request& request, Response response) {
+  t::OperationResult result;
+  response.status = _driver.resultSnapshot(response.token, result);
+  if (response.status.ok() && response.take) {
+    // Serialized ownership reserves capacity until this synchronous response is queued.
+    // Five whole maximum records cover ACK, optional human status, RESULT, detail and END.
+    // Three more cover a still-unannounced original completion. No second result is retained.
+    const bool announce = !_completionAnnounced && result.token.value == _operationToken.value;
+    const std::size_t required = (announce ? 8U : 5U) * (ConsoleBuffer::RECORD_CAPACITY - 1);
+    if (_console.available() < required) {
+      // Rejection is not a lost record. Only actual response enqueue failures count as loss.
+      response.status = t::Status::Error(t::Err::BUSY, "Insufficient output space; result retained");
+    } else {
+      if (announce) announceCompletion(result);
+      response.status = _driver.takeResult(response.token, result);
+    }
+  }
+  acknowledge(request, response);
+  if (response.status.ok()) resultOutput(request, result);
+  close(request, response.status, response.token);
 }
 
 void Cli::profileOutput(const Request& request) {

@@ -2353,3 +2353,80 @@ CMake/Ninja paths and strips maintainer tools from the child PATH. It checks an
 independent application linking the shipped CLI sources as well as ordinary core
 consumption; it is neither a framework stub nor a firmware result. Later operation,
 device-command, runner/HIL and full omission-guard stages are not claimed here.
+
+## Prompt 21 managed CLI operations (2026-10-28)
+
+Started clean and synchronized after fetch at completed prompt 20 commit
+`072015c5b5d977bfe81d42978bbb587b5b8e2fea`, on the same execution branch. Read
+current instructions, full 21, grammar/record/result ownership, cooperative owner
+time/trust/effect contracts, actual core declarations and registered tests. Fresh
+peer evidence, failed-cleanup/budget cases and explicit adopted/rejected choices
+are in [execution 21](audit/execution-21-peers.md). No sibling mutation/build or
+remote CI request occurred.
+
+Delivered 17 new rows, 44 total, with canonical core start APIs, one tick poll and
+no CLI result store or register sequences. Core owns its one retained result.
+Independent review corrected hidden nonterminal poll errors, conservative step
+effect metadata, missing result-delivery payload validation and contradictory
+cancelled/timed-out schemas. Lead reviewed actual diffs and fixtures and ran the
+checks below; agent reports are not substituted for integration evidence.
+
+Tools: GCC 15.1.0 MinGW-W64 UCRT/MCF, CMake/CTest 4.0.1, Ninja 1.12.1, Python
+3.12.10, Doxygen 1.13.2 and installed managed PlatformIO Core 6.1.19/native
+1.2.1. No tool pin, core source list or library version changed.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Strict framework-free Debug/Release | PASS | All 12 registered CTests each, with active Release checks and prior core/isolated-consumer/version/launcher regressions |
+| Local CLI / framing | PASS | 149,227 checks, including all 44 executable rows/help topics, zero handler deltas, strict parsing, maximum-width real RESULT/DETAIL/END and continued completion after request exhaustion |
+| Managed CLI behavior | PASS | 7,801 independent literal-byte checks: every route/alias, accepted desired capture only, zero/one/255 budgets, explicit zero overriding auto, immutable deadlines, timeout clipping, late success and backward/half-range clock rejection |
+| Result ownership / correlation | PASS | Core slot retained through repeated query, stale token, lost announcements and failed reservation; near-full rejection delivers complete BUSY without fabricated record/byte loss; one take, delivery OK versus payload failure, original request 24 completion after request 25 and a changed marker |
+| Hardware-effect logic | PASS | Read-only init/reconcile and verification aliases; actual 50% versus staged/desired 30% ACK; unrelated apply keeps pending W1C latch; failed write/readback retains signed INT32_MIN, uncertain effects and UNKNOWN trust; cancel/end still work with full output; deadline expiry still runs |
+| Variant / waits | PASS | Reset for base/LAI/322I, explicit base 04/wait31/00 recovery and later-part denial, 322I fault/advertisement gates and allowed changed mode with unchanged proved advertisement; invalidated historical port remains visible |
+| Console / persistent transcript | PASS | 17,787 unchanged console checks; 178 requests in one actual shared-C++ process plus two fault sessions, all 44 executed HELP rows, 20 bounded schemas and missing/duplicate/wrong token/origin/status/closure negatives |
+| Documentation / version | PASS | Strict Doxygen; XML visibility of 17 core structs/26 owner methods plus 10 Cli/12 Console callable methods; Python docstrings/style, local links/anchors, UTF-8/LF/whitespace and no-op version sync/check |
+| Package / ordinary consumption | PASS | Current 43-file source-equal archive, matching IDF inclusion and guide links; renamed tests-OFF core and CLI C++17 consumers beneath unrelated Git build/link/run without Python/Git/Doxygen/PIO on child PATH; CLI size 9416 host-ABI bytes, zero fake callbacks for local consumer commands |
+| Native host environment | PASS | Standalone ordinary CMake consumer and existing managed PlatformIO native consumer; this does not link Arduino/native-IDF firmware |
+| Sanitizers | BLOCKED | Fresh trivial ASan/UBSan link probes fail for unavailable -lasan/-lubsan; MSVC/Clang/clang-format absent |
+| Physical / framework qualification | NOT RUN | Serial, CC/INT/electrical behavior, stable-VDD fixture, Arduino/native-IDF links, S2/S3 memory/stack and aggregate adapter blocking bounds remain separate later evidence |
+
+Actual lead commands:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
+ctest --test-dir build/native -C Release -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
+& build/native/test/Release/tusb32x_cli.exe
+& build/native/test/Release/tusb32x_console.exe
+python tools/test_cli_transcript.py --host build/native/test/Release/tusb32x_cli_host.exe
+python -m py_compile tools/tusb32x_cli_contract.py tools/test_cli_transcript.py
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python build/p20-final-check.py
+cmake -S examples/host/basic -B build/host-basic -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/host-basic --config Release
+& build/host-basic/tusb32x_host_basic.exe
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd run -d examples/host/basic -e native -t exec
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p21.tar.gz
+python build/p21-package.py
+g++ -std=c++17 -fsanitize=address build/p20-sanitizer.cpp -o build/p21-asan.exe
+g++ -std=c++17 -fsanitize=undefined build/p20-sanitizer.cpp -o build/p21-ubsan.exe
+git diff --check
+```
+
+Both sanitizer probes exit 1 for absent runtime libraries. Session-only checked
+scripts under ignored build/ inspect XML/text and the exact source-equal archive;
+they are not consumer dependencies. The package fixtures deliberately strip
+maintainer tools from child PATH and use absolute CMake/Ninja/compiler paths.
+No new SDK/framework dependency or successful hardware stub was added. Remaining
+cached IRQ/pin, invalidation, register/decode and diagnostic command coverage is
+prompt 22, not an unfinished operation route. Final commit/sync evidence belongs
+in the handoff and next progress update, avoiding a self-referencing hash loop.

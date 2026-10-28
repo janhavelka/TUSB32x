@@ -583,3 +583,25 @@ maintainer-only dependency. Hardware and framework claims require separate evide
   Machine code/detail never depend on human text; injected status text is bounded
   and sanitized before presentation. Host-only friend access covers mathematical
   limits without public seed setters or production commands.
+
+## Prompt 21 core-owned operation flow (2026-10-28)
+
+- Dispatch calls each canonical core start API once, without traffic. Only accepted
+  apply captures CLI staging as core desired. No initialization reset/replay exists.
+- Automatic stepping defaults on for CLI-admitted tokens only. Explicit job step
+  selects the sole poll budget for that turn, including zero; it may also explicitly
+  advance a represented application operation. Never silently adopt foreign work.
+  The application must not separately poll the same driver in that CLI owner turn.
+- Keep only origin request/nonce/token and an announcement flag. Core owns the
+  immutable retained result; output loss never consumes or retries its announcement.
+  Unattributed externally admitted results report origin_request=0.
+- Reserve five maximum whole records before take (ACK, optional human status,
+  RESULT, RESULT_DETAIL and END), plus three for an unannounced original completion.
+  Serialized dispatch then emits synchronously; congestion retains the core slot
+  and loss evidence. No deferred destructive take or second result store exists.
+  A reservation rejection is BUSY, not a fabricated lost record; count only actual
+  failed response enqueues. A near-full queue can deliver the complete rejection.
+- JOB code/detail describe a cached inspection or that explicit poll. A rejected
+  nonterminal owner-time sample remains visible and leaves the operation active.
+  A completed operation failure stays in RESULT; successful take/step delivery
+  remains separate from that payload outcome and possible hardware effects.

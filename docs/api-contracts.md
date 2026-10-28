@@ -14,8 +14,9 @@ handling, cached evidence and read-only initialization. Prompt 12 adds
 and cached port publication; prompt 16 adds `startAcknowledgeInterrupt` and
 `startServiceInterrupt`. Prompt 17 adds safe `readRegisterSync`/`writeRegisterSync`,
 complete diagnostics views and pure `validateHealthPolicy`/`projectHealth`.
-The callable inventory below is delivered; framework adapters and CLI remain
-later work.
+The callable inventory below is delivered. The [shared CLI](CLI.md) routes these
+operations without reimplementing protocol or retaining a second result. Framework
+adapters and remaining CLI diagnostic routes remain later work.
 
 Prompt 18's [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
 connects these owner, interrupt and raw contracts to named runtime tests. The

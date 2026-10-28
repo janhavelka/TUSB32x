@@ -1,8 +1,8 @@
-"""Frozen local CLI rows and schema-1 parsing; no I/O or device side effects.
+"""Frozen executable CLI rows and schema-1 parsing; no I/O or device side effects.
 
 C++ owns command dispatch. Transcript owners separately check request ordering,
 nonce attribution and exactly one matching terminal closure. This module covers
-the implemented prompt-20 subset only.
+the implemented local and cooperative-operation routes only.
 """
 
 from collections.abc import Mapping
@@ -11,10 +11,23 @@ import re
 PREFIX = ("schema", "nonce", "request")
 SCHEMAS = {
     "ACK": PREFIX + (
-        "command", "code", "detail", "action", "staged_generation",
+        "command", "code", "detail", "action", "token", "staged_generation",
         "desired_generation", "applied_generation", "configuration",
     ),
-    "END": PREFIX + ("command", "outcome", "code", "detail", "callbacks"),
+    "END": PREFIX + ("command", "outcome", "code", "detail", "token", "callbacks"),
+    "JOB": PREFIX + (
+        "token", "kind", "state", "phase", "code", "detail", "callbacks", "last_poll_callbacks",
+        "deadline_ms", "waiting", "ready_at_ms", "ready_at_valid", "result_pending", "auto",
+    ),
+    "RESULT": PREFIX + (
+        "origin_request", "token", "kind", "state", "code", "detail", "effect", "callbacks",
+        "desired_generation", "applied_generation", "configuration",
+    ),
+    "RESULT_DETAIL": PREFIX + (
+        "origin_request", "token", "started_ms", "completed_ms", "completed_time_valid",
+        "termination", "reset", "irq_observed", "irq_before", "ack_attempted",
+        "ack_confirmed", "irq_after", "irq_after_valid",
+    ),
     "MARK": PREFIX,
     "SESSION": ("schema", "code", "detail", "reason"),
     "LOSS": ("schema", "dropped_records", "dropped_bytes"),
@@ -63,17 +76,21 @@ SCHEMAS = {
 
 
 def _row(command, aliases, topic, syntax, execution="PURE", effect="LOCAL_STATE",
-         prerequisites="none", capability="all", records="ACK,END"):
+         prerequisites="none", capability="all", records="ACK,END", *, operation=False):
     """Build fixed host metadata; no firmware code generation."""
     return {
         "command": command, "aliases": aliases, "topic": topic, "syntax": syntax,
         "execution": execution, "effect": effect, "prerequisites": prerequisites,
-        "capability": capability, "records": records, "max_callbacks": "0",
-        "tx_bytes": "0", "rx_bytes": "0", "fixture": "host", "test": "local_routes",
+        "capability": capability, "records": records,
+        "max_callbacks": "1" if execution == "CORE_JOB" else "0",
+        "tx_bytes": "2" if execution == "CORE_JOB" else "0",
+        "rx_bytes": "8" if execution == "CORE_JOB" else "0",
+        "fixture": "host", "test": "operation_routes" if operation else "local_routes",
     }
 
 
 PROFILE_RECORDS = "ACK,CONFIG,PROFILE,END"
+OPERATION_RECORDS = "ACK,JOB,RESULT,RESULT_DETAIL,END"
 ROWS = (
     _row("help", "?", "common", "help [topic|command]", "CACHE_ONLY", "NONE",
          records="ACK,HELP,END"),
@@ -124,6 +141,40 @@ ROWS = (
          capability="extended", records=PROFILE_RECORDS),
     _row("rd-rp", "none", "profile", "rd-rp [on|off]", capability="has_45",
          records=PROFILE_RECORDS),
+    _row("init", "initialize,probe", "connection", "init [timeout_ms]", "CORE_JOB",
+         "READ_OBSERVATION", "bound", records=OPERATION_RECORDS, operation=True),
+    _row("read", "status", "port", "read", "CORE_JOB", "READ_OBSERVATION", "bound",
+         records=OPERATION_RECORDS, operation=True),
+    _row("profile.read", "none", "profile", "profile read [timeout_ms]", "CORE_JOB",
+         "READ_OBSERVATION", "bound", records=OPERATION_RECORDS, operation=True),
+    _row("apply", "none", "profile", "apply [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+         "known_actual", records=OPERATION_RECORDS, operation=True),
+    _row("verify", "selfcheck,selftest", "profile", "verify [timeout_ms]", "CORE_JOB",
+         "READ_OBSERVATION", "retained_desired", records=OPERATION_RECORDS, operation=True),
+    _row("reconcile", "none", "profile", "reconcile [timeout_ms]", "CORE_JOB",
+         "READ_OBSERVATION", "bound", records=OPERATION_RECORDS, operation=True),
+    _row("irq.read", "none", "interrupt", "irq read", "CORE_JOB", "READ_OBSERVATION",
+         "bound", records=OPERATION_RECORDS, operation=True),
+    _row("irq.ack", "none", "interrupt", "irq ack [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+         "bound", "irq_ack", OPERATION_RECORDS, operation=True),
+    _row("irq.service", "none", "interrupt", "irq service [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+         "bound", "irq_ack", OPERATION_RECORDS, operation=True),
+    _row("reset", "none", "lifecycle", "reset [timeout_ms]", "CORE_JOB", "DEVICE_WRITE",
+         "bound", records=OPERATION_RECORDS, operation=True),
+    _row("recover-dead-battery", "none", "lifecycle", "recover-dead-battery [timeout_ms]",
+         "CORE_JOB", "DEVICE_WRITE", "base_stable_vdd", "base_only", OPERATION_RECORDS,
+         operation=True),
+    _row("job.status", "progress", "job", "job [status]", "CACHE_ONLY", "NONE",
+         records="ACK,JOB,END", operation=True),
+    _row("job.auto", "none", "job", "job auto [0|1]", records="ACK,JOB,END", operation=True),
+    _row("job.step", "none", "job", "job step [0..255]", "CORE_JOB", "DEVICE_WRITE",
+         "represented_operation", records="ACK,JOB,END", operation=True),
+    _row("cancel", "stop,job.cancel", "job", "cancel [token]",
+         prerequisites="represented_operation", operation=True),
+    _row("result", "job.result", "job", "result [token]", "CACHE_ONLY", "NONE",
+         "retained_result", records="ACK,RESULT,RESULT_DETAIL,END", operation=True),
+    _row("result.take", "none", "job", "result take <token>", prerequisites="retained_result",
+         records="ACK,RESULT,RESULT_DETAIL,END", operation=True),
 )
 COMMANDS = frozenset(row["command"] for row in ROWS)
 ERRORS = frozenset((
@@ -137,6 +188,13 @@ VARIANTS = frozenset((
     "tusb320", "tusb320i", "tusb320li", "tusb320hi", "tusb320lai", "tusb320hai", "tusb322i",
 ))
 CONFIGURATIONS = frozenset(("UNCONFIGURED", "APPLYING", "KNOWN", "UNKNOWN"))
+OPERATION_KINDS = frozenset((
+    "NONE", "INITIALIZE", "READ_PROFILE", "APPLY_PROFILE", "VERIFY_PROFILE", "RECONCILE",
+    "REFRESH_PORT", "ACKNOWLEDGE_INTERRUPT", "SERVICE_INTERRUPT", "RESET", "RECOVER_DEAD_BATTERY",
+))
+TERMINAL_STATES = frozenset(("SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT"))
+OPERATION_PHASES = frozenset(("NONE", "READING", "WRITING", "WAITING", "FINISHING"))
+EFFECTS = frozenset(("NONE", "CONFIRMED", "PARTIAL", "INDETERMINATE"))
 _UINT = re.compile(r"(?:0|[1-9][0-9]*)\Z", re.ASCII)
 _SINT = re.compile(r"-?(?:0|[1-9][0-9]*)\Z", re.ASCII)
 _KEY = re.compile(r"[a-z][a-z0-9_]*\Z", re.ASCII)
@@ -146,14 +204,17 @@ _BOOL = frozenset((
     "bound", "adapter_available", "loss_pending", "color", "verbose", "identity_valid",
     "identity_matches", "revision_valid", "revision_matches", "advertisement_write",
     "duty_write", "accessory_write", "staged_reset", "has_desired", "has_observed",
-    "has_applied", "available", "invalidated", "observed_time_valid",
+    "has_applied", "available", "invalidated", "observed_time_valid", "waiting",
+    "ready_at_valid", "result_pending", "auto", "completed_time_valid", "irq_observed",
+    "irq_before", "ack_attempted", "ack_confirmed", "irq_after", "irq_after_valid",
 ))
 _U32 = frozenset((
     "staged_generation", "desired_generation", "applied_generation", "generation",
-    "config_generation", "dropped_records", "dropped_bytes", "bus_hz", "timeout_ms",
+    "config_generation", "dropped_records", "dropped_bytes", "bus_hz", "timeout_ms", "callbacks",
 ))
 _U16 = frozenset(("profile_fields", "observed_valid_fields", "valid_fields"))
-_U8 = frozenset(("address", "raw_valid_mask", "max_callbacks", "tx_bytes", "rx_bytes"))
+_U8 = frozenset(("address", "raw_valid_mask", "max_callbacks", "tx_bytes", "rx_bytes",
+                 "last_poll_callbacks"))
 _BOUNDS = {
     "line_capacity": 192, "input_budget": 64, "output_capacity": 8192,
     "record_capacity": 512, "drain_budget": 256, "queued": 8192, "available": 8192,
@@ -238,7 +299,8 @@ def validate_record(record: Mapping[str, str]) -> None:
             _unsigned(value, 255)
         elif key in {"detail", "sda", "scl", "irq"}:
             _signed(value)
-        elif key in {"sequence", "observed_ms"}:
+        elif key in {"sequence", "observed_ms", "token", "origin_request", "deadline_ms",
+                     "ready_at_ms", "started_ms", "completed_ms"}:
             _unsigned(value, (1 << 64) - 1)
         elif key == "age_ms" and value != "unknown":
             _unsigned(value, (1 << 63) - 1)
@@ -252,15 +314,47 @@ def validate_record(record: Mapping[str, str]) -> None:
         raise ValueError("invalid Err name")
     if kind in {"ACK", "END"} and record["command"] not in COMMANDS | {"invalid"}:
         raise ValueError("noncanonical command")
-    if kind == "ACK" and record["action"] not in {"QUERY", "LOCAL", "UNCHANGED", "STAGED"}:
-        raise ValueError("invalid local action")
-    if kind == "ACK" and record["code"] != "OK" and record["action"] != "UNCHANGED":
-        raise ValueError("failed local command must leave state unchanged")
+    if kind == "ACK":
+        if record["action"] not in {"QUERY", "LOCAL", "UNCHANGED", "STAGED", "ADMITTED"}:
+            raise ValueError("invalid input action")
+        admitted = record["action"] == "ADMITTED"
+        if admitted != (record["code"] == "IN_PROGRESS"):
+            raise ValueError("operation admission requires IN_PROGRESS")
+        if admitted and record["token"] == "0":
+            raise ValueError("admitted operation requires a nonzero token")
+        if record["code"] not in {"OK", "IN_PROGRESS"} and record["action"] != "UNCHANGED":
+            raise ValueError("failed command must leave state unchanged")
     if kind == "END":
-        if record["outcome"] not in {"SUCCEEDED", "FAILED"} or record["callbacks"] != "0":
-            raise ValueError("invalid local terminal outcome/callback count")
+        if record["outcome"] not in TERMINAL_STATES:
+            raise ValueError("invalid terminal outcome")
         if (record["outcome"] == "SUCCEEDED") != (record["code"] == "OK"):
             raise ValueError("contradictory terminal status")
+        if record["outcome"] == "CANCELLED" and record["code"] != "CANCELLED":
+            raise ValueError("contradictory cancelled status")
+        if record["outcome"] == "TIMED_OUT" and record["code"] != "TIMEOUT":
+            raise ValueError("contradictory expired status")
+    if kind in {"JOB", "RESULT"}:
+        if record["kind"] not in OPERATION_KINDS:
+            raise ValueError("invalid operation kind")
+        states = TERMINAL_STATES | {"IDLE", "ACTIVE"} if kind == "JOB" else TERMINAL_STATES
+        if record["state"] not in states:
+            raise ValueError("invalid operation state")
+        if kind == "JOB" and record["phase"] not in OPERATION_PHASES:
+            raise ValueError("invalid operation phase")
+        if kind == "RESULT":
+            if record["token"] == "0" or record["effect"] not in EFFECTS:
+                raise ValueError("invalid terminal operation evidence")
+            if (record["state"] == "SUCCEEDED") != (record["code"] == "OK"):
+                raise ValueError("contradictory operation status")
+            if record["state"] == "CANCELLED" and record["code"] != "CANCELLED":
+                raise ValueError("contradictory cancelled operation status")
+            if record["state"] == "TIMED_OUT" and record["code"] != "TIMEOUT":
+                raise ValueError("contradictory expired operation status")
+    if kind == "RESULT_DETAIL" and (
+        record["token"] == "0" or record["termination"] not in {"UNKNOWN", "ENABLED", "DISABLED"}
+        or record["reset"] not in {"NONE", "MAY_BE_PENDING", "COMPLETED"}
+    ):
+        raise ValueError("invalid operation detail")
     if kind == "SESSION" and (record["code"], record["detail"], record["reason"]) != (
         "TOKEN_EXHAUSTED", "0", "request_exhausted"
     ):

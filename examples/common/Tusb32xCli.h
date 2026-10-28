@@ -1,5 +1,5 @@
 /// @file Tusb32xCli.h
-/// @brief Application-owned local CLI, fixed records and staging; no framework or device scheduler.
+/// @brief Application-owned CLI, fixed staging/records and core operation flow; no extra engine.
 #pragma once
 
 #include <TUSB32x/TUSB32x.h>
@@ -58,15 +58,15 @@ struct CommandRow {
   const char* aliases; ///< Comma-separated aliases, or none; no arbitrary alias expansion.
   const char* topic; ///< Implemented help section, lowercase ASCII.
   const char* syntax; ///< Complete implemented syntax only, without the human padding field.
-  const char* execution; ///< CACHE_ONLY or PURE; this stage has no device jobs or platform actions.
-  const char* effect; ///< NONE or LOCAL_STATE; no device mutation in this stage.
+  const char* execution; ///< CACHE_ONLY, PURE or CORE_JOB; no raw/framework handlers yet.
+  const char* effect; ///< NONE, LOCAL_STATE, READ_OBSERVATION or DEVICE_WRITE.
   const char* description; ///< Static human explanation including cached/stage effect label.
   const char* prerequisites = "none"; ///< Local admission/evidence prerequisite, no startup action.
   const char* capability = "all"; ///< Required value/control capability, checked before staging.
   const char* records = "ACK,END"; ///< Payload types; exact required keys are frozen in host schemas.
-  uint8_t maxCallbacks = 0; ///< Maximum terminal transport callbacks per handler, always zero here.
-  uint8_t txBytes = 0; ///< Maximum requested transport TX bytes, always zero for this subset.
-  uint8_t rxBytes = 0; ///< Maximum requested transport RX bytes, always zero for this subset.
+  uint8_t maxCallbacks = 0; ///< Maximum callbacks per owner poll; command admission remains silent.
+  uint8_t txBytes = 0; ///< Maximum TX bytes per callback, not a whole-operation transaction count.
+  uint8_t rxBytes = 0; ///< Maximum RX bytes per callback; zero for local-only rows.
   const char* fixture = "host"; ///< Behavioral evidence fixture; no hardware qualification.
   const char* test = "local_routes"; ///< Executed route coverage in the registered CLI suite.
 };
@@ -81,8 +81,11 @@ const CommandRow* commandRows(std::size_t& count);
 /// each turn. Streaming feed accepts at most 64 bytes across calls and both entry points share a
 /// one-command limit. processCommand accepts an already collected bounded line. tick emits
 /// at most two incremental help records, drains once at most 256 bytes and starts the next turn.
-/// No method polls a driver or invokes transport. Staging is private to this CLI; only later apply
-/// routes will submit it to core. No ISR/concurrent access or callback reentry is supported.
+/// Only tick polls once, with automatic budget one or this turn's explicit job-step budget.
+/// Automatic stepping advances only CLI-admitted work; an explicit step can advance represented
+/// work. Basic Status callbacks require fresh time after each call, so even larger budgets invoke
+/// at most one callback. Staging enters core desired only at accepted apply admission.
+/// No ISR/concurrent access or callback reentry is supported. Results remain owned by core.
 class Cli {
  public:
   /// @brief Copy local configuration/hooks and borrow the serialized driver; zero callbacks.
@@ -106,8 +109,10 @@ class Cli {
   /// @return True if accepted (including malformed rejection); false without effects if turn busy,
   /// setup missing, partial input pending or session exhausted. Use feed for binary input tests.
   bool processCommand(const char* line);
-  /// @brief Advance finite help output and one nonblocking drain; reset input budgets for next turn.
-  /// @note No core poll, clock wait or hidden callback loop; output loss never stalls driver owners.
+  /// @brief Poll at most once, announce completion, advance finite help and drain once; no waits.
+  /// @note Automatic stepping defaults on for CLI-admitted work. job step replaces that turn's
+  /// budget, including zero. Polling/deadlines continue during backpressure and session exhaustion.
+  /// The application must not also poll the same driver in this serialized CLI owner turn.
   void tick();
   /// @brief Request ordinary incremental help through the same turn/request rules.
   /// @param[in] topic Implemented topic/command or all; default all. Scan is bounded to 33 bytes.
@@ -138,7 +143,9 @@ class Cli {
     const char* command = "invalid";
     char nonce[33] = "none";
   };
-  enum class Payload : uint8_t { NONE, VERSION, BUS, CONSOLE, CAPABILITIES, TARGET, PROFILE, PORT };
+  enum class Payload : uint8_t {
+    NONE, VERSION, BUS, CONSOLE, CAPABILITIES, TARGET, PROFILE, PORT, JOB, RESULT
+  };
   struct Response {
     TUSB32x::Status status{};
     const char* action = "QUERY";
@@ -146,6 +153,8 @@ class Cli {
     bool deferred = false;
     bool marker = false;
     bool stagedReset = false;
+    TUSB32x::OperationToken token{};
+    bool take = false;
   };
   TUSB32x::TUSB32x& _driver;
   TUSB32x::DriverConfig _config;
@@ -169,6 +178,14 @@ class Cli {
   const char* _helpSection = nullptr;
   std::size_t _helpIndex = 0;
   bool _helpTitle = false;
+  Request _operationRequest{};
+  TUSB32x::OperationToken _operationToken{};
+  bool _completionAnnounced = false;
+  bool _automatic = true;
+  bool _stepExplicit = false;
+  uint8_t _stepBudget = 1;
+  Request _stepRequest{};
+  bool _stepReport = false;
   void execute(const char* line, bool poisoned);
   bool sessionAvailable();
   void sessionNotice();
@@ -179,11 +196,18 @@ class Cli {
   void record(const Request& request, const char* type, const char* format, ...);
   void human(const char* format, ...);
   void acknowledge(const Request& request, const Response& response);
-  void close(const Request& request, const TUSB32x::Status& status);
+  void close(const Request& request, const TUSB32x::Status& status,
+      TUSB32x::OperationToken token = {}, uint32_t callbacks = 0,
+      TUSB32x::OperationState state = TUSB32x::OperationState::IDLE);
   void payload(const Request& request, const Response& response);
   void helpStep();
   void profileOutput(const Request& request);
   void portOutput(const Request& request, const TUSB32x::PortSnapshot& port, uint64_t nowMs);
+  void jobOutput(const Request& request, const TUSB32x::Status& status = {});
+  void resultOutput(const Request& request, const TUSB32x::OperationResult& result);
+  void announceCompletion();
+  void announceCompletion(const TUSB32x::OperationResult& result);
+  void deliverResult(const Request& request, Response response);
 };
 
 }  // namespace tusb32x_cli

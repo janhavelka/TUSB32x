@@ -40,13 +40,25 @@ executable has no build-only passing CTest. To run the implemented local subset:
 ctest --test-dir build/native -C Debug -R "tusb32x_cli|tusb32x_console|cli_transcript" --output-on-failure
 ```
 
-All 27 canonical local commands, aliases and implemented help topics run through
+All 44 canonical local/managed rows, aliases and implemented help topics run through
 the real shared example sources. Tests cover zero callback deltas, whole-command
 rejection, staged/core separation, cross-family target edits, retained effects,
 poison/CRLF/backspace, cumulative input 64/one command, queue 8192/record 512/drain 256,
 whole-record loss and fairness, maximum-width formatter paths, unsafe injected
 messages, request exhaustion and typed schema/closure negatives. The Python rows
 are compared with executed C++ HELP records. See the [implemented CLI](../docs/CLI.md).
+
+Prompt 21 extends these same registrations. `cli/test_cli_operations.cpp` invokes
+every managed route and inspects literal callback bytes and fixture registers:
+admission/desired adoption, manual/automatic zero/one/255 budgets, immutable and
+clipped deadlines, late success, invalid owner clocks, reset/recovery waits, IRQ
+ACK versus staged/applied values, W1C-preserving apply, ambiguous writes, failed
+readback and cancellation. Core-only result retention, stale tokens, repeated
+query, one take, conservative output reservation and lost announcements use runtime
+behavior. Request 24 may complete after request 25 and a changed marker. The
+existing C++ suite additionally exercises maximum-width result formatting and
+continued owner progress after request exhaustion. The persistent transcript uses
+the actual shared C++ fixture and separate transport/readback fault sessions.
 
 Set `-DCMAKE_BUILD_TYPE=Debug` at configure time for a single-configuration
 generator (for example Ninja). Repeat in `build/release` with Release selected
