@@ -281,3 +281,57 @@ if(WIN32)
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_pio_launcher.py")
   set_tests_properties(tusb32x_pio_launcher PROPERTIES TIMEOUT 30)
 endif()
+
+# Guard commands and their malformed-input fixtures are distinct checks. No tool
+# discovery occurs for tests-OFF consumers; guards report unavailable tools.
+if(DEFINED ENV{TUSB32X_DOXYGEN})
+  set(tusb32x_doxygen "$ENV{TUSB32X_DOXYGEN}")
+else()
+  set(tusb32x_doxygen doxygen)
+endif()
+add_test(NAME core_contracts
+  COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/check_contracts.py")
+add_test(NAME core_contracts_negative
+  COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/test_check_contracts.py" -v)
+add_test(NAME doxygen
+  COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/check_doxygen.py"
+    --doxygen "${tusb32x_doxygen}" --out "${CMAKE_CURRENT_BINARY_DIR}/doxygen-check")
+add_test(NAME doxygen_negative
+  COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/test_check_doxygen.py" -v)
+add_test(NAME validate_runner
+  COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/test_validate.py" -v)
+add_test(NAME firmware_guard
+  COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/test_check_firmware.py" -v)
+set_tests_properties(core_contracts core_contracts_negative validate_runner firmware_guard
+  PROPERTIES TIMEOUT 60)
+set_tests_properties(doxygen doxygen_negative PROPERTIES TIMEOUT 180)
+
+# One owner per registration lets validate.py combine selections without running
+# native/Python wrappers twice. Unknown registrations require an explicit choice.
+set(validation_contracts tusb32x_compile_contracts tusb32x_portable_consumer
+  cli_contract cli_contract_negative core_contracts core_contracts_negative)
+set(validation_python cli_transcript hil_runner tusb32x_idf_example_config
+  tusb32x_arduino_examples_config tusb32x_version_sync tusb32x_pio_launcher
+  validate_runner firmware_guard)
+set(validation_package tusb32x_package_safety tusb32x_package_consumer tusb32x_package_origins)
+set(validation_native tusb32x_validators tusb32x_protocol tusb32x_operations tusb32x_port
+  tusb32x_diagnostics tusb32x_cli tusb32x_console tusb32x_example_owner
+  tusb32x_example_integration tusb32x_output_mailbox tusb32x_host_basic)
+get_property(validation_tests DIRECTORY PROPERTY TESTS)
+foreach(check IN LISTS validation_tests)
+  if(check IN_LIST validation_contracts)
+    set(group contracts)
+  elseif(check IN_LIST validation_python)
+    set(group python)
+  elseif(check IN_LIST validation_package)
+    set(group package)
+  elseif(check STREQUAL "doxygen" OR check STREQUAL "doxygen_negative")
+    set(group doxygen)
+  elseif(check IN_LIST validation_native OR check MATCHES
+      "^tusb32x_(arduino_wire_[0-9]+|idf_transport_[0-9]+|arduino_app_.+|idf_app_.+)$")
+    set(group native)
+  else()
+    message(FATAL_ERROR "CTest registration has no validation owner: ${check}")
+  endif()
+  set_property(TEST ${check} APPEND PROPERTY LABELS "validation_${group}")
+endforeach()

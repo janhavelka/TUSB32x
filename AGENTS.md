@@ -128,14 +128,11 @@ to each numbered implementation prompt and to completed maintenance work here.
   only a C++17 toolchain for tests-OFF consumers. Tests ON require Python 3.10+
   and register the runnable simulated host example as well as generic owner cases
   in `tusb32x_operations`; neither imports FieldCore or a framework.
-  Other registered checks include
-  the eight C++ suites (including `tusb32x_protocol`,
-  `tusb32x_operations`, `tusb32x_port`, `tusb32x_diagnostics`, `tusb32x_cli` and
-  `tusb32x_console`), the persistent `cli_transcript` against `tusb32x_cli_host`,
-  executable `cli_contract`/`cli_contract_negative` parity checks, the isolated
-  `tusb32x_portable_consumer` with allocation/failure sentinels, plus
-  `tusb32x_version_sync` and, on Windows,
-  `tusb32x_pio_launcher`. Compile-only signature/header
+  Other registered checks cover core/protocol/port/diagnostics, CLI/console,
+  adapter/application fixtures, live transcripts/parity, isolated allocation
+  sentinels, Python/version/package suites and guard negatives. There are72
+  CTests on Windows and71 elsewhere, all with finite timeouts and one validation
+  owner. Compile-only signature/header
   contracts are never behavioral tests.
 - Session changes run `python tools/test_tusb32x_hil_runner.py` (including artifact
   failures) and `ctest --test-dir build/native -C Debug -R
@@ -150,7 +147,16 @@ to each numbered implementation prompt and to completed maintenance work here.
   and `python scripts/generate_version.py check`; use bump/set only for intentional
   version changes. Generated Version.h and CMake/component/Doxygen fields must
   stay aligned. No consumer build runs the generator. `doxygen Doxyfile` is the
-  current documentation command; the complete omission guard remains prompt 33.
+  direct documentation command. `python tools/check_doxygen.py` additionally
+  checks public visibility, generated-file boundaries, helper comments and links;
+  its real-parser negative fixtures are registered with CTest.
+- `python tools/validate.py --checks all` owns the declared local non-HIL release
+  checks. Accepted focused names: native, contracts, doxygen, python, package,
+  arduino, idf-s2 and idf-s3. Default host configurations are Debug and Release.
+  Reuse disjoint CTest validation labels; do not run the same runner modules again
+  through unittest discovery. Logs/JUnit and atomic partial reports stay under
+  build/validation. Missing tools return INCOMPLETE/nonzero; no implicit HIL,
+  flashing, publication or remote CI. See [validation](docs/validation.md#local-validation-entry-point).
 - On Windows use `scripts/pio.cmd` with the installed VS Code-managed Core.
   The native host consumer command is:
   `scripts\pio.cmd run -d examples/host/basic -e native -t exec`. See
@@ -453,7 +459,7 @@ uses add_subdirectory/target TUSB32x; no install/export API is claimed.
 CTest also registers tusb32x_package_safety (60s), tusb32x_package_consumer
 (120s) and tusb32x_package_origins (120s). The consumer creates a real test tar
 without requiring PIO; origins rejects injected checkout/outside compiler headers.
-There are65 runtime tests on all hosts plus the Windows launcher, with compile-only headers
+There are71 runtime tests on all hosts plus the Windows launcher, with compile-only headers
 kept separate. The selected extracted Arduino/native-IDF S2/S3 rows are recorded
 in validation; full remote matrix remains prompt34 and hardware remains separate.
 

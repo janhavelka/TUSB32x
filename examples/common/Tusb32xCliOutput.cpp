@@ -14,6 +14,7 @@ namespace {
 namespace t = TUSB32x;
 constexpr const char* UNKNOWN = "unknown";
 
+// Use stable lower-case part names for machine records; invalid enums stay unknown.
 const char* variantName(t::Variant value) {
   switch (value) {
     case t::Variant::TUSB320: return "tusb320";
@@ -28,6 +29,7 @@ const char* variantName(t::Variant value) {
   return UNKNOWN;
 }
 
+// Render configuration trust independently of communication health or attachment.
 const char* configurationName(t::ConfigurationState value) {
   switch (value) {
     case t::ConfigurationState::UNCONFIGURED: return "UNCONFIGURED";
@@ -38,6 +40,7 @@ const char* configurationName(t::ConfigurationState value) {
   return "UNKNOWN";
 }
 
+// Bounds-check the operation enum before selecting its static record name.
 const char* kindName(t::OperationKind kind) {
   constexpr const char* names[] = {"NONE", "INITIALIZE", "READ_PROFILE", "APPLY_PROFILE",
       "VERIFY_PROFILE", "RECONCILE", "REFRESH_PORT", "ACKNOWLEDGE_INTERRUPT",
@@ -46,36 +49,42 @@ const char* kindName(t::OperationKind kind) {
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+// Keep active, terminal and idle outcomes distinct in operation records.
 const char* operationStateName(t::OperationState state) {
   constexpr const char* names[] = {"IDLE", "ACTIVE", "SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT"};
   const auto index = static_cast<unsigned>(state);
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+// Name the public progress phase without exposing internal engine states.
 const char* phaseName(t::OperationPhase phase) {
   constexpr const char* names[] = {"NONE", "READING", "WRITING", "WAITING", "FINISHING"};
   const auto index = static_cast<unsigned>(phase);
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+// Preserve partial and indeterminate hardware effects in formatted output.
 const char* effectName(t::HardwareEffect effect) {
   constexpr const char* names[] = {"NONE", "CONFIRMED", "PARTIAL", "INDETERMINATE"};
   const auto index = static_cast<unsigned>(effect);
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+// Retain unknown termination evidence instead of presenting enabled as a default.
 const char* terminationName(t::TerminationState state) {
   constexpr const char* names[] = {"UNKNOWN", "ENABLED", "DISABLED"};
   const auto index = static_cast<unsigned>(state);
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+// Distinguish a possibly pending reset from proved completion.
 const char* resetName(t::ResetState state) {
   constexpr const char* names[] = {"NONE", "MAY_BE_PENDING", "COMPLETED"};
   const auto index = static_cast<unsigned>(state);
   return index < sizeof(names) / sizeof(names[0]) ? names[index] : "UNKNOWN";
 }
 
+// Format the passive health projection without deriving configuration readiness.
 const char* healthName(t::DriverState state) {
   switch (state) {
     case t::DriverState::UNINIT: return "UNINIT";
@@ -86,6 +95,7 @@ const char* healthName(t::DriverState state) {
   return "UNKNOWN";
 }
 
+// Select displayable profile fields by configured variant; this grants no write permission.
 uint16_t applicableFields(t::Variant variant) {
   if (variant == t::Variant::TUSB320 || variant == t::Variant::TUSB320I) return 0x9B;
   if (variant == t::Variant::TUSB322I) return 0x7F;
@@ -94,6 +104,7 @@ uint16_t applicableFields(t::Variant variant) {
   return 0;
 }
 
+// Match the CLI's profile mode spelling, including the physical PORT-pin selection.
 const char* modeName(t::PortMode value) {
   switch (value) {
     case t::PortMode::FOLLOW_PORT_PIN: return "port";
@@ -104,6 +115,7 @@ const char* modeName(t::PortMode value) {
   return UNKNOWN;
 }
 
+// Format CC advertisement settings; these values are not measured load currents.
 const char* currentName(t::SourceCurrent value) {
   switch (value) {
     case t::SourceCurrent::DEFAULT: return "default";
@@ -113,6 +125,7 @@ const char* currentName(t::SourceCurrent value) {
   return UNKNOWN;
 }
 
+// Map source-preference codes to the same words accepted by profile staging.
 const char* preferenceName(t::SourcePreference value) {
   switch (value) {
     case t::SourcePreference::NORMAL: return "normal";
@@ -122,6 +135,7 @@ const char* preferenceName(t::SourcePreference value) {
   return UNKNOWN;
 }
 
+// Return the configured DRP duty percentage as a static decimal token.
 const char* dutyName(t::DrpDutyCycle value) {
   switch (value) {
     case t::DrpDutyCycle::PERCENT_30: return "30";
@@ -132,6 +146,7 @@ const char* dutyName(t::DrpDutyCycle value) {
   return UNKNOWN;
 }
 
+// Return the nominal CC debounce setting in milliseconds, without inferring elapsed time.
 const char* debounceName(t::CcDebounce value) {
   switch (value) {
     case t::CcDebounce::MS_116: return "116";
@@ -145,6 +160,7 @@ const char* debounceName(t::CcDebounce value) {
   return UNKNOWN;
 }
 
+// Keep detached, accessory and local source/sink attachment labels distinct.
 const char* attachmentName(t::Attachment value) {
   switch (value) {
     case t::Attachment::UNKNOWN: return "UNKNOWN";
@@ -156,6 +172,7 @@ const char* attachmentName(t::Attachment value) {
   return "UNKNOWN";
 }
 
+// Preserve unknown versus inapplicable role fields in cached observations.
 const char* roleName(t::PortRole value) {
   switch (value) {
     case t::PortRole::UNKNOWN: return "UNKNOWN";
@@ -166,6 +183,7 @@ const char* roleName(t::PortRole value) {
   return "UNKNOWN";
 }
 
+// Display CC1/CC2 only when supplied as such; unknown and inapplicable remain explicit.
 const char* orientationName(t::Orientation value) {
   switch (value) {
     case t::Orientation::UNKNOWN: return "UNKNOWN";
@@ -176,6 +194,7 @@ const char* orientationName(t::Orientation value) {
   return "UNKNOWN";
 }
 
+// Render decoded CC current indication, including the charge-through accessory code.
 const char* detectedName(t::DetectedCurrent value) {
   switch (value) {
     case t::DetectedCurrent::UNKNOWN: return "UNKNOWN";
@@ -188,6 +207,7 @@ const char* detectedName(t::DetectedCurrent value) {
   return "UNKNOWN";
 }
 
+// Keep accessory classifications and local debug roles visible as separate tokens.
 const char* accessoryName(t::Accessory value) {
   switch (value) {
     case t::Accessory::UNKNOWN: return "UNKNOWN";
@@ -202,6 +222,7 @@ const char* accessoryName(t::Accessory value) {
   return "UNKNOWN";
 }
 
+// Report the fixed read plan's coherence evidence without claiming hardware atomicity.
 const char* coherenceName(t::SnapshotCoherence value) {
   switch (value) {
     case t::SnapshotCoherence::SEQUENTIAL: return "SEQUENTIAL";
@@ -211,6 +232,7 @@ const char* coherenceName(t::SnapshotCoherence value) {
   return "UNKNOWN";
 }
 
+// Convert known help topic keys to display titles; retain an unknown key unchanged.
 const char* sectionName(const char* topic) {
   if (std::strcmp(topic, "common") == 0) return "Common";
   if (std::strcmp(topic, "connection") == 0) return "Connection";
@@ -224,18 +246,21 @@ const char* sectionName(const char* topic) {
   return topic;
 }
 
+// Format a valid byte into caller storage; invalid evidence returns a static unknown token.
 const char* rawByte(uint8_t byte, bool valid, char (&buffer)[4]) {
   if (!valid) return UNKNOWN;
   std::snprintf(buffer, sizeof(buffer), "%u", static_cast<unsigned>(byte));
   return buffer;
 }
 
+// Fit a uint32 decimal count plus NUL, or return unknown without using the buffer.
 const char* optionalCount(uint32_t value, bool valid, char (&buffer)[11]) {
   if (!valid) return UNKNOWN;
   std::snprintf(buffer, sizeof(buffer), "%" PRIu32, value);
   return buffer;
 }
 
+// Borrow only a complete printable message within 256 bytes; otherwise use static fallback.
 const char* statusMessage(const char* message) {
   // An application target validator may supply text. Scan a fixed prefix and reject
   // control/non-ASCII bytes rather than echoing terminal controls or partial messages.
@@ -250,6 +275,7 @@ const char* statusMessage(const char* message) {
 }
 }  // namespace
 
+// Queue a whole correlated record from fixed storage; oversize formatting records output loss.
 void Cli::record(const Request& request, const char* type, const char* format, ...) {
   const int prefix = std::snprintf(_record, sizeof(_record),
       "TUSB %s schema=1 nonce=%s request=%" PRIu64, type, request.nonce, request.id);
@@ -279,6 +305,7 @@ void Cli::record(const Request& request, const char* type, const char* format, .
   _console.enqueue(_record, length);
 }
 
+// Format human output within one fixed record; the console rejects truncation and bad framing.
 void Cli::human(const char* format, ...) {
   va_list arguments;
   va_start(arguments, format);
@@ -288,6 +315,7 @@ void Cli::human(const char* format, ...) {
   else _console.enqueue(_record, static_cast<std::size_t>(length));
 }
 
+// Publish admission status and cached generations, with optional sanitized human diagnostics.
 void Cli::acknowledge(const Request& request, const Response& response) {
   const auto config = _driver.configurationSnapshot();
   record(request, "ACK", "command=%s code=%s detail=%" PRId32
@@ -318,6 +346,7 @@ void Cli::close(const Request& request, const t::Status& status, t::OperationTok
       t::errorName(status.code), status.detail, token.value, callbacks);
 }
 
+// Format the selected response view from cached values or explicit application observations.
 void Cli::payload(const Request& request, const Response& response) {
   const auto diagnostics = _driver.diagnostics();
   switch (response.payload) {
@@ -394,6 +423,7 @@ void Cli::payload(const Request& request, const Response& response) {
   }
 }
 
+// Publish supplied raw bytes and public decoder results; perform no register transfer here.
 void Cli::registerOutput(const Request& request, const Response& response) {
   const auto variant = std::strcmp(response.source, "write") == 0
       ? _driver.diagnostics().identity.variant : response.decoded.variant;
@@ -477,6 +507,7 @@ void Cli::healthOutput(const Request& request, const t::HealthSnapshot& health,
       resetName(diagnostics.resetState), health.evidence.consecutiveFailures);
 }
 
+// Emit copied trust, managed failures, identity, IRQ and all-callback totals without I2C.
 void Cli::diagnosticsOutput(const Request& request, const t::DriverDiagnostics& diagnostics,
     const t::TransportStats& stats) {
   record(request, "DIAG", "bound=%u initialized=%u configuration=%s effect=%s termination=%s reset=%s"
@@ -527,6 +558,7 @@ void Cli::jobOutput(const Request& request, const t::Status& status) {
       progress.waiting, progress.readyAtMs, progress.readyAtValid, progress.resultPending, _automatic);
 }
 
+// Format a supplied terminal result and original request correlation without consuming its slot.
 void Cli::resultOutput(const Request& request, const t::OperationResult& result) {
   const uint64_t origin = result.token.value == _operationToken.value ? _operationRequest.id : 0;
   record(request, "RESULT", "origin_request=%" PRIu64 " token=%" PRIu64
@@ -547,6 +579,7 @@ void Cli::resultOutput(const Request& request, const t::OperationResult& result)
       result.interrupt.pendingAfter, result.interrupt.pendingAfterValid);
 }
 
+// Announce the CLI-owned completion once, including on output loss; retain the core result.
 void Cli::announceCompletion(const TUSB32x::OperationResult& result) {
   if (_completionAnnounced || result.token.value != _operationToken.value) return;
   // Output loss never consumes the core slot or causes repeated terminal announcements.
@@ -555,12 +588,14 @@ void Cli::announceCompletion(const TUSB32x::OperationResult& result) {
   close(_operationRequest, result.status, result.token, result.transfers, result.state);
 }
 
+// Inspect only the CLI-owned retained token and publish a newly available completion.
 void Cli::announceCompletion() {
   if (!_operationToken.valid() || _completionAnnounced) return;
   t::OperationResult result;
   if (_driver.resultSnapshot(_operationToken, result).ok()) announceCompletion(result);
 }
 
+// Reserve whole-response space before an explicit take so backpressure cannot consume a result.
 void Cli::deliverResult(const Request& request, Response response) {
   t::OperationResult result;
   response.status = _driver.resultSnapshot(response.token, result);
@@ -583,6 +618,7 @@ void Cli::deliverResult(const Request& request, Response response) {
   close(request, response.status, response.token);
 }
 
+// Emit raw validity, generations, trust and mismatch evidence from one copied configuration.
 void Cli::configurationOutput(const Request& request, const t::ConfigurationSnapshot& snapshot) {
   char raw08[4], raw09[4], raw0a[4], raw45[4];
   record(request, "CONFIG", "raw_valid_mask=%u observed_valid_fields=%u has_desired=%u"
@@ -608,6 +644,7 @@ void Cli::configurationOutput(const Request& request, const t::ConfigurationSnap
       rawByte(snapshot.mismatchMask, snapshot.mismatchValid, mask));
 }
 
+// Keep staged, desired, observed and applied profiles tied to their own variant and valid fields.
 void Cli::profileOutput(const Request& request) {
   const auto snapshot = _driver.configurationSnapshot();
   configurationOutput(request, snapshot);
@@ -663,6 +700,7 @@ void Cli::profileOutput(const Request& request) {
   }
 }
 
+// Format valid cached port fields and rollover-safe age; retain unknown or stale evidence.
 void Cli::portOutput(const Request& request, const t::PortSnapshot& port, uint64_t nowMs) {
   const auto valid = [&port](t::PortField field) {
     return (port.validFields & static_cast<uint16_t>(field)) != 0;
@@ -697,6 +735,7 @@ void Cli::portOutput(const Request& request, const t::PortSnapshot& port, uint64
       coherenceName(port.coherence));
 }
 
+// Queue at most two help output attempts per owner turn while walking the fixed command table.
 void Cli::helpStep() {
   if (!_helpActive) return;
   std::size_t count = 0;

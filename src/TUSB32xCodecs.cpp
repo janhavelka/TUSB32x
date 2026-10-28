@@ -49,6 +49,8 @@ constexpr Attachment ATTACHMENTS[] = {Attachment::DETACHED, Attachment::LOCAL_SO
 constexpr PortMode MODES[] = {PortMode::FOLLOW_PORT_PIN, PortMode::UFP, PortMode::DFP,
                              PortMode::DRP};
 
+// Select whole semantic fields; includeAbsent detects unsupported requests
+// without presenting absent controls as actual observations.
 uint16_t registerFields(const detail::VariantInfo& info, uint8_t reg, bool includeAbsent = false) {
   const bool extended = info.hasExtendedControls || includeAbsent;
   switch (reg) {
@@ -66,6 +68,7 @@ uint16_t registerFields(const detail::VariantInfo& info, uint8_t reg, bool inclu
   }
 }
 
+// Settings images exclude commands and live status, even a reset read as one.
 uint8_t persistentMask(const detail::VariantInfo& info, uint8_t reg) {
   switch (reg) {
     case 0x08: return ADVERTISEMENT;
@@ -76,6 +79,7 @@ uint8_t persistentMask(const detail::VariantInfo& info, uint8_t reg) {
   }
 }
 
+// Distinguish absent controls from bytes with no persistent user settings.
 Status settingRegister(const detail::VariantInfo& info, uint8_t reg) {
   if (reg == 0x45 && !info.hasRdRp) {
     return Status::Error(Err::UNSUPPORTED_FEATURE, "Register is absent on the selected variant");
@@ -106,6 +110,7 @@ Status unknownEvidence() {
                        "Required actual control or sequence proof is absent");
 }
 
+// Reserved actual fields cannot prove a safe image for preserving controls.
 Status actualFields(const detail::VariantInfo& info, uint8_t reg, uint8_t value,
                     RegisterDecode& decoded) {
   const Status status = decodeRegister(info.variant, reg, value, decoded);

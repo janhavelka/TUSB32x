@@ -122,6 +122,17 @@ cmake --build build/native --config Debug
 ctest --test-dir build/native -C Debug --output-on-failure
 ```
 
+For maintainer validation, `python tools/validate.py --checks all` runs the
+declared local release checks: strict Debug/Release CTest groups, boundary and
+documentation guards, Python/session tests, clean packages and extracted S2/S3
+firmware links. It saves logs and partial verdicts under build/validation.
+Focused selections such as `--checks native,contracts,python` report only their
+requested scope. Missing required tools return INCOMPLETE, never a successful skip.
+See the source-checkout [validation guide](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md#local-validation-entry-point)
+for names, tool prerequisites and the explicit managed-IDF constraint-cache choice.
+No selection runs HIL, remote CI, flashing or publication. These maintainer tools
+are excluded from the package and are not consumer dependencies.
+
 Initialization reads identity and persistent settings without writing defaults,
 resetting, acknowledging IRQ or replaying a desired profile. The application
 serializes calls, supplies a uint64 millisecond clock and keeps each accepted

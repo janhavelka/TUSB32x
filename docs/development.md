@@ -87,8 +87,10 @@ ordinary CMake consumer.
 Run `doxygen Doxyfile` for public documentation under build/doxygen. The current
 configuration extracts documented public API and enables missing-comment,
 parameter, enum and documentation errors as failures. Source/example comments
-are included. The complete omission checker and its negative fixtures remain
-prompt 33 work; a warning-free generation alone does not prove visibility.
+are included. The source-checkout check_doxygen.py guard also verifies actual
+HTML/XML visibility, generated-file boundaries, helper comments and links, with
+real-parser negative fixtures. A warning-free generation alone cannot prove
+visibility; the guard rejects hidden public APIs and documentation suppressions.
 
 ## Package and ownership boundaries
 

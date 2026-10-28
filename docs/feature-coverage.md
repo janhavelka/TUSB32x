@@ -601,3 +601,16 @@ Package proof checks actual compiler header dependencies against extracted,
 fixture and toolchain roots. tusb32x_package_origins runs the complete positive
 consumer and rejects injected checkout and unrelated outside headers. Directory
 properties and translation-unit names alone cannot prove header provenance.
+
+## Local validation guards
+
+The source-checkout tools/validate.py selects disjoint native/contracts/doxygen/
+python/package CTest groups and explicit arduino/idf-s2/idf-s3 package image links.
+It checks actual inventory and JUnit execution, saves command logs and partial
+reports, and fails missing tools or unfinished scope. Boundary negative fixtures
+supplement independent headers and the allocation-sentinel consumer. Actual
+Doxygen plus HTML/XML visibility, helper comments and broken-reference negatives
+cover source documentation. Existing CLI parity, version, archive, session and
+transcript registrations are reused; runner modules are not discovered twice.
+See the repository-only [validation guide](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md#local-validation-entry-point).
+No validator selection invokes physical HIL, flashing, publication or remote CI.

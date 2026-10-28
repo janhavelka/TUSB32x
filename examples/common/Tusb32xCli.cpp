@@ -183,6 +183,7 @@ constexpr CommandRow ROWS[] = {
 bool equal(const char* a, const char* b) { return std::strcmp(a, b) == 0; }
 t::Status error(t::Err code) { return t::Status::Error(code, t::errorName(code)); }
 
+// Match one complete comma-separated alias; prefixes do not select commands.
 bool alias(const char* list, const char* word) {
   if (equal(list, "none")) return false;
   const std::size_t size = std::strlen(word);
@@ -196,12 +197,14 @@ bool alias(const char* list, const char* word) {
   return false;
 }
 
+// Resolve canonical names and aliases through the single fixed command table.
 const CommandRow* findRow(const char* name) {
   for (const auto& row : ROWS)
     if (equal(row.command, name) || alias(row.aliases, name)) return &row;
   return nullptr;
 }
 
+// Require bounded printable identity/correlation tokens without record delimiters.
 bool token(const char* text, std::size_t maxLength) {
   if (text == nullptr || *text == '\0') return false;
   for (std::size_t i = 0; i <= maxLength; ++i) {
@@ -213,11 +216,13 @@ bool token(const char* text, std::size_t maxLength) {
   return false;
 }
 
+// Reserve "none" and dots so client nonces remain unambiguous session identifiers.
 bool nonce(const char* text) {
   if (!token(text, 32) || equal(text, "none")) return false;
   return std::strchr(text, '.') == nullptr;
 }
 
+// Parse unsigned decimal or opt-in hex without overflow; preserve out on rejection.
 bool number(const char* text, uint32_t maximum, uint32_t& out, bool hex = false) {
   unsigned base = 10;
   if (hex && text[0] == '0' && (text[1] == 'x' || text[1] == 'X')) {
@@ -238,6 +243,7 @@ bool number(const char* text, uint32_t maximum, uint32_t& out, bool hex = false)
   return true;
 }
 
+// Accept only nonzero decimal uint64 owner tokens; never narrow them to CLI integers.
 bool operationToken(const char* text, t::OperationToken& out) {
   uint64_t value = 0;
   if (*text == '\0') return false;
@@ -252,6 +258,7 @@ bool operationToken(const char* text, t::OperationToken& out) {
   return true;
 }
 
+// Accept exact 0/1, plus on/off only for command fields that explicitly permit words.
 bool boolean(const char* text, bool& out, bool words) {
   if (equal(text, "1") || (words && equal(text, "on"))) out = true;
   else if (equal(text, "0") || (words && equal(text, "off"))) out = false;
@@ -259,11 +266,13 @@ bool boolean(const char* text, bool& out, bool words) {
   return true;
 }
 
+// Restrict enable controls to the documented on/off grammar.
 bool enabled(const char* text, bool& out) {
   if (!equal(text, "on") && !equal(text, "off")) return false;
   return boolean(text, out, true);
 }
 
+// Map exact lower-case part names to the public variant enum without probing hardware.
 bool variant(const char* name, t::Variant& out) {
   constexpr const char* NAMES[] = {"tusb320", "tusb320i", "tusb320li", "tusb320hi",
       "tusb320lai", "tusb320hai", "tusb322i"};
@@ -276,6 +285,7 @@ bool variant(const char* name, t::Variant& out) {
   return false;
 }
 
+// Split one bounded ASCII line into at most 12 tokens of 32 bytes; reject truncation.
 bool tokenize(const char* line, char (&tokens)[12][33], std::size_t& count) {
   count = 0;
   std::size_t size = 0;
@@ -299,6 +309,7 @@ bool tokenize(const char* line, char (&tokens)[12][33], std::size_t& count) {
   return false;
 }
 
+// Saturate local generations so an increment cannot wrap to an older visible value.
 void increment(uint32_t& value) {
   if (value != std::numeric_limits<uint32_t>::max()) ++value;
 }
@@ -389,6 +400,7 @@ bool Cli::printHelp(const char* topic) {
   return processCommand(line);
 }
 
+// Combine pure core validation with the optional application-owned target check.
 t::Status Cli::validateTarget(const t::DriverConfig& config) const {
   const auto status = t::validateDriverConfig(config);
   if (!status.ok()) return status;
@@ -400,6 +412,7 @@ t::Status Cli::validateTarget(const t::DriverConfig& config) const {
   return backend;
 }
 
+// Reject edits while bound/busy or while a changed target would discard unresolved effects.
 t::Status Cli::targetEditable(bool changing) const {
   const auto progress = _driver.progress();
   const auto diagnostics = _driver.diagnostics();
@@ -413,6 +426,7 @@ t::Status Cli::targetEditable(bool changing) const {
   return t::Status::Ok();
 }
 
+// Publish a valid CLI-only candidate and advance its generation; perform no device work.
 t::Status Cli::stage(const t::DeviceProfile& candidate) {
   const auto status = t::validateProfile(_config.variant, candidate);
   if (!status.ok()) return status;
@@ -435,6 +449,7 @@ t::Status Cli::assertCounters(const t::TransportStats& stats, uint32_t attempts,
   return t::Status::Ok();
 }
 
+// Stop admission at request-ID exhaustion rather than reuse a correlation identity.
 bool Cli::sessionAvailable() {
   if (_lastRequest == std::numeric_limits<uint64_t>::max()) {
     _exhausted = true;
@@ -444,6 +459,7 @@ bool Cli::sessionAvailable() {
   return true;
 }
 
+// Retain the terminal session notice until one complete output record can be queued.
 void Cli::sessionNotice() {
   // Preserve the reason across output loss. Retry only after capacity returns;
   // repeated zero-write turns must not generate an unbounded stream of losses.
@@ -451,6 +467,7 @@ void Cli::sessionNotice() {
     _sessionNoticePending = !_console.enqueue(SESSION_EXHAUSTED, sizeof(SESSION_EXHAUSTED) - 1);
 }
 
+// Allocate one request ID, validate the complete line and frame its bounded response.
 void Cli::execute(const char* line, bool poisoned) {
   Request request{};
   request.id = ++_lastRequest;
@@ -474,6 +491,7 @@ void Cli::execute(const char* line, bool poisoned) {
   if (!response.deferred) close(request, response.status, response.token, response.callbacks);
 }
 
+// Check command-specific arity and values before routing one core action or local edit.
 Cli::Response Cli::dispatch(char (&tokens)[12][33], std::size_t count, Request& request) {
   Response response{};
   const auto invalid = [&]() {

@@ -9,6 +9,7 @@ bool isBase(Variant variant) {
   return variant == Variant::TUSB320 || variant == Variant::TUSB320I;
 }
 
+// Reject unknown enum casts before selecting an address or capability rule.
 bool isValidVariant(Variant variant) {
   switch (variant) {
     case Variant::TUSB320:

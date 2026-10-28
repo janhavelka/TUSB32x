@@ -27,10 +27,13 @@ constexpr size_t MAX_READ_BYTES = 11;
 constexpr uint8_t IDENTITY_320[] = {0x30, 0x32, 0x33, 0x42, 0x53, 0x55, 0x54, 0x00};
 constexpr uint8_t IDENTITY_322[] = {0x32, 0x32, 0x33, 0x42, 0x53, 0x55, 0x54, 0x00};
 
+// Saturation preserves exhausted evidence instead of wrapping to a small count.
 void increment(uint32_t& value) {
   if (value != std::numeric_limits<uint32_t>::max()) ++value;
 }
 
+// Accept only terminal transport statuses, preserving native detail even when
+// the backend incorrectly returns an owner or validation code.
 Status normalize(Status status) {
   switch (status.code) {
     case Err::OK:
@@ -46,6 +49,7 @@ Status normalize(Status status) {
   }
 }
 
+// Local binding/source/budget rejections do not count as transfers.
 Status validateRequest(const ProtocolContext& context, TrafficSource source,
                        uint64_t remainingMs) {
   const Status configStatus = validateDriverConfig(context.config);
@@ -59,6 +63,7 @@ Status validateRequest(const ProtocolContext& context, TrafficSource source,
   return Status::Ok();
 }
 
+// Accept a documented contiguous range without probing holes or absent controls.
 Status validateRange(const VariantInfo& info, uint8_t reg, size_t length) {
   if (length == 0 || length > MAX_READ_BYTES) {
     return Status::Error(Err::INVALID_PARAM, "Read length must be 1..11 bytes");
@@ -78,6 +83,7 @@ Status validateRange(const VariantInfo& info, uint8_t reg, size_t length) {
   return Status::Error(Err::INVALID_PARAM, "Read crosses or selects an unmapped register");
 }
 
+// Map/access permission is separate from persistent-bit composition safety.
 Status validateWrite(const VariantInfo& info, uint8_t reg) {
   if ((reg == RD_RP_REGISTER && !info.hasRdRp) ||
       (reg == REVISION_REGISTER && !info.hasRevision)) {

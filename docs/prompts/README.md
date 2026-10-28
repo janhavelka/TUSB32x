@@ -25,6 +25,11 @@ physical fixture qualification remains NOT RUN.
 Prompt31 completes reset-termination, fault and console plans with explicit
 action authorization, retained failure/effect evidence and fresh reconnect framing.
 
+Prompt32 proves bounded safe archives and clean renamed package consumers,
+including extracted Arduino/native-IDF image links. Prompt33 adds the explicit
+local validation entry point, disjoint registrations and real checker failure
+fixtures. These software checks do not imply physical fixture qualification.
+
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split
 follows dependencies and independently testable outcomes, not equal text lengths.

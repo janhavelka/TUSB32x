@@ -36,9 +36,21 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Sixty-five runtime CTests are registered on all hosts, plus
+active in Release. Seventy-one runtime CTests are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
+
+Use `python tools/validate.py --checks all` for the declared local release scope.
+Accepted names are native, contracts, doxygen, python, package, arduino, idf-s2
+and idf-s3; comma-separated subsets label their narrower scope. CTest ownership
+labels are disjoint: adding a suite requires assigning it to one group. Do not
+run unittest discovery over the HIL modules: the existing hil_runner registration
+already loads those modules once. The validator checks inventory and actual JUnit
+execution counts; a missing group, disabled test or zero execution fails.
+See [validation prerequisites and exits](docs/validation.md#local-validation-entry-point).
+Run focused malformed-input fixtures first, then the combined entry point; avoid
+immediately repeating its full suite through a second wrapper. HIL and remote CI
+are never selected here. Missing build tools leave the requested scope incomplete.
 The simulated ordinary host consumer is also a runtime CTest. Generic owner
 cases use public APIs and externally serialized callbacks; keep FieldCore paths
 as read-only evidence, never build dependencies. See [integration](docs/integration.md).

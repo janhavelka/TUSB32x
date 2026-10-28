@@ -1,5 +1,13 @@
 # Native core, local CLI, console, transcript and version checks
 
+`python tools/validate.py --checks all` is the source-checkout entry point for
+local release checks. It owns the Debug/Release CTest runs and extracted firmware
+links; focused `--checks native,contracts,python` selects only those groups.
+The [validation guide](../docs/validation.md#local-validation-entry-point) lists
+tools, exits and evidence paths. All 72 Windows registrations (71 elsewhere)
+have finite timeouts and exactly one validation owner. Compile-only header
+fixtures remain build evidence. HIL is never selected by this command.
+
 Prompts 5-8 provide real value/Status, validator and version checks, syntax-only planned
 methods/owner examples, compile-time specification arithmetic and a library build.
 Prompt 9 adds private terminal transport and exact identity/revision checks.
@@ -348,7 +356,9 @@ Run current version/documentation checks with `python scripts/generate_version.p
 and `doxygen Doxyfile`; output stays under build/doxygen. Inspect XML/HTML for all
 17 public structs, the owner class and methods, binding/profile/health validators, projectHealth, decodeRegister and
 four generated version constants.
-The complete omission checker and negative fixtures remain prompt 33 work.
+The complete omission guard is `python tools/check_doxygen.py`; its actual-parser
+negative fixtures and public/helper/HTML/XML visibility checks run through the
+doxygen validation group. Missing required tools leave validation incomplete.
 
 For source documentation, prompt 5 also ran Doxygen directly with a temporary
 configuration: INPUT=include/TUSB32x, RECURSIVE=YES, EXTRACT_ALL=NO,

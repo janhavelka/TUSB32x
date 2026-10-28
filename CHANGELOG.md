@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- One local validation entry point with explicit check ownership, saved logs,
+  finite child deadlines and failed/incomplete/interrupted verdicts. Registered
+  boundary, real-Doxygen and validator negative fixtures prove checker failures;
+  extracted Arduino/native-IDF links reuse the existing package consumer.
+  Private helper and non-copyable-owner documentation omissions are corrected.
+
 - Literal matching PlatformIO/IDF package lists, bounded archive validation and
   hostile-path/type/collision/size tests. Clean renamed archive consumers compile,
   link and run the public cooperative API with tests OFF and no maintainer tools.

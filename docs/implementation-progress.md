@@ -2435,3 +2435,86 @@ runner readiness and compiler dependency guards add no scheduler or product poli
 The lead reviews/stages/commits and syncs this audited unit on the same branch,
 verifying fetched upstream equality,0ahead/behind and no remaining task edits.
 Record the completed audit commit in the next progress entry, avoiding a hash loop.
+
+## Prompt33 - local validation and checker failure evidence
+
+Starting revision c71e7ca4997a244359e43a3fd0047071de1ce0e8 completes the prompts31/32
+audit. Fetch confirmed equal upstream and0ahead/behind on the same
+promptset/tusb32x-implementation-20261023 branch; worktree/index were clean.
+Read the original prompt33, COMMON, parent/local AGENTS, AGENT_WORKFLOW,
+MAINTAINABILITY, verification/package rules and actual CMake/CTest/guards first.
+Initial inventory had66finite tests, one built-fixture cli_transcript and one
+hil_runner that already loads six related modules. No workflow exists yet here;
+remote CI remains prompt34 work and was not queried.
+
+Fresh read-only peers: TMP1x2 bafc34067530eb340e55c42dae3fad4eb795b6e9,
+24Cxx936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e,
+OPT4001dab818e575fc25a0949d962bc0df600eb2ed5200,
+LDC16141db38b63cb93a561b6e0bea51017ab94102ebd24 and
+MCP45HVX1c6c7feefd79b9fc16ddc7b7786ad187e5185fde6; all clean.
+Read their AGENTS, checked-in CI and actual TMP boundary/Doxygen/version guards
+and tests,24Cxx transcript registration, OPT package/timing/Doxyfile and MCP
+tools/validate.py. Adopt finite real parser/HTML/XML checks, sys.executable,
+argument lists, the existing managed launcher and single transcript registration.
+Reject EXTRACT_ALL/warning suppression, small hardcoded public-type inventories,
+successful missing-tool SKIPs, unbounded subprocesses and duplicate full suites.
+
+Delegation used general gpt-6.1-sol/high owners for the Doxygen guard/fixtures,
+boundary guard/fixtures and CLI helper comments, and version/registration review
+plus extracted firmware helper/fixtures. Shared interfaces and write scopes were
+fixed; lead owns validator, CMake, public/core comments, docs and all Git.
+A separate gpt-6-astra/high reviewer checks verdict/ownership and hidden APIs.
+Version review found the existing18tests already cover sync/check/bump/set,
+malformed values, each drift field, idempotent bytes/mtimes and no-parent-Git;
+no duplicate suite or release bump is needed.
+
+Implemented one validate.py entry point, explicit disjoint CTest labels,
+inventory/actual JUnit checks, finite children, saved partial reports and explicit
+native/contracts/doxygen/python/package/arduino/idf-s2/idf-s3 selections. The
+firmware path packs once, reuses the hardened package consumer, then links the
+extracted shared sources. No HIL, serial probing, flashing, publishing or CI action
+is reachable. Static boundaries supplement the existing allocation traps and
+independently included headers. New real Doxygen checks exposed missing helper
+comments and deleted copy/move member docs; these are fixed with no C++ behavior
+change. Independent negative review also closes public hiding through Doxygen
+access/append/predefinition settings instead of trusting warning-free output.
+
+Focused negative suites are being run before the combined local validation.
+Exact final commands/results and firmware evidence will be appended after
+execution; missing physical/alternative-toolchain evidence remains separate.
+
+Prompt33 implementation and local verification are complete. New registrations
+bring the inventory to72on Windows/71elsewhere, with finite bounds and disjoint
+ownership. Focused negatives pass:37contracts,28real-Doxygen,15validator and17
+firmware cases; unchanged version18cases pass. Independent strong review's
+hidden-API, explicit-tool, interpreter, registration and output-path findings
+are fixed and verified against actual code/fixtures. Eight production/example
+C++files changed comments only, with identical executable tokens.
+
+Both strict Debug and Release execute72/72PASS through the corrected entry
+point, including the existing311-case runner and live C++ transcript. The first
+full invocation retained a real relative-build-tool failure and drove absolute
+tool resolution before CMake. The corrected full invocation's final native-S3
+SDK LCD compilation then hit a GCC internal segmentation fault; its report
+correctly stays FAIL. A separately selected S3 run passed with identical76-file
+payload, SDK/compiler/flags; the other5image checks passed in that full run.
+All final6ELF/BIN/map records were independently rehashed, with11extracted
+project sources each, actual used-header origins, native APIs/noArduino,
+unknown Git identity and distinct absolute SDKCONFIG/locks. No automatic retry,
+weakened flag, SDK pin change or rewritten failure verdict was introduced.
+
+Actual commands, reports, archive hashes, paths, versions and the intermittent
+compiler limitation are in [validation](validation.md#prompt33-execution-2026-10-28).
+Full evidence: build/validation/run-u1bhwqzn; explicit S3 evidence:
+build/validation/run-llfyeh3g. No single full-run PASS is claimed for the compiler
+failure; all required individual software checks have positive evidence. Final
+version/Doxygen/Markdown/Python format and scoped whitespace checks pass.
+All76exported payload bytes remain equal to the built extractions; no new core
+consumer dependency or package-content change was introduced.
+
+Physical serial/I2C/CC/INT/power/timing remains NOT RUN. Other host compilers/
+sanitizers retain their documented tool gaps. Remote CI was not queried or
+dispatched; no hardware, flashing or publication action occurred. The lead
+reviews/stages this coherent unit, commits and syncs the same execution branch,
+and reports final commit/upstream equality in the handoff. Record that completed
+commit in the next progress update, avoiding a self-reference commit loop.

@@ -866,3 +866,22 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   source/include properties and compile_commands omit absolute header imports.
   Accept only extracted/fixture headers or detected compiler/SDK include roots,
   and prove rejection with complete injected-header consumer builds.
+
+## Local validation ownership and evidence
+
+- One CTest validation label owns each registration. The validator reads actual
+  JSON inventory and actual JUnit outcomes, rejects omitted/disabled/zero tests,
+  and runs each selected group once per selected configuration. HIL unit modules
+  remain under their single existing load_tests registration.
+- `all` includes the declared local host/guard/package and extracted firmware
+  rows, with Debug and Release host checks by default. Focused selections and
+  narrower configurations report only their scope. Unavailable tools and pending
+  checks are incomplete; failed work is never erased by later success.
+- Documentation warnings and XML presence alone cannot prove public visibility.
+  Check generated HTML anchors, source visibility and deliberate omissions too.
+  Generated Version.h remains visible and documented; its bytes/version truth
+  belong to the existing generator fixture suite.
+- Example image validation reuses one managed archive/extraction rather than a
+  second source-checkout matrix. Installed SDK requirements are checked; the
+  existing managed-IDF standalone constraint-cache waiver is explicit and saved.
+  Linked images, host models and physical connector/serial evidence stay distinct.

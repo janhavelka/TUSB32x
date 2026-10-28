@@ -37,6 +37,8 @@ bool TUSB32x::unresolved() const {
       _configuration.resetState == ResetState::MAY_BE_PENDING;
 }
 
+// Revoke write images and dependent port usability, retaining raw history and
+// desired settings for explicit later reconciliation.
 void TUSB32x::invalidateConfiguration() {
   _rdRpWriteImageValid = false;
   _modeWriteImageValid = false;
@@ -47,6 +49,8 @@ void TUSB32x::invalidateConfiguration() {
   _port.invalidated = true;
 }
 
+// End/invalidation also revokes initialization; results and historical effects
+// remain available to the serialized owner.
 void TUSB32x::invalidateUsability() {
   _rdRpWriteImageValid = false;
   _modeWriteImageValid = false;
@@ -60,6 +64,8 @@ void TUSB32x::invalidateUsability() {
   _port.invalidated = true;
 }
 
+// Clear the old association after ownership gates, without resetting hardware
+// or erasing transport totals.
 void TUSB32x::clearTarget() {
   _configuration = {};
   _port = {};
@@ -93,6 +99,7 @@ Status TUSB32x::bind(const DriverConfig& config) {
   return Status::Ok();
 }
 
+// Reject stale/malformed instance-local tokens without consuming any evidence.
 Status TUSB32x::checkToken(OperationToken token) const {
   if (!token.valid()) return error(Err::INVALID_PARAM);
   if (!_progress.token.valid()) return error(Err::RESULT_NOT_AVAILABLE);
@@ -100,6 +107,8 @@ Status TUSB32x::checkToken(OperationToken token) const {
   return Status::Ok();
 }
 
+// Publish one retained terminal outcome with transport detail and conservative
+// effects. Completion neither rolls back writes nor consumes the result slot.
 Status TUSB32x::finish(Status status, bool timeValid, uint64_t nowMs) {
   if (_configuration.state == ConfigurationState::APPLYING) invalidateConfiguration();
   if (status.ok() && (_progress.kind == OperationKind::APPLY_PROFILE ||
@@ -223,6 +232,8 @@ Status TUSB32x::startRecoverDeadBattery(const OperationTiming& timing, Operation
   return startOperation(OperationKind::RECOVER_DEAD_BATTERY, timing, token);
 }
 
+// Admit bus-silent work with an immutable deadline and one instance-local token;
+// only the shared poll path advances transport.
 Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing,
                                OperationToken& token, const DeviceProfile* candidate) {
   const uint64_t interval = timing.deadlineMs - timing.nowMs;
@@ -327,6 +338,8 @@ Status TUSB32x::startOperation(OperationKind kind, const OperationTiming& timing
   return error(Err::IN_PROGRESS);
 }
 
+// Plan at most six writes from proved actual settings, changing requested fields
+// only; sequence permission remains with the owner engine.
 Status TUSB32x::planProfile(const DeviceProfile& candidate, ProfileWrite (&writes)[6],
                           uint8_t& count, bool& baseMode) const {
   const auto& info = *detail::findVariant(_config.variant);
@@ -428,6 +441,7 @@ Status TUSB32x::planProfile(const DeviceProfile& candidate, ProfileWrite (&write
   return Status::Ok();
 }
 
+// After writes/waits, require a complete fresh observation before trusting apply.
 void TUSB32x::beginApplyProof() {
   _phase = Phase::IDENTITY;
   _progress.phase = OperationPhase::READING;
@@ -436,6 +450,8 @@ void TUSB32x::beginApplyProof() {
   _waitMode = _diagnostics.modeTransitionUnresolved;
 }
 
+// Publish completed signature/revision evidence without inventing polarity or
+// losing an earlier complete revision when a later proof phase fails.
 void TUSB32x::publishIdentityRead() {
   auto& identity = _diagnostics.identity;
   if (_phase == Phase::IDENTITY) {
@@ -456,6 +472,7 @@ void TUSB32x::publishIdentityRead() {
   }
 }
 
+// Advance the fixed profile-observation plan from one completed scratch read.
 void TUSB32x::acceptRead() {
   // Fixed F plan: TI SLLSEN9F Table 7-7 pp16-19; SLLSEP2D/SLLSEQ8D
   // Tables 7-12 pp16-20; SLLSEO5D Tables 6-6..6-11 pp17-20.
@@ -507,6 +524,8 @@ void TUSB32x::acceptRead() {
   }
 }
 
+// Partial observations may revoke existing proof, but cannot repair whole
+// configuration trust or certify historical mode/reset/recovery sequences.
 void TUSB32x::observeControl(uint8_t reg, uint8_t value) {
   // SLLSEO5D Table6-10 p20: DRP00/11 are semantically equivalent, but composing
   // from the older byte would silently recode MODE_SELECT. Keep profile trust
@@ -553,6 +572,8 @@ void TUSB32x::observeControl(uint8_t reg, uint8_t value) {
   }
 }
 
+// Compare semantic persistent fields, retaining the first raw mismatch; live
+// status and IRQ bits do not participate in profile equality.
 Status TUSB32x::compareObservedProfile(const DeviceProfile& expectedProfile) {
   const auto& info = *detail::findVariant(_config.variant);
   const uint8_t registers[] = {0x08, 0x09, 0x0A, 0x45};
@@ -581,6 +602,8 @@ Status TUSB32x::compareObservedProfile(const DeviceProfile& expectedProfile) {
   return Status::Ok();
 }
 
+// Publish completed observation, validity, trust and unresolved sequence facts
+// separately. A readback cannot erase historical recovery uncertainty.
 Status TUSB32x::publishConfiguration() {
   const auto& info = *detail::findVariant(_config.variant);
   const uint16_t applicable = static_cast<uint16_t>(info.hasExtendedControls ?

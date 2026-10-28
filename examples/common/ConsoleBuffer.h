@@ -153,6 +153,7 @@ class ConsoleBuffer {
   }
 
  private:
+  // Copy a caller-checked whole record across at most two ring-buffer spans.
   void append(const char* data, std::size_t length) {
     const std::size_t tail = (_head + _used) % OUTPUT_CAPACITY;
     const std::size_t first = length < OUTPUT_CAPACITY - tail ? length : OUTPUT_CAPACITY - tail;
@@ -161,6 +162,7 @@ class ConsoleBuffer {
     _used += length;
   }
 
+  // Queue cumulative loss evidence only when its complete fixed-size record fits.
   void queueLossMarker() {
     if (!_lossPending) return;
     // Counts are cumulative; this marker is deliberately independent of command correlation.

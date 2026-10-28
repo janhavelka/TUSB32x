@@ -3660,3 +3660,144 @@ Final documentation consistency after the audit evidence was written:136Markdown
 files/834local or own-source links/anchors PASS; all173archived guide links still
 resolve. Final Git whitespace and changed-module docstring/format checks pass.
 No exported payload changed after the audited archive was frozen.
+
+## Local validation entry point
+
+From a source checkout, use:
+
+```text
+python tools/validate.py --checks all
+python tools/validate.py --checks native,contracts,python --configs Debug
+```
+
+The first command requests all declared local non-HIL release checks in Debug
+and Release. The second reports focused scope. CMake/CTest 3.21+ (for execution
+JUnit), Python 3.10+, a C++17 compiler and the selected generator's build tool
+are maintainer requirements. Ordinary tests-OFF consumers still need only CMake
+3.16+ and a C++17 compiler. Supported GNU/Clang/MSVC warnings and Release runtime
+assertions are preserved.
+
+| --checks name | Owned execution |
+| --- | --- |
+| native | Runtime core/variant/protocol/owner/port/diagnostics, CLI/console and SDK/application recording fixtures |
+| contracts | Compile-contract runtime, isolated allocation-sentinel consumer, existing real CLI parity and its broken fixtures, static core/include/metadata/source-list guard and negatives |
+| doxygen | Actual strict Doxygen plus public HTML/XML visibility, generated-file/input boundaries, helper comments and links; real malformed-document fixtures |
+| python | Existing version suite, single session/plan suite, single live C++ transcript, example configuration and launcher fixtures, validator and firmware-guard tests |
+| package | Existing archive safety, renamed clean tests-OFF consumer and complete outside-header rejection consumers |
+| arduino | Four extracted-package basic/owner ESP32-S2/S3 links using the existing managed Core and pinned pioarduino55.03.311/Arduino3.3.11 |
+| idf-s2 / idf-s3 | Genuine extracted native CLI links for the respective target, audited ESP-IDF5.5.5, independent absolute build/SDKCONFIG paths |
+
+Selections are comma-separated, deduplicated and explicit. `all` cannot be mixed
+with other names. Every CTest has one validation label and a finite timeout;
+unknown/missing groups, disabled tests, duplicate names and zero tests fail.
+Each group executes once per selected configuration; native plus python never
+duplicates a registration. The same fixture path supplied by CMake drives CLI
+transcripts and parity. The HIL unit suite loads its existing modules once;
+there is no second discovery wrapper. All build configurations compile the
+independent-header object target, which is not a behavioral CTest.
+
+Each invocation creates build/validation/run-*/ with command logs, actual CTest
+inventory/JUnit and atomically replaced report.json. A completed focused run is
+not full release evidence. Failed children and timeouts return 1; unavailable
+tools, invalid invocation or unfinished requested scope return 2; interruption
+saves completed/failed evidence and pending work, returning 130. Exit 0 requires
+all requested checks, including nonzero executed tests. A later successful or
+unavailable check cannot erase an earlier failure. Logs preserve the exact child
+arguments and signed exit codes. Host commands have a finite --timeout (default
+900s); tests also have their own limits. Firmware builds have 1800s per row,
+bounded saved output, and a finite aggregate validator bound.
+
+Firmware checks pack once with scripts/pio.cmd, then reuse check_package.py's
+hardened extraction and clean consumer. They link only the renamed extraction,
+inspect ELF/BIN/map files and required symbols, compiler header dependencies,
+unknown archive Git identity and native configuration isolation. The helper
+does not install another PlatformIO Core. Set PLATFORMIO_CORE_DIR or --core-dir
+to the existing package store. Optional --idf-path and --idf-python identify an
+existing audited SDK/environment; SDK Python is a framework tool, while all
+maintainer/test Python children use sys.executable. If that SDK has no standalone
+constraint cache, the default result is INCOMPLETE. The explicit
+--accept-missing-idf-constraints choice permits its documented constraint-cache
+waiver while still checking installed SDK Python requirements; the report saves
+that choice. No dependency/tool pin changes are implied.
+
+Run malformed-input fixtures before a full validation when changing a guard:
+
+```text
+python tools/test_validate.py -v
+python tools/test_check_contracts.py -v
+python tools/test_check_doxygen.py -v
+python tools/test_check_firmware.py -v
+```
+
+The guard commands are `python tools/check_contracts.py` and
+`python tools/check_doxygen.py`; the latter accepts --doxygen and --out. Their
+negative fixtures must fail for their broken inputs, not silently SKIP.
+Static boundary checks supplement runtime allocation/portability evidence.
+Documentation checks use real parser warnings and independently test visibility;
+they do not enable EXTRACT_ALL or suppress missing documentation. The unchanged
+version fixture suite owns sync/check/bump/set drift and stable generation.
+Archive and linked firmware evidence remain separate from physical qualification.
+No selection contacts remote CI, enumerates/opens serial ports, flashes hardware,
+publishes a package or runs fixture actions. Prompt34 owns remote matrix proof.
+
+### Prompt33 execution, 2026-10-28
+
+Focused guard fixtures ran before combined validation:37boundary cases,
+28real-Doxygen cases,15validator cases and17firmware-inspection cases pass.
+The existing18version cases needed no changes. Independent review reproduced
+and fixed silent public API hiding through @private, appended EXCLUDE_SYMBOLS
+and preprocessing; each now fails its real-parser fixture. Explicit Doxygen
+executable propagation, Python interpreter selection, missing registration
+families and unusable output paths also have checked corrections. All8C++
+file changes preserve executable tokens; only documentation changed.
+
+| Check / actual command | Result / retained evidence |
+| --- | --- |
+| python tools/validate.py --checks all --accept-missing-idf-constraints | First run-y4c5xv2m correctly FAIL: relative Ninja path broke isolated consumers. Tool paths now resolve before configuration; regression assertion added. This run nevertheless linked and inspected6images. Its failed report remains unchanged. |
+| Same full command after correction | run-u1bhwqzn: strict Debug72/72 and Release72/72 PASS; each has53native,6contracts,2Doxygen,8Python and3package registrations. Overall report correctly remains FAIL because the final native-S3 SDK compilation crashed; details below. |
+| python tools/validate.py --checks idf-s3 --accept-missing-idf-constraints | run-llfyeh3g: focused PASS/exit0, genuine S3 link and artifact checks. The corrected full run's other5image checks passed. All76payload files are identical between these extractions and current source. No failed report was rewritten into PASS. |
+| Latest registration/JUnit verification | Both actual inventories and all10JUnit group files pass current registration/execution checks;72unique, finite, enabled tests per configuration, one owner each. |
+| Session and live CLI evidence | The single hil_runner runs311cases (66.088s Debug/65.886s Release); single built-fixture cli_transcript passes in both configurations. No serial port or fixture action is invoked. |
+| Version / documentation / formatting | Existing version18cases pass; no-op sync/check preserves bytes/mtimes. Real Doxygen1.13.2 checks36C++files with visible HTML/XML and helper comments.136Markdown files/840local or own-source links/anchors;173package links. All8new Python modules have complete docstrings,100-column lines, UTF-8/LF and clean whitespace. |
+
+Commands and logs are under build/validation/{run-y4c5xv2m,run-u1bhwqzn,
+run-llfyeh3g}. Each has its own report.json, command logs and package evidence;
+the full host runs retain actual inventory and JUnit files. Framework output
+contains exact build/probe argument lists and selected environment in
+*.command.json, per-row logs, compiler dependency evidence and hashed artifacts.
+The lead independently rehashed the final6image records and verified their11
+extracted project sources each, native symbols/no-Arduino, unknown Git identity
+and separate absolute SDKCONFIG/lock files. The3package registrations execute
+safety, clean tests-OFF linkage and outside-header rejection consumers in both
+host configurations. No maintainer tools leak into those consumer PATHs.
+
+The native-S3 failure was Xtensa GCC14.2.0's internal compiler segmentation fault
+in unchanged SDK esp_lcd/rgb/esp_lcd_panel_rgb.c:722 during the IRA pass, after
+the previous six-image run had passed. The separately requested S3 rerun passed
+with the same SDK/compiler/flags and identical input payload. This is retained
+as an intermittent toolchain failure, not suppressed or automatically retried.
+No single full-validator PASS is claimed for that failed invocation; final
+individual host/package/guard and six-image proof is available across the full
+and explicitly focused runs. No compiler flags, assertions, pins or gates were
+weakened to obtain the later link.
+
+Full-run archive SHA256:
+`82a4244ee583571ad81f5a60eb0c9b46d2d7ad19de7f23cbc880ae1251646c4a`;
+extraction C:/Users/Honza/AppData/Local/Temp/package-3h5z6s35/renamed-tusb32x.
+Focused S3 archive SHA256:
+`82fd60471a7028259d545c1fc625b6eb712094f958b9fc51b4619c7520769368`;
+extraction C:/Users/Honza/AppData/Local/Temp/package-uy6atcds/renamed-tusb32x.
+Each has76source-equal files; differing archive metadata does not change the
+stable library header or any payload byte. No source-checkout firmware matrix
+was duplicated. The new validator and guard tooling remain outside packages.
+
+Fresh tool probes: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1,
+GNU15.1.0 MinGW UCRT/MCF, Doxygen1.13.2, Git2.52.0.windows.1 and managed
+PlatformIO6.1.19. Existing firmware pins remain pioarduino55.03.311,
+Arduino3.3.11 and ESP-IDF5.5.5; native tools are CMake4.0.3, Ninja1.13.1,
+Python3.12.10 and Xtensa14.2.0 esp-14.2.0_20260121. The explicit constraint-cache
+waiver is saved; installed SDK Python requirements still pass their own preflight.
+Other host compilers and unavailable MinGW sanitizer runtimes retain earlier
+NOT RUN limits. Physical serial/I2C/CC/INT/supply/timing remains NOT RUN; remote
+CI belongs to prompt34 and was not contacted. No tags, registry or release was
+published. Git commit/sync evidence is reported in the prompt handoff.

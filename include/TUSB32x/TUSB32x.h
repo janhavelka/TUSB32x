@@ -386,9 +386,13 @@ class TUSB32x {
   TUSB32x() = default;
   /// @brief Release locally without callbacks; consume results before destruction if needed.
   ~TUSB32x() = default;
+  /// @brief Copying is forbidden: tokens, borrowed binding and evidence have one owner.
   TUSB32x(const TUSB32x&) = delete;
+  /// @brief Copy assignment is forbidden to preserve instance-local operation ownership.
   TUSB32x& operator=(const TUSB32x&) = delete;
+  /// @brief Moving is forbidden: active work and retained tokens stay with this instance.
   TUSB32x(TUSB32x&&) = delete;
+  /// @brief Move assignment is forbidden to preserve binding and result lifetimes.
   TUSB32x& operator=(TUSB32x&&) = delete;
   /// @brief Validate then atomically copy a binding; zero callbacks and fixed work.
   /// @param[in] config Borrowed callbacks/context and copied exact variant/address/timeout.
