@@ -50,6 +50,8 @@ the same core to that CLI. No framework dependency enters the core target.
 | examples/common/Tusb32xCli.h/.cpp, Tusb32xCliOutput.cpp and ConsoleBuffer.h | Example-only dispatcher/staging, fixed output/help and bounded console; bus-silent admission and one core poll in tick, injected platform hooks, no framework dependency or second result store |
 | test/cli/test_cli.cpp, cli_host.cpp, test/console/test_console.cpp and tools/test_cli_transcript.py | Registered local CLI/console behavior and Python-to-persistent-real-C++ transcript; fixture executable is not itself a behavioral CTest |
 | tools/tusb32x_cli_contract.py | Frozen implemented rows and typed record parsing; behavioral parity executes actual help |
+| tools/tusb32x_hil_runner.py | Borrowed terminal serial I/O, single-deadline framing, firmware identity and one owned original operation; read-only session CLI, no hardware test plans |
+| tools/tusb32x_hil_artifacts.py | Streamed bounded capture, fixed tail, independent outcomes and atomic JSON/Markdown checkpoints |
 | test/cli/test_cli_operations.cpp, test_cli_diagnostics.cpp | Managed timing/result ownership plus raw safety/accounting, decode/health and literal device effects; parts of the existing CLI suite |
 | tools/check_cli_contract.py | One executed command/alias/help parity checker, shared help comparison for transcript, and deliberately broken-contract checks |
 | examples/host/basic/ | Standalone two-TU simulated owner; public bind/start/poll/take, apply, external invalidation/reconcile, copied port evidence and explicit end |

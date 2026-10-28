@@ -86,6 +86,12 @@ and a two-device fairness/lifetime fixture, without FieldCore dependencies. If n
 sources as a component. Registration and dependency admission are not linked
 firmware evidence.
 
+The [Python session layer](docs/hil-runner.md) provides strict serial framing,
+owned-result correlation, finite deadlines and streamed evidence with atomic
+reports. Its current command-line entry is a read-only marker/identity exchange;
+observation and fixture plans are later stages. Fake-serial and actual C++ fixture
+tests do not qualify a physical serial or Type-C connection.
+
 ## Develop from a source checkout
 
 ```text

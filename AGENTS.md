@@ -31,6 +31,9 @@ and opt-in input reading; executable contract/parity checks use the host fixture
 The ordinary host example now runs simulated owner operations and explicit
 invalidation/reconciliation; `docs/integration.md` maps generic owner integration
 without product dependencies. Its runtime checks are registered as `tusb32x_host_basic`.
+The Python session/evidence layer now supports strict framing, owned results,
+deadlines and local restoration with streamed artifacts. Its CLI currently runs
+only a read-only marker/firmware-identity exchange; runner plans remain later work.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -127,6 +130,12 @@ to each numbered implementation prompt and to completed maintenance work here.
   `tusb32x_version_sync` and, on Windows,
   `tusb32x_pio_launcher`. Compile-only signature/header
   contracts are never behavioral tests.
+- Session changes run `python tools/test_tusb32x_hil_runner.py` (including artifact
+  failures) and `ctest --test-dir build/native -C Debug -R
+  "hil_runner|cli_transcript|cli_contract" --output-on-failure`. Keep the single
+  transcript registration and pass its built fixture path explicitly. Parser
+  tests require no pyserial. Hardware use requires an explicit port; opening may
+  reset a board despite pre-open DTR/RTS configuration. See docs/hil-runner.md.
 - Version truth is `library.json`. Run `python scripts/generate_version.py sync`
   and `python scripts/generate_version.py check`; use bump/set only for intentional
   version changes. Generated Version.h and CMake/component/Doxygen fields must

@@ -718,3 +718,21 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
 - Preserve Status-only uncertainty and fresh post-callback owner time. FieldCore
   completion/effect fields and its millisecond-scaled nowUs hook cannot become
   stronger timestamp/acceptance claims through this boundary.
+
+## Prompt 28 strict sessions and saved evidence (2026-10-28)
+
+- Reuse typed schemas and move the existing single-request closure validator into
+  the pure CLI contract module. Keep new-input ordering and one owned original
+  operation in Session, not a growing request/token journal or second scheduler.
+- Preserve the admission's host deadline through wait/query/marker traffic. Keep
+  result delivery, operation payload, firmware owner timing and hardware effect
+  separate; a failed payload becomes sticky failed proof even with good cleanup.
+- Separate streamed artifacts into one helper with fixed tail, explicit cap loss,
+  bounded report data and same-directory atomic file replacement. JSON is
+  authoritative if summary replacement fails; every cap/save fault prevents PASS.
+- Snapshot and restore local values only under verified identity and idle/result
+  ownership, checking the returned values. Do not apply hardware, silently retarget,
+  cancel foreign work or replay local changes after reboot/reconnect/framing loss.
+- Optional pyserial3.5 uses closed-handle DTR/RTS configuration and finite I/O
+  timeouts. Port open itself has no portable bound or no-reset guarantee; actual
+  serial and hardware qualification remain separate from fake/compiled fixtures.

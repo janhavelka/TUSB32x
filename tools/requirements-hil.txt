@@ -1,0 +1,5 @@
+# Optional hardware serial only; fake-serial and C++ fixture tests use the standard library.
+# Audited 2026-10-28 against https://pypi.org/project/pyserial/3.5/ and
+# https://pyserial.readthedocs.io/en/latest/pyserial_api.html (3.5 documentation).
+# OS/driver open can pulse DTR/RTS or reset a board; timeouts do not bound open().
+pyserial==3.5

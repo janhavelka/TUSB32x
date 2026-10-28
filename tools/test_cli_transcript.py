@@ -12,80 +12,13 @@ import queue
 import subprocess
 import threading
 import time
+from pathlib import Path
+import tempfile
 from collections.abc import Callable, Mapping, Sequence
 
-from tusb32x_cli_contract import ROWS, SCHEMAS, parse_record, validate_record
-
-
-def validate_exchange(
-    records: Sequence[Mapping[str, str]], request: int, command: str, nonce: str
-) -> None:
-    """Check one ACK/MARK and exactly one matching END, raising ValueError.
-
-    Inputs are already schema-checked machine records for one command. Closure
-    requires matching request, nonce, command and status; markers use MARK alone.
-    Admitted operations require one terminal result/detail, while result query
-    delivery status remains independent of its terminal payload status.
-    """
-    acknowledgements = [r for r in records if r["type"] in ("ACK", "MARK")]
-    ends = [r for r in records if r["type"] == "END"]
-    if len(acknowledgements) != 1 or len(ends) != 1:
-        raise ValueError("request needs one acknowledgement and one END")
-    for record in records:
-        if record["type"] in ("LOSS", "SESSION"):
-            raise ValueError("session lost framing or request capacity")
-        if record.get("request") != str(request) or record.get("nonce") != nonce:
-            raise ValueError("record correlation changed within request")
-    ack, end = acknowledgements[0], ends[0]
-    if end["command"] != command:
-        raise ValueError("wrong terminal command")
-    if command == "hilmark":
-        if ack["type"] != "MARK" or end["code"] != "OK":
-            raise ValueError("marker must acknowledge with MARK")
-    elif ack["type"] != "ACK" or ack["command"] != command:
-        raise ValueError("acknowledgement command mismatch")
-    elif ack["action"] == "ADMITTED":
-        results = [r for r in records if r["type"] == "RESULT"]
-        details = [r for r in records if r["type"] == "RESULT_DETAIL"]
-        if len(results) != 1 or len(details) != 1:
-            raise ValueError("admitted work needs exactly one result and detail")
-        result, detail = results[0], details[0]
-        if ack["code"] != "IN_PROGRESS" or ack["token"] == "0":
-            raise ValueError("invalid operation admission")
-        for payload in (result, detail):
-            if payload["origin_request"] != str(request) or payload["token"] != ack["token"]:
-                raise ValueError("operation result origin/token mismatch")
-        for key, payload_key in (("code", "code"), ("detail", "detail"),
-                                 ("callbacks", "callbacks"), ("outcome", "state")):
-            if end[key] != result[payload_key]:
-                raise ValueError("terminal closure contradicts operation result")
-        if end["token"] != ack["token"]:
-            raise ValueError("terminal closure changed operation token")
-    elif ack["code"] != end["code"] or ack["detail"] != end["detail"]:
-        jobs = [r for r in records if r["type"] == "JOB"]
-        if (command != "job.step" or len(jobs) != 1 or jobs[0]["state"] != "ACTIVE"
-                or jobs[0]["code"] != end["code"] or jobs[0]["detail"] != end["detail"]):
-            raise ValueError("contradictory local terminal status")
-    if command in {"result", "result.take"} and end["code"] == "OK":
-        results = [r for r in records if r["type"] == "RESULT"]
-        details = [r for r in records if r["type"] == "RESULT_DETAIL"]
-        if len(results) != 1 or len(details) != 1:
-            raise ValueError("successful result delivery requires one result and detail")
-        result, detail = results[0], details[0]
-        if (ack["token"] == "0" or result["token"] != ack["token"]
-                or detail["token"] != ack["token"] or end["token"] != ack["token"]
-                or detail["origin_request"] != result["origin_request"]):
-            raise ValueError("result delivery changed its token or origin")
-    if ack.get("action") != "ADMITTED":
-        raw = command in {"reg", "wreg"}
-        terminal_callback = end["code"] == "OK" or end["code"].startswith("I2C_")
-        expected = "1" if raw and terminal_callback else "0"
-        if end["callbacks"] != expected:
-            raise ValueError("handler callback count contradicts its execution/status")
-        if (ack.get("action") == "ATTEMPTED") != (raw and terminal_callback):
-            raise ValueError("attempted raw action contradicts terminal callback evidence")
-    if (end["outcome"] == "SUCCEEDED") != (end["code"] == "OK"):
-        raise ValueError("contradictory local terminal outcome")
+from tusb32x_cli_contract import ROWS, SCHEMAS, parse_record, validate_record, validate_exchange
+from tusb32x_hil_artifacts import Artifacts
+from tusb32x_hil_runner import Session, SessionBlocked
 
 
 class PersistentHost:
@@ -897,6 +830,106 @@ def exercise_diagnostic_fixtures(executable: str) -> None:
             raise
 
 
+class SessionFixtureIo:
+    """Adapt the existing persistent C++ fixture to the borrowed session I/O contract.
+
+    This test-only pipe uses finite queue waits and small command writes. It
+    makes no serial backend timing or physical hardware claim.
+    """
+
+    def __init__(self, host):
+        """Borrow the existing reader/process and retain at most one bounded line fragment."""
+        self.host = host
+        self.pending = b""
+        self.writes = 0
+
+    def read(self, size, timeout):
+        """Return a fragment or finite timeout; EOF before framing is an error."""
+        if not self.pending:
+            try:
+                self.pending = self.host.lines.get(timeout=timeout)
+            except queue.Empty:
+                return b""
+            if self.pending is None:
+                raise OSError("C++ fixture ended before session closure")
+            if len(self.pending) > 1024:
+                raise AssertionError("fixture line exceeds session bound")
+        result, self.pending = self.pending[:size], self.pending[size:]
+        return result
+
+    def write(self, data, timeout):
+        """Offer one bounded command; the Session checks elapsed time before/after it."""
+        if timeout <= 0 or len(data) > 192:
+            raise AssertionError("invalid fixture write budget/length")
+        self.writes += 1
+        return self.host.process.stdin.write(data)
+
+    def close(self):
+        """Close test input, require the real fixture's checks to pass, and bound teardown."""
+        self.host.process.stdin.close()
+        if self.host.process.wait(timeout=3) != 0:
+            raise AssertionError("session fixture detected bad callback/frame/budget")
+        self.host.reader.join(timeout=3)
+
+
+def exercise_session(executable):
+    """Run real marker/version/admit/wait/take/restore exchanges and failed payload delivery."""
+    for fault in (False, True):
+        host = PersistentHost(executable, *(('--fault', 'transport') if fault else ()))
+        io = SessionFixtureIo(host)
+        with tempfile.TemporaryDirectory(prefix="tusb32x-session-") as temporary:
+            artifacts = Artifacts(Path(temporary), time.monotonic)
+            try:
+                session = Session(io, artifacts)
+                identity = session.begin()
+                if identity.build != "host-fixture" or identity.git != "unknown":
+                    raise AssertionError("fixture provenance was replaced by host identity")
+                begin_nonce = session.nonce
+                before = io.writes
+                try:
+                    session.command("apply")
+                except SessionBlocked:
+                    pass
+                else:
+                    raise AssertionError("unknown fixture identity authorized a device mutation")
+                if io.writes != before:
+                    raise AssertionError("blocked identity guard sent bytes")
+                session.command("color off")
+                session.command("verbose 1")
+                session.command("mode dfp")
+                session.command("bind")
+                admitted = session.command("init")
+                if not admitted.admitted or admitted.ack["code"] != "IN_PROGRESS":
+                    raise AssertionError("real operation admission lost IN_PROGRESS")
+                result = session.wait_operation()
+                expected = "I2C_TIMEOUT" if fault else "OK"
+                if result["code"] != expected or (fault and result["detail"] != "-2147483648"):
+                    raise AssertionError("real payload failed to preserve operation status/detail")
+                copied = session.command("result " + admitted.ack["token"])
+                if payload(copied.records, "RESULT")["code"] != expected:
+                    raise AssertionError("query changed retained operation outcome")
+                delivered = session.take_result()
+                if delivered.end["code"] != "OK" or (
+                        payload(delivered.records, "RESULT")["code"] != expected):
+                    raise AssertionError("delivery and payload status were conflated")
+                session.finish()
+                if session.nonce == begin_nonce:
+                    raise AssertionError("end marker reused begin nonce")
+                artifacts.primary = "FAIL" if fault else "PASS"
+                artifacts.check("operation", "FAIL" if fault else "PASS", expected)
+                artifacts.checkpoint()
+                if artifacts.exit_code() != (1 if fault else 0):
+                    raise AssertionError("delivery/cleanup repaired a failed payload")
+                io.close()
+            except BaseException:
+                if host.process.poll() is None:
+                    host.process.kill()
+                    host.process.wait(timeout=3)
+                raise
+            finally:
+                artifacts.close()
+
+
 def main() -> int:
     """Run the bounded transcript; return zero only after all records and fixture exit pass."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -916,12 +949,14 @@ def main() -> int:
             exercise_fault(args.host, mode)
         exercise_diagnostic_fixtures(args.host)
         exercise_terminal_ordering(args.host)
+        exercise_session(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()
             host.process.wait(timeout=3)
         raise
-    print(f"CLI transcript: {requests} persistent requests and damaged-record checks passed")
+    print(f"CLI transcript: {requests} persistent requests and damaged-record checks passed; "
+          "2 strict session exchanges passed")
     return 0
 
 

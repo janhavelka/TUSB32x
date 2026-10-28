@@ -492,7 +492,7 @@ Neither fake tests nor linked images prove physical timing or a qualified board.
 
 ## Native IDF application checks
 
-The complete matrix now registers 62 tests on Windows (61 elsewhere). Twenty-eight
+The complete matrix now registers 63 tests on Windows (62 elsewhere). Twenty-eight
 application scenarios compile and execute the actual native lifecycle, core,
 adapter, shared CLI and startup owner through recording SDK boundaries. They
 cover default/qualified setup, absent/configured/failed IRQ, owned versus borrowed
@@ -533,3 +533,23 @@ allocation/failure sentinels. See [integration](../docs/integration.md).
 ```text
 ctest --test-dir build/native -C Debug -R "tusb32x_host_basic|tusb32x_operations|tusb32x_portable_consumer|tusb32x_example" --output-on-failure
 ```
+
+## Python session and evidence checks
+
+The single `hil_runner` CTest runs tools/test_tusb32x_hil_runner.py, including the
+separate artifact helper's failure cases. Injected serial/clock tests cover
+fragments, schemas, marker/request/token ownership, older original completion,
+failed payload versus successful delivery, immutable deadlines, caps, atomic
+reports, verified local restoration and saved interruption. They need no pyserial
+or wall-clock sleeps. The existing `cli_transcript` also runs the actual Session
+against the built persistent C++ fixture, including a real fixture-injected
+I2C_TIMEOUT payload under delivery OK and good local cleanup.
+
+```text
+python tools/test_tusb32x_hil_runner.py
+ctest --test-dir build/native -C Debug -R "hil_runner|cli_transcript|cli_contract" --output-on-failure
+```
+
+Both registrations have finite timeouts; the transcript receives the explicit
+built executable path. See [session contracts](../docs/hil-runner.md). These are
+host software checks, not serial hardware or physical Type-C qualification.

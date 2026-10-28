@@ -1,5 +1,11 @@
 # Complete shared CLI
 
+The [Python session layer](hil-runner.md) now reuses these schemas for strict
+marker/request/token correlation, bounded evidence and explicit local restoration.
+Its serial entry point performs read-only framing/firmware-identity checks;
+observation and fixture plans remain later work. It owns only admitted tokens
+from that run and never consumes another owner's retained result.
+
 The implemented CLI is example code in
 [examples/common](../examples/common/Tusb32xCli.h). It accepts local queries,
 target/lifecycle edits, independent staging, managed operations and diagnostics.

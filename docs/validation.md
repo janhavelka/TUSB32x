@@ -3032,3 +3032,87 @@ after identity and stable VDD; consumer code copies no silicon sequence.
 
 The final commit and verified push/fetch equality belong in the handoff and next
 progress update, avoiding a self-referencing hash update. Prompt28 is unstarted.
+
+
+## Prompt 28 strict Python sessions and evidence (2026-10-28)
+
+Started clean after fetch at synchronized prompt27 commit
+`19fcd2c37837ef823fd852581d4cfe42b6bb8d5c`, on the same execution branch
+`promptset/tusb32x-implementation-20261023`. Read the full prompt, current rules,
+machine-record/runner contracts and actual CLI schema/output/transcript sources.
+Fresh TMP1x2/24Cxx/LDC1614 revisions, clean state, exact code/test/AGENTS/runner
+paths and adopted/rejected choices are in [execution28](audit/execution-28-peers.md).
+No tracked workflow definitions exist here; remote CI remains prompt34 only.
+No sibling edit/build, physical serial open, hardware action or flashing occurred.
+
+The lead integrated three disjoint coding/audit assignments and a strong independent
+framing/deadline/ownership review. Findings were checked against actual sources
+and live C++ records: per-write lateness, buffered terminal framing, coherent wrong
+tokens, missing profile sources, unknown identity, restoration readback and saved
+capture/teardown failures now reject. The admission's host deadline and response
+allowances persist through later waits/queries; result delivery remains independent
+of the original payload. The existing one-request validator moved into the pure
+contract module and is shared by Session and the transcript, not duplicated.
+
+Tools used: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GCC15.1.0 MinGW UCRT/MCF,
+Doxygen1.13.2 and installed managed PlatformIO6.1.19/native1.2.1. Optional pyserial3.5
+is already installed in host Python; the pin was audited against the official
+[release](https://pypi.org/project/pyserial/3.5/) and
+[API](https://pyserial.readthedocs.io/en/latest/pyserial_api.html). Tests require
+no pyserial or wall-clock sleeps. No new Core, package installation or SDK was needed.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Fake serial/session/artifact tests | PASS | 87 unittest cases, including 26 dedicated artifact cases; independently schema-valid reactive peer, injected monotonic time and temporary on-disk reports |
+| Protocol/ownership faults | PASS | Fragmented CRLF/ANSI noise, stale/echo-only markers, required/duplicate/unknown fields, all four profile sources, wrong/coherent/reused/foreign tokens, old-origin interleaving and repeated query copies, invalid commands, exhaustion, boot/loss and identity changes |
+| Deadline/capture faults | PASS | Late/expired/short writes, late reads/slow fragments, immutable admission deadline across wait/query, response byte/record allowances across interleaved queries, line/noise/read/capture/tail caps and exact boundaries |
+| Outcomes/local cleanup | PASS | Failed owned payload remains failed under delivery OK and primary/cleanup PASS; checkpoint before mutations, verified local values, no hardware apply during restoration, lost-session refusal, close/disconnect/capture errors and saved Ctrl-C130 |
+| Atomic artifacts | PASS | Exclusive transcript, bounded tail/report/checks, short/failed disk writes, replace/fsync faults, intact previous files, removed temporary files, JSON authoritative if summary replacement fails, missing proof/incomplete/uncertainty prevents PASS |
+| Actual compiled C++ session exchange | PASS | Existing cli_transcript registration retains its 248-request transcript/damaged-record checks and adds two Session exchanges: marker/version, local staging, bind/read-only initialize, original completion, repeat query, exact take and verified restoration/end; actual fixture I2C_TIMEOUT preserves signed INT32_MIN under delivery OK |
+| Focused registered checks | PASS | hil_runner, cli_transcript, cli_contract and cli_contract_negative all execute with finite timeouts and an explicit built C++ fixture path |
+| Full strict native matrix | PASS | 63/63 registered CTests in Debug and Release; five independent public-header TUs compile and assertions remain active in Release; all prior registrations retained |
+| Python/documentation | PASS | Six affected Python modules compile, all module/function/class docstrings and 100-column style; strict Doxygen/XML public visibility, local links, UTF-8/LF/whitespace and git diff --check |
+| Metadata/package isolation | PASS | Stable version sync/check/no-op and eight unchanged vendor hashes; 75 source-equal exported files with matching IDF selection and resolvable links, new guide included while runner/audit/test machinery stays excluded |
+| Tests-OFF consumer linkage | PASS | Renamed extracted host/core, shared CLI and public two-owner fixture build/run beneath unrelated Git parent with Git/Python/Doxygen/PlatformIO absent from child PATH; only compiler runtime DLLs preserved |
+| Real serial/hardware/SDK timing | NOT RUN | No port/board selected; opening may reset a board and has no portable deadline. DTR/RTS/open/read/write/close behavior still needs physical backend qualification; no serial/USB/IRQ/CC/VBUS/power claim |
+| Sanitizers/other compilers | BLOCKED | Prior fresh MinGW probes lack ASan/UBSan link runtimes; cl/clang++/clang-format unavailable. Core/firmware sources are unchanged and SDK images were not rerun for this Python layer |
+
+Actual commands:
+
+```powershell
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug -R 'hil_runner|cli_transcript|cli_contract' --output-on-failure
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -N
+python tools/test_tusb32x_hil_runner.py
+python tools/test_cli_transcript.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/tusb32x_hil_runner.py --help
+python -m py_compile tools/tusb32x_hil_runner.py tools/tusb32x_hil_artifacts.py tools/test_tusb32x_hil_runner.py tools/test_tusb32x_hil_artifacts.py tools/tusb32x_cli_contract.py tools/test_cli_transcript.py
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python build/p27-final-check.py
+$env:PYTHONIOENCODING = 'utf-8'
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p28.tar.gz
+python build/p28-package.py
+git diff --check
+```
+
+An additional session-only AST/style check inspected all six affected Python
+modules for complete docstrings and 100-column formatting. XML/link/package/text
+helpers remain ignored local evidence, not new permanent guard implementations.
+The package fixture is build/p28-clean-parent-unsv2rkj; build/p28-package.log
+records its three ordinary applications. Reports in fake tests use temporary
+paths and make no invented hardware success claim. The session entry point itself
+is currently read-only; complete observation/fixture command-line plans are later
+prompts. Main saves primary, cleanup, residual uncertainty and per-check evidence
+with exits 0 complete PASS, 1 failure, 2 blocked/incomplete and 130 interruption.
+
+The final commit/push/fetch equality and clean-tree evidence belong in the handoff
+and next progress update, avoiding a self-referencing hash loop. Prompt29 remains
+unstarted; no remote CI or serial hardware completion is claimed.

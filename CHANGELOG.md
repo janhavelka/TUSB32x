@@ -21,6 +21,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Strict Python serial sessions with marker/request/token correlation, immutable
+  host operation deadlines, firmware provenance, bounded streamed capture and
+  atomic evidence reports. Local restoration verifies values without applying
+  hardware settings; failed payloads remain failed through delivery and cleanup.
+  Fake-serial/artifact tests and the existing live C++ transcript cover the layer.
+
 - Runnable ordinary C++ simulated owner example with exact-token result delivery,
   separate payload/effect checks, external invalidation and explicit read-only
   reconciliation. Generic two-device tests extend stale-token, cancellation,

@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 27, plain C++ and generic owner consumers.
+Current authorization: implement prompt 28, strict Python sessions and evidence artifacts.
 
 ## Prompt status
 
@@ -37,7 +37,7 @@ Current authorization: implement prompt 27, plain C++ and generic owner consumer
 | [25: idf-transport](prompts/25-idf-transport.md) | COMPLETE (two native SDK links; physical qualification not run) |
 | [26: idf-cli-example](prompts/26-idf-cli-example.md) | COMPLETE |
 | [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | COMPLETE |
-| [28: python-session](prompts/28-python-session.md) | NOT STARTED |
+| [28: python-session](prompts/28-python-session.md) | COMPLETE |
 | [29: observation-runners](prompts/29-observation-runners.md) | NOT STARTED |
 | [30: port-fixture-suites](prompts/30-port-fixture-suites.md) | NOT STARTED |
 | [31: recovery-fixture-suites](prompts/31-recovery-fixture-suites.md) | NOT STARTED |
@@ -1916,3 +1916,56 @@ See [validation](validation.md#prompt-27-plain-c-and-generic-owner-integration-2
 for exact versions, commands and limits. The lead commits/syncs this complete
 checked unit and verifies clean upstream equality in the handoff; record that
 commit in the next progress update. Prompt28 remains unstarted.
+
+## Prompt 28: strict Python sessions and evidence artifacts (2026-10-28)
+
+Started clean after fetch at synchronized prompt27 commit
+`19fcd2c37837ef823fd852581d4cfe42b6bb8d5c`, on the same execution branch/base.
+Read current parent/local rules, COMMON, full28, machine/runner contracts,
+maintainability and actual CLI schemas/record production/live tests. Fresh peer
+revisions, state, exact files and decisions are in execution-28-peers.md. No
+workflow definitions exist locally; remote CI remains prompt34 only.
+
+Delegation: gpt-6.1-sol/high owns the focused peer audit; another owns only the
+artifact helper and its failure tests; another owns fake-serial session tests.
+gpt-6-astra/high independently reviews framing/correlation/deadline/ownership.
+The lead owns session production, live C++ integration, docs/build registration
+and Git. Record schemas stay unchanged; one-request closure validation moves
+from the transcript test into the existing pure CLI contract module for reuse.
+Use a single absolute deadline, at most one owned operation, strict new-input
+ACK/MARK ordering with older original completions allowed, and streamed evidence
+with bounded tail. No copied scratch policy, full transcript journal, hardware
+suite stub or hidden reset/retry/reconnect policy is introduced.
+
+Optional pyserial3.5 was checked against official package/API documentation;
+pre-open DTR/RTS configuration has OS/backend limits and cannot guarantee a board
+will not reset on open. No physical serial port was opened.
+
+PASS: 87 deterministic Python session/artifact tests, including 26 dedicated
+artifact failure cases; two real C++ Session exchanges added to the existing
+single cli_transcript registration. The original 248-request transcript and
+damaged-record checks remain passing. Full strict Debug and Release CTest each
+pass 63/63 registrations, with the built fixture path explicit and finite timeouts.
+
+Independent review found and corrected write-deadline renewal, buffered/trailing
+framing, owned-token correlation, profile-source completeness, successful-delivery
+versus payload failure, verified local restoration and saved close/capture failure
+handling. The lead verified fixes against source and actual C++ output, not agent
+summaries. Original operation deadlines and response caps persist through later
+waits/queries; no growing transcript/token/request journal was added.
+
+PASS: strict Doxygen/XML visibility, complete Python module/function/class docs,
+100-column style, local links, version/no-op checks, vendor hashes and UTF-8/LF/
+whitespace. The package contains 75 source-equal files with matching IDF selection,
+including the session guide, while maintainer runners remain excluded. Renamed
+tests-OFF core/host, shared-CLI and public two-owner consumers build/run beneath an
+unrelated Git parent without Git/Python/Doxygen/PlatformIO on child PATH.
+
+No core/firmware source or stable library version changed. Prior sanitizer probes
+remain blocked by absent MinGW runtimes; no alternative host compiler or
+clang-format is installed. Serial/USB/IRQ/CC/VBUS, real adapter timing and flashing/
+HIL remain NOT RUN. Remote CI remains prompt34 only. See
+[validation](validation.md#prompt-28-strict-python-sessions-and-evidence-2026-10-28)
+for exact commands/results and limits. The lead commits/syncs this complete unit
+on the same branch and verifies upstream equality in the handoff; record that
+commit in the next progress update. Prompt29 is unstarted.

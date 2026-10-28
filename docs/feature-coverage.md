@@ -1,6 +1,6 @@
 # Feature, source and verification coverage
 
-Prompts 2-27, updated 2026-10-28. This matrix defines the capability boundary;
+Prompts 2-28, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
@@ -499,3 +499,19 @@ source evidence, with richer completion/effect fields explicitly outside the
 Status-only bridge. Existing independent-header and isolated portable-consumer
 checks are reused. No core API, protocol, framework/product dependency or silicon
 capability changes; these are simulated host proofs, not Type-C qualification.
+
+## Prompt 28 Python sessions and evidence
+
+| Contract | Implemented boundary | Executed evidence |
+| --- | --- | --- |
+| Strict schema and framing | Existing contract parser/closure validator plus bounded Session assembly; extension fields cannot replace proof | hil_runner fake serial: fragments, CRLF/ANSI noise, echo-only PASS, missing/duplicate/contradictory records and exact profile sources |
+| Request/token ownership | Increasing new ACK/MARK IDs, one original operation and exact result take; older origin traffic stays valid | Query/marker interleaving, wrong/reused/foreign tokens, exhaustion and repeated copies; live C++ original/take exchange |
+| Deadlines and provenance | Pre-open finite budgets, immutable host operation deadline, checked late replies and separate firmware/host identities | Virtual clock late write/read/fragment and admission tests; expected unknown identity denial, changed identity/boot/loss invalidation |
+| Local restoration and effects | Checkpointed local staging/output/auto values, verified restoration without apply, independent device intent/result effects | Wrong restored payload rejection, lost-session restoration fence, real C++ local restoration and failed I2C_TIMEOUT payload under delivery OK |
+| Capture and verdicts | Streamed timestamped TX/RX, bounded tail/counters, individual atomic JSON/Markdown replacement | Artifact caps, short/failed writes, atomic replace/fsync faults, missing proof, primary/cleanup separation and saved Ctrl-C130 |
+
+The [session guide](hil-runner.md) records exact APIs, limits, optional serial
+backend, artifacts and exit conventions. The existing cli_transcript registration
+now executes the actual Session against the built C++ fixture; hil_runner adds
+fake-serial/artifact tests under one finite registration. No observation suite,
+serial hardware or physical Type-C qualification is claimed here.

@@ -5,7 +5,7 @@ nonce attribution and exactly one matching terminal closure. This module covers
 all implemented local, cooperative-operation and diagnostic routes.
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 import re
 
 PREFIX = ("schema", "nonce", "request")
@@ -615,3 +615,81 @@ def parse_record(line: str) -> dict[str, str]:
         result[key] = value
     validate_record(result)
     return result
+
+
+def validate_exchange(
+    records: Sequence[Mapping[str, str]], request: int, command: str, nonce: str
+) -> None:
+    """Check one ACK/MARK and exactly one matching END, raising ValueError.
+
+    Inputs are already schema-checked machine records for one command. Closure
+    requires matching request, nonce, command and status; markers use MARK in place of ACK.
+    Admitted operations require one terminal result/detail, while result query
+    delivery status remains independent of its terminal payload status.
+    """
+    acknowledgements = [r for r in records if r["type"] in ("ACK", "MARK")]
+    ends = [r for r in records if r["type"] == "END"]
+    if len(acknowledgements) != 1 or len(ends) != 1:
+        raise ValueError("request needs one acknowledgement and one END")
+    for record in records:
+        if record["type"] in ("LOSS", "SESSION"):
+            raise ValueError("session lost framing or request capacity")
+        if record.get("request") != str(request) or record.get("nonce") != nonce:
+            raise ValueError("record correlation changed within request")
+    ack, end = acknowledgements[0], ends[0]
+    if end["command"] != command:
+        raise ValueError("wrong terminal command")
+    if command == "hilmark":
+        if (ack["type"] != "MARK" or end["code"] != "OK" or end["detail"] != "0"
+                or end["token"] != "0"):
+            raise ValueError("marker must acknowledge with MARK")
+    elif ack["type"] != "ACK" or ack["command"] != command:
+        raise ValueError("acknowledgement command mismatch")
+    elif ack["action"] == "ADMITTED":
+        results = [r for r in records if r["type"] == "RESULT"]
+        details = [r for r in records if r["type"] == "RESULT_DETAIL"]
+        if len(results) != 1 or len(details) != 1:
+            raise ValueError("admitted work needs exactly one result and detail")
+        result, detail = results[0], details[0]
+        if ack["code"] != "IN_PROGRESS" or ack["token"] == "0":
+            raise ValueError("invalid operation admission")
+        for payload in (result, detail):
+            if payload["origin_request"] != str(request) or payload["token"] != ack["token"]:
+                raise ValueError("operation result origin/token mismatch")
+        for key, payload_key in (("code", "code"), ("detail", "detail"),
+                                 ("callbacks", "callbacks"), ("outcome", "state")):
+            if end[key] != result[payload_key]:
+                raise ValueError("terminal closure contradicts operation result")
+        if end["token"] != ack["token"]:
+            raise ValueError("terminal closure changed operation token")
+    elif ack["code"] != end["code"] or ack["detail"] != end["detail"]:
+        jobs = [r for r in records if r["type"] == "JOB"]
+        if (command != "job.step" or len(jobs) != 1 or jobs[0]["state"] != "ACTIVE"
+                or jobs[0]["code"] != end["code"] or jobs[0]["detail"] != end["detail"]):
+            raise ValueError("contradictory local terminal status")
+    if command != "hilmark" and ack["action"] != "ADMITTED" and ack["token"] != end["token"]:
+        raise ValueError("local closure changed represented token")
+    if command in {"job.status", "job.auto", "job.step"}:
+        jobs = [r for r in records if r["type"] == "JOB"]
+        if any(job["token"] != ack["token"] for job in jobs):
+            raise ValueError("job payload changed represented token")
+    if command in {"result", "result.take"} and end["code"] == "OK":
+        results = [r for r in records if r["type"] == "RESULT"]
+        details = [r for r in records if r["type"] == "RESULT_DETAIL"]
+        if len(results) != 1 or len(details) != 1:
+            raise ValueError("successful result delivery requires one result and detail")
+        result, detail = results[0], details[0]
+        if (ack["token"] == "0" or result["token"] != ack["token"]
+                or detail["token"] != ack["token"] or end["token"] != ack["token"]
+                or detail["origin_request"] != result["origin_request"]):
+            raise ValueError("result delivery changed its token or origin")
+    if ack.get("action") != "ADMITTED":
+        raw = command in {"reg", "wreg"}
+        terminal_callback = end["code"] == "OK" or end["code"].startswith("I2C_")
+        expected = "1" if raw and terminal_callback else "0"
+        if end["callbacks"] != expected:
+            raise ValueError("handler callback count contradicts its execution/status")
+        if (ack.get("action") == "ATTEMPTED") != (raw and terminal_callback):
+            raise ValueError("attempted raw action contradicts terminal callback evidence")
+    if (end["outcome"] == "SUCCEEDED") != (end["code"] == "OK"):
+        raise ValueError("contradictory local terminal outcome")
