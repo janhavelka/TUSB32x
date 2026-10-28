@@ -42,8 +42,12 @@ class FixtureNotRun(PlanBlocked):
 def fixture_prerequisite(plan, setup, expected, *, base_recovery_required=None):
     """Reject missing setup/gates before traffic, using current-run base startup proof.
 
-    None uses the initial operator declaration. A bool supersedes that declaration
-    after this run's power cycle or qualified typed recovery; it is not USB policy.
+    plan is the selected ObservationPlan, setup the load_setup mapping and expected
+    the flashed identity expectations including git/framework/target. Return None
+    if admitted; FixtureNotRun means missing evidence, PlanBlocked a closed gate.
+    No I/O or board action occurs. base_recovery_required=None uses the initial
+    operator declaration; True requires new recovery and False supplies current-run
+    completion after qualified typed recovery. It does not select USB policy.
     """
     if not setup:
         raise FixtureNotRun("explicit --fixture and --fixture-config required")
@@ -105,6 +109,9 @@ def run_fixture_plan(session, plan, setup, expected=None, *, transition=console_
     For console, reconnect(old_session, absolute_deadline) must return a fresh,
     unstarted Session over the explicitly reopened transport and the same artifacts.
     The caller owns opening/closing; no old token or local baseline is transferred.
+    clock/sleep use Session's monotonic seconds domain. Return a copy of progress
+    counters after selected suites and cleanup pass. Failures save partial checks,
+    observations and remaining effects through session.artifacts, then propagate.
     """
     artifacts = session.artifacts
     deadline = _plan_deadline(clock(), plan, run_deadline)

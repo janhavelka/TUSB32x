@@ -277,7 +277,7 @@ struct OperationProgress {
   uint64_t deadlineMs = 0; ///< Immutable admitted owner-domain deadline in milliseconds.
   bool waiting = false; ///< A required hardware interval is currently pending.
   uint64_t readyAtMs = 0; ///< Owner-domain earliest ready timestamp, only when readyAtValid.
-  bool readyAtValid = false; ///< A fresh post-callback boundary has established readyAtMs.
+  bool readyAtValid = false; ///< Fresh owner sample established readyAtMs; after the write, if any.
   bool resultPending = false; ///< Sole terminal slot is occupied and requires exact-token take.
 };
 
@@ -415,6 +415,12 @@ class TUSB32x {
   /// @param[out] token New nonzero instance token on IN_PROGRESS; unchanged on rejection.
   /// @return INVALID_PARAM, NOT_BOUND, BUSY, RESULT_PENDING, TOKEN_EXHAUSTED in that order,
   /// or IN_PROGRESS. Admission clears initialization usability; no callbacks or writes.
+  /// @details Poll reads identity, revision where present and each applicable profile register
+  /// once: five callbacks on TUSB320/TUSB320I/TUSB322I, six on LI/HI/LAI/HAI. Complete
+  /// matching identity and raw profile establish initialization; reserved fields or pending
+  /// reset/mode/recovery proof return CONFIGURATION_UNKNOWN and prevent KNOWN configuration.
+  /// Successful observations publish only after fresh owner time. No desired profile is created
+  /// or applied.
   Status startInitialize(const OperationTiming& timing, OperationToken& token);
   /// @brief Admit one persistent-profile observation; no desired adoption or trust promotion.
   /// @param[in] timing Owner milliseconds with unsigned deadline-now strictly in (0,2^63).
@@ -448,9 +454,10 @@ class TUSB32x {
   /// @param[out] token New nonzero token on IN_PROGRESS; unchanged on rejection.
   /// @return INVALID_PARAM, NOT_BOUND, BUSY, RESULT_PENDING, CONFIGURATION_UNKNOWN when no
   /// desired exists, TOKEN_EXHAUSTED, or IN_PROGRESS, in that order. Admission is bus-silent.
-  /// @details No current identity/trust prerequisite. Shares reconciliation's bounded wait/F
-  /// proof, 5 base/322I or 6 L/A reads, no writes. Complete differing actual controls become
-  /// KNOWN with CONFIGURATION_MISMATCH; desired and earlier results remain unchanged.
+  /// @details No current identity/trust prerequisite. Shares reconciliation's bounded wait and
+  /// identity/profile proof: five base/322I or six LI/HI/LAI/HAI reads, no writes. Complete
+  /// differing actual controls become KNOWN with CONFIGURATION_MISMATCH; desired and earlier
+  /// results remain unchanged.
   Status startVerifyProfile(const OperationTiming& timing, OperationToken& token);
   /// @brief Admit read-only identity/control/effect proof, available without initialization.
   /// @param[in] timing Immutable owner millisecond interval strictly in (0,2^63).

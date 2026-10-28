@@ -85,13 +85,15 @@ documents. The root firmware environments and their explicit board/USB flags are
 described in [Arduino examples](arduino-examples.md); they do not affect the
 ordinary CMake consumer.
 
-Run `doxygen Doxyfile` for public documentation under build/doxygen. The current
-configuration extracts documented public API and enables missing-comment,
-parameter, enum and documentation errors as failures. Source/example comments
-are included. The source-checkout check_doxygen.py guard also verifies actual
-HTML/XML visibility, generated-file boundaries, helper comments and links, with
-real-parser negative fixtures. A warning-free generation alone cannot prove
-visibility; the guard rejects hidden public APIs and documentation suppressions.
+Use `python tools/check_doxygen.py --out build/doxygen-check` in a source checkout
+for generation plus HTML/XML visibility, generated-file boundaries, helper
+comments and links. Run its existing `doxygen_negative` CTest for real-parser
+omission fixtures. `doxygen Doxyfile` is the direct renderer under build/doxygen.
+Both use documented public extraction and fail missing-comment, parameter, enum
+and documentation warnings; source/example comments are checked as well. A quiet
+generation alone cannot prove visibility. Do not hide public declarations or
+suppress warnings to make missing documentation pass. Private helpers remain
+private and need useful invariant comments rather than full public contracts.
 
 ## Package and ownership boundaries
 

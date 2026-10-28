@@ -4256,3 +4256,107 @@ It does not verify a later guide commit. Physical serial/USB, I2C framing and
 aggregate blocking, Type-C/current/INT, supply/startup and exact-board timing
 remain **NOT RUN**. No port was opened, fixture manipulated, firmware flashed,
 release published or sibling edited. Prompt 36 has not started.
+
+## Prompt 36: source documentation and maintainer guidance
+
+Date: 2026-10-29, Europe/Prague. Started from
+`e37f0a35aa0cbad5cf6a4f46d22032e2adce253d`, clean index/tree and equal to
+the same-name upstream after fetch, zero ahead/behind. Work remains on
+`promptset/tusb32x-implementation-20261023`; checks below used the scoped dirty
+documentation tree. The [progress entry](implementation-progress.md#prompt-36-source-documentation-and-maintenance-2026-10-29)
+records current peer HEADs/dirty states, exact files, delegation and decisions.
+No production tokens, public API, source lists, SDK pins or package version changed.
+
+Environment remains Windows PowerShell, Python 3.12.10, CMake/CTest 4.0.1,
+Ninja 1.12.1, GNU 15.1.0 (MinGW-W64 UCRT/MCF), Doxygen 1.13.2 and
+Git 2.52.0.windows.1. All required local documentation tools are available.
+
+### Source and generated API audit
+
+Inspected all 36 maintained C++ inputs: five public headers, eight private core
+files and 23 example headers/sources, plus every Python module (34 files).
+Eleven C++ files changed only comments; all code tokens and string/character
+literals independently match HEAD. Twelve Python files changed only docstrings;
+ASTs with docstrings removed match HEAD, and every module compiles in memory.
+Module/exported helper docs cover meaningful inputs, returns/exits, timeout units,
+files and side effects; existing tests/fakes need no boilerplate comments.
+No generated Version.h/template change, public alias removal or extraction change
+was needed. Private helpers remain private with useful invariant comments.
+
+Reopened archived TI timing/register pages before comment corrections:
+SLLSEN9F pp7/14/16/18-19, SLLSEP2D/SLLSEQ8D pp6/14/18-19 and
+SLLSEO5D pp6-7/9-11/18-20. Corrected ambiguous fault-bit wording and expanded
+mask/wait citations without changing behavior or closing unresolved gates.
+Actual runtime cases confirm outputs preserved on failure, bus-silent local
+methods, actual-control ACK composition, fresh completion anchors and retained
+possible effects. Status-only NACK/BUSY cannot prove a write had no effect.
+
+The generated API was inspected beyond Doxygen's return code: HTML pages and
+XML for the facade, Status, DriverConfig/DeviceProfile, token/timing/progress/
+result, configuration/port snapshots, transport/managed diagnostics, health and
+register decode are visible. All **16 principal types**, **41 public function
+entries** and **23 Err values** have prose and applicable parameter/return
+contracts. Existing guard checks also cover the remaining public members,
+anchors, enum values and local HTML assets. `EXTRACT_ALL=NO`, private extraction
+NO and all documentation warnings remain enabled.
+
+### Executed checks
+
+```text
+cmake -S . -B build/p36-docs-release -G Ninja -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+ctest --test-dir build/p36-docs-release -C Release -R "^doxygen_negative$" --output-on-failure --output-junit p36-doxygen-negative.xml
+cmake --build build/p36-docs-release --config Release --target tusb32x_compile_contracts tusb32x_header_contracts
+ctest --test-dir build/p36-docs-release -C Release -R "^(doxygen|tusb32x_version_sync|core_contracts|tusb32x_compile_contracts|tusb32x_portable_consumer|tusb32x_package_consumer)$" --output-on-failure --output-junit p36-final-guards.xml
+```
+
+| Check | Actual result |
+| --- | --- |
+| Existing Doxygen omission suite, run first | **1/1 CTest PASS**, 6.37 s; **33 fixture cases**, including missing public/type/enum comments, wrong parameters, broken reference, hidden/alias API, source/helper omissions, generated boundaries and missing-tool/timeout failure. Uses real Doxygen for documentation defects; no skipped success. |
+| Final guard/consumer selection | **6/6 PASS**, 17.49 s. README literal simulation, copied public/allocation-sentinel consumer, renamed extracted tests-OFF consumer, 18 version fixtures, boundary check and real Doxygen. Independent headers also compile under strict warnings. |
+| Example/CLI selection | **53/53 Release PASS** with the regex below. Actual adapters/applications, owner/mailbox/host, shared CLI/console, config fixtures, persistent transcript and CLI parity/negative checks; no hardware. |
+| Existing core semantics | `ctest --test-dir build/native -C Debug -R "^tusb32x_(protocol|operations|port|diagnostics)$" --output-on-failure`: **4/4 PASS**, existing Debug binaries. Code-token identity verifies these comments introduced no behavior change. |
+| Source documentation guard | **PASS**, 36 C++ inputs, no diagnostics. Generated HTML/XML/local links/helpers and independent page/parameter inspection are saved below. |
+| Stable metadata | `python scripts/generate_version.py sync` and `check`: **PASS**, unchanged generated bytes. Manifest/component/CMake/Doxygen agree at `0.1.0-dev.1`; MIT/Thymos/maintainer/CODEOWNERS and vendor terms remain unchanged. |
+| Maintenance entrypoints | Checker/validator/generator and seven changed CLI `--help` paths: **PASS**. Accepted names/defaults/exits match new instructions. No help invocation starts HIL or firmware work. |
+| Registration and Release behavior | Actual CTest JSON checked by existing `tools.validate.registration`: **72** unique finite owned tests (53 native, six contracts, two Doxygen, eight Python, three package). No disabled/missing required group. Strict GNU warning flags and `-DNDEBUG ... -UNDEBUG` remain in Release fixture builds. |
+| Repository/package links | Existing Markdown checker passes all 139 repository Markdown files (**844 local links/fragments**) and **207** links in the 77-file export set/extraction. Final counts recorded in `source-review.json` and `build/p36-docs-final-package/package-report.json`; no duplicate checker implementation. |
+| Final scoped review | Exact comment/docstring-only checks, independent maintainer/changelog review, generator check and `git diff --check`: **PASS**. No documentation omission is hidden or waived. |
+
+The example selection was:
+
+```text
+ctest --test-dir build/p36-docs-release -C Release -R "^(tusb32x_(cli|console|example_owner|example_integration|output_mailbox|host_basic|arduino_wire_[0-9]+|idf_transport_[0-9]+|arduino_app_.+|idf_app_.+|arduino_examples_config|idf_example_config)|cli_transcript|cli_contract|cli_contract_negative)$" --output-on-failure --output-junit build/p36-examples-junit.xml
+```
+
+These three Release selections are disjoint: **60/60 selected CTests PASS**.
+The complete 72-test matrix was not repeated through another wrapper. Evidence:
+
+- `build/p36-docs-release/{p36-doxygen-negative,p36-final-guards}.xml` and
+  `build/p36-docs-release/build/p36-examples-junit.xml`.
+- `build/p36-docs-release/test/doxygen-check/latest.json` selects the current
+  generated HTML/XML and stdout/stderr under `run-isocazet`.
+- `build/p36-docs-release/api-review.json`, `source-review.json`,
+  `registrations.json` and `test/package-check/package-report.json` retain
+  page/member, source, inventory and extracted-consumer evidence.
+
+After final changelog reconciliation,
+`python tools/check_package.py --test-archive --extract-only --out build/p36-docs-final-package`
+also passes: 77 source-equal files and 207 packaged links. This final guide-byte
+check reports consumer **NOT RUN**; it does not replace the executed clean
+consumer above or imply a new firmware link.
+
+AGENTS/CONTRIBUTING now match actual commands, same-branch authorized Git,
+delegation/runtime model policy, existing managed Core, exact native SDK rows
+and explicit release permission. CHANGELOG's unreleased prompt diary and stale
+planned claims were replaced with user-facing features/fixes; the full execution
+history remains in progress, validation and Git. No tag, release date or owner
+was invented, and no consumer-time generator was introduced.
+
+No firmware matrix or remote CI was rerun solely for comments. The earlier
+checkpoint remains tied to `c50f8ddda8809425ede2161586466c95fa650ae6` /
+[run 40782369910](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910),
+not this later commit. Physical serial/USB, I2C framing and aggregate blocking,
+Type-C/current/INT, power/startup and exact-board timing remain **NOT RUN**.
+Complete native readonly/soak proof still reports **BLOCKED** without optional
+callback-kind counters. No physical port, flash, power action, publication,
+sibling modification or next-prompt implementation occurred.

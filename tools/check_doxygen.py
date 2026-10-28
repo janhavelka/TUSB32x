@@ -2,8 +2,9 @@
 """Generate and verify local C++ documentation with real Doxygen (Python 3.10+).
 
 Exit 0 means documentation passed, 1 means bad documentation or generation, and
-2 means an unavailable executable or invalid invocation. Runs at most 120 seconds;
-retains configuration, stdout, stderr, HTML and XML beneath --out (default
+2 means an unavailable executable or invalid invocation. The Doxygen child has a
+120-second deadline; source and generated-page checks run locally afterward.
+Retains configuration, stdout, stderr, HTML and XML beneath --out (default
 build/doxygen-check). TUSB32X_DOXYGEN selects the default executable; --doxygen
 has precedence. Reads trusted local sources; no network, firmware or Git.
 Public API visibility is checked independently of Doxygen warnings. Private

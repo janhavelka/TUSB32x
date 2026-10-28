@@ -84,7 +84,7 @@ const CommandRow* commandRows(std::size_t& count);
 /// each turn. Streaming feed accepts at most 64 bytes across calls and both entry points share a
 /// one-command limit. processCommand accepts an already collected bounded line. tick emits
 /// at most two incremental help records, drains once at most 256 bytes and starts the next turn.
-/// Only tick polls once, with automatic budget one or this turn's explicit job-step budget.
+/// Only tick polls, at most once, with automatic budget one or this turn's explicit job-step budget.
 /// Automatic stepping advances only CLI-admitted work; an explicit step can advance represented
 /// work. Basic Status callbacks require fresh time after each call, so even larger budgets invoke
 /// at most one callback. Staging enters core desired only at accepted apply admission.
@@ -114,9 +114,11 @@ class Cli {
   /// @return True if accepted (including malformed rejection); false without effects if turn busy,
   /// setup missing, partial input pending or session exhausted. Use feed for binary input tests.
   bool processCommand(const char* line);
-  /// @brief Poll at most once, announce completion, advance finite help and drain once; no waits.
+  /// @brief Poll at most once, announce completion, advance finite help and drain once.
   /// @note Automatic stepping defaults on for CLI-admitted work. job step replaces that turn's
   /// budget, including zero. Polling/deadlines continue during backpressure and session exhaustion.
+  /// An invoked terminal transport callback may wait within its aggregate timeout; tick adds no
+  /// scheduler sleep, retry loop or wait for output capacity.
   /// When the CLI owns an operation, the application must not also poll that driver in this turn.
   /// Before any CLI input/admission, application-owned startup may poll its own token and use
   /// tick only for output: automatic stepping cannot advance that externally admitted token.

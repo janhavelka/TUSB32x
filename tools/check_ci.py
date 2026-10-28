@@ -62,7 +62,7 @@ def require(condition, message):
 
 
 def integer(value, minimum, maximum):
-    """Accept a finite bounded YAML integer, including the parser's string form."""
+    """Return whether a YAML integer/string is in the inclusive range; reject booleans."""
     return not isinstance(value, bool) and re.fullmatch(r"[0-9]+", str(value)) is not None \
         and minimum <= int(value) <= maximum
 
@@ -77,7 +77,12 @@ def boolean(value):
 
 
 def parse_workflow(source):
-    """Parse real YAML with duplicate keys rejected and the GitHub `on` key intact."""
+    """Return parsed YAML source with duplicate keys rejected and `on` kept intact.
+
+    Scalars retain string spellings. Missing/wrong PyYAML raises RuntimeError;
+    malformed YAML or duplicate mapping keys raises AuditError. No files are read
+    or written; audit_workflow separately checks the returned document's shape.
+    """
     try:
         import yaml
     except ImportError as error:

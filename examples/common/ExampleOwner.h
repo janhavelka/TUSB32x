@@ -12,6 +12,8 @@ namespace tusb32x_example {
 /// taking each exact result. A zero refresh period hands the driver to the CLI after startup.
 /// Nonzero periods enable secondary refreshes. Any failure stops automatic scheduling; no retry,
 /// reset or recovery is hidden here. Output never participates in result ownership or progress.
+/// All methods use one serialized application task; no ISR calls or callback reentry. A CLI may
+/// take over only after startupDone(), and another owner must not poll this owner's active token.
 class ExampleOwner {
  public:
   /// @brief Borrow a driver and copy finite scheduling intervals in milliseconds.
@@ -26,6 +28,7 @@ class ExampleOwner {
   /// @brief Admit one read-only initialization; no I2C and no second startup attempt.
   /// @param[in] nowMs Fresh owner time in the driver's uint64 millisecond domain.
   /// @return IN_PROGRESS or the actual admission failure; invalid zero timeout is INVALID_CONFIG.
+  /// Repeated start, including after stop(), returns INVALID_PARAM without another admission.
   TUSB32x::Status start(uint64_t nowMs);
   /// @brief Advance only this owner's token, then consume its exact terminal result.
   /// @param[in] nowMs Fresh timestamp sampled after the previous callback, never reused as completion.

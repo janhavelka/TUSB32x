@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 35, reconcile user guides and feature coverage.
+Current authorization: implement prompt 36, audit source documentation and maintainer guidance.
 
 ## Prompt status
 
@@ -45,7 +45,7 @@ Current authorization: implement prompt 35, reconcile user guides and feature co
 | [33: validation-guards](prompts/33-validation-guards.md) | COMPLETE (software evidence; hardware separate) |
 | [34: ci-matrix](prompts/34-ci-matrix.md) | COMPLETE (14 CI jobs; eight extracted images; hardware NOT RUN) |
 | [35: user-documentation](prompts/35-user-documentation.md) | COMPLETE (local guides/snippets/package checks; physical qualification separate) |
-| [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | NOT STARTED |
+| [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | COMPLETE (source/API visibility and maintainer checks; hardware separate) |
 | [37: final-core-review](prompts/37-final-core-review.md) | NOT STARTED |
 | [38: final-integration-review](prompts/38-final-integration-review.md) | NOT STARTED |
 
@@ -2838,3 +2838,69 @@ or new CI checkpoint is required or claimed for these guide changes.
 
 Full scoped review and local checks are complete. Commit/sync evidence belongs
 in the handoff and next progress update; no self-referencing commit ID is added.
+
+## Prompt 36: source documentation and maintenance (2026-10-29)
+
+Started from synchronized `e37f0a35aa0cbad5cf6a4f46d22032e2adce253d`, the
+completed prompt-35 guide/snippet/package unit. Status and index were clean;
+fetch confirmed the same execution branch and zero ahead/behind. Original base
+and branch are unchanged. Prompt 37 has not started. The earlier remote result
+remains attached only to `c50f8dd` / run 40782369910; no new CI status was queried.
+
+Read COMMON, AGENT_WORKFLOW, MAINTAINABILITY, prompt 36, selected baseline
+Status/transport/result/effect/time/lifetime contracts, current test registration,
+workflow commands, metadata and license. Delegation used gpt-6-astra/high for
+core/silicon/lifetime review and two gpt-6.1-sol/high agents for disjoint example
+C++ and Python/workflow reviews. Lead owned maintainer guides, checker integration
+and Git. Independent final reviews checked maintainer-policy preservation and
+the user-facing changelog; all source findings were verified against code/tests.
+
+Fresh read-only peer evidence:
+
+| Peer, clean HEAD | Exact sources and selected/rejected conventions |
+| --- | --- |
+| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Doxyfile, AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py and .github/workflows/ci.yml. Retain strict undocumented/parameter warning failure and coordinated guides; direct rendering plus a landing-page check cannot establish complete API visibility. |
+| TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | Doxyfile, tools/check_doxygen.py, tools/test_check_doxygen.py, AGENTS.md, scripts/generate_version.py, CMakeLists.txt and CI. Retain HTML/XML visibility, private exclusion, finite child deadline and links; reject EXTRACT_ALL=YES and synthetic XML as proof of real-parser omission detection. No CONTRIBUTING.md exists. |
+| 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | AGENTS.md, scripts/generate_version.py, library.json, platformio.ini, CMakeLists.txt, CI and test/core_no_arduino/compile_main.cpp. Retain manifest truth, stable checked generation and existing managed Core; reject consumer-time package generation/firmware metadata injection. No CONTRIBUTING.md or dedicated version test exists. |
+| OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200` | AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py, tools/check_version_header_contract.py, library.json, platformio.ini, CMakeLists.txt and CI. Retain ownership/check conventions; reject import-time sync, unbounded Git child, incompatible aliases/numeric-only version assumptions, broad test discovery and unrelated branch/release rules. |
+
+All five public headers, eight private core files and 23 example C++ files were
+inspected. Generated Version.h remains correct and was not hand-edited. Reopened
+archived B pp7/14/16/18-19, L/A pp6/14/18-19 and V pp6-7/9-11/18-20 before TI
+citation corrections. Useful comments already covered most invariants; changes
+clarify static-lifetime callback Status text, initialization versus trust, fresh
+wait anchors including reconciliation, 322 fault bit 3/mask 08, exact TI timing,
+adapter borrowing/configuration and CLI callback waits versus scheduler sleeping.
+No public alias/API, silicon gate, mask, wait duration or executable behavior changed.
+The selected baseline's optimistic address-NACK phase exception was corrected to
+match the existing conservative Status-only acceptance path and runtime cases.
+
+Reviewed all 34 Python modules, including lead-owned Doxygen guard/fixtures.
+Expanded meaningful input/output/deadline/file/exit contracts in identity helpers,
+checkers and session/plans. The Doxygen child has a 120-second deadline; local
+page/source checks are not falsely claimed to share that whole-command bound.
+Initial serial open remains explicitly outside the run deadline with no portable
+open-timeout guarantee. Core consumers gained no generator/tool dependency.
+
+AGENTS and CONTRIBUTING now link maintained responsibilities rather than repeat
+the implementation diary. Commands, delegation, same-branch lead-only Git,
+authorized sync, SDK pins, managed Windows Core, local/remote CI boundary and
+release authorization are preserved. CHANGELOG now records meaningful Unreleased
+features/fixes/documentation, with execution history retained in progress and
+validation. License, ownership, manifests, Doxyfile and generated versions agree;
+no version bump or warning/extraction suppression was needed.
+
+[Validation](validation.md#prompt-36-source-documentation-and-maintainer-guidance)
+records 60 disjoint Release CTests and four focused Debug core checks, all PASS.
+The real Doxygen guard checks 36 C++ files; 33 existing negative cases reject
+omissions, hidden APIs and broken refs. Generated pages/XML independently show
+16 principal types, 41 public function entries with applicable parameter/return contracts
+and all 23 Err values. Private extraction remains NO. Existing registry retains
+72 finite Windows tests, one owner each; Release assertions remain enabled.
+Exact C++ tokens/literals and Python executable ASTs are unchanged. Clean renamed
+tests-OFF consumer, independent headers, version fixtures, CLI transcript/parity
+and final link/metadata checks pass. No firmware matrix, physical HIL, flashing,
+publication or sibling mutation was performed or inferred.
+
+The complete scoped unit is reviewed and ready for authorized commit/sync.
+Final commit/equality evidence belongs in the handoff and next progress update.

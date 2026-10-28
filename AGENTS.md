@@ -2,46 +2,19 @@
 
 ## Scope and starting point
 
-This repository will provide a general-purpose, framework-neutral C++17 library
-for the verified TUSB320 family, starting with TUSB320LAI. It currently contains
-passive public values, Status helpers, pure binding/profile validators, a CMake
-library target and host consumer, deterministic metadata/version tools and native
-IDF component registration, public pure register decoding, private codecs/write
-composition and register transport/identity checks,
-alongside the audit, TI references and prompts.
-Test commands are in [test/README.md](test/README.md).
-It also provides a non-copyable owner facade with bus-silent lifecycle,
-instance-local tokens, retained results, read-only initialization, profile
-observation, explicit desired-profile apply/verification, read-only reconciliation,
-explicit reset, original TUSB320/I dead-battery recovery and complete read-only
-port refresh with cached publication, plus explicit interrupt acknowledgement and
-bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
-diagnostics views and pure passive health projection. The example-only Arduino
-Wire adapter has host contracts and S2/S3 SDK link fixtures. Complete Arduino
-CLI and two-device owner examples share that adapter and have explicit S2/S3
-builds. The native-IDF adapter also has host contracts and independent S2/S3
-component link fixtures. The complete native CLI application also has real S2/S3
-links, exclusive UART0, read-only startup ownership and checked resource teardown. The
-example-only common CLI implements bounded local help/identity,
-cache/target/lifecycle queries and edits, and independent validated profile staging.
-Managed operation/control/result routes also use the core engine with one poll
-per turn and explicit retained-result take. The full 55-row shared CLI also provides
-bounded raw diagnostics, pure decode, passive health/counters, explicit invalidation
-and opt-in input reading; executable contract/parity checks use the host fixture.
-The ordinary host example now runs simulated owner operations and explicit
-invalidation/reconciliation; `docs/integration.md` maps generic owner integration
-without product dependencies. Its runtime checks are registered as `tusb32x_host_basic`.
-The Python session/evidence layer now supports strict framing, owned results,
-deadlines and local restoration with streamed artifacts. Its CLI runs complete
-readonly/soak and bounded mapped-register observations, plus portless dry-runs.
-Explicit orientation/accessory/role-current/interrupt fixture plans require declared
-setup, expected firmware identity and bounded operator observations. Ordinary tests
-use modeled hardware only; physical qualification remains separate.
-Reset-termination, fault and console plans complete the nine runner families.
-Physical fault/reconnect/reboot actions require separate setup authorization;
-negative operation outcomes must be declared before admission. Reconnects create
-new sessions and never inherit old owned tokens or restoration obligations.
-Do not describe planned interfaces, commands or builds as implemented or tested.
+TUSB32x provides a framework-neutral C++17 library for the verified TUSB320
+family, starting with TUSB320LAI, and explicitly partial TUSB322I support.
+It implements one cooperative owner engine, pure values/validation/decoding,
+retained results and effects, safe raw diagnostics and passive health.
+Application-owned Arduino/native-IDF adapters and S2/S3 examples reuse the
+shared CLI. The ordinary C++ example is explicitly simulated; Python runners
+provide bounded sessions, observation/fixture plans and evidence artifacts.
+
+Use the [README](README.md) and [documentation index](docs/README.md) for the
+current subset, exact silicon gates and evidence limits, and
+[test/README.md](test/README.md) for executable checks. Physical board/timing
+qualification remains separate. Do not describe planned interfaces, commands
+or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
 edit guidance or review the audit does not itself start driver implementation.
@@ -130,8 +103,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   in `tusb32x_operations`; neither imports FieldCore or a framework.
   Other registered checks cover core/protocol/port/diagnostics, CLI/console,
   adapter/application fixtures, live transcripts/parity, isolated allocation
-  sentinels, Python/version/package suites and guard negatives. There are72
-  CTests on Windows and71 elsewhere, all with finite timeouts and one validation
+  sentinels, Python/version/package suites and guard negatives. There are 72
+  CTests on Windows and 71 elsewhere, all with finite timeouts and one validation
   owner. Compile-only signature/header
   contracts are never behavioral tests.
 - Session changes run `python tools/test_tusb32x_hil_runner.py` (including artifact
@@ -206,7 +179,7 @@ to each numbered implementation prompt and to completed maintenance work here.
 
 ## Repository layout and boundaries
 
-The intended responsibilities below become real as their stages are implemented.
+The maintained source boundaries are listed below.
 Do not create empty files or successful hardware stubs to fill the tree.
 
 | Location | Responsibility |
@@ -365,7 +338,7 @@ Do not create empty files or successful hardware stubs to fill the tree.
 - On Windows use `scripts/pio.cmd` once created, with the existing VS Code-managed
   PlatformIO executable. Do not install another PlatformIO Core. If a required
   tool is unavailable, report that check and continue independent work.
-- Use actual repository commands once implemented. Initial intended checks are
+- Use the actual repository commands. Maintained checks are
   CMake/CTest with `TUSB32X_BUILD_TESTS=ON`, version `check`, Doxygen, contract,
   Python and package guards, then relevant S2/S3 Arduino/native-IDF links. The
   prompts define exact names; no command is considered passed merely by existing.
@@ -376,7 +349,7 @@ Do not create empty files or successful hardware stubs to fill the tree.
   the implementation. Prompts 35–36 reconcile documentation maintained throughout.
 - Follow [MAINTAINABILITY](docs/prompts/MAINTAINABILITY.md). Documentation checks
   must catch missing comments and hidden public APIs, not just produce no warnings.
-- `library.json` is version truth once introduced. Use the generator's
+- `library.json` is version truth. Use the generator's
   sync/check/bump/set workflow; do not hand-edit generated Version.h. Keep package,
   component, CMake and Doxygen versions aligned. Do not bump a release per prompt.
 - Preserve evidenced maintainer/license metadata and vendor terms. Keep reference
@@ -440,7 +413,7 @@ documentation commits do not inherit that proof or require another remote gate.
 
 Prompt30 adds orientation/accessory/role-current/interrupt plans to the existing
 runner, with --fixture/--fixture-config and expected firmware commit/framework/
-target required for physical work. Read docs/hil-runner.md and hardware-validation.md.
+target required for physical work. Read docs/hil-runner.md and docs/hardware-validation.md.
 Use existing hil_runner (finite 180s) and cli_transcript registrations; they exercise
 deterministic observations and the actual shared CLI/core only. No hardware is
 opened by ordinary tests. Missing equipment/input remains NOT RUN, closed silicon
@@ -474,8 +447,8 @@ uses add_subdirectory/target TUSB32x; no install/export API is claimed.
 CTest also registers tusb32x_package_safety (60s), tusb32x_package_consumer
 (120s) and tusb32x_package_origins (160s). The consumer creates a real test tar
 without requiring PIO; origins rejects injected checkout/outside compiler headers.
-There are71 runtime tests on all hosts plus the Windows launcher, with compile-only headers
-kept separate. The selected extracted Arduino/native-IDF S2/S3 rows are recorded
+Compile-only headers remain separate from the registered runtime checks.
+The selected extracted Arduino/native-IDF S2/S3 rows are recorded
 in validation; full remote matrix remains prompt34 and hardware remains separate.
 
 
@@ -489,12 +462,9 @@ cannot grant later source-capable work. These are host evidence guards, not a co
 scheduler or automatic recovery policy.
 
 
-The completed prompt 34 checkpoint is run40778512875 at
-9aa8898c65ca1eebc5f7ea241dfac4bbc815283b: 14 jobs PASS, eight extracted firmware
-images, no hardware qualification. See docs/validation.md for actual artifacts
-and prior failed attempts. Retain this tested SHA during later prompts; reporting
-commits and later local checks do not retroactively extend its remote proof.
-
-The completed prompts33/34 audit additionally verified run40782369910 at
-c50f8ddda8809425ede2161586466c95fa650ae6: all14jobs PASS. Prompt35 uses that
-recorded evidence and local guide/snippet/package checks; no new remote gate.
+The completed prompt-34 audit verified run 40782369910 at
+`c50f8ddda8809425ede2161586466c95fa650ae6`: 14 jobs PASS and eight extracted
+firmware images, with no physical qualification. See [validation](docs/validation.md)
+for artifacts and prior attempts. Retain that actual tested SHA during later
+prompts; reporting commits and later local checks do not extend its remote proof
+or create a new remote gate.

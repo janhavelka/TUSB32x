@@ -23,6 +23,8 @@ struct BackendStats {
 /// Pin the owner task to ownerCore; a runtime core check cannot prevent later migration.
 /// No event callbacks may be registered. Keep this object alive until every binding
 /// ends and the application deletes its devices and bus. No reentry or ISR use.
+/// Callbacks finish terminally and borrow buffers only until return. The bus gate
+/// serializes transfers; the application must separately serialize each driver's APIs.
 struct BusContext {
   i2c_master_bus_handle_t handle = nullptr; ///< Borrowed bus; never deleted by callbacks.
   i2c_master_bus_config_t config{}; ///< Exact immutable creation settings; default clock and zero queue depth required.
@@ -59,6 +61,7 @@ TUSB32x::Status validateContext(const Context& context);
 /// @param[in] timeoutMs Whole callback milliseconds including lock, waits, cleanup and overhead.
 /// @param[in,out] user Borrowed Context; shared gate contention returns immediately.
 /// @return OK or I2C_* with full esp_err_t detail; failures may follow a hardware effect.
+/// Zero/insufficient budget returns I2C_TIMEOUT; invalid arguments/setup return I2C_ERROR.
 TUSB32x::Status write(uint8_t address, const uint8_t* data, size_t length,
                      uint32_t timeoutMs, void* user);
 
@@ -68,9 +71,11 @@ TUSB32x::Status write(uint8_t address, const uint8_t* data, size_t length,
 /// @param[in] txLength Exactly one byte.
 /// @param[out] rxData Borrowed output, unchanged on error; no active SDK work accesses it after return.
 /// @param[in] rxLength Exact receive size in 1..8 bytes.
-/// @param[in] timeoutMs Aggregate milliseconds; receive receives only remaining budget.
+/// @param[in] timeoutMs Aggregate milliseconds including gate, both phases, SDK cleanup and
+/// qualified CPU overhead; receive receives only remaining budget.
 /// @param[in,out] user Borrowed Context. Failed SDK receive retires the shared bus.
 /// @return OK or I2C_*; no retry, inferred NACK phase, partial count or automatic recovery.
+/// Zero/insufficient budget returns I2C_TIMEOUT; invalid arguments/setup return I2C_ERROR.
 TUSB32x::Status writeRead(uint8_t address, const uint8_t* txData, size_t txLength,
                          uint8_t* rxData, size_t rxLength, uint32_t timeoutMs, void* user);
 

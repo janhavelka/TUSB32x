@@ -106,7 +106,15 @@ def stop_process(process):
 
 
 def run_logged(command, cwd, environment, log, timeout=60, input_text=None):
-    """Execute one argument list with saved bounded output, including failed children."""
+    """Return decoded child output; retain log and adjacent .command.json evidence.
+
+    command is an argument list, cwd/environment select the child context and
+    timeout is a monotonic seconds ceiling (60 by default). Optional input_text
+    is finite trusted probe input written once. Parent directories are created;
+    existing log files are replaced. Missing execution raises Incomplete; nonzero
+    exit, timeout or output above 16 MiB raises FirmwareError. Timeout, overflow
+    or interruption stops the child tree; the bounded log prefix remains.
+    """
     command = [str(item) for item in command]
     log.parent.mkdir(parents=True, exist_ok=True)
     evidence = {"command": command, "cwd": str(cwd), "timeout_seconds": timeout,
@@ -276,7 +284,13 @@ def ninja_dependencies(text):
 
 
 def verify_dependencies(records, package, build, approved, source_names, cwd):
-    """Check every used header and exact extracted source set against approved roots."""
+    """Return dependency evidence after exact source/approved-root checks.
+
+    records contains one path list per compiled source, source_names the expected
+    package-relative set and cwd the base for relative paths. Resolve actual files
+    against approved roots, then write build/firmware-dependencies.json. Missing,
+    extra or escaping inputs raise FirmwareError; filesystem errors propagate.
+    """
     if len(records) != len(source_names) or any(not record for record in records):
         raise FirmwareError("missing or duplicate compiler dependency records")
     used, sources = set(), set()

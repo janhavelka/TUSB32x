@@ -4,6 +4,13 @@ I/O is injected as read(size, timeout)/write(bytes, timeout); time is injected i
 monotonic seconds. Only this run's admitted token may be controlled or consumed.
 Readonly/soak stay read-only; explicitly selected fixture suites use ordinary CLI operations.
 Optional pyserial is imported only when an explicit physical port is opened.
+The CLI requires --out and an explicit --port except for --dry-run. It retains
+transcript.log, report.json and summary.md there; existing transcripts reject.
+Command/write deadlines are distinct from the immutable whole-run deadline.
+Physical port opening has no portable timeout and may reset the board; the run
+deadline starts after the initial open. Exit 0 requires complete selected proof,
+1 failed evidence, 2 invalid/incomplete/blocked work (including dry-run), and 130
+interruption. Reports separate hardware verdicts, cleanup and remaining effects.
 """
 
 import argparse
@@ -205,16 +212,32 @@ def canonical_command(text):
 
 
 class Session:
-    """Serialized session over borrowed terminal I/O; no retries, scans or resets.
+    """Serialized session over borrowed terminal I/O; no retries or implicit resets.
 
     State retains only the pending response, one operation and high-water IDs.
     Each call uses one absolute monotonic deadline across all its writes/reads.
     Reconnect notification requires invalidate and a new Session/handshake.
+    Public deadline arguments are absolute seconds in the injected clock domain;
+    None selects now + Timeouts.command, with at most 3600 seconds remaining.
+    Callers composing work must pass one unchanged deadline to prevent renewal.
+    I/O must honor the supplied remaining timeout and return terminal bytes/write
+    counts; late returns fail evidence but cannot bound a blocking backend.
+    Calls stream/checkpoint borrowed Artifacts and can raise SessionError or
+    EvidenceError. The owner closes both I/O and artifacts; methods are serialized.
+    Marker/cached handlers perform no I2C, but firmware auto mode can advance
+    already-admitted work independently after handling those commands.
     """
 
     def __init__(self, io, artifacts, clock=time.monotonic, timeouts=None, limits=None,
                  nonce_factory=None):
-        """Borrow I/O/artifacts/clock; construction performs no I/O or implicit opening."""
+        """Borrow I/O/artifacts/clock without serial I/O or implicit port opening.
+
+        io supplies read(size, timeout_seconds) and write(bytes, timeout_seconds).
+        clock returns finite non-regressing monotonic seconds. Optional Timeouts
+        and Limits select validated ceilings; nonce_factory returns fresh 1..32
+        character marker tokens. Construction registers pending artifact checks
+        in memory; begin must establish framing before ordinary commands.
+        """
         self.io = io
         self.artifacts = artifacts
         self.clock = clock
@@ -584,7 +607,11 @@ class Session:
             self._pending = None
 
     def mark(self, deadline=None):
-        """Require a fresh random MARK and matching END under one supplied deadline."""
+        """Return a fresh verified nonce after MARK/END under one absolute deadline.
+
+        Requires establishing or verified framing; the marker handler does not
+        consume results or change settings. Protocol/I/O failure invalidates framing.
+        """
         if not self.valid and not self._synchronizing:
             raise SessionBlocked("marker requires an establishing or verified session")
         try:
@@ -603,7 +630,13 @@ class Session:
             raise
 
     def begin(self, expected=None, deadline=None):
-        """Fresh marker, identity and idle prerequisite plus local snapshots; no device writes."""
+        """Return FirmwareIdentity after marker/identity/idle checks and local snapshots.
+
+        expected maps firmware field names to exact required string values; None
+        adds no identity expectation. All exchanges share deadline. Only marker
+        and query routes are issued. A Session can begin only once; failure records
+        evidence and requires a new Session, even if no operation was admitted.
+        """
         if self._started:
             raise SessionBlocked("create a fresh Session after loss/reconnect")
         self._started = True
@@ -708,6 +741,10 @@ class Session:
     def command(self, text, deadline=None, *, expected_code="OK"):
         """Execute an explicit route without implicit apply/cancel/result consumption.
 
+        text is one bounded printable ASCII CLI command. Requires verified framing
+        and ownership prerequisites; device-changing routes require known firmware
+        identity. Return Exchange after ACK/payload/closure, or managed admission
+        before its terminal closure. All guard queries and I/O share deadline.
         Managed admission may preregister an exact negative terminal code for a
         deliberate fault experiment. Its actual failed payload is retained; any
         mismatch remains failed evidence. This cannot excuse protocol/host timeouts,
@@ -760,7 +797,12 @@ class Session:
         return response
 
     def wait_operation(self, deadline=None):
-        """Wait for the one original terminal pair without consuming its retained result."""
+        """Return a copy of the owned terminal RESULT after verifying detail and END.
+
+        Requires a verified owned operation. An incomplete operation clips deadline
+        to its immutable admission deadline; no new firmware command is sent.
+        The firmware result remains retained until explicit take_result delivery.
+        """
         if not self.valid or self.operation is None:
             raise SessionBlocked("no verified owned operation")
         deadline = self._deadline(deadline)
@@ -777,13 +819,23 @@ class Session:
             raise
 
     def take_result(self, deadline=None):
-        """Deliver the exact owned token; delivery OK does not repair a failed payload."""
+        """Return result-take Exchange for the owned token under deadline.
+
+        Successful delivery releases local ownership, even for a terminal failed
+        payload. Missing ownership raises SessionBlocked; no foreign token is used.
+        """
         if self.operation is None:
             raise SessionBlocked("no retained result owned by this run")
         return self.command(f"result take {self.operation.token}", deadline)
 
     def restore_local(self, deadline=None):
-        """Restore only saved staging/auto/output values in the still verified session; no apply."""
+        """Restore saved staging/auto/output under deadline; return None without apply.
+
+        No changes returns immediately. Otherwise require a verified idle session,
+        recheck firmware identity and verify each restored local value. Failure may
+        leave partial local edits; save them as unrestored and invalidate framing.
+        Device configuration and possible hardware effects are not rolled back.
+        """
         if not self._changed:
             return
         if not self.valid or self.operation:
@@ -842,7 +894,12 @@ class Session:
             self._restoring = False
 
     def finish(self, deadline=None):
-        """Restore local values and require a fresh end marker; leave borrowed I/O to its owner."""
+        """Restore local values and verify a fresh end marker under one deadline.
+
+        Requires valid framing without an owned result; returns None and closes
+        this session logically. The owner still closes borrowed I/O and artifacts.
+        Failure retains incomplete evidence rather than certifying hardware cleanup.
+        """
         if not self.valid or self.operation:
             raise SessionBlocked("cannot close invalid session or abandon an owned result")
         try:
@@ -928,7 +985,12 @@ def open_serial(port, *, timeouts=None, dtr="unchanged", rts="unchanged", baud=1
 
 
 def host_identity(root):
-    """Read only this checkout's Git identity, with finite argument-list subprocess calls."""
+    """Return root's git/tree mapping, or unknown values when unavailable/unrelated.
+
+    Up to three local argument-list Git calls each have a 3-second timeout. Root
+    must itself be the checkout top level. No files, network or devices are changed;
+    this host identity never proves which firmware is running.
+    """
     root = Path(root).resolve()
     try:
         top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],

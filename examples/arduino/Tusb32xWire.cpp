@@ -31,7 +31,9 @@ constexpr uint64_t TICK_US = (1000000ULL + configTICK_RATE_HZ - 1) / configTICK_
 // NACK busy wait. Two possible 50ms clears; strict >tick comparisons add a tick.
 constexpr uint64_t CLEANUP_US = 2 * (50000 + TICK_US);
 constexpr uint64_t WAIT_COUNT = 7;
-constexpr uint64_t BUS_FREE_US = 2; // TI requires >=1.3us STOP-to-START.
+// TI tBUF >=1.3us: SLLSEN9F section 6.6 p7; SLLSEP2D/SLLSEQ8D section 6.6 p6;
+// SLLSEO5D section 5.6 p6. Pointer STOP/read framing: docs/transport.md.
+constexpr uint64_t BUS_FREE_US = 2;
 
 /// @brief Read the native boot clock; caller supplies normal task/tick operation.
 uint64_t nowUs() { return static_cast<uint64_t>(esp_timer_get_time()); }

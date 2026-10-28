@@ -2,6 +2,15 @@
 
 This entry point never opens serial ports, flashes, publishes, or contacts CI.
 CTest owns behavioral suites; this module only selects and records their execution.
+--checks selects the declared groups; --configs defaults to Debug and Release.
+Each invocation creates an exclusive run-* directory beneath --out (by default
+build/validation), with command logs, CTest JUnit and atomic report.json checkpoints.
+--timeout bounds each host child, not the whole invocation; inventory commands
+have 60 seconds and the firmware-link child has 7200 seconds. Retained command
+logs are capped at 16 MiB and overflow fails. Builds/package extraction write local
+artifacts; installed firmware tools may fetch their declared build dependencies.
+Exit 0 means the requested scope passed, 1 failed, 2 incomplete/invalid invocation,
+and 130 interrupted with available evidence retained. Missing tools never pass.
 """
 
 from __future__ import annotations
@@ -174,7 +183,13 @@ def run_command(name, command, directory, timeout, cwd=ROOT, environment=None,
 
 
 def save_report(directory, requested, configurations, results, interrupted=False):
-    """Atomically checkpoint requested scope and completed results beside their logs."""
+    """Replace directory/report.json and return its scope/verdict/results mapping.
+
+    directory already exists; requested/configurations describe admitted work,
+    results contains completed Result values, and interrupted leaves work
+    incomplete. A fixed report.json.tmp is replaced atomically, so serialize
+    callers. File errors propagate; this helper never executes pending checks.
+    """
     completed = {result.name for result in results}
     pending = [f"{configuration.lower()}-{group}" for group in requested if group in CTEST_CHECKS
                for configuration in configurations

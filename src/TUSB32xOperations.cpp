@@ -14,7 +14,8 @@ namespace {
 
 Status error(Err code) { return Status::Error(code, errorName(code)); }
 
-// TI SLLSEN9F Table7-7 p18; SLLSEP2D/SLLSEQ8D Table9 p18. V fault bit3 is separate.
+// TI SLLSEN9F Table 7-7 p18; SLLSEP2D/SLLSEQ8D Table 9 p18.
+// TUSB322I VCONN fault bit 3 is separate (SLLSEO5D Table 6-9 p19).
 constexpr uint8_t IRQ_PENDING = 0x10;
 
 // Persistent masks exclude live/RO, IRQ W1C, reset command and internal45 bits.
@@ -723,9 +724,11 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
   if (nowMs - _progress.deadlineMs < detail::HALF_RANGE)
     return finish(error(Err::TIMEOUT), true, nowMs);
   // A conservative anchor is the first fresh poll, never admission or a stale
-  // pre-callback timestamp. TI reset max95 ms / extended mode min5 ms, plus
-  // OWNER_CLOCK_MARGIN_MS: SLLSEN9F 6.7; SLLSEP2D/SLLSEQ8D 6.7,7.3.2;
-  // SLLSEO5D 5.7. No extra 5 ms wait is specified for 322I mode changes.
+  // pre-callback timestamp. TI reset max 95 ms: SLLSEN9F section 6.7 p7,
+  // SLLSEP2D/SLLSEQ8D section 6.7 p6 and SLLSEO5D section 5.7 p7.
+  // Extended 320 mode wait 5 ms: SLLSEP2D/SLLSEQ8D section 7.3.2 p14.
+  // OWNER_CLOCK_MARGIN_MS is separate library quantization allowance. No extra
+  // 5 ms wait is specified for 322I mode changes (SLLSEO5D sections 6.3.2.1-2 pp10-11).
   if (_phase == Phase::WAIT) {
     if (!_progress.readyAtValid) {
       const auto& info = *detail::findVariant(_config.variant);
@@ -786,8 +789,9 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
       _phase = Phase::APPLY_WRITE;
       _progress.phase = OperationPhase::WRITING;
     } else if (_phase == Phase::RESET_PRECHECK) {
-      // TI reset command bit3: SLLSEN9F Table7-7 p19, L/A Table10 p19,
-      // SLLSEO5D Table6-10 p20. Compose from fresh actual controls, never desired.
+      // TI reset command bit 3: SLLSEN9F Table 7-7 p19,
+      // SLLSEP2D/SLLSEQ8D Table 10 p19 and SLLSEO5D Table 6-10 p20.
+      // Compose from fresh actual controls, never desired.
       detail::WriteRequest request{};
       request.variant = _config.variant;
       request.reg = 0x0A;
@@ -807,6 +811,10 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
       _phase = Phase::RECOVERY_DISABLE;
       _progress.phase = OperationPhase::WRITING;
     } else if (_phase == Phase::RESET_WRITE || _phase == Phase::RECOVERY_DISABLE) {
+      // This is the first fresh sample after the successful callback. The
+      // earlier pre-write nowMs cannot anchor either interval; late polls add
+      // conservatism without moving the immutable operation deadline.
+      // Recovery 30 ms: SLLSEN9F section 7.4.3 p14; reset duration cited above.
       const uint64_t ticks = _phase == Phase::RESET_WRITE ? 95 : 30;
       _phase = Phase::PROCEDURE_WAIT;
       _progress.phase = OperationPhase::WAITING;
@@ -863,7 +871,8 @@ Status TUSB32x::poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers)
   if (maxTransfers == 0) return error(Err::IN_PROGRESS);
   if (_phase == Phase::IRQ_ACK) {
     // A pure W1C ACK preserves persistent controls and historical port evidence.
-    // TI B Table7-6 p16, Table7-7 p18; L/A Table9 p18. No IRQ inter-clear wait.
+    // TI SLLSEN9F Table 7-6 p16 and Table 7-7 p18;
+    // SLLSEP2D/SLLSEQ8D Table 9 p18. No IRQ inter-clear wait is specified.
     _result.interrupt.acknowledgeAttempted = true;
     _diagnostics.interrupt = _result.interrupt;
     _result.hardwareEffect = HardwareEffect::INDETERMINATE;

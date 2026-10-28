@@ -22,7 +22,11 @@ struct WireStats {
 /// Before enabling callbacks, the application initializes Wire on ownerCore, warms each
 /// selected address's HAL handle, disables SDK logging, and qualifies maxOverheadUs.
 /// Every bus user must acquire gate, check retired, and leave no pending transaction.
-/// No ISR calls. See docs/arduino-transport.md for the exact support prerequisites.
+/// Use only synchronous master mode on a task pinned to ownerCore, with the audited
+/// Arduino 3.3.11/IDF 5.5.5 S2/S3 build and globally disabled HAL locks. Each callback
+/// completes terminally, borrows buffers only through return and never re-enters the driver.
+/// Serialize each driver separately; the bus gate does not serialize its cached APIs.
+/// No ISR calls. See docs/arduino-transport.md for SDK waits/cleanup and qualification.
 struct Context {
   TwoWire* wire = nullptr; ///< Borrowed initialized master; adapter never begins/ends/deletes it.
   std::atomic_flag gate = ATOMIC_FLAG_INIT; ///< Nonblocking shared serialization; never held across polls.
@@ -60,7 +64,8 @@ TUSB32x::Status write(uint8_t address, const uint8_t* data, size_t length,
 /// @param[in] txLength Must equal one.
 /// @param[out] rxData Borrowed output, unchanged unless all bytes arrive successfully.
 /// @param[in] rxLength Exact length in 1..8; no caller buffer retained by SDK.
-/// @param[in] timeoutMs One aggregate millisecond budget; second phase uses remaining time.
+/// @param[in] timeoutMs Aggregate milliseconds including gate, both phases, SDK cleanup and
+/// qualified CPU overhead; second phase uses only the remaining time.
 /// @param[in,out] user Borrowed Context shared by the entire physical controller.
 /// @return OK or I2C_*; receive failure reports observed length, not an unavailable ESP error.
 /// Zero/insufficient budget returns I2C_TIMEOUT; invalid arguments/setup return I2C_ERROR.

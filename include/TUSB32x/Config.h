@@ -24,6 +24,7 @@ namespace TUSB32x {
 /// recovery is allowed. SDK internal waits/cleanup require an independent bound audit. No asynchronous
 /// work may outlive return. Owner/validation codes and invalid enums are normalized to I2C_ERROR.
 /// Status does not report elapsed time; the owner must obtain a fresh time sample after return.
+/// Returned Status.msg must have static lifetime because results and diagnostics retain it.
 using I2cWriteFn = Status (*)(uint8_t address, const uint8_t* data, size_t length,
                              uint32_t timeoutMs, void* user);
 
@@ -43,6 +44,7 @@ using I2cWriteFn = Status (*)(uint8_t address, const uint8_t* data, size_t lengt
 /// retained buffers, asynchronous completion or instance reentry. SDK internal waits/cleanup require
 /// an independent bound audit. Status does not report elapsed time; the owner samples freshly after
 /// return. A timeout parameter alone does not prove an SDK bound.
+/// Returned Status.msg must have static lifetime because results and diagnostics retain it.
 using I2cWriteReadFn = Status (*)(uint8_t address, const uint8_t* txData, size_t txLength,
                                  uint8_t* rxData, size_t rxLength, uint32_t timeoutMs, void* user);
 

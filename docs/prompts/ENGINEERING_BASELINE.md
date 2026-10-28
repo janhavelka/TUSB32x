@@ -606,8 +606,9 @@ For `HardwareEffect`: NONE means no data-changing write could have reached the
 target; CONFIRMED means every intended write and required postcondition was
 verified; PARTIAL means at least one confirmed write occurred but the requested
 final state was not fully verified; INDETERMINATE means any attempted write has
-unresolved acceptance. An address NACK can prove no effect for that attempt only
-when the backend's phase guarantee says so; it cannot undo an earlier write.
+unresolved acceptance. These Status-only callbacks carry no separate phase or
+acceptance evidence: every invoked failed write remains possibly accepted,
+including address NACK or BUSY. A later status cannot undo an earlier write.
 Read-only success has NONE. A successful reset command write alone does not
 establish reset completion. Read-only reconciliation does not rewrite the old
 operation's result or claim the old operation succeeded.

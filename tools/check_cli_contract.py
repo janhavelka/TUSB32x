@@ -7,6 +7,9 @@ reads/exits are bounded by PersistentHost. --self-test-negative requires damaged
 alias and record contracts to fail against actual fixture output.
 Read-observation routes independently require zero adapter write callbacks; their
 reported hardware-effect value alone is insufficient evidence of bus behavior.
+Exit 0 means all selected assertions passed; argparse exits 2 for invalid syntax
+and uncaught fixture/parser/assertion errors exit nonzero. The checker writes no
+report files; assertion context and fixture output are its console evidence.
 """
 
 from __future__ import annotations

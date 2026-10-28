@@ -4,6 +4,14 @@ Archive parsing is bounded and never uses tarfile's filesystem extraction. Build
 execute source code and therefore require a package made from this trusted checkout;
 path validation does not sandbox arbitrary CMake. All subprocesses use argument
 lists and finite timeouts. Temporary evidence is retained for inspection.
+Select --archive for an existing trusted .tar.gz or --test-archive to pack the
+checkout's literal export list. --out receives package-report.json and consumer
+origin/dependency reports; when --out is inside the checkout, the retained private
+extraction and build workspace use the system temporary directory instead.
+--extract-only validates content and links without consumer linkage. Each child
+has 60 seconds. Exit 0 means the selected checks passed, 1 a failed check/I/O,
+and 2 invalid arguments or unavailable requested build tools. No port or network
+is opened by this checker, and it does not remove the retained workspace.
 """
 
 import argparse
@@ -425,7 +433,14 @@ def check_dependencies(root, fixture, build, args, environment, compiles):
 
 
 def consume(root, checkout, args):
-    """Copy only the public consumer fixture, build/run, and verify extracted origins."""
+    """Build/run checkout's public consumer fixture against extracted root; return None.
+
+    args supplies explicit build tools, generator and configuration. Fresh sibling
+    consumer and consumer-build directories hold copied fixture/build files;
+    dependency/origin reports prove actual inputs came from root or the toolchain.
+    Each child has 60 seconds. PackageError, I/O and child errors propagate while
+    retaining evidence. Only this trusted package's build/source code is executed.
+    """
     workspace = root.parent
     fixture = workspace / "consumer"
     fixture.mkdir()

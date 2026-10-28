@@ -54,11 +54,16 @@ def _seconds(value, name, maximum):
 
 @dataclass(frozen=True)
 class ObservationPlan:
-    """Selected target, finite suites and host timing; all durations are milliseconds/seconds.
+    """Validated target, suites, sample count and host timing; construction does no I/O.
 
-    Count includes the first immediate soak observation. Intervals are quiet
-    gaps after completed observations; late work never causes catch-up bursts. The whole-run
-    deadline includes handshake, reads, waits, result delivery and local cleanup.
+    variant selects an exact supported part and address is its seven-bit address.
+    suites are named plans, deduplicated in order. count is 1..100000 including
+    the first immediate soak observation; interval_ms is 1..3600000 milliseconds
+    between completed observations. Late work never causes catch-up bursts.
+    Optional duration_ms caps soak time at 1..86400000 milliseconds. run_timeout
+    is positive seconds up to 86400 and includes handshake, reads, waits, result
+    delivery and local cleanup; command_timeout is positive seconds up to 3600,
+    no larger than run_timeout. Invalid values/schedules raise ValueError.
     """
 
     variant: str = "tusb320lai"
@@ -212,6 +217,11 @@ def run_plan(session, plan, expected=None, clock=time.monotonic, sleep=time.slee
              run_deadline=None):
     """Run complete readonly/soak plans, save checks, restore local values and close framing.
 
+    session is a fresh borrowed Session, plan an ObservationPlan and expected an
+    optional mapping of firmware identity fields to exact strings. clock/sleep
+    share the Session's monotonic seconds domain. Return a detached observation
+    summary (count, detached, last) after complete proof; failures are checkpointed
+    and propagated. Reports/transcript are written through session.artifacts.
     The caller owns I/O teardown. On failure, only verified local restoration is
     attempted, under the original whole-run deadline; no hardware rollback or
     result-take retry occurs. Fixed aggregates replace sample/transcript journals.

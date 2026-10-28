@@ -179,8 +179,9 @@ Status decodeRegister(Variant variant, uint8_t reg, uint8_t value, RegisterDecod
       decoded.profileCodes.disableUfpAccessory = (value & DISABLE_ACCESSORY) != 0;
       decoded.profileValidFields |= field(ProfileField::DISABLE_UFP_ACCESSORY);
     }
-    // 322I 09 bit08 is independent raw VCONN fault evidence. Table 6-9's RCU does
-    // not specify a fault-clear transaction: no typed fault clear or implied ACK.
+    // TUSB322I 09 bit 3 (mask 0x08) is independent raw VCONN fault evidence.
+    // SLLSEO5D Table 6-9 p19 labels it RCU without specifying a fault-clear
+    // transaction: no typed fault clear or implied ACK.
   } else if (reg == 0x0A) {
     decoded.profileCodes.ccDebounce = info->hasExtendedControls
         ? EXTENDED_DEBOUNCES[(value & DEBOUNCE) >> 6] : BASE_DEBOUNCES[(value & DEBOUNCE) >> 6];
@@ -237,7 +238,8 @@ Status decodePort(Variant variant, uint8_t first09, uint8_t status08, uint8_t la
     decoded.advertisedCurrent = status.profileCodes.sourceCurrent;
     decoded.validFields |= field(PortField::ADVERTISED_CURRENT);
   }
-  // TI B Table7-7 pp17-18; L/A Tables8-9 pp17-18; V Tables6-8/9 pp18-19.
+  // TI SLLSEN9F Table 7-7 pp17-18; SLLSEP2D/SLLSEQ8D Tables 8-9 pp17-18;
+  // SLLSEO5D Tables 6-8/6-9 pp17-19.
   // Applicability is conservative library policy: contradictory/reserved accessory
   // combinations remain unknown. No normal power roles are inferred for accessories.
   const bool noAccessory = status.accessory == Accessory::NONE;

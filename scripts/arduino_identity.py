@@ -1,4 +1,13 @@
-"""Generate example-only firmware identity from the actual build checkout and UTC time."""
+"""Write Arduino example identity through the active PlatformIO/SCons environment.
+
+Importing this extra script reads PROJECT_DIR, BUILD_DIR and PIOENV from ``env``,
+writes BUILD_DIR/example_identity/FirmwareBuild.h and appends its include path.
+Up to three local Git calls each have a 10-second timeout; unavailable Git or a
+different enclosing checkout leaves identity unknown. The sanitized target is
+limited to 32 characters; the UTC stamp identifies this invocation, not a release.
+File/environment errors propagate to fail the firmware build. No core version,
+tracked source, network service or device is changed.
+"""
 from datetime import datetime, timezone
 from pathlib import Path
 import re
@@ -8,7 +17,7 @@ Import("env")  # type: ignore[name-defined]  # SCons supplies the active firmwar
 
 
 def git_value(*args):
-    """Read this checkout without depending on Git in downstream core consumers."""
+    """Return stripped Git output for PROJECT_DIR; error/10-second timeout returns None."""
     try:
         return subprocess.check_output(
             ["git", "-C", env.subst("$PROJECT_DIR"), *args],

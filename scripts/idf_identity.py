@@ -2,6 +2,11 @@
 
 Only example CMake invokes this script. The portable core has no Python or Git
 dependency. Tokens use the same spelling and unknown-checkout rules as Arduino.
+Required --root, --output and --target select the checkout, generated header and
+SDK target. Up to three local Git calls each have a 10-second timeout. The output
+parent is created and the header replaced; no tracked package version is changed.
+Exit 0 means written, argparse exits 2 for invalid arguments, and unhandled file
+errors fail the build. No network or device access occurs.
 """
 from __future__ import annotations
 
@@ -13,7 +18,11 @@ import subprocess
 
 
 def git_value(root: Path, *arguments: str) -> str | None:
-    """Read bounded local Git metadata, leaving missing/unrelated evidence unknown."""
+    """Return stripped Git output for root, or None after error/10-second timeout.
+
+    Arguments are passed as separate local subprocess arguments. The caller
+    checks checkout association before using returned revision/tree metadata.
+    """
     try:
         return subprocess.check_output(
             ["git", "-C", str(root), *arguments], text=True,
@@ -23,7 +32,13 @@ def git_value(root: Path, *arguments: str) -> str | None:
 
 
 def generate(root: Path, output: Path, target: str) -> None:
-    """Write static C++ string tokens for this exact root and current UTC build."""
+    """Replace output with root's revision/tree, current UTC and sanitized target.
+
+    Create output's parent if needed and return None. A missing Git executable,
+    failed Git call or different enclosing repository produces unknown evidence.
+    Target characters outside ASCII letters/digits/_.- become underscores; at
+    most 32 remain, with unknown for an empty target. Filesystem errors propagate.
+    """
     root = root.resolve()
     git_root = git_value(root, "rev-parse", "--show-toplevel")
     own_checkout = git_root is not None and Path(git_root).resolve() == root
@@ -45,7 +60,10 @@ def generate(root: Path, output: Path, target: str) -> None:
 
 
 def main() -> int:
-    """Require explicit example root, generated header destination and SDK target."""
+    """Read process arguments, generate the explicit header and return 0 on success.
+
+    argparse exits 2 for invalid syntax; generation errors propagate to the build.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)

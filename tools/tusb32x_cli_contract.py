@@ -590,7 +590,8 @@ def validate_record(record: Mapping[str, str]) -> None:
 def parse_record(line: str) -> dict[str, str]:
     """Parse a machine line to a string mapping including 'type', or raise ValueError.
 
-    Accept at most511 ASCII bytes with one optional final newline/CRLF. Human
+    Accept ASCII text whose LF-terminated form fits 511 bytes; normalize a final
+    CRLF before counting and charge one LF if no terminator is supplied. Human
     text, ANSI, duplicate keys, bad tokens and invalid schemas/values reject.
     Additional fields survive. The caller owns byte assembly and correlation.
     """
