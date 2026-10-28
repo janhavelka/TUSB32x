@@ -578,7 +578,9 @@ The persistent C++ fixture has launch-only modeled physical observations and
 test identity; production CLI grammar is unchanged. It proves actual core ACK
 preservation and pending-latch effects, not physical INT/CC behavior. hil_runner
 has a finite 180s limit for the expanded atomic-artifact tests; cli_transcript
-retains30s. No ordinary test opens a physical port or needs pyserial.
+has a 60s suite limit with phase progress after completed assertions. Its command
+and operation deadlines remain independently checked. No ordinary test opens a
+physical port or needs pyserial.
 
 Prompt31 completes all nine families using those same registrations. The recovery
 test module covers exact predeclared outcomes, action/identity/epoch guards, each

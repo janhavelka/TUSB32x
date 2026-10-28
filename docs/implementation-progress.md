@@ -2746,3 +2746,29 @@ command, write, marker, core operation, cleanup and simulated-clock deadlines ar
 unchanged, as are all cases and assertions. Focused transcript verification and
 the next affected push result are recorded in validation; no unrelated source
 firmware matrix is run locally.
+
+The measured transcript correction was committed as
+`c50f8ddda8809425ede2161586466c95fa650ae6` and synchronized with zero ahead/behind.
+Its existing [push run 40782369910](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910)
+completed **SUCCESS: 14/14 jobs**, exact tested SHA verified, at 22:50:15 UTC.
+All 15 required artifacts exist for that SHA with bounded retention. The actual
+Python artifact proves transcript PASS in 17.8099s, all four phase checkpoints
+and 248 requests; runner 312 cases pass in 94.474s, validator/CI 43, firmware 24
+and version 18. Native/sanitizer/docs/package checks and all eight extracted
+firmware links pass. No manual dispatch or job rerun was needed; the initial
+failed run remains separately recorded.
+
+The final archive is 302,545 bytes / 76 files, SHA256
+`654a5213022bc570eeb346f56d084cdbdaaf75cdbc5928406e25450fa6cf0240`.
+Final Python/package artifacts are independently checked; all 71 Linux test
+names/owners match and no Python JUnit case is skipped. Prior 32-file independent
+image rehashing stays tied to `ac211e0`, not reassigned to this new SHA. The
+final checked image jobs inspect their own extracted sources, headers, symbols
+and artifacts. Evidence is under build/audit-33-34-final-ci and the lead's
+ci-final.json; validation records actual commands, results and remaining limits.
+
+Audit complete: confirmed defects fixed, full scoped diff reviewed, local checks
+and final CI passed. This final reporting unit changes documentation only and
+receives link/version/whitespace checks plus its own commit/sync. It does not
+create a further remote gate or extend the tested SHA to a reporting commit.
+Physical serial/I2C/USB/CC/INT/supply/timing qualification remains NOT RUN.

@@ -4130,3 +4130,53 @@ and four progress checkpoints. Fresh CTest JSON and check_ci.py confirm all 72
 registrations still have their exact owners and finite timeouts. Python syntax,
 version ownership and diff whitespace checks remain valid. The next affected
 push-triggered Python result will be recorded with its own tested commit.
+
+### Completed audit CI
+
+**PASS:** [run 40782369910](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910),
+exact tested SHA `c50f8ddda8809425ede2161586466c95fa650ae6`, completed
+2026-10-28 22:50:15 UTC. All **14/14 jobs** passed on the same execution branch:
+five strict GCC/Clang Debug/Release/sanitizer configurations, workflow, Python,
+documentation, package, four Arduino images and four native IDF SDK/target images.
+The 15 expected artifacts exist, unexpired and attributed to that exact SHA;
+bounded seven-day retention and required artifact paths remain enabled.
+No manual dispatch, job retry, disabled case or assertion suppression was used.
+The first audit push remains FAIL and its evidence is retained above.
+
+Independent final artifact checks:
+
+| Check | Actual PASS evidence |
+| --- | --- |
+| Registration | All 71 Linux names match the canonical groups: 53 native, six contracts, seven Python, two Doxygen, three package; finite bounds and no skipped Python JUnit cases |
+| Complete transcript | 17.8099s under the 60s suite ceiling; four completed phase messages, all 248 persistent requests and the complete prior failure/fixture checks |
+| Runner | 312 cases in 94.474s (CTest 94.7005s); original 180s suite and every inner deadline unchanged |
+| Validator/CI, firmware guard, version | 43, 24 and 18 cases respectively, all PASS |
+| Package safety/origins | 42 unit cases and real clean consumers, including Ninja Multi-Config and outside-header rejection; origins 3.24851s |
+| Archive/consumer | 302,545 bytes, 76 source-equal files, 175 packaged links; renamed tests-OFF consumer compile/link/run; no maintainer tools on its child PATH |
+| Final artifacts | Three independently downloaded Python/package ZIP digests match service metadata; exact source SHA, JUnit, logs and consumer archive hash agree |
+
+Final archive SHA-256:
+
+```text
+654a5213022bc570eeb346f56d084cdbdaaf75cdbc5928406e25450fa6cf0240
+```
+
+All eight final extracted image jobs pass their actual compiler-dependency,
+identity, target/configuration, native-symbol and artifact checks. The earlier
+independent rehash of 32 image/map/config/lock files remains explicitly attached
+to `ac211e0`; it is not transferred to this SHA. No identical extra source
+firmware matrix was added. SDK/tool/action pins and production firmware sources
+remain unchanged throughout this audit. Actual CI tools are those recorded in
+the checkpoint's pinned matrix; no new supported row is claimed.
+
+Evidence: `build/audit-33-34-final-ci/verification.json`, its three artifact ZIPs
+and python-LastTest.log; `build/audit-33-34-lead/ci-final.json` records the terminal
+run, all jobs and exact-SHA artifact inventory. The local Release 72/72 and
+Debug 59/59 evidence precedes only the separately verified transcript CPU-margin
+correction; final CI executes all affected checks on that correction.
+
+The final documentation-only report is checked locally and synchronized without
+another remote gate. It retains `c50f8dd` as the tested CI revision. Remaining
+**NOT RUN** evidence is physical serial/USB, I2C framing/aggregate blocking,
+Type-C/current/INT and exact-board supply/timing qualification. No HIL, flashing,
+power manipulation, release, registry publication or sibling change occurred.
