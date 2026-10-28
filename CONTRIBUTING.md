@@ -47,6 +47,10 @@ through CTest when editing sessions or record contracts. These tests need no
 pyserial; the pinned optional hardware dependency is tools/requirements-hil.txt.
 An actual port must be selected explicitly for the read-only serial entry point;
 never use test completion as hardware qualification. See [sessions](docs/hil-runner.md).
+Readonly/soak observation and dry-run checks use those same registrations. A
+portless `--dry-run --variant tusb320lai --address 0x47 --suite readonly --out
+build/readonly-plan` saves the concrete plan and exits 2 with hardware NOT RUN.
+Never add physical HIL invocation to ordinary tests or validation commands.
 Native application builds use the pinned IDF5.5.5 environment and independent
 absolute build/SDKCONFIG paths, including on incremental builds. See the
 [native application guide](examples/esp_idf/basic/README.md) for wiring and commands.

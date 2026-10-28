@@ -18,7 +18,8 @@ completes all diagnostic commands and executable alias/help/record parity.
 Prompt 27 adds runnable simulated plain C++ ownership and generic integration
 evidence without a FieldCore dependency.
 Prompt 28 provides strict Python session framing, provenance, bounded evidence
-and saved outcomes; complete observation and fixture plans remain later work.
+and saved outcomes. Prompt 29 implements finite readonly/soak/register observation
+plans and their live native integration; physical fixture mutation suites remain later work.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

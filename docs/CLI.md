@@ -1,9 +1,9 @@
 # Complete shared CLI
 
-The [Python session layer](hil-runner.md) now reuses these schemas for strict
+The [Python observation runner](hil-runner.md) reuses these schemas for strict
 marker/request/token correlation, bounded evidence and explicit local restoration.
-Its serial entry point performs read-only framing/firmware-identity checks;
-observation and fixture plans remain later work. It owns only admitted tokens
+Its serial entry point implements finite readonly/soak and mapped-register
+observation; physical fixture mutation plans remain later work. It owns only admitted tokens
 from that run and never consumes another owner's retained result.
 
 The implemented CLI is example code in

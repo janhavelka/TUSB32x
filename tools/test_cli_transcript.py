@@ -19,6 +19,7 @@ from collections.abc import Callable, Mapping, Sequence
 from tusb32x_cli_contract import ROWS, SCHEMAS, parse_record, validate_record, validate_exchange
 from tusb32x_hil_artifacts import Artifacts
 from tusb32x_hil_runner import Session, SessionBlocked
+from tusb32x_hil_plans import ObservationPlan, PlanFailure, run_plan
 
 
 class PersistentHost:
@@ -936,6 +937,159 @@ def exercise_session(executable):
                 artifacts.close()
 
 
+def exercise_observation_plans(executable):
+    """Run the complete production readonly plan against normal and failing real CLI buses."""
+    for fault in (False, True):
+        options = ("--observation", "1") + (("--fault", "transport") if fault else ())
+        host = PersistentHost(executable, *options)
+        io = SessionFixtureIo(host)
+        with tempfile.TemporaryDirectory(prefix="tusb32x-plan-") as temporary:
+            artifacts = Artifacts(Path(temporary), time.monotonic)
+            try:
+                session = Session(io, artifacts)
+                try:
+                    run_plan(session, ObservationPlan())
+                except PlanFailure:
+                    if not fault:
+                        raise
+                else:
+                    if fault:
+                        raise AssertionError("failed callback became a successful readonly plan")
+                report = artifacts.snapshot()
+                if report["primary"] != ("FAIL" if fault else "PASS"):
+                    raise AssertionError("native plan lost its primary outcome")
+                if session.operation is not None or session.valid:
+                    raise AssertionError("native plan left its owned result/session open")
+                operation = report["metadata"]["operation"]
+                if not operation["taken"]:
+                    raise AssertionError("native plan failed to consume its exact result")
+                if fault:
+                    if (operation["result"]["code"] != "I2C_TIMEOUT" or
+                            operation["result"]["detail"] != "-2147483648"):
+                        raise AssertionError("native plan erased original failed callback evidence")
+                elif report["metadata"]["observations"]["count"] < 1:
+                    raise AssertionError("readonly plan never established a fresh observation")
+                elif (report["metadata"]["observations"]["detached"] !=
+                      report["metadata"]["observations"]["count"]):
+                    raise AssertionError("valid repeated detached observations were not counted")
+                # Continue the same process after the production plan's end marker. These
+                # cache queries independently prove actual restoration and zero device writes.
+                host.request, host.nonce = session.last_request, session.nonce
+                host.last_ack = session.last_request
+                bus = payload(host.command("bus", "bus"), "BUS")
+                if bus["adapter_writes"] != "0" or int(bus["adapter_write_reads"]) < 1:
+                    raise AssertionError("readonly plan wrote hardware or performed no reads")
+                before = report["metadata"]["local_before"]
+                after_console = payload(host.command("console", "console"), "CONSOLE")
+                after_job = payload(host.command("job status", "job.status"), "JOB")
+                after_profiles = host.command("profile show", "profile.show")
+                after_profile = next(r for r in after_profiles if r["type"] == "PROFILE"
+                                     and r["source"] == "staged")
+                if (after_job["auto"] != before["auto"] or
+                        any(after_console[key] != before["console"][key]
+                            for key in ("color", "verbose")) or
+                        any(after_profile[key] != before["profile"][key]
+                            for key in SCHEMAS["PROFILE"][3:] if key != "generation")):
+                    raise AssertionError("native plan did not restore saved local values")
+                host.close()
+            finally:
+                if host.process.poll() is None:
+                    host.process.kill()
+                    host.process.wait(timeout=3)
+                artifacts.close()
+
+
+def exercise_plan_denied_take(executable):
+    """Keep a production plan failed and unrestored when real output reservation denies take."""
+    host = PersistentHost(executable, "--observation", "1", "--fault", "take-full")
+    io = SessionFixtureIo(host)
+    with tempfile.TemporaryDirectory(prefix="tusb32x-denied-plan-") as temporary:
+        artifacts = Artifacts(Path(temporary), time.monotonic)
+        try:
+            session = Session(io, artifacts)
+            try:
+                run_plan(session, ObservationPlan())
+            except PlanFailure:
+                pass
+            else:
+                raise AssertionError("denied take did not stop the production plan")
+            report = artifacts.snapshot()
+            operation = report["metadata"]["operation"]
+            if (report["primary"] != "FAIL" or operation["taken"] or session.valid or
+                    session.operation is None or not report["residual_uncertainty"] or
+                    not report["metadata"].get("unrestored_local")):
+                raise AssertionError("denied take lost owned/unrestored failed evidence")
+            # Independent fixture inspection proves core retention. The failed production
+            # Session remains invalid and never retries the take or replays local settings.
+            host.request, host.nonce = session.last_request, session.nonce
+            host.last_ack = session.last_request
+            job = payload(host.command("job status", "job.status"), "JOB")
+            copied = payload(host.command("result", "result"), "RESULT")
+            if job["result_pending"] != "1" or any(
+                    copied[key] != operation["result"][key] for key in SCHEMAS["RESULT"][3:]):
+                raise AssertionError("failed plan consumed or changed the retained core result")
+            host.close()
+        finally:
+            if host.process.poll() is None:
+                host.process.kill()
+                host.process.wait(timeout=3)
+            artifacts.close()
+
+
+def exercise_session_turns(executable):
+    """Prove real older completion, one-turn cached progress and denied take retention."""
+    for congested in (False, True):
+        options = ("--observation", "1") + (("--fault", "take-full") if congested else ())
+        host = PersistentHost(executable, *options)
+        io = SessionFixtureIo(host)
+        with tempfile.TemporaryDirectory(prefix="tusb32x-turns-") as temporary:
+            artifacts = Artifacts(Path(temporary), time.monotonic)
+            try:
+                session = Session(io, artifacts)
+                session.begin()
+                session.command("bind")
+                session.command("job auto 0")
+                admitted = session.command("init")
+                origin = admitted.ack["request"]
+                zero = payload(session.command("job step 0").records, "JOB")
+                if zero["callbacks"] != "0" or zero["last_poll_callbacks"] != "0":
+                    raise AssertionError("real zero callback budget advanced work")
+                session.command("job auto 1")
+                before = payload(session.command("bus").records, "BUS")
+                newer_request = session.last_request
+                after = payload(session.command("bus").records, "BUS")
+                if int(after["adapter_write_reads"]) - int(before["adapter_write_reads"]) != 1:
+                    raise AssertionError("cached query turn did not advance exactly one callback")
+                rejected = session.command("mode nonsense")
+                if rejected.end["code"] != "INVALID_PARAM" or rejected.end["callbacks"] != "0":
+                    raise AssertionError("malformed handler acquired callbacks from older work")
+                for _ in range(8):
+                    if session.operation.complete:
+                        break
+                    session.command("job status")
+                result = session.wait_operation()
+                if (result["origin_request"] != origin or int(origin) >= newer_request or
+                        result["code"] != "OK" or result["callbacks"] != "6"):
+                    raise AssertionError("older completion lost exact origin or callback evidence")
+                if congested:
+                    denied = session.take_result()
+                    if denied.end["code"] != "BUSY" or session.operation is None:
+                        raise AssertionError("output-full take consumed the retained core result")
+                    copied = payload(session.command("result").records, "RESULT")
+                    if any(copied[key] != result[key] for key in SCHEMAS["RESULT"][3:]):
+                        raise AssertionError("denied take changed the original result")
+                taken = session.take_result()
+                if taken.end["code"] != "OK" or session.operation is not None:
+                    raise AssertionError("exact successful take did not release ownership")
+                session.finish()
+                io.close()
+            finally:
+                if host.process.poll() is None:
+                    host.process.kill()
+                    host.process.wait(timeout=3)
+                artifacts.close()
+
+
 def main() -> int:
     """Run the bounded transcript; return zero only after all records and fixture exit pass."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -956,13 +1110,16 @@ def main() -> int:
         exercise_diagnostic_fixtures(args.host)
         exercise_terminal_ordering(args.host)
         exercise_session(args.host)
+        exercise_observation_plans(args.host)
+        exercise_plan_denied_take(args.host)
+        exercise_session_turns(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()
             host.process.wait(timeout=3)
         raise
     print(f"CLI transcript: {requests} persistent requests and damaged-record checks passed; "
-          "2 strict session exchanges passed")
+          "2 strict sessions, 3 native readonly plans and 2 owner-turn sessions passed")
     return 0
 
 

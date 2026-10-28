@@ -537,13 +537,21 @@ ctest --test-dir build/native -C Debug -R "tusb32x_host_basic|tusb32x_operations
 ## Python session and evidence checks
 
 The single `hil_runner` CTest runs tools/test_tusb32x_hil_runner.py, including the
-separate artifact helper's failure cases. Injected serial/clock tests cover
+separate artifact helper's failure cases and planning/pre-open/dry-run checks.
+The production readonly/soak plans execute against reactive fake serial/time;
+invalidation, counter/budget failures, local restoration, result fences and whole
+run/stage limits have negative tests without physical I/O. Injected tests also cover
 fragments, schemas, marker/request/token ownership, older original completion,
 failed payload versus successful delivery, immutable deadlines, caps, atomic
 reports, verified local restoration and saved interruption. They need no pyserial
 or wall-clock sleeps. The existing `cli_transcript` also runs the actual Session
 against the built persistent C++ fixture, including a real fixture-injected
-I2C_TIMEOUT payload under delivery OK and good local cleanup.
+I2C_TIMEOUT payload under delivery OK and good local cleanup. It executes the
+complete readonly plan against one persistent process in normal, transport-failure
+and output-full take modes. Controlled fixture turns separately prove cached/
+malformed zero handler callbacks with auto progress, older completion after newer
+query, BUSY take reservation and exact result retention. Original fixture mode
+and all prior transcript cases remain enabled; no firmware grammar was added.
 
 ```text
 python tools/test_tusb32x_hil_runner.py

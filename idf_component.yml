@@ -36,6 +36,7 @@ files:
     - "docs/idf-transport.md"
     - "docs/integration.md"
     - "docs/hil-runner.md"
+    - "docs/hardware-validation.md"
     - "examples/esp_idf/Tusb32xIdf.h"
     - "examples/esp_idf/Tusb32xIdf.cpp"
     - "docs/diagnostics.md"

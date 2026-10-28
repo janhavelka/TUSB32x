@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently audit and correct completed prompts 27 and 28.
+Current authorization: implement prompt 29, finite read-only observation runners.
 
 ## Prompt status
 
@@ -38,7 +38,7 @@ Current authorization: independently audit and correct completed prompts 27 and 
 | [26: idf-cli-example](prompts/26-idf-cli-example.md) | COMPLETE |
 | [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | COMPLETE |
 | [28: python-session](prompts/28-python-session.md) | COMPLETE |
-| [29: observation-runners](prompts/29-observation-runners.md) | NOT STARTED |
+| [29: observation-runners](prompts/29-observation-runners.md) | COMPLETE |
 | [30: port-fixture-suites](prompts/30-port-fixture-suites.md) | NOT STARTED |
 | [31: recovery-fixture-suites](prompts/31-recovery-fixture-suites.md) | NOT STARTED |
 | [32: package-consumers](prompts/32-package-consumers.md) | NOT STARTED |
@@ -2023,3 +2023,67 @@ availability is recorded separately. Prompt29 remains unstarted.
 The lead commits and syncs the complete checked audit on the existing branch,
 then verifies equal upstream commits, zero ahead/behind and no uncommitted task
 changes in the handoff; record its hash in the next progress update.
+
+## Prompt 29: finite observation plans and native integration (2026-10-28)
+
+Started clean after fetch at synchronized independent-audit commit
+`aca463158485d13fe8d4437e1962dda4a4c32516`, on the same execution branch/base.
+Read current parent/local rules, COMMON, full29, CLI runner/record and baseline
+observation/register contracts, workflow and maintainability. Fresh clean peer
+HEADs, exact declarations/CLI/runner/tests/AGENTS/workflow paths and adopted/
+rejected choices are in [execution29](audit/execution-29-peers.md). No workflow
+definitions exist locally; remote CI remains prompt34 only. No sibling edits/
+builds, physical serial open, flashing or hardware actions occurred.
+
+Delegation: gpt-6.1-sol/high owned the fresh peer audit, then reactive plan and
+failure tests in the existing runner suite; another owned planning/pre-open/dry-run
+tests and the two runner/hardware guides. gpt-6-astra/high reviewed ownership,
+freshness and deadline evidence, then owned only the persistent C++ fixture and
+transcript integration. The lead owned production planning/main, shared contracts,
+integration/review, remaining docs/checks and all Git. Disjoint files remained
+explicit, and reviewers' findings were confirmed against code/live output.
+
+Implemented complete readonly and finite soak plans, a per-variant mapped register
+list, strict pre-open target/identity/timing/capture guards, normalized repeated
+suites and portless dry-run artifacts. Plans reuse Session/parser/artifacts and
+ordinary commands, compare the configured target, reject foreign ownership,
+bind only an already selected ended target, and never apply/reset/ACK/recover.
+Local staging/auto/output restoration stays separate from core state and effects.
+Result delivery/take remain exact and owned; BUSY take is retained evidence with
+no hidden retry. Aggregate count/last observation avoids a growing sample journal.
+
+Review fixes include concrete selected-suite descriptions, quiet-gap semantics,
+unknown/contradictory/invalidation/coherence/raw/sequence/time freshness rejection,
+counter saturation/regression/consistency, staged parser-state preservation,
+zero callback deltas during staging/rejected verification, primary failure
+preservation, final-save lateness and nonadvancing wait refusal. Actual wire
+volume review also exposed unnecessary dependence on the CLI's 1000ms default:
+init/profile/verify use their existing optional timeout clipped to the host
+deadline. Port/soak reads use existing automatic finite polls within their fixed
+1000ms owner deadline; explicit init steps still prove zero/one budgets. No grammar
+change or physical timing qualification is inferred from these measurements.
+
+PASS: 161 deterministic Python tests, including 26 planning/pre-open cases and
+the original session/artifact suites. The unchanged cli_transcript registration
+runs 248 original requests, two strict sessions, three full native readonly plans
+(normal, failed callback, output-full take) and two controlled owner-turn sessions.
+Full strict Debug and Release pass 63/63 CTests each; the four affected CLI/runner
+registrations were repeated after final corrections. Source/registered tests use
+no pyserial, real sleeps or implicit hardware. Exact built fixture paths and
+finite timeouts remain unchanged. The actual dry-run saves LAI/0x47 and hardware
+NOT RUN with exit2; help runs successfully.
+
+PASS: version sync/check/no-op stability, strict Doxygen/public XML, complete
+Python docs/100-column style, local links, vendor hashes and UTF-8/LF/whitespace.
+The 76-file source-equal package includes the new hardware guide, retains explicit
+source lists/IDF selection and excludes maintainer tools. Renamed extracted host,
+shared CLI and public two-owner consumers build/run beneath unrelated Git with
+maintainer tools absent from child PATH. ASan/UBSan remain unavailable in the
+installed MinGW runtime; alternative compilers/clang-format remain absent.
+No firmware rebuild or remote CI was required for host tooling/fixture changes.
+Physical serial/I2C/CC/IRQ/VBUS and real adapter timing remain NOT RUN. See
+[validation](validation.md#prompt-29-observation-plans-and-native-integration-2026-10-28).
+
+The lead commits and synchronizes this complete checked unit on the execution
+branch, then verifies upstream equality, zero ahead/behind and no task changes in
+the handoff. Record its hash in the next progress update. Prompt30 is unstarted.

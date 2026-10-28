@@ -3182,3 +3182,69 @@ runs its real public API's 5,487 checks. Framework images were not rebuilt for
 host Python fixes; earlier links are not claimed as new-commit firmware evidence.
 Remote CI remains prompt34 only. Commit/push/fetch equality is verified in the
 handoff and the next progress update, avoiding a self-referencing hash loop.
+
+## Prompt 29: observation plans and native integration (2026-10-28)
+
+Entry: clean synchronized `aca463158485d13fe8d4437e1962dda4a4c32516`, same
+`promptset/tusb32x-implementation-20261023` branch. Fresh sibling revisions, dirty
+state, exact sources/AGENTS/workflows and choices are in
+[execution29](audit/execution-29-peers.md). Full original29, actual CLI schemas,
+core observation/access and retained-result tests were inspected. No remote CI,
+sibling edits/builds, hardware open, power control or flashing occurred.
+
+Tools rechecked: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GNU15.1.0 MinGW
+UCRT/MCF, Doxygen1.13.2, managed PlatformIO6.1.19/native1.2.1. No tool/dependency
+installation or version bump; library remains 0.1.0-dev.1. Actual hardware serial
+still needs optional pinned pyserial3.5, but tests/dry-run do not import it.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Planning/invocation | PASS | 26 cases: exact pairs/types/ranges/suites, checked span, finite run/stage/command limits, malformed expected identity/port/numbers, missing port, output failures and interrupted dry-run close |
+| Complete runner/session/artifacts | PASS | 161 cases with reactive serial and injected clock/wait; no wall-clock sleeps or hardware dependency; existing session/artifact tests retained |
+| Readonly/soak behavior | PASS | Full plans, detached fresh samples, missing desired rejection/all verify aliases with retained desired, zero/one callback budgets, mapped raw counts, negative attribution/counter/effect/freshness tests, lost sessions and local restoration |
+| Result and timing boundaries | PASS | Exact owned take, original versus copied result, failed payload, BUSY take no retry, foreign-result denial, run/stage/operation deadlines, clipped explicit firmware timeouts, nonadvancing wait and late final save |
+| Actual persistent C++ | PASS | 248 original requests/damaged records, two strict sessions, three full readonly plans (normal/I2C_TIMEOUT/BUSY take) and two controlled owner-turn sessions; zero data writes and preserved core result/state are asserted |
+| Native regression/build | PASS | Debug 63/63 and Release 63/63 CTests, strict warnings and active Release assertions; four affected registrations repeated after the final Python fixes |
+| Help and real dry-run entry | PASS | --help exit0; explicit readonly LAI/0x47 into build/p29-readonly-final, expected exit2, primary/hardware NOT RUN, finite concrete plan and no firmware identity/port traffic |
+| Package boundary | PASS | 76 source-equal files, matching IDF selection, shipped relative links; renamed extracted host/shared-CLI/public-owner consumers build/link/run beneath unrelated Git with tests OFF and Git/Python/Doxygen/PlatformIO absent from child PATH |
+| Documentation/metadata | PASS | Generator sync/check and repeated no-op bytes/mtime; Doxygen/XML visibility; eight Python modules' complete docstrings/100-column style; local links, eight vendor hashes, UTF-8/LF and diff whitespace |
+| Sanitizers/other compilers | BLOCKED | Installed MinGW lacks ASan/UBSan runtimes as freshly probed during prior27/28 audit; cl/clang++/clang-format remain absent; no unsupported sanitizer claim |
+| Physical serial/I2C/CC/IRQ/VBUS/VCONN | NOT RUN | No identified/authorized physical port, target or trace; native modeled counters/attachment do not qualify a connector, waveform, supply or adapter timing |
+
+Commands executed from the repository root:
+
+```text
+python tools/test_tusb32x_observation.py
+python tools/test_tusb32x_hil_runner.py
+python tools/test_cli_transcript.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/tusb32x_hil_runner.py --help
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite readonly --out build/p29-readonly-final
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R "^(hil_runner|cli_transcript|cli_contract|cli_contract_negative)$" --output-on-failure
+ctest --test-dir build/native -C Release -R "^(hil_runner|cli_transcript|cli_contract|cli_contract_negative)$" --output-on-failure
+python scripts/generate_version.py sync
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p29-final-check.py
+python build/p10-docs.py
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p29.tar.gz
+python build/p29-package.py
+git diff --check
+```
+
+The build/ scripts are session-only checks, not shipped future validators. Package
+isolation logs identify the extracted directory and strict compiler arguments;
+the public-owner fixture executes its existing 5,487 checks. Native observation
+mode controls simulated owner turns/output drain without changing firmware grammar
+or the default fixture mode. Output-full take tests retain actual core result
+evidence, not fabricated printed success. Wire-volume review motivated explicit
+timeouts and automatic port polling, but does not establish physical serial timing.
+Unchanged framework images were not rebuilt for these Python/test/documentation
+changes; earlier firmware links are not claimed as final-commit evidence. Commit,
+push and final fetched upstream equality are verified in the handoff and recorded
+in the next progress update. Prompt30 remains unstarted.

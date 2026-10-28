@@ -29,6 +29,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Complete Python readonly/soak and bounded register observation plans with strict
+  pre-open target/identity validation, portless dry-runs, immutable run deadlines,
+  fresh port evidence, exact callback/result checks and local-only restoration.
+  Persistent C++ tests cover normal plans, failed callbacks and output-full take;
+  the hardware guide records per-variant prerequisites without hardware claims.
+
 - Strict Python serial sessions with marker/request/token correlation, immutable
   host operation deadlines, firmware provenance, bounded streamed capture and
   atomic evidence reports. Local restoration verifies values without applying

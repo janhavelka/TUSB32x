@@ -16,7 +16,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from tusb32x_cli_contract import COMMANDS, SCHEMAS, parse_record
+from tusb32x_cli_contract import COMMANDS, ROWS, SCHEMAS, parse_record
 import tusb32x_hil_runner as runner
 from tusb32x_hil_artifacts import Artifacts
 
@@ -274,6 +274,238 @@ class Peer:
         self.closed = True
         if self.close_error is not None:
             raise self.close_error
+
+
+class PlanPeer(Peer):
+    """Reactive observation target; every owner turn has explicit callback accounting."""
+
+    def __init__(self, clock):
+        """Keep manual Peer unchanged and add finite ordinary-operation device state."""
+        super().__init__(clock)
+        self.attempts = 0
+        self.failures = 0
+        self.adapter_writes = 0
+        self.sequence = 0
+        self.observed_ms = 0
+        self.variant = "tusb320lai"
+        self.address = 71
+        self.bound = "1"
+        self.adapter_available = "1"
+        self.core_profile = dict(self.staged)
+        self.staged_generation = 0
+        self.turn_history = []
+        self.port_fault = {}
+        self.callback_budget = 1
+        self.result_code = "OK"
+        self.result_effect = "NONE"
+        self.take_code = "OK"
+        self.has_desired = False
+
+    def _profile(self, request):
+        """Keep staged edits separate from the unavailable desired/applied core evidence."""
+        rows = [record("CONFIG", request, self.nonce,
+                       has_desired=int(self.has_desired), has_applied=0),
+                record("CONFIG_DETAIL", request, self.nonce)]
+        for source in ("staged", "desired", "observed", "applied"):
+            values = self.staged if source == "staged" else self.core_profile
+            rows.append(record(
+                "PROFILE", request, self.nonce, source=source, **values,
+                generation=self.staged_generation if source == "staged" else 0,
+                available=int(source in {"staged", "observed"} or
+                              source == "desired" and self.has_desired),
+                disable_ufp_accessory=int(values["ufpaccessory"] == "off"),
+                disable_term=int(values["termination"] == "off"),
+                disable_rd_rp=int(values["rd_rp"] == "off")))
+        return rows
+
+    def _job(self, request, code="OK"):
+        """Report the actual admitted operation kind instead of a fixed sample kind."""
+        row = super()._job(request, code)
+        if self.operation:
+            row["kind"] = runner.KINDS[self.operation["command"]]
+            row["callbacks"] = str(self.operation["callbacks"])
+        return row
+
+    def _port(self, request):
+        """Emit unchanged detached values with independently advancing publication metadata."""
+        fields = dict(raw08=0, raw09=0, raw_valid_mask=3, valid_fields=7,
+                      invalidated=0, attachment="DETACHED", local_role="NOT_APPLICABLE",
+                      peer_role="NOT_APPLICABLE", orientation="NOT_APPLICABLE",
+                      detected_current="NOT_APPLICABLE", sequence=self.sequence,
+                      observed_ms=self.observed_ms, observed_time_valid=1, age_ms=0)
+        fields.update(self.port_fault)
+        return [record("PORT", request, self.nonce, **fields),
+                record("PORT_DETAIL", request, self.nonce, advertised_current="unknown",
+                       accessory="NONE", active_cable="unknown", interrupt_pending="0",
+                       configuration="KNOWN", coherence="BOOKENDS_MATCH")]
+
+    def _advance(self, budget):
+        """Consume bounded callbacks and queue the matching original closure exactly once."""
+        op = self.operation
+        if not op or op["done"] or not budget:
+            return 0
+        used = min(budget, op["remaining"])
+        self.attempts += used
+        op["callbacks"] += used
+        op["remaining"] -= used
+        if not op["remaining"]:
+            self.failures += int(self.result_code != "OK")
+            if op["command"] == "read":
+                self.sequence += 1
+                self.observed_ms = int(self.clock.now * 1000)
+            outcome = "SUCCEEDED" if self.result_code == "OK" else "FAILED"
+            payload = [record(
+                "RESULT", op["request"], op["nonce"], token=op["token"],
+                kind=runner.KINDS[op["command"]], state=outcome, code=self.result_code,
+                effect=self.result_effect, callbacks=op["callbacks"]),
+                record("RESULT_DETAIL", op["request"], op["nonce"], token=op["token"])]
+            op.update(payload=payload, done=True)
+            self.queue(payload + [record(
+                "END", op["request"], op["nonce"], command=op["command"],
+                token=op["token"], outcome=outcome, code=self.result_code,
+                callbacks=op["callbacks"])])
+        return used
+
+    def write(self, data, timeout):
+        """Model ordinary commands and their owner turn without touching Session internals."""
+        self.timeouts.append(("write", timeout))
+        self.clock.now += self.write_delay + 0.001
+        if self.write_error is not None:
+            raise self.write_error
+        text = data.decode("ascii").rstrip("\r\n")
+        self.writes.append(text)
+        if self.short_write:
+            return max(0, len(data) - 1)
+        self.request += 1
+        request = self.request
+        parts = text.split()
+        canonical = runner.canonical_command(text)
+        if parts[0] == "hilmark":
+            self.nonce = parts[1]
+            return self._respond(text, [record("MARK", request, self.nonce),
+                record("END", request, self.nonce, command="hilmark")], data)
+        malformed = text in {"bus extra", "mode nonsense", "reg -1", "read extra"}
+        if malformed:
+            canonical = "invalid"
+        ack = record("ACK", request, self.nonce, command=canonical)
+        end = record("END", request, self.nonce, command=canonical)
+        payload = []
+        if malformed or canonical == "verify" and not self.has_desired:
+            code = "INVALID_PARAM" if malformed else "CONFIGURATION_UNKNOWN"
+            ack.update(code=code, action="UNCHANGED")
+            end.update(code=code, outcome="FAILED")
+        elif canonical in {"init", "read", "profile.read", "verify"}:
+            self.token += 1
+            self.operation = dict(request=request, nonce=self.nonce, command=canonical,
+                                  token=self.token, done=False, remaining=3, callbacks=0)
+            ack.update(action="ADMITTED", code="IN_PROGRESS", token=str(self.token))
+            self.turn_history.append((text, self.attempts, 0))
+            return self._respond(text, [ack, self._job(request, "IN_PROGRESS")], data)
+        elif canonical in {"result", "result.take"}:
+            if not self.operation or not self.operation["done"]:
+                raise AssertionError("result query without completed operation")
+            ack["token"] = end["token"] = str(self.token)
+            payload = [dict(row, request=str(request), nonce=self.nonce)
+                       for row in self.operation["payload"]]
+            if canonical == "result.take":
+                if self.take_code == "OK":
+                    self.operation = None
+                else:
+                    ack.update(code=self.take_code, action="UNCHANGED")
+                    end.update(code=self.take_code, outcome="FAILED")
+                    payload = []
+        elif canonical in {"job.status", "job.auto", "job.step"}:
+            if canonical == "job.auto" and len(parts) == 3:
+                self.auto = parts[2]
+                ack["action"] = "LOCAL"
+            payload = [self._job(request)]
+            ack["token"] = end["token"] = payload[0]["token"]
+        elif canonical in {"console", "color", "verbose"}:
+            if canonical != "console" and len(parts) == 2:
+                setattr(self, canonical, "1" if parts[1] in {"1", "on"} else "0")
+                ack["action"] = "LOCAL"
+            payload = [self._console(request)]
+        elif canonical in {"profile.show", "profile.validate"} or (
+                canonical.replace("-", "_") in self.staged):
+            if canonical not in {"profile.show", "profile.validate"} and len(parts) == 2:
+                self.staged[canonical.replace("-", "_")] = parts[1]
+                self.staged_generation += 1
+                ack["action"] = "STAGED"
+            payload = self._profile(request)
+        elif canonical == "bus":
+            payload = [record("BUS", request, self.nonce, variant=self.variant,
+                              address=self.address, bound=self.bound,
+                              adapter_available=self.adapter_available,
+                              adapter_writes=self.adapter_writes,
+                              adapter_write_reads=self.attempts)]
+        elif canonical == "capabilities":
+            payload = [record("CAPABILITIES", request, self.nonce)]
+        elif canonical == "version":
+            payload = [record("VERSION", request, self.nonce),
+                       record("FIRMWARE", request, self.nonce, **self.identity),
+                       record("FRAMEWORK", request, self.nonce)]
+        elif canonical in {"variant", "addr"}:
+            payload = [record("TARGET", request, self.nonce, variant=self.variant,
+                              address=self.address, bound=self.bound)]
+        elif canonical in {"sample", "freshness"}:
+            payload = self._port(request)
+        elif canonical == "xfer_stats":
+            payload = [record("XFER", request, self.nonce, source="all_callbacks",
+                              attempts=self.attempts, success=self.attempts - self.failures,
+                              failures=self.failures, assertion="NONE",
+                              last_code="OK", expected_attempts="unknown",
+                              expected_success="unknown", expected_failures="unknown")]
+        elif canonical == "reg":
+            self.attempts += 1
+            ack["action"] = "ATTEMPTED"
+            end["callbacks"] = "1"
+            payload = [record("REG", request, self.nonce, source="read", variant=self.variant,
+                              address=int(parts[1], 0), value=0)]
+            payload += [record("DECODE", request, self.nonce, variant=self.variant,
+                               address=int(parts[1], 0), value=0, attachment="UNKNOWN",
+                               orientation="UNKNOWN", detected_current="UNKNOWN",
+                               accessory="UNKNOWN", active_cable="unknown",
+                               interrupt_pending="unknown", reset_requested="unknown"),
+                        record("DECODE_PROFILE", request, self.nonce, variant=self.variant,
+                               address=int(parts[1], 0), **self.core_profile,
+                               disable_ufp_accessory=0, disable_term=0, disable_rd_rp=0)]
+        elif canonical == "bind":
+            self.bound = "1"
+            payload = [record("TARGET", request, self.nonce, variant=self.variant,
+                              address=self.address, bound=self.bound)]
+        else:
+            row = next(row for row in ROWS if row["command"] == canonical)
+            for kind in row["records"].split(","):
+                if kind not in {"ACK", "END"}:
+                    fields = {
+                        "DRV": dict(source="managed_callbacks", state="READY", threshold=3,
+                                    bound=1, initialized=1, configuration="KNOWN", effect="NONE",
+                                    termination="ENABLED", reset="NONE"),
+                        "DIAG": dict(bound=1, initialized=1, configuration="KNOWN", effect="NONE",
+                                     termination="ENABLED", reset="NONE", last_kind="NONE",
+                                     last_code="OK"),
+                        "MANAGED": dict(source="managed_callbacks", initialized=1, last_code="OK"),
+                        "FAILURE": dict(code="OK"),
+                        "IDENTITY": dict(variant=self.variant, address=self.address,
+                                         identity_valid=0, bytes="unknown", revision="unknown"),
+                        "IRQ": dict(source="managed_operation", pending_before="unknown",
+                                    pending_after="unknown"),
+                        "XFER": dict(source="all_callbacks", attempts=self.attempts,
+                                     success=self.attempts - self.failures, failures=self.failures,
+                                     assertion="NONE", last_code="OK",
+                                     expected_attempts="unknown", expected_success="unknown",
+                                     expected_failures="unknown"),
+                    }[kind]
+                    payload.append(record(kind, request, self.nonce, **fields))
+        before = self.attempts
+        used = self._advance(self.callback_budget if canonical == "job.step" and
+                             parts[-1] != "0" else int(self.auto == "1" and
+                             canonical != "job.step"))
+        self.turn_history.append((text, before, used))
+        if canonical == "job.step":
+            payload = [self._job(request)]
+            payload[0]["last_poll_callbacks"] = str(used)
+        return self._respond(text, [ack] + payload + [end], data)
 
 
 class SessionTests(unittest.TestCase):
@@ -1158,6 +1390,507 @@ class SessionTests(unittest.TestCase):
                 self.assertNotEqual(saved["checks"].get("end_marker", {}).get("status"), "PASS")
 
 
+class ObservationExecutionTests(unittest.TestCase):
+    """Execute production finite plans with reactive wire faults and virtual time only."""
+
+    def make_plan_session(self, **plan_options):
+        """Create a real Session/artifact owner and a separate reactive observation target."""
+        from tusb32x_hil_plans import ObservationPlan
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        clock = FakeClock()
+        artifacts = Artifacts(Path(temporary.name), clock)
+        self.addCleanup(artifacts.close)
+        peer = PlanPeer(clock)
+        nonces = iter(f"plan_{index}" for index in range(1000))
+        session = runner.Session(peer, artifacts, clock=clock,
+                                 nonce_factory=lambda: next(nonces))
+        return session, peer, clock, artifacts, ObservationPlan(**plan_options)
+
+    def execute(self, fixture, sleep=None):
+        """Call the actual plan and advance injected interval waits without wall-clock sleep."""
+        from tusb32x_hil_plans import run_plan
+        session, _, clock, _, plan = fixture
+        return run_plan(session, plan, clock=clock,
+                        sleep=sleep or (lambda seconds: setattr(clock, "now", clock() + seconds)))
+
+    def assert_failed_plan(self, fixture, pattern=None):
+        """Require saved nonpassing proof for a production plan/session exception."""
+        from tusb32x_hil_plans import PlanBlocked, PlanFailure
+        with self.assertRaises((PlanFailure, PlanBlocked, runner.SessionError)) as caught:
+            self.execute(fixture)
+        if pattern:
+            self.assertRegex(str(caught.exception), pattern)
+        self.assertNotEqual(fixture[3].snapshot()["exit_code"], 0)
+        return caught.exception
+
+    def test_complete_readonly_plan_restores_local_state_and_takes_each_owned_result(self):
+        """Run all routes with no writes, exact takes and saved independent provenance."""
+        fixture = self.make_plan_session()
+        session, peer, _, artifacts, plan = fixture
+        peer.color, peer.verbose, peer.auto = "1", "0", "1"
+        peer.staged["current"] = "3a0"
+        original = dict(peer.staged)
+        observed = self.execute(fixture)
+        self.assertEqual(observed["count"], 1)
+        self.assertEqual(observed["detached"], 1)
+        self.assertEqual(artifacts.snapshot()["exit_code"], 0)
+        self.assertEqual(peer.staged, original)
+        self.assertEqual((peer.color, peer.verbose, peer.auto), ("1", "0", "1"))
+        self.assertIsNone(session.operation)
+        self.assertIsNone(peer.operation)
+        self.assertEqual(sum(text.startswith("result take ") for text in peer.writes), 4)
+        self.assertEqual(sum(text.startswith("reg 0x") for text in peer.writes),
+                         len(plan.describe()["registers"]))
+        self.assertTrue(all(used <= 1 for _, _, used in peer.turn_history))
+        self.assertFalse(any(text.split()[0] in {"apply", "reset", "wreg", "cancel"}
+                             for text in peer.writes))
+        self.assertTrue(peer.writes[-1].startswith("hilmark "))
+        self.assertTrue(all(used == 0 for text, _, used in peer.turn_history
+                            if runner.canonical_command(text) == "verify"))
+
+    def test_firmware_operation_timeouts_are_explicit_finite_and_host_bounded(self):
+        """Manual CLI jobs receive positive milliseconds clipped to the host command limit."""
+        for options in (dict(command_timeout=2), dict(run_timeout=1, command_timeout=1)):
+            with self.subTest(options=options):
+                fixture = self.make_plan_session(**options)
+                peer = fixture[1]
+                peer.has_desired = True
+                self.execute(fixture)
+                timed = [text for text in peer.writes if runner.canonical_command(text)
+                         in {"init", "profile.read", "verify"}]
+                self.assertEqual(len(timed), 5)
+                self.assertEqual({text.split()[0] for text in timed},
+                                 {"init", "profile", "verify", "selfcheck", "selftest"})
+                for text in timed:
+                    parts = text.split()
+                    self.assertEqual(len(parts), 3 if parts[0] == "profile" else 2)
+                    self.assertTrue(parts[-1].isascii() and parts[-1].isdecimal())
+                    self.assertGreater(int(parts[-1]), 0)
+                    self.assertLessEqual(int(parts[-1]), fixture[4].command_timeout * 1000)
+                if options["command_timeout"] == 1:
+                    self.assertLess(int(timed[-1].split()[-1]), 1000)
+                self.assertTrue(all(text == "read" for text in peer.writes
+                                    if runner.canonical_command(text) == "read" and
+                                    text != "read extra"))
+
+    def test_soak_repeated_detached_observations_are_fresh_and_finite(self):
+        """Count identical detached values using sequence/time and bound virtual intervals."""
+        fixture = self.make_plan_session(suites=("soak",), count=4, interval_ms=10)
+        sleeps = []
+        def advance(seconds):
+            """Record finite positive sleeps and advance only the injected clock."""
+            self.assertGreater(seconds, 0)
+            self.assertLessEqual(seconds, 0.05)
+            sleeps.append(seconds)
+            fixture[2].now += seconds
+        result = self.execute(fixture, advance)
+        self.assertEqual((result["count"], result["detached"]), (4, 4))
+        self.assertEqual(int(result["last"]["port"]["sequence"]), 4)
+        self.assertGreaterEqual(sum(sleeps), 0.03)
+        self.assertEqual(fixture[3].snapshot()["checks"]["soak"]["status"], "PASS")
+        self.assertNotIn("readonly", fixture[3].snapshot()["checks"])
+
+    def test_soak_rejects_a_nonadvancing_injected_wait(self):
+        """A broken clock/wait backend cannot create an unbounded interval loop."""
+        fixture = self.make_plan_session(suites=("soak",), count=2, interval_ms=1)
+        with self.assertRaisesRegex(RuntimeError, "did not advance"):
+            self.execute(fixture, lambda seconds: None)
+        self.assertEqual(fixture[3].primary, "FAIL")
+        self.assertEqual(fixture[3].metadata["observations"]["count"], 1)
+
+    def test_expired_whole_run_retains_unrestored_local_evidence(self):
+        """No remaining cleanup time must save residual facts and prohibit later replay."""
+        fixture = self.make_plan_session(suites=("soak",), count=2, interval_ms=1)
+        def late_wait(seconds):
+            """Overrun the complete run while no operation owns the core slot."""
+            fixture[2].now += 61
+        with self.assertRaisesRegex(RuntimeError, "duration"):
+            self.execute(fixture, late_wait)
+        session, _, _, artifacts, _ = fixture
+        self.assertFalse(session.valid)
+        self.assertEqual(artifacts.primary, "FAIL")
+        self.assertEqual(artifacts.cleanup, "FAIL")
+        self.assertIn("verbose", artifacts.metadata["unrestored_local"])
+        self.assertTrue(artifacts.residual_uncertainty)
+
+    def test_both_suites_share_identity_and_one_finite_session(self):
+        """Readonly and soak share state while every operation is taken before replacement."""
+        fixture = self.make_plan_session(suites=("readonly", "soak"), count=2, interval_ms=1)
+        result = self.execute(fixture)
+        self.assertEqual((result["count"], result["detached"]), (3, 3))
+        self.assertEqual(sum(text.startswith("hilmark ") for text in fixture[1].writes), 2)
+        self.assertEqual(sum(text.startswith("result take ") for text in fixture[1].writes), 6)
+
+    def test_target_adapter_and_foreign_work_block_before_initialization(self):
+        """Wrong hardware prerequisites never steal work or reach a managed read."""
+        for key, value in (("variant", "tusb320hi"), ("address", 0x67),
+                           ("adapter_available", "0"), ("foreign_active", True),
+                           ("foreign_result", True)):
+            with self.subTest(key=key):
+                fixture = self.make_plan_session()
+                setattr(fixture[1], key, value)
+                self.assert_failed_plan(fixture)
+                self.assertNotIn("init", map(runner.canonical_command, fixture[1].writes))
+                self.assertFalse(any(text.startswith(("cancel", "result take"))
+                                     for text in fixture[1].writes))
+
+    def test_ended_idle_target_is_bound_without_retargeting(self):
+        """An ended but selected target is explicitly bound before read-only initialization."""
+        fixture = self.make_plan_session()
+        fixture[1].bound = "0"
+        self.execute(fixture)
+        canonical = list(map(runner.canonical_command, fixture[1].writes))
+        self.assertLess(canonical.index("bind"), canonical.index("init"))
+        self.assertFalse(any(text.startswith(("variant ", "addr "))
+                             for text in fixture[1].writes))
+
+    def test_freshness_rejects_invalid_historical_and_nonadvancing_publications(self):
+        """A recent timestamp cannot replace field validity, invalidation or fresh sequence."""
+        faults = ({"invalidated": 1}, {"observed_time_valid": 0}, {"raw_valid_mask": 1},
+                  {"valid_fields": 3}, {"sequence": 0}, {"sequence": (1 << 64) - 1},
+                  {"attachment": "UNKNOWN"}, {"local_role": "UNKNOWN"},
+                  {"peer_role": "UNKNOWN"}, {"raw08": "unknown"}, {"raw09": "unknown"},
+                  {"local_role": "SOURCE"}, {"peer_role": "SINK"})
+        for fault in faults:
+            with self.subTest(fault=fault):
+                fixture = self.make_plan_session()
+                fixture[1].port_fault = fault
+                self.assert_failed_plan(fixture, "publication")
+                self.assertEqual(fixture[3].metadata["observations"]["count"], 0)
+                self.assertEqual(fixture[3].cleanup, "PASS")
+                self.assertIsNone(fixture[0].operation)
+
+    def test_port_requires_coherence_without_inventing_optional_field_validity(self):
+        """Unknown fixed-acquisition coherence rejects while unavailable CC fields stay legal."""
+        for coherence in ("UNKNOWN", "SEQUENTIAL"):
+            with self.subTest(coherence=coherence):
+                fixture = self.make_plan_session()
+                def unproved_coherence(text, rows):
+                    """Keep current port evidence but remove its fixed-read coherence proof."""
+                    return [dict(row, coherence=coherence) if row["type"] == "PORT_DETAIL"
+                            else row for row in rows]
+                fixture[1].response_hook = unproved_coherence
+                self.assert_failed_plan(fixture, "publication")
+        fixture = self.make_plan_session()
+        fixture[1].port_fault = {"orientation": "UNKNOWN", "detected_current": "UNKNOWN"}
+        self.assertEqual(self.execute(fixture)["count"], 1)
+
+    def test_regressed_acquisition_time_rejects_new_sequence(self):
+        """A new publication sequence cannot legitimize an older owner acquisition time."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        def backwards_after_read(text, rows):
+            """Change the acquired timestamp only after a read has published a snapshot."""
+            if text == "sample" and peer.sequence:
+                return [dict(row, observed_ms="0") if row["type"] == "PORT" else row
+                        for row in rows]
+            if text == "sample":
+                return [dict(row, observed_ms="100") if row["type"] == "PORT" else row
+                        for row in rows]
+            return rows
+        peer.response_hook = backwards_after_read
+        self.assert_failed_plan(fixture, "publication")
+
+    def test_acquisition_time_accepts_natural_owner_rollover(self):
+        """Firmware uint64 milliseconds use forward half-range comparisons across rollover."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        def rollover(text, rows):
+            """Model one fresh publication spanning the owner clock's uint64 rollover."""
+            return [dict(row, observed_ms="1" if peer.sequence else str((1 << 64) - 2))
+                    if text == "sample" and row["type"] == "PORT" else row for row in rows]
+        peer.response_hook = rollover
+        self.assertEqual(self.execute(fixture)["count"], 1)
+
+    def test_zero_and_one_callback_budget_faults_stop_without_take_retry(self):
+        """Transport under zero budget and two callbacks under one budget both fail."""
+        for fault in ("zero", "one"):
+            with self.subTest(fault=fault):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                if fault == "one":
+                    peer.callback_budget = 2
+                else:
+                    def violate_zero(text, rows):
+                        """Inject an observable callback after the zero-budget query."""
+                        if text == "job step 0":
+                            peer.attempts += 1
+                        return rows
+                    peer.response_hook = violate_zero
+                self.assert_failed_plan(fixture, "callback budget|zero callback")
+                self.assertFalse(any(text.startswith(("result take", "cancel"))
+                                     for text in peer.writes))
+
+    def test_unexpected_effect_or_failed_payload_is_taken_once_then_fails(self):
+        """Successful delivery never erases a terminal callback failure or write effect."""
+        for code, effect in (("I2C_TIMEOUT", "NONE"), ("OK", "INDETERMINATE")):
+            with self.subTest(code=code, effect=effect):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                peer.result_code, peer.result_effect = code, effect
+                self.assert_failed_plan(fixture, "payload")
+                self.assertEqual(sum(text.startswith("result take ") for text in peer.writes), 1)
+                self.assertIsNone(peer.operation)
+                self.assertEqual(fixture[3].cleanup, "PASS")
+                self.assertNotIn("read", peer.writes)
+
+    def test_rejected_take_retains_exact_owned_token_without_cleanup_retry(self):
+        """A BUSY take keeps original result evidence and ends the plan after one attempt."""
+        fixture = self.make_plan_session()
+        fixture[1].take_code = "BUSY"
+        self.assert_failed_plan(fixture, "take rejected")
+        self.assertEqual(sum(text.startswith("result take ") for text in fixture[1].writes), 1)
+        self.assertIsNotNone(fixture[1].operation)
+        self.assertFalse(fixture[3].metadata["operation"]["taken"])
+        self.assertIn("unrestored_local", fixture[3].metadata)
+
+    def test_unexpected_adapter_write_is_preserved_and_stops_observation(self):
+        """The no-write fence uses adapter data-write counts independently of result effect."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        def extra_write(text, rows):
+            """Publish the injected write after the first owned result was delivered."""
+            if text.startswith("result take "):
+                peer.adapter_writes += 1
+            return rows
+        peer.response_hook = extra_write
+        self.assert_failed_plan(fixture, "data-write")
+        self.assertEqual(peer.adapter_writes, 1)
+        self.assertEqual(fixture[3].cleanup, "PASS")
+        self.assertEqual(sum(text.startswith("result take ") for text in peer.writes), 1)
+
+    def test_malformed_fence_rejects_state_or_callback_changes(self):
+        """Valid rejection records cannot hide a changed core profile or callback counter."""
+        for fault in ("profile", "counter"):
+            with self.subTest(fault=fault):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                def hidden_change(text, rows):
+                    """Alter device evidence behind one correctly framed invalid request."""
+                    if text == "bus extra":
+                        if fault == "profile":
+                            peer.core_profile["current"] = "3a0"
+                        else:
+                            peer.attempts += 1
+                    return rows
+                peer.response_hook = hidden_change
+                self.assert_failed_plan(fixture, "cached/rejected")
+                self.assertNotIn("profile.read", map(runner.canonical_command, peer.writes))
+
+    def test_staging_cannot_change_retained_core_profiles(self):
+        """The independent stage check catches a CLI setter that also changes core desire."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        def stage_leak(text, rows):
+            """Leak the first staged current value into subsequent observed-profile records."""
+            if text == "current 1a5":
+                peer.core_profile["current"] = "1a5"
+            return rows
+        peer.response_hook = stage_leak
+        self.assert_failed_plan(fixture, "staging changed")
+        self.assertEqual(peer.staged["current"], "default")
+        self.assertFalse(any(text.startswith("apply") for text in peer.writes))
+
+    def test_raw_reads_require_one_callback_and_correct_register_attribution(self):
+        """Counters and typed target/register evidence must both prove ordinary raw reads."""
+        for fault in ("counter", "variant", "register"):
+            with self.subTest(fault=fault):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                def damaged_raw(text, rows):
+                    """Inject one independent raw-observation contract violation."""
+                    if text.startswith("reg 0x"):
+                        if fault == "counter":
+                            peer.attempts += 1
+                        else:
+                            field, value = (("variant", "tusb320hi") if fault == "variant"
+                                            else ("address", "1"))
+                            return [dict(row, **{field: value}) if row["type"] == "REG"
+                                    else row for row in rows]
+                    return rows
+                peer.response_hook = damaged_raw
+                self.assert_failed_plan(fixture, "raw observation")
+
+    def test_lost_session_retains_local_changes_and_never_replays_restoration(self):
+        """Framing loss after staged changes keeps precise unrestored state without writes."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        def lose_after_staging(text, rows):
+            """Lose the first validation response after the staging edit was accepted."""
+            if text == "profile validate" and peer.staged["current"] == "1a5":
+                return b"TUSB LOSS schema=1 dropped_records=1 dropped_bytes=1\n"
+            return rows
+        peer.response_hook = lose_after_staging
+        self.assert_failed_plan(fixture)
+        self.assertEqual(peer.writes[-1], "profile validate")
+        self.assertEqual(peer.staged["current"], "1a5")
+        self.assertIn("profile", fixture[3].metadata["unrestored_local"])
+        self.assertFalse(fixture[0].valid)
+
+    def test_whole_run_and_soak_deadlines_bound_live_command_work(self):
+        """Late command output and duration exhaustion cannot count a completed observation."""
+        for options in (dict(run_timeout=0.01, command_timeout=0.01),
+                        dict(suites=("soak",), count=1, duration_ms=1)):
+            with self.subTest(options=options):
+                fixture = self.make_plan_session(**options)
+                self.assert_failed_plan(fixture, "deadline|duration")
+                self.assertNotEqual(fixture[3].primary, "PASS")
+
+    def test_counter_saturation_cannot_support_exact_callback_proof(self):
+        """A typed saturated counter snapshot blocks exact delta claims before raw reads."""
+        fixture = self.make_plan_session()
+        def saturated(text, rows):
+            """Emit a schema-valid maximum callback counter snapshot."""
+            return [dict(row, attempts="4294967295", success="4294967295", saturated="1")
+                    if row["type"] == "XFER" else row for row in rows]
+        fixture[1].response_hook = saturated
+        self.assert_failed_plan(fixture, "saturated")
+        self.assertFalse(any(text.startswith("reg 0x") for text in fixture[1].writes))
+
+    def test_inconsistent_or_regressed_totals_cannot_prove_callback_deltas(self):
+        """Typed unsaturated totals still need accounting consistency and monotonicity."""
+        for fault in ("sum", "regressed"):
+            with self.subTest(fault=fault):
+                fixture = self.make_plan_session()
+                seen = []
+                def inconsistent(text, rows):
+                    """Inject a false aggregate or a later regression without malformed fields."""
+                    if text != "xfer_stats":
+                        return rows
+                    seen.append(text)
+                    return [dict(row, attempts="100", success="99" if fault == "sum" else "100")
+                            if row["type"] == "XFER" and len(seen) == 1 else row for row in rows]
+                fixture[1].response_hook = inconsistent
+                self.assert_failed_plan(fixture, "consistent|regressed")
+
+    def test_late_final_report_save_cannot_publish_plan_pass(self):
+        """Whole-run time also rejects a successful save that completes after the deadline."""
+        fixture = self.make_plan_session()
+        artifacts = fixture[3]
+        original = artifacts.checkpoint
+        def late_save():
+            """Advance only the injected clock after a passing final save."""
+            original()
+            if artifacts.primary == "PASS":
+                fixture[2].now += 60
+        with mock.patch.object(artifacts, "checkpoint", side_effect=late_save):
+            self.assert_failed_plan(fixture, "deadline")
+        saved = json.loads((artifacts.directory / "report.json").read_text())
+        self.assertEqual(saved["primary"], "FAIL")
+        self.assertEqual(saved["exit_code"], 1)
+
+    def test_noncompleting_operation_has_a_finite_service_exchange_bound(self):
+        """A peer that never progresses cannot cause an unbounded host polling loop."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        def never_complete(text, rows):
+            """Keep a valid admitted operation active while every poll remains bus silent."""
+            if runner.canonical_command(text) == "init":
+                peer.operation["remaining"] = 1000
+                peer.callback_budget = 0
+            return rows
+        peer.response_hook = never_complete
+        self.assert_failed_plan(fixture, "32 bounded")
+        self.assertEqual(peer.writes.count("job step 1"), 32)
+        self.assertFalse(any(text.startswith(("cancel", "result take")) for text in peer.writes))
+
+    def test_monotonic_clock_regression_stops_new_commands(self):
+        """A backwards clock cannot extend the immutable whole-run timeout."""
+        fixture = self.make_plan_session()
+        peer, clock = fixture[1:3]
+        def regress(text, rows):
+            """Move the owner clock backwards after a complete statistics response."""
+            if text == "xfer_stats":
+                clock.now -= 1
+            return rows
+        peer.response_hook = regress
+        self.assert_failed_plan(fixture, "regressed")
+        self.assertEqual(peer.writes[-1], "xfer_stats")
+
+    def test_failed_plan_with_rejected_local_restore_preserves_primary_failure(self):
+        """A cleanup mismatch adds failed cleanup without masking original invalid freshness."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        peer.color = "1"
+        peer.port_fault = {"invalidated": 1}
+        def dishonest_restore(text, rows):
+            """Acknowledge color restoration but report a value that was not restored."""
+            return [dict(row, color="0") if row["type"] == "CONSOLE" and text == "color 1"
+                    else row for row in rows]
+        peer.response_hook = dishonest_restore
+        self.assert_failed_plan(fixture, "publication")
+        self.assertEqual(fixture[3].cleanup, "FAIL")
+        self.assertEqual(fixture[3].primary, "FAIL")
+        self.assertIn("color", fixture[3].metadata["unrestored_local"])
+        self.assertFalse(fixture[0].valid)
+
+    def test_malformed_fence_includes_staged_values_and_generation(self):
+        """A silent rejection must preserve local staging as well as retained core profiles."""
+        for fault in ("value", "generation"):
+            with self.subTest(fault=fault):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                def staged_leak(text, rows):
+                    """Change only local staged evidence behind a valid invalid-command reply."""
+                    if text == "bus extra":
+                        if fault == "value":
+                            peer.staged["current"] = "3a0"
+                        else:
+                            peer.staged_generation += 1
+                    return rows
+                peer.response_hook = staged_leak
+                self.assert_failed_plan(fixture, "cached/rejected")
+                self.assertNotIn("profile.read", map(runner.canonical_command, peer.writes))
+
+    def test_staging_validation_and_missing_desired_aliases_are_bus_silent(self):
+        """Every local-only stage or precondition-rejection route has an exact zero delta."""
+        for target in ("current 1a5", "profile validate", "verify", "selfcheck", "selftest"):
+            with self.subTest(target=target):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                def callback_leak(text, rows):
+                    """Count a hidden callback in a correctly framed local-only route."""
+                    matches = (text.split()[0] == target if target in {
+                        "verify", "selfcheck", "selftest"} else text == target)
+                    if matches and (target != "profile validate" or
+                                    peer.staged["current"] == "1a5"):
+                        peer.attempts += 1
+                    return rows
+                peer.response_hook = callback_leak
+                self.assert_failed_plan(fixture, "staging|callback|transport")
+                self.assertFalse(any(text.startswith("apply") for text in peer.writes))
+
+    def test_saturated_adapter_write_counts_cannot_prove_no_writes(self):
+        """Neither an initial saturated count nor a newly saturated count supports the fence."""
+        for phase in ("initial", "after-result"):
+            with self.subTest(phase=phase):
+                fixture = self.make_plan_session()
+                peer = fixture[1]
+                if phase == "initial":
+                    peer.adapter_writes = (1 << 32) - 1
+                else:
+                    def saturate_after_take(text, rows):
+                        """Lose exact write accounting after a successfully taken result."""
+                        if text.startswith("result take "):
+                            peer.adapter_writes = (1 << 32) - 1
+                        return rows
+                    peer.response_hook = saturate_after_take
+                self.assert_failed_plan(fixture, "saturat|unavailable|data-write")
+
+    def test_readonly_preserves_saved_off_staging_without_apply(self):
+        """Valid off control values remain staged preferences and restore without chip writes."""
+        fixture = self.make_plan_session()
+        peer = fixture[1]
+        peer.staged.update(ufpaccessory="off", termination="off", rd_rp="off")
+        saved = dict(peer.staged)
+        self.execute(fixture)
+        self.assertEqual(peer.staged, saved)
+        self.assertEqual(peer.adapter_writes, 0)
+        self.assertTrue({"ufpaccessory off", "termination off", "rd-rp off"}
+                        .issubset(set(peer.writes)))
+
+
 class ConfigurationTests(unittest.TestCase):
     """Reject invalid bounds and opening options before a serial backend is touched."""
 
@@ -1238,7 +1971,7 @@ class MainTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         directory = Path(temporary.name) / "evidence"
         clock = FakeClock()
-        peer = Peer(clock)
+        peer = PlanPeer(clock)
         peer.settings = {"port": "COM_TEST", "dtr": "unchanged", "rts": "unchanged"}
         if fault == "interrupt":
             peer.write_error = KeyboardInterrupt()
@@ -1405,7 +2138,9 @@ class MainTests(unittest.TestCase):
 def load_tests(loader, tests, pattern):
     """Register artifact failure coverage with this single runner test entrypoint."""
     import test_tusb32x_hil_artifacts
+    import test_tusb32x_observation
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_hil_artifacts))
+    tests.addTests(loader.loadTestsFromModule(test_tusb32x_observation))
     return tests
 
 

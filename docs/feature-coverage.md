@@ -515,3 +515,18 @@ backend, artifacts and exit conventions. The existing cli_transcript registratio
 now executes the actual Session against the built C++ fixture; hil_runner adds
 fake-serial/artifact tests under one finite registration. No observation suite,
 serial hardware or physical Type-C qualification is claimed here.
+
+## Prompt 29 finite observation plans
+
+| Requirement | Implemented path | Executed evidence |
+| --- | --- | --- |
+| Usable CLI and pre-open guards | main, ObservationPlan; readonly default, repeated suites, target/identity, finite time/capture limits, dry-run | 26 planning/invocation tests; malformed numeric/enum/identity/pair/port/cap guards; no serial open during dry-run |
+| Complete readonly | run_plan with cached routes, initialization, zero/one budgets, malformed fences, separate staging, verify precondition, profile/read results | Reactive PlanPeer and full production plan against persistent shared C++ CLI; explicit signed failure and no data-write callbacks |
+| Fresh bounded soak | Finite count/quiet-gap/duration/whole-run bounds; relevant raw/field/coherence/sequence/time proof; detached accepted | Fake clock with no sleeps; stale/invalid/unknown/contradictory/saturated evidence, deadline and callback failures; bounded aggregate count/last sample |
+| Mapped register observation | Ordinary one-callback reg commands, explicit per-variant maps and preserved read effects | Allowlist checks for all seven variants; actual LAI map in native readonly; exact all-source counts, counter saturation/regression and wrong-attribution denial |
+| Ownership and honest outcomes | Original result/query/exact take; no foreign control or retry of BUSY/uncertain consumption; local restoration only | Native output-full reservation retains exact result; older completion after newer queries; failure cleanup, loss/no replay, checkpoint and truthful 0/1/2/130 exits |
+
+The [runner guide](hil-runner.md) and [hardware prerequisites](hardware-validation.md)
+describe concrete commands and the physical NOT RUN boundary. These source-checkout
+tools do not add Python to consumers or HIL to ordinary tests. No hardware mutation
+suite, firmware bulk scheduler, public C++ API or silicon capability was added.

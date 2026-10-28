@@ -1,9 +1,9 @@
-"""Bounded serial sessions and saved evidence, without hardware test plans.
+"""Bounded serial sessions and finite read-only observation command-line plans.
 
 I/O is injected as read(size, timeout)/write(bytes, timeout); time is injected in
 monotonic seconds. Only this run's admitted token may be controlled or consumed.
-The command-line entry performs a read-only marker/identity session, not HIL
-qualification. Optional pyserial is imported only when an explicit port is opened.
+Readonly/soak plans use ordinary shared CLI routes, not device mutation suites.
+Optional pyserial is imported only when an explicit physical port is opened.
 """
 
 import argparse
@@ -922,50 +922,101 @@ def host_identity(root):
 
 
 def main(argv=None):
-    """Run only a read-only serial session and save outcomes; return 0/1/2/130.
+    """Run finite readonly/soak observations or save a no-I/O dry-run; return 0/1/2/130.
 
-    Opening is explicit and may reset the board. Observation/fixture suites are
-    not implemented here. Invocation failures before capture creation return 2;
+    Opening is explicit and may reset the board. Physical fixture mutation suites
+    are separate work. Invocation failures before capture creation return 2;
     later exceptions/interruption checkpoint evidence before closing the port.
     """
+    from tusb32x_hil_plans import ObservationPlan, run_plan
+
+    def unsigned(text):
+        """Convert an entire unsigned decimal token, rejecting signs, spaces and suffixes."""
+        if not re.fullmatch(r"[0-9]+", text):
+            raise argparse.ArgumentTypeError("expected unsigned decimal integer")
+        return int(text)
+
+    def address(text):
+        """Convert one seven-bit decimal or explicit hexadecimal address token."""
+        if not re.fullmatch(r"(?:[0-9]+|0[xX][0-9a-fA-F]+)", text):
+            raise argparse.ArgumentTypeError("expected decimal or 0x hexadecimal address")
+        return int(text, 16 if text.lower().startswith("0x") else 10)
+
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port", required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--baud", type=int, default=115200)
-    parser.add_argument("--timeout", type=float, default=5.0)
+    parser.add_argument("--port", help="explicit physical port; required except --dry-run")
+    parser.add_argument("--out", "--output", dest="output", type=Path, required=True)
+    parser.add_argument("--baud", type=unsigned, default=115200)
+    parser.add_argument("--command-timeout", "--timeout", dest="timeout", type=float, default=5.0)
     parser.add_argument("--write-timeout", type=float, default=1.0)
+    parser.add_argument("--variant", default="tusb320lai")
+    parser.add_argument("--address", type=address, default=0x47)
+    parser.add_argument("--suite", action="append", choices=("readonly", "soak"))
+    parser.add_argument("--count", type=unsigned, default=10, help="soak observations: 1..100000")
+    parser.add_argument("--interval-ms", type=unsigned, default=1000,
+                        help="minimum gap between soak observations: 1..3600000 ms")
+    parser.add_argument("--duration-ms", type=unsigned,
+                        help="optional soak duration ceiling, at most 86400000 ms")
+    parser.add_argument("--run-timeout", type=float, default=60,
+                        help="whole-run deadline including cleanup, at most 86400 seconds")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="save concrete plan; hardware NOT RUN")
     parser.add_argument("--dtr", choices=("on", "off", "unchanged"), default="unchanged")
     parser.add_argument("--rts", choices=("on", "off", "unchanged"), default="unchanged")
-    parser.add_argument("--response-bytes", type=int, default=256 * 1024)
-    parser.add_argument("--transcript-bytes", type=int, default=32 * 1024 * 1024)
-    parser.add_argument("--tail-bytes", type=int, default=64 * 1024)
+    parser.add_argument("--response-bytes", type=unsigned, default=256 * 1024)
+    parser.add_argument("--transcript-bytes", type=unsigned, default=32 * 1024 * 1024)
+    parser.add_argument("--tail-bytes", type=unsigned, default=64 * 1024)
     for name in ("library", "git", "tree", "build", "framework", "framework-version", "target"):
-        parser.add_argument("--expect-" + name)
+        aliases = ("--expect-commit", "--expect-git") if name == "git" else ("--expect-" + name,)
+        parser.add_argument(*aliases, dest="expect_" + name.replace("-", "_"))
     artifacts = None
     io = None
     session = None
     try:
         args = parser.parse_args(argv)
         timeouts = Timeouts(args.timeout, args.write_timeout)
+        plan = ObservationPlan(args.variant, args.address, tuple(args.suite or ("readonly",)),
+                               args.count, args.interval_ms, args.duration_ms,
+                               args.run_timeout, args.timeout)
         limits = Limits(response_bytes=args.response_bytes)
         capture_limits = CaptureLimits(args.transcript_bytes, args.tail_bytes)
-        artifacts = Artifacts(args.output, time.monotonic, capture_limits)
-        artifacts.metadata["host"] = host_identity(Path(__file__).resolve().parents[1])
-        artifacts.metadata["serial_requested"] = {
-            "port": args.port, "baud": args.baud, "dtr": args.dtr, "rts": args.rts,
-            "open_may_reset": True, "open_deadline_supported": False}
-        artifacts.check("session", "NOT RUN", "read-only framing/identity exchange")
-        artifacts.check("end_marker", "NOT RUN", "end marker not yet observed")
-        artifacts.checkpoint()
-        io = open_serial(args.port, timeouts=timeouts, dtr=args.dtr, rts=args.rts, baud=args.baud)
-        artifacts.metadata["serial"] = io.settings
-        session = Session(io, artifacts, timeouts=timeouts, limits=limits)
+        if (not args.dry_run and not args.port or args.port is not None and (
+                not args.port or args.port != args.port.strip() or not args.port.isascii() or
+                any(ord(char) < 33 for char in args.port) or "://" in args.port)):
+            raise InvocationError("real serial work requires an explicit physical --port")
+        if not 1 <= args.baud <= 4000000:
+            raise InvocationError("baud must be in [1,4000000]")
         expected = {name: getattr(args, "expect_" + name) for name in (
             "library", "git", "tree", "build", "framework", "framework_version", "target")
                     if getattr(args, "expect_" + name) is not None}
-        session.begin(expected)
-        session.finish()
-        artifacts.primary = "PASS"
+        for name, value in expected.items():
+            maximum = {"tree": 8, "framework": 32, "framework_version": 32,
+                       "target": 32, "git": 40}.get(name, 64)
+            if (len(value) > maximum or not re.fullmatch(r"[A-Za-z0-9_.:+-]{1,64}", value) or
+                    value in {"unknown", "none"} or
+                    name == "tree" and value not in {"clean", "dirty"} or
+                    name == "git" and not re.fullmatch(r"[0-9a-fA-F]{40}", value)):
+                raise InvocationError("invalid expected firmware identity: " + name)
+        artifacts = Artifacts(args.output, time.monotonic, capture_limits)
+        artifacts.metadata["host"] = host_identity(Path(__file__).resolve().parents[1])
+        artifacts.metadata["plan"] = plan.describe()
+        artifacts.metadata["expected_firmware"] = expected
+        artifacts.metadata["serial_requested"] = {
+            "port": args.port, "baud": args.baud, "dtr": args.dtr, "rts": args.rts,
+            "open_may_reset": True, "open_deadline_supported": False}
+        if args.dry_run:
+            artifacts.check("plan", "PASS", "finite target/command plan validated without I/O")
+            artifacts.check("hardware", "NOT RUN", "dry-run: no physical port opened")
+            artifacts.checkpoint()
+            print(f"Dry-run saved to {args.output}; hardware NOT RUN")
+        else:
+            artifacts.check("session", "NOT RUN", "read-only framing/identity exchange")
+            artifacts.check("end_marker", "NOT RUN", "end marker not yet observed")
+            artifacts.checkpoint()
+            io = open_serial(args.port, timeouts=timeouts, dtr=args.dtr, rts=args.rts,
+                             baud=args.baud)
+            artifacts.metadata["serial"] = io.settings
+            session = Session(io, artifacts, timeouts=timeouts, limits=limits)
+            run_plan(session, plan, expected, clock=time.monotonic)
     except KeyboardInterrupt:
         if artifacts:
             artifacts.interrupted = True

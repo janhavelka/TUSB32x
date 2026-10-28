@@ -1,35 +1,60 @@
-# Python sessions and evidence
+# Python observation plans, sessions and evidence
 
-Prompt 28 implements reusable framing, provenance, deadlines and saved outcomes
-in `tools/tusb32x_hil_runner.py`, using the existing pure
-`tools/tusb32x_cli_contract.py`. `tools/tusb32x_hil_artifacts.py` owns streamed
-capture and atomic reports. Observation plans and fixture suites are later work;
-no unimplemented suite is available as a command. These host tests are separate
-from serial delivery, adapter timing and physical Type-C qualification.
+The executable `tools/tusb32x_hil_runner.py` runs finite `readonly` and `soak`
+plans from `tools/tusb32x_hil_plans.py`, using the existing Session and pure CLI
+contract. `tools/tusb32x_hil_artifacts.py` owns streamed capture and atomic reports.
+Physical fixture mutation suites remain later work. Native/fake-serial tests
+prove software behavior; physical serial, I2C timing, CC, VBUS and IRQ
+qualification remain separate and NOT RUN. Read the
+[hardware prerequisites](hardware-validation.md) before opening a physical port.
+The runner is source-checkout tooling; normal library packages exclude tools and
+tests. Their shipped documentation does not add Python to C++ consumption.
 
 ## Read-only serial entry point
 
-```text
+```powershell
 python tools/tusb32x_hil_runner.py --help
-python -m pip install -r tools/requirements-hil.txt
-python tools/tusb32x_hil_runner.py --port COM7 --output build/session-001 --timeout 5 --write-timeout 1 --dtr unchanged --rts unchanged
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite readonly --out build/readonly-plan
 ```
 
-COM7 is an illustration, not a discovered or selected device. Supply the actual
-authorized port. The entry point performs a fresh marker, version, cached bus,
-capabilities, job-status, console and staged-profile exchange, then a fresh end marker. It does
-not initialize the chip, apply settings, acknowledge an interrupt or reset it.
-A foreign active operation or retained result blocks the session. Firmware can
-advance work it already owns independently while processing a cached query.
+A dry-run needs no port or pyserial. It saves the selected target, normalized
+suites, mapped register list, actions, count and timing in `metadata.plan`, plus
+`report.json`, `summary.md` and an empty transcript. Plan validation is PASS;
+primary and hardware remain NOT RUN, so the exit code is 2. A plan alone cannot
+prove firmware identity or physical behavior. Use a fresh output directory.
 
-Optional hardware I/O pins `pyserial==3.5`, checked against its
+The following is an operator-edited recipe, not an executed hardware result.
+Install the optional serial dependency only for physical serial work, and enter
+the authorized port and expected flashed-firmware identity yourself:
+
+```powershell
+python -m pip install -r tools/requirements-hil.txt
+$observationPort = Read-Host 'Explicit authorized physical serial port'
+$observationCommit = Read-Host 'Expected flashed firmware Git commit (40 hex characters)'
+$observationFramework = Read-Host 'Expected firmware framework name'
+$observationTarget = Read-Host 'Expected firmware target'
+python tools/tusb32x_hil_runner.py --port "$observationPort" --variant tusb320lai --address 0x47 --expect-commit "$observationCommit" --expect-framework "$observationFramework" --expect-target "$observationTarget" --suite readonly --out build/readonly-hardware-001 --command-timeout 5 --write-timeout 1 --dtr unchanged --rts unchanged
+```
+
+The runner compares the selected variant/address with firmware records. It
+does not change the target to make a plan fit; a mismatch blocks the run. It may
+bind an ended, idle owner to its already selected target, then explicitly run
+read-only initialization. A foreign active operation or retained result blocks
+work. No plan applies settings, resets, acknowledges IRQ or performs dead-battery
+recovery. Firmware can advance already admitted work while handling cached input.
+
+Physical serial uses the optional pinned dependency `pyserial==3.5`, checked against its
 [official release](https://pypi.org/project/pyserial/3.5/) and
 [API documentation](https://pyserial.readthedocs.io/en/latest/pyserial_api.html).
 Parser/artifact tests and the actual C++ fixture need only the Python standard
 library. There is no new Python/Git/serial dependency for C++ consumers.
 
-Command/write timeouts must be finite positive seconds, at most 3600, and are
-validated before creating or opening the backend. DTR/RTS accept on/off/unchanged;
+All arguments, expectations, variant/address pairs, arithmetic and capture limits
+are validated before serial open. Decimal unsigned fields reject signs, spaces
+and suffixes; address additionally accepts a complete `0x` hexadecimal token.
+`--out`/`--output`, `--command-timeout`/`--timeout` and
+`--expect-commit`/`--expect-git` share their respective meanings. Command/write
+timeouts must be finite positive seconds, at most 3600. DTR/RTS accept on/off/unchanged;
 explicit values are assigned to the closed handle before open. Requested values
 are checkpointed before open; successful open also records the observed pre-open
 properties. Unchanged makes no setter call, but does not guarantee the OS preserves
@@ -37,6 +62,104 @@ an existing electrical level. The driver may pulse or ignore these lines. Port
 open has no portable deadline and can reset a board. No scan, enumeration, URL
 backend, retry, reconnect, flashing, buffer flush or hidden reset is performed.
 Real serial timeout/close behavior still needs backend and board qualification.
+
+## Readonly, soak and register observation
+
+With no `--suite`, the runner selects `readonly`. Repeat `--suite readonly` and
+`--suite soak` to select both; duplicates are removed in first-selection order.
+Only selected suites execute. Both require initialization, exact owned results
+and finite register observation. When both are selected, readonly runs before soak.
+The readonly suite additionally checks cached
+queries and malformed-input fences with automatic stepping disabled, changes
+only CLI staging, validates it without apply, and checks verify/selfcheck/selftest
+against an existing core desired profile or their CONFIGURATION_UNKNOWN rejection.
+It reads the profile and complete port, checks zero/one-callback poll budgets,
+queries retained results and explicitly takes each matching token. Separately,
+already admitted read work progresses under cached queries with auto enabled.
+
+Callback deltas use all-source counters with `job auto 0` for exact comparisons.
+Initialization/profile observation/verification pass the existing optional
+firmware timeout in milliseconds, clipped to the remaining command/run deadline;
+the host still enforces its original deadline. Port read/status has a fixed
+1000 ms firmware timeout and accepts no override. Slow serial/adapter/owner turns
+can exhaust that bound; this is a failure with retained evidence, not a retry.
+Port/soak reads use automatic finite polling so their owner deadline is not spent
+on manual serial exchanges; initialization separately proves explicit zero/one
+budgets. Scheduler settings are still captured and restored locally.
+Handler callbacks, cooperative operation callbacks, adapter data-write callbacks
+and backend physical transactions are separate quantities. A combined pointer/read
+callback is one callback, even though it transfers a register pointer. The plan
+requires adapter counter availability, checks that no data-write callback occurs,
+and blocks rather than inventing that proof when the adapter cannot supply it.
+Saturated adapter-write or all-source counters cannot prove exact deltas; regressed
+or inconsistent totals fail. Exact staging/validation and rejected verify aliases
+also require zero callback deltas.
+
+Soak performs repeated complete port observations; count includes the immediate
+first sample. Detached is a valid result. Each publication requires advancing
+sequence, non-regressing acquisition time, valid raw and relevant interpreted
+fields, and `invalidated=0`. A recent historical timestamp alone does not qualify.
+Acquisition milliseconds use the firmware's uint64 forward/equal half-range rule,
+including natural rollover; backwards or ambiguous half-range differences fail.
+The host retains bounded counts and the last complete sample, with streamed
+transcript evidence. No firmware bulk scheduler or second run token is added.
+Useful attachment/local/peer fields must be known and mutually consistent with
+their validity bits; optional fields may remain unknown. Fixed-read coherence
+must be BOOKENDS_MATCH or CHANGED_DURING_READ, and raw bytes must be present.
+Sequence saturation or non-advancement cannot establish this plan's freshness proof.
+The hardware label in metadata.plan describes the saved input plan, not an
+execution verdict; named checks and the primary/cleanup outcomes describe execution.
+
+| Option | Default | Valid bound and meaning |
+| --- | --- | --- |
+| `--count` | 10 | 1..100000 soak observations |
+| `--interval-ms` | 1000 | 1..3600000 ms; minimum gap after the preceding observation completes |
+| `--duration-ms` | Unset | Optional soak-stage ceiling, 1..86400000 ms |
+| `--run-timeout` | 60 | Finite positive seconds, at most 86400; includes handshake, operations, waits, result delivery and local cleanup |
+| `--command-timeout` | 5 | Finite positive seconds, at most 3600 and no larger than the run deadline |
+| `--write-timeout` | 1 | Finite positive seconds, at most 3600; additionally clipped to remaining exchange time |
+
+For selected soak, `(count - 1) * interval_ms` must be strictly below both the
+whole-run milliseconds and any explicit duration. Duration must not exceed the
+whole-run ceiling. This leaves room for observation but does not guarantee the
+chosen timeout can accommodate the work: actual command time and setup also
+consume it. Unselected soak values still receive type/range checks. No interval
+catch-up burst or renewed operation deadline is used. Waits use at most 50 ms per
+sleep, clipped to the immutable stage/run deadline. Port opening itself has the
+separate portability limit described above.
+
+For example, after choosing the same explicit operator values above:
+
+```powershell
+python tools/tusb32x_hil_runner.py --port "$observationPort" --variant tusb320lai --address 0x47 --expect-commit "$observationCommit" --expect-framework "$observationFramework" --expect-target "$observationTarget" --suite readonly --suite soak --count 20 --interval-ms 1000 --duration-ms 30000 --run-timeout 90 --out build/observation-hardware-002
+```
+
+Register observation issues individual ordinary `reg` commands over this finite
+variant allowlist. Each successful read must count exactly one callback.
+
+| Selected variant | Ordinary register offsets |
+| --- | --- |
+| TUSB320, TUSB320I | 00..0A, 45 |
+| TUSB320LI, TUSB320HI, TUSB320LAI, TUSB320HAI | 00..0A, 45, A0 |
+| TUSB322I | 00..0A, A0; never 45 |
+
+The [register contract](register-map.md) describes access effects. Status reads
+are not an implied IRQ ACK on the six 320 parts. TUSB322I 09 includes an RCU fault
+field whose clearing transaction remains unresolved; reading it is not claimed
+non-destructive. Initialization and port observation also read 09. Ordinary raw
+reads do not publish new profile/port snapshots. Contrary control evidence can
+invalidate configuration trust and dependent port validity; see
+[raw diagnostics](diagnostics.md). Read-only means no requested register-data
+writes, reset, ACK or apply; it does not promise that reads leave silicon or
+cached evidence unchanged.
+
+Every admitted operation must reach its original matching terminal records and
+have its result taken before the next admission. Repeated queries are copies,
+not additional completions. Failure stops the run and retains the transcript,
+unexpected effects, incomplete results and restoration uncertainty. Only saved
+local staging, auto stepping, color and verbosity may be restored in a verified
+idle session. Lost identity/session evidence prevents replay; no later apply or
+hardware rollback is scheduled.
 
 ## Reusing a session
 
@@ -119,7 +242,7 @@ Host Git/tree metadata is read only for this exact checkout, not an enclosing
 repository. It never substitutes for firmware library/version, Git/tree/build,
 framework/version or target. All firmware identity fields must be known to meet
 an expectation or authorize device mutations. Read-only framing can still record
-unknown identity. Optional --expect-library/--expect-git/--expect-tree/
+unknown identity. Optional --expect-library/--expect-commit/--expect-tree/
 --expect-build/--expect-framework/--expect-framework-version/--expect-target compare
 explicit expectations. Variant/address, trust/generations and port masks,
 invalidation, applicability and acquisition time remain separate record facts.
@@ -189,21 +312,25 @@ be consumed, restores local values and verifies a fresh end marker.
 | --- | --- |
 | 0 | Complete PASS with all required proof and no residual uncertainty |
 | 1 | Test/protocol failure, including failed owned payload or session capture loss |
-| 2 | Invocation, missing tool, blocked prerequisite, incomplete capture/report/cleanup |
+| 2 | Dry-run without hardware proof, invocation, missing tool, blocked prerequisite, incomplete capture/report/cleanup |
 | 130 | Saved interruption |
 
 ## Executed host tests
 
 ```text
 python tools/test_tusb32x_hil_runner.py
+python tools/test_tusb32x_observation.py
 python tools/test_cli_transcript.py --host build/native/test/Debug/tusb32x_cli_host.exe
 ctest --test-dir build/native -C Debug -R "hil_runner|cli_transcript|cli_contract" --output-on-failure
 ```
 
-The single hil_runner registration includes fake serial/clock and artifact fault
-tests without pyserial or sleeps. The existing cli_transcript registration also
-runs the actual Session against persistent compiled C++ CLI processes: fresh
-markers/version, local staging, read-only admission, original completion, repeated
-query, exact take and local restoration. A real fixture-injected I2C_TIMEOUT
-retains INT32_MIN detail and a failed payload under delivery OK and good cleanup.
-This is simulated software evidence, not successful physical hardware evidence.
+The single hil_runner registration includes planning/pre-open/dry-run guards,
+fake serial/clock and artifact faults without pyserial or real sleeps. The
+existing cli_transcript registration runs complete plans against persistent
+compiled C++ CLI processes with scripted hardware, covering local restoration,
+retained-result query/take, callback budgets and observation validity. Malformed
+requests, failed callbacks, output-full result take and a legal original
+completion following a newer query retain executable protocol coverage. A
+fixture-injected I2C_TIMEOUT retains INT32_MIN detail and a failed payload under
+delivery OK and good cleanup. This is simulated software evidence; physical
+serial/I2C/CC/IRQ/VBUS qualification remains NOT RUN.

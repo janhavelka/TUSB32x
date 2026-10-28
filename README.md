@@ -90,9 +90,10 @@ The [Python session layer](docs/hil-runner.md) provides strict serial framing,
 owned-result correlation, finite deadlines and streamed evidence with atomic
 reports. Local restoration requires available, valid saved staging and matching
 readback; missing terminal proof or an interrupted/failed save cannot produce PASS.
-Its current command-line entry is a read-only marker/identity exchange;
-observation and fixture plans are later stages. Fake-serial and actual C++ fixture
-tests do not qualify a physical serial or Type-C connection.
+The command-line runner implements complete readonly, finite soak and mapped
+register observation, plus portless dry-runs. It initializes and observes without
+apply, reset or IRQ ACK. [Hardware prerequisites](docs/hardware-validation.md)
+keep physical serial and Type-C qualification separate from native/fake-serial tests.
 
 ## Develop from a source checkout
 

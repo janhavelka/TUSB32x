@@ -9,8 +9,10 @@
   application-owned transport boundary.
 - [Owner integration](integration.md): runnable simulated plain C++, two-device
   fairness/lifetimes, result delivery and the limits of a Status-only callback bridge.
-- [Python sessions and evidence](hil-runner.md): deadlines, provenance, owned
-  results, bounded capture, local restoration and explicit outcomes.
+- [Python observation runner](hil-runner.md): finite readonly/soak/register plans,
+  deadlines, provenance, owned results, bounded capture and local restoration.
+- [Hardware prerequisites](hardware-validation.md): per-variant wiring, straps,
+  power assumptions and operator-authorized observation; physical checks NOT RUN.
 - [Development](development.md): version truth, generator exits, tool choices,
   component registration and package contents.
 - [Transport](transport.md): implemented private framing, access, accounting and

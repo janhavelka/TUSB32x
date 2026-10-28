@@ -736,3 +736,26 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
 - Optional pyserial3.5 uses closed-handle DTR/RTS configuration and finite I/O
   timeouts. Port open itself has no portable bound or no-reset guarantee; actual
   serial and hardware qualification remain separate from fake/compiled fixtures.
+
+## Prompt 29: finite host observations, not another firmware engine
+
+- Keep selected plans in one small observation module using the existing Session,
+  parser, artifacts and ordinary CLI commands. Repeated CLI suites normalize to
+  readonly/soak; no device-side bulk command or second result cache is introduced.
+- Compare firmware's configured target with the requested pair. Bind an ended
+  selected owner only after idle/result fences; never retarget, apply or reset
+  to make an observation pass. Unknown identity cannot satisfy expected values.
+- Use exact all-source callback deltas with auto off and unsaturated adapter-write
+  evidence. Separately prove active cached-query progression in controlled native
+  turns. Callback attempts do not identify physical transaction phases.
+- Treat interval as a quiet gap after completed observation. Count, optional soak
+  duration and one immutable whole-run deadline all bound work, including result
+  delivery/local cleanup. Reject impossible minimum waits before opening.
+- Require current invalidation/validity/coherence, advancing sequence and supported
+  acquisition time, not changed attachment. Stop at saturated freshness/count
+  evidence rather than invent precision. Preserve raw read effects and unresolved
+  TUSB322I09 semantics; read-only is not a claim of electrical non-interference.
+- A refused result-take is retained proof, not permission to retry or drop the
+  slot. Stop with residual evidence. Restore only verified local values without
+  hardware apply; lost sessions never replay restoration. Dry-run exits 2 because
+  hardware was not run, even when its finite plan validation passes.

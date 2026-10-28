@@ -32,8 +32,9 @@ The ordinary host example now runs simulated owner operations and explicit
 invalidation/reconciliation; `docs/integration.md` maps generic owner integration
 without product dependencies. Its runtime checks are registered as `tusb32x_host_basic`.
 The Python session/evidence layer now supports strict framing, owned results,
-deadlines and local restoration with streamed artifacts. Its CLI currently runs
-only a read-only marker/firmware-identity exchange; runner plans remain later work.
+deadlines and local restoration with streamed artifacts. Its CLI runs complete
+readonly/soak and bounded mapped-register observations, plus portless dry-runs.
+Physical fixture mutation suites remain later work; no test opens hardware implicitly.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -136,6 +137,9 @@ to each numbered implementation prompt and to completed maintenance work here.
   transcript registration and pass its built fixture path explicitly. Parser
   tests require no pyserial. Hardware use requires an explicit port; opening may
   reset a board despite pre-open DTR/RTS configuration. See docs/hil-runner.md.
+  Use `python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai
+  --address 0x47 --suite readonly --out build/readonly-plan` for a no-I/O plan;
+  it reports hardware NOT RUN and exits 2. Actual runs require an authorized port.
 - Version truth is `library.json`. Run `python scripts/generate_version.py sync`
   and `python scripts/generate_version.py check`; use bump/set only for intentional
   version changes. Generated Version.h and CMake/component/Doxygen fields must

@@ -11,6 +11,11 @@ namespace tusb32x_cli {
 /// @brief Fixture-only boundary setup; never exposed as a production command.
 struct CliTestAccess {
   static void requestBase(Cli& cli, uint64_t value) { cli._lastRequest = value; }
+  /// @brief Drain output without advancing simulated owner time or polling managed work.
+  static void drain(Cli& cli) {
+    cli.helpStep();
+    cli._console.drain(cli._platform.write, cli._platform.user);
+  }
 };
 }  // namespace tusb32x_cli
 
@@ -21,7 +26,7 @@ namespace t = TUSB32x;
 /// @details This fixture models only the acceptance needed by the transcript, not silicon timing,
 /// electrical behavior or hardware qualification. No production route controls its fault mode.
 struct Bus {
-  enum class Fault { NONE, TRANSPORT, READBACK, WRITE };
+  enum class Fault { NONE, TRANSPORT, READBACK, WRITE, TAKE_FULL };
   uint8_t registers[256]{};
   uint64_t clock = 100;
   uint32_t calls = 0;
@@ -128,6 +133,7 @@ bool parseRequestBase(const char* text, uint64_t& out) {
 
 int main(int argc, char** argv) {
   uint64_t requestBase = 0;
+  bool observation = false;
   Bus bus;
   for (int index = 1; index < argc; index += 2) {
     if (index + 1 >= argc) return 2;
@@ -137,7 +143,11 @@ int main(int argc, char** argv) {
       if (std::strcmp(argv[index + 1], "transport") == 0) bus.fault = Bus::Fault::TRANSPORT;
       else if (std::strcmp(argv[index + 1], "readback") == 0) bus.fault = Bus::Fault::READBACK;
       else if (std::strcmp(argv[index + 1], "write") == 0) bus.fault = Bus::Fault::WRITE;
+      else if (std::strcmp(argv[index + 1], "take-full") == 0) bus.fault = Bus::Fault::TAKE_FULL;
       else return 2;
+    } else if (std::strcmp(argv[index], "--observation") == 0) {
+      if (std::strcmp(argv[index + 1], "1") != 0) return 2;
+      observation = true;
     } else if (std::strcmp(argv[index], "--input") == 0) {
       if (std::strcmp(argv[index + 1], "0") == 0) bus.input = 0;
       else if (std::strcmp(argv[index + 1], "1") == 0) bus.input = 1;
@@ -169,6 +179,42 @@ int main(int argc, char** argv) {
     cli.tick();
     if (bus.calls - before > 1) ++bus.errors;
   };
+  if (observation) {
+    // Keep command work separate from output draining. A cached query can therefore
+    // observe an older active operation before another bounded owner turn advances it.
+    char line[193]{};
+    while (std::fgets(line, sizeof(line), stdin) != nullptr) {
+      const auto length = std::strlen(line);
+      if (length == 0 || line[length - 1] != '\n') return 6;
+      const bool denyTake = bus.fault == Bus::Fault::TAKE_FULL && !bus.injected &&
+          std::strncmp(line, "result take ", 12) == 0;
+      if (denyTake) {
+        char filler[511];
+        std::memset(filler, 'x', sizeof(filler));
+        std::memcpy(filler, "APP ", 4);
+        filler[sizeof(filler) - 1] = '\n';
+        for (unsigned index = 0; index < 12; ++index)
+          if (!cli.enqueueApplicationRecord(filler, sizeof(filler))) ++bus.errors;
+        if (cli.console().available() >= 5U * 511U || cli.console().available() <= 1500)
+          ++bus.errors;
+        bus.injected = true;
+      }
+      std::size_t offset = 0;
+      while (offset < length) {
+        const auto used = cli.feed(line + offset, length - offset);
+        if (used == 0) return 7;
+        offset += used;
+        tick();
+      }
+      if (denyTake && (!driver.progress().resultPending ||
+          cli.console().droppedRecords() != 0 || cli.console().droppedBytes() != 0))
+        ++bus.errors;
+      for (unsigned turn = 0; turn < 512; ++turn) tusb32x_cli::CliTestAccess::drain(cli);
+      if (std::fflush(stdout) != 0) return 4;
+    }
+    if (bus.fault == Bus::Fault::TAKE_FULL && !bus.injected) ++bus.errors;
+    return bus.errors == 0 ? 0 : 5;
+  }
   // The fixture owns blocking stdio. Each CLI call still offers only one byte and each
   // bounded flush offers at most one backend write; no production scheduler is replaced.
   for (int byte = std::getchar(); byte != EOF; byte = std::getchar()) {
