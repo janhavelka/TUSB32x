@@ -36,7 +36,7 @@ ctest --test-dir build/native -C Debug --output-on-failure
 Single-configuration generators also need `-DCMAKE_BUILD_TYPE=Debug` at configure
 time. Repeat in a separate Release directory for relevant changes. Supported GNU,
 Clang and MSVC builds use strict private warnings; runtime suite checks remain
-active in Release. Sixty-two runtime CTests are registered on all hosts, plus
+active in Release. Sixty-four runtime CTests are registered on all hosts, plus
 the Windows launcher suite on Windows; compile-only signature/header fixtures
 are build checks. See [test/README.md](test/README.md).
 The simulated ordinary host consumer is also a runtime CTest. Generic owner
@@ -117,3 +117,31 @@ reviews the staged diff, commits and synchronizes the established upstream witho
 rewriting history. Remote CI belongs only to prompt 34 in this initial execution;
 preserve required hooks and merge/release protections. Firmware links, package
 qualification and physical hardware checks remain separate evidence.
+
+For package changes also run:
+
+```text
+python tools/test_check_package.py -v
+scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz
+python tools/check_package.py --archive build/TUSB32x.tar.gz --out build/package-check
+```
+
+The two registered package suites run safety fixtures and a real test-archive
+consumer; PlatformIO packing is a separate explicit maintainer command. Keep
+exports literal and identical in library.json/idf_component.yml. Preserve both
+example identity scripts, licenses and all shared/frontend sources. Never add
+local sdkconfig, locks, build outputs, private evidence or vendor artifacts.
+Review the clean-consumer origin report and execute it, rather than accepting
+source-tree compilation as package proof. When output is inside the checkout,
+compilation uses a separate system temporary workspace; console/JSON evidence
+reports its absolute path. Artifacts are retained for review.
+
+Accepted input is bounded gzip POSIX tar with regular files and optional per-file
+mtime-only PAX metadata, matching the managed packer. Reject unsupported archive
+extensions instead of guessing their path/size semantics. This is path/content
+validation of trusted local source, not authentication or a CMake sandbox.
+Before release, pack and check the exact revision and link extracted Arduino and
+genuine native-IDF S2/S3 consumers with independent SDKCONFIG paths. The selected
+rows and commands are in [development](docs/development.md#archive-and-clean-consumers)
+and [validation](docs/validation.md). Prompt34 owns the full supported CI matrix;
+no tag, registry upload or release publication is implied by package checks.

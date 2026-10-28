@@ -833,3 +833,25 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   original run deadline. Authorized serial reconnect closes the old local state,
   then creates a fresh Session with new nonces/identity/target proof. It carries no
   old operation token, local restoration baseline or permission to replay a role.
+
+## Safe distribution and renamed consumers
+
+- The trusted source manifests enumerate76literal files, independently checked
+  against required shared/example inputs and forbidden build/evidence content.
+  Archive manifest text cannot grant itself additional members. Core consumption
+  uses add_subdirectory and targetTUSB32x with tests OFF; no install/export API.
+- Validate bounded immutable compressed/decompressed snapshots before creating
+  any extracted payload. Accept the actual managed packer's regular POSIX files
+  and single per-file mtime-only PAX metadata; reject unsupported semantic/global/
+  GNU extensions instead of implementing a general archive interpreter. Count
+  physical headers too, reject nonzero trailing streams, then manually create
+  exclusive files without applying archive permissions or links.
+- Report the validated snapshot's SHA, even if the caller's input is replaced.
+  Build only source-equal trusted local packages: safety checks do not sandbox
+  arbitrary CMake. All child source/include origins must resolve inside the
+  copied fixture/renamed extraction, with no maintainer tools on child PATH.
+- Keep framework identity scripts in exports while excluding the stable-version
+  generator from consumer requirements. Genuine extracted native-IDF images and
+  Arduino images are separate link evidence, with independent SDKCONFIG paths
+  and unknown Git identity beneath unrelated repositories. No electrical support
+  claim, release publication or full SDK matrix follows from these checks.

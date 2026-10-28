@@ -12,7 +12,11 @@ files:
   exclude:
     - "**/*"
   include:
-    - "include/TUSB32x/*.h"
+    - "include/TUSB32x/TUSB32x.h"
+    - "include/TUSB32x/Config.h"
+    - "include/TUSB32x/Status.h"
+    - "include/TUSB32x/CommandTable.h"
+    - "include/TUSB32x/Version.h"
     - "src/TUSB32x.cpp"
     - "src/TUSB32xProtocol.cpp"
     - "src/TUSB32xProtocol.h"

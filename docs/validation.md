@@ -3481,3 +3481,91 @@ grammar remain unchanged. Hardware and unchanged firmware images remain separate
 evidence layers; earlier links are not final-commit qualification. The lead
 commits/pushes/fetches this completed unit and verifies upstream equality, zero
 ahead/behind and no task changes before handoff. Prompt32 remains unstarted.
+
+## Prompt 32: archives and clean consumers, 2026-10-28
+
+Starting HEAD458706ae7ebedeb24d43e2e7a7f6a48732865ba5 and upstream equal on
+promptset/tusb32x-implementation-20261023 after fetch, clean index/worktree.
+Independent current-source audits are [peers](audit/execution-32-peers.md) and
+[frameworks](audit/execution-32-frameworks.md); the lead verified their code,
+returned diffs, actual image/source paths and hashes. Siblings remain unchanged.
+No SDK/tool pin, production core/public API or stable Version.h changed.
+
+| Check | Result | Actual evidence |
+| --- | --- | --- |
+| Archive rejection | PASS | python tools/test_check_package.py;35runtime tests, hostile names/aliases/types/collisions/PAX/sizes/counts/checksums/terminators, unchanged outside sentinels and no early payload extraction |
+| Strict native Debug | PASS | cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON; cmake --build build/native --config Debug; ctest --test-dir build/native -C Debug --output-on-failure;65/65,113.26s |
+| Strict native Release | PASS | cmake -S . -B build/release -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release; cmake --build build/release --config Release; ctest --test-dir build/release -C Release --output-on-failure;65/65,113.40s; checks remain active |
+| Final affected registration reruns | PASS | ctest --test-dir build/native -C Debug -R tusb32x_package --output-on-failure and matching Release;2/2 each after extraction/tool-error fixes; final35-case additions rechecked below |
+| Actual managed-Core archive | PASS | scripts/pio.cmd pkg pack . --output build/TUSB32x-p32-final.tar.gz;294961bytes,76regular files; all bytes match trusted literal export list, IDF list equal |
+| Clean copied package consumer | PASS | python tools/check_package.py --archive build/TUSB32x-p32-final.tar.gz --out C:/Temp/tusb32x-p32-delivery; renamed root, all public headers, actual cooperative initialization, token/status/effect/snapshot checks, source-origin report and executable success |
+| Child dependency boundary | PASS | Isolated PATH excludes Git/Python/Doxygen/PIO; cache confirms default tests OFF and no maintainer/test dependency discovery; C++17 propagates despite consumer requesting11; compiler inputs originate in clean workspace |
+| Parent identity isolation | PASS | Lead-created temporary unrelated parent HEAD73027de1db658cd1e1e05bdd2d7ac4093e3ba2d1; another clean CMake run and all6firmware images retain own provenance boundary; all firmware Git/treeunknown |
+| Standalone host example | PASS | cmake -S examples/host/basic -B build/p32-host-basic -G Ninja -DCMAKE_BUILD_TYPE=Release; build and tusb32x_host_basic.exe; simulated operations/invalidation/reconcile checks pass |
+| Extracted Arduino links | PASS | Final artifact; basic and two-device environments esp32s2dev/esp32s3dev/esp32s2_owner_service/esp32s3_owner_service;4real ELF/BIN/map images |
+| Extracted native-IDF links | PASS | Final artifact; genuine ESP-IDF5.5.5 S2/S3 application images, native APIs/app_main/shared CLI/core, no Arduino/Wire/Serial linkage; separate absolute build/SDKCONFIG/locks |
+| Version/docs/source consistency | PASS | sync/check/no-op mtimes stable; doxygen Doxyfile plus public XML visibility; repository136Markdown/826local or own-source links/anchors before final evidence additions; final counts below; archive173local links/anchors |
+| Hardware/serial/USB/CC/INT/supply/timing | NOT RUN | No target/port/fixture authorization and no physical action; simulated consumer and firmware image links are software evidence |
+| Full supported remote matrix | NOT RUN | Reserved for prompt34; no remote CI dispatched, polled or required |
+| Additional host toolchains/sanitizers | NOT RUN | cl/clang++/clang-format unavailable; previously probed MinGW ASan/UBSan runtimes unavailable; no new core code changed |
+
+Final actual distribution SHA-256:
+`97549728fd29eae2660630a011a0005991e39bc99ce2ad62aea703821a357316`.
+The initial final-image consumer extraction is
+C:/Temp/tusb32x-p32-delivery/package-9uqaz8ky/renamed-tusb32x; a separate final
+CMake rerun beneath the now-existing unrelated Git parent is
+C:/Temp/tusb32x-p32-delivery/package-m_09porw/renamed-tusb32x. Both come from that
+same archive and all76files remain source-equal. Each private workspace retains
+archive.tar.gz/archive.tar, copied consumer, build/cache/compile database,
+package-consumer-origin.txt and package-report.json. No source .git, tests,
+framework headers, sibling paths or generation tools are copied into it.
+
+Six-image final evidence is C:/Temp/tusb32x-p32-final2-firmware/image-evidence.json,
+with exact commands/environments/exits in arduino.json/idf-s2.json/idf-s3.json,
+bounded logs, symbols and artifact/config hashes. The lead independently hashed
+all18nonempty ELF/BIN/map artifacts and compared all76extracted bytes with current
+source. See the [framework audit](audit/execution-32-frameworks.md) for exact
+commands and per-image hashes. Each Arduino row compiled11actual core/shared/app
+sources with DWARF compilation directories at the renamed root; each native
+compile database has11extracted sources and native-only SDK symbols. Native
+project metadata resolves component renamed-tusb32x by actual directory name.
+All6identity headers have unknown Git/tree, not the unrelated enclosing HEAD.
+S2/S3 configuration, affinity,console NONE,HZ1000 and distinct config hashes were
+checked after both builds; no extracted source config/lock/cache was created.
+
+Host tools: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GNU15.1.0 MCF/UCRT,
+Doxygen1.13.2, Git2.52.0.windows.1. Existing user-managed launcher Core6.1.19
+uses installed C:/pio storage; pioarduino55.03.311, Arduino3.3.11,
+Arduino SDK5.5.5+sha.b774170ff46, Xtensa14.2.0 esp-14.2.0_20260121. Native
+SDK package3.50505/IDF5.5.5, CMake4.0.3, Ninja1.13.1, managed Python3.12.10,
+component manager2.4.11. SDK requirements check passed with the existing documented
+IDF_PYTHON_CHECK_CONSTRAINTS=no setting for the managed environment's absent
+standalone constraints cache; no dependency check was skipped. No new Core/SDK
+was installed and no pin was changed.
+
+Independent negative tests first reproduced concatenated trailing tar acceptance,
+recursive extension overflow, semantic PAX-size header concealment and a reopened
+input hash. Corrected parsing rejects unsupported semantic metadata before
+interpretation, checks physical headers/padding and hashes the immutable snapshot.
+Malformed DEFLATE now maps to PackageError/exit1; missing tools are invocation
+exit2. Initial CTest isolation correctly exposed a nested checkout workspace;
+compilation now uses an external temporary root. Red evidence is retained in logs;
+final focused reruns pass without suppressing assertions or weakening contracts.
+
+An earlier76-file artifact230c31...8e08 also completed6links. A documentation-only
+candidate3883dc...5d96 was retracted and its partial builds cancelled; it supplies
+no final success claim. The final975497...7316 matrix used fresh independent
+outputs. Build configuration defaults remain diagnostic-only; neither successful
+link nor a compile-only SDK fixture proves live I2C/console/connector operation.
+No install/export/find_package infrastructure or release/tag/registry publication
+was added. The lead reviews/stages/commits and syncs the checked unit on the same
+execution branch and records actual synchronization in the handoff.
+
+Final focused acceptance after the last malformed-input/exit regressions:
+Debug package2/2 in2.34s and Release package2/2 in2.36s, each executing the final
+35-test safety suite and a fresh archive compile/link/run. Final repository
+Markdown check:136files/831local or own-source links/anchors; packaged links173.
+Python AST/docstrings and100-column/UTF-8/LF/whitespace checks pass for both new
+modules; Doxygen/XML and no-op version sync remain clean. Full Debug/Release
+65/65 evidence above precedes only these focused extraction regressions and
+excluded validation/progress text; all affected registrations were rerun.

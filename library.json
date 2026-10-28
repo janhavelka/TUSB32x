@@ -1,7 +1,7 @@
 {
   "name": "TUSB32x",
   "version": "0.1.0-dev.1",
-  "description": "Portable C++17 TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, explicit reset, original-device recovery, complete port observations and bounded interrupt service. Bounded raw diagnostics and passive health; firmware adapters remain in development.",
+  "description": "Portable C++17 TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, explicit reset, original-device recovery, complete port observations and bounded interrupt service. Bounded raw diagnostics and passive health; example Arduino and native ESP-IDF adapters and applications for the audited S2/S3 configurations.",
   "keywords": ["tusb320", "tusb320lai", "tusb322i", "usb-type-c", "i2c"],
   "authors": [
     {"name": "Thymos Solution s.r.o", "email": "info@thymos.cz", "url": "https://www.thymos.cz"},
@@ -16,7 +16,9 @@
   "build": {"includeDir": "include", "srcDir": "src", "srcFilter": "+<TUSB32x.cpp> +<TUSB32xProtocol.cpp> +<TUSB32xCodecs.cpp> +<TUSB32xOperations.cpp> +<TUSB32xDiagnostics.cpp>"},
   "export": {
     "include": [
-      "include/TUSB32x/*.h", "src/TUSB32x.cpp", "src/TUSB32xProtocol.cpp",
+      "include/TUSB32x/TUSB32x.h", "include/TUSB32x/Config.h",
+      "include/TUSB32x/Status.h", "include/TUSB32x/CommandTable.h",
+      "include/TUSB32x/Version.h", "src/TUSB32x.cpp", "src/TUSB32xProtocol.cpp",
       "src/TUSB32xProtocol.h", "src/TUSB32xCodecs.cpp", "src/TUSB32xCodecs.h", "CMakeLists.txt",
       "src/TUSB32xOperations.cpp", "src/TUSB32xOwnerTime.h", "src/TUSB32xDiagnostics.cpp",
       "library.json", "idf_component.yml", "LICENSE", "README.md", "CHANGELOG.md",
@@ -59,6 +61,11 @@
       "examples/esp_idf/basic/main/main.cpp",
       "examples/esp_idf/basic/README.md"
     ],
-    "exclude": ["docs/reference/**", "docs/audit/**", "docs/prompts/**", "build/**", "**/.pio/**", "**/__pycache__/**"]
+    "exclude": [
+      "docs/reference/**", "docs/audit/**", "docs/prompts/**", "build/**", "test/**", "tools/**",
+      "**/.git/**", "**/.pio/**", "**/__pycache__/**", "**/.cache/**",
+      "**/sdkconfig", "**/sdkconfig.old", "**/dependencies.lock", "**/managed_components/**",
+      "**/*.bin", "**/*.elf", "**/*.log", "**/*.pyc", "**/*.pdf"
+    ]
   }
 }

@@ -64,6 +64,10 @@ add_subdirectory(path/to/TUSB32x)
 target_link_libraries(app PRIVATE TUSB32x)
 ```
 
+The [package guide](docs/development.md#archive-and-clean-consumers) describes
+the exact archive content, bounded safety checks and renamed clean consumers.
+Use `add_subdirectory()` with target `TUSB32x`; no install/export interface is claimed.
+
 Tests default OFF. The target supplies its public include directory and C++17
 requirement; ordinary consumers need no Git, Python, Doxygen, PlatformIO,
 framework headers or sibling checkout. For example:
@@ -224,6 +228,6 @@ each completed unit. Remote CI is confined to prompt 34 in this first execution.
 Project code is MIT, owned by Thymos Solution s.r.o with Jan Havelka as maintainer.
 Archived vendor references retain their original terms and are excluded from
 normal library packages. Native tests prove software values and linkage;
-Arduino and native-IDF adapter firmware linkage are checked separately. Native
-CLI integration, full distribution qualification and physical hardware evidence
-remain separate work.
+Arduino and native-IDF applications also link from renamed extracted packages
+for the recorded S2/S3 configurations. The full supported CI matrix and physical
+hardware qualification remain separate work.

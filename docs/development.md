@@ -3,8 +3,8 @@
 `library.json` is version truth. The current `0.1.0-dev.1` marks an incomplete
 library: portable values, validators, decoding, cooperative operations, the shared
 CLI and Arduino S2/S3 examples are implemented. The native IDF adapter has
-independent S2/S3 component link fixtures; the native CLI application and physical
-qualification remain separate work. Version text
+independent S2/S3 component and complete native CLI application links. Physical
+qualification remains separate work. Version text
 identifies the package, never the firmware flashed on a board.
 
 ## Version workflow
@@ -104,8 +104,70 @@ URLs; links between shipped guides remain relative.
 The IDF manifest excludes all files and explicitly re-includes the same consumer
 set: IDF include rules are re-inclusions, as its
 [manifest reference](https://docs.espressif.com/projects/idf-component-manager/en/latest/reference/manifest_file.html#files)
-explains. Archive selection checks at this stage are separate from prompt 32's
-full package/firmware consumer qualification.
+explains. Both manifests enumerate the same 76 literal filenames, including each
+public header. The checker rejects any missing or extra member; it compares every
+payload with this trusted checkout before executing build files.
+
+### Archive and clean consumers
+
+Run these maintainer commands from a source checkout (the checker is deliberately
+excluded from the distribution):
+
+```text
+python tools/test_check_package.py -v
+scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz
+python tools/check_package.py --archive build/TUSB32x.tar.gz --out build/package-check
+```
+
+The checker requires CMake, Ninja and a C++ compiler on the maintainer host; pass
+`--cmake`, `--compiler`, `--make-program` or `--generator` for explicit tool paths.
+It returns 0 after archive, link and executable checks pass, 1 on failed checks,
+and 2 for invocation errors or missing build tools. Every child has a finite
+60-second timeout. Its JSON report records the archive SHA-256, fresh extracted
+path and counts. Evidence remains in a fresh private workspace; when `--out`
+is inside the checkout, compilation uses the system temporary directory and
+reports that external path. No unrelated tree is moved or deleted. These commands do not publish an archive or run hardware.
+
+Before extraction, portable ASCII names (240 characters, 16 segments, 100 per
+segment), case/prefix collisions, Windows aliases, duplicate headers and all
+nonregular members are rejected. Limits are 512 files, 2 MiB per file, 16 MiB
+payload, 32 MiB decompressed tar including extension headers and 8 MiB compressed.
+The accepted format is gzip POSIX tar with regular files and optional per-file
+mtime-only PAX metadata, matching the managed packer. Semantic path/size overrides,
+global/GNU extensions and nonzero content after the terminator are rejected.
+The complete scan uses a private immutable snapshot; no archive link or permission
+is installed. Exact files and local Markdown links are checked in both trees.
+This validates distribution mechanics, not authenticity or a sandbox for arbitrary
+CMake: only packages made from this trusted checkout are built.
+
+The copied standalone fixture uses `add_subdirectory()` and target `TUSB32x` in a
+renamed extraction, directly includes every public header and runs simulated
+cooperative initialization with exact tokens and effects. It checks source/include
+origins, tests OFF, compile commands and a child PATH without Git, Python,
+Doxygen or PlatformIO. The checker itself uses Python; consuming core does not.
+There is no install/export or `find_package(TUSB32x)` contract.
+
+CTest registers `tusb32x_package_safety` and `tusb32x_package_consumer`. The latter
+creates a real test tar from the literal content list, then extracts, compiles,
+links and executes; ordinary host tests do not require PlatformIO. Separately,
+the actual managed-Core archive is checked with the command above. Extracted
+Arduino builds use the four root environments. Native builds use the archived
+`examples/esp_idf/basic` and separate absolute build/SDKCONFIG paths for S2/S3;
+see its [commands](../examples/esp_idf/basic/README.md). Firmware identity remains
+example-only: an extracted tree reports unknown Git/tree instead of borrowing
+an enclosing repository. See repository-only
+[validation evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)
+for actual hashes, tools, paths, commands and linked images. Firmware links do
+not establish USB console input/output, I2C framing or electrical Type-C behavior.
+
+| Checked package use | Tool/SDK row | Evidence boundary |
+| --- | --- | --- |
+| Plain add_subdirectory consumer | CMake 4.0.1, Ninja 1.12.1, GNU 15.1.0 | Renamed extraction compiles, links and runs without maintainer tools |
+| Arduino basic and two-device examples, S2/S3 | Managed Core 6.1.19; pioarduino 55.03.311; Arduino 3.3.11; IDF 5.5.5 | Four extracted image links; hardware NOT RUN |
+| Native CLI, S2/S3 | ESP-IDF 5.5.5; Xtensa GCC 14.2.0 esp-14.2.0_20260121 | Two genuine extracted image links; no Arduino; hardware NOT RUN |
+
+Other SDK/toolchain rows await the full supported matrix at prompt 34; manifest
+admission floors and framework names do not qualify them.
 
 Thymos Solution s.r.o and maintainer Jan Havelka follow current sibling manifests
 and MIT terms. CODEOWNERS uses the evidenced @janhavelka account from the current

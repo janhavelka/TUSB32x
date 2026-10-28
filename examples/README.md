@@ -34,3 +34,16 @@ links that adapter, core and shared CLI for IDF5.5.5 on S2/S3, with exclusive UA
 explicit readiness, read-only startup ownership and checked bounded teardown.
 Builds do not qualify electrical behavior or application timing.
 See [development metadata](../docs/development.md).
+
+## Extracted package consumers
+
+The [package guide](../docs/development.md#archive-and-clean-consumers) describes
+safe managed-Core packing and the copied, renamed plain CMake runtime fixture.
+All shared CLI/console/owner/board sources, native CMake/sdkconfig defaults and
+both firmware identity scripts are explicit export members. The package does not
+need a version-generation step. Use the root Arduino environments for S2/S3 basic
+and two-device images; native CLI builds use separate absolute build and SDKCONFIG
+paths per target. These examples compile/link from a renamed archive without this
+checkout or sibling paths. Firmware identity reports unknown Git/tree for extracted
+sources instead of borrowing a parent repository. No install/export interface,
+flashing, fixture action or physical Type-C qualification is implied.

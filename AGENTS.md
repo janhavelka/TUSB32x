@@ -435,3 +435,23 @@ Unplanned failure, capture loss or missing cleanup still prevents PASS. Base
 fault power-cycle source startup requires new owner-selected recovery, never old
 readiness replay. Base console requires declared continuous target VDD across the
 separately authorized MCU reboot. See the maintained runner/hardware guides.
+
+
+## Implemented package checks (prompt 32)
+
+Run `python tools/test_check_package.py -v`, pack with
+`scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz`, then
+`python tools/check_package.py --archive build/TUSB32x.tar.gz --out build/package-check`.
+The manifests contain the same76literal file names. Preserve the two firmware
+identity scripts and shared example inputs; exclude local sdkconfig/locks, caches,
+binaries, private evidence and reference/vendor files. check_package validates
+bounded portable names/types/content and mtime-only PAX before manual extraction,
+then compiles/links/runs a copied public consumer in a renamed external workspace.
+This is not a sandbox for arbitrary CMake; only trusted locally packed sources
+are built. Child core consumption requires no Git/Python/Doxygen/PlatformIO and
+uses add_subdirectory/target TUSB32x; no install/export API is claimed.
+CTest also registers tusb32x_package_safety (60s) and tusb32x_package_consumer
+(120s); the latter creates a real test tar without requiring PIO. There are64
+runtime tests on all hosts plus the Windows launcher, with compile-only headers
+kept separate. The selected extracted Arduino/native-IDF S2/S3 rows are recorded
+in validation; full remote matrix remains prompt34 and hardware remains separate.

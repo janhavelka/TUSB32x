@@ -578,3 +578,15 @@ only preregistered exact negative statuses satisfy a negative experiment.
 Unexpected failure, missing cleanup, capture loss and interruption remain saved
 failed/incomplete evidence. Hardware serial/supply/CC/INT/reset timing remains
 NOT RUN. Console may observe322 while its mutation-suite gates remain closed.
+
+## Prompt 32 package mechanics
+
+The literal 76-file PlatformIO/IDF contract includes core/public headers, metadata,
+licenses and complete shared/framework example inputs. Bounded hostile archive
+fixtures run in tusb32x_package_safety; tusb32x_package_consumer extracts a real
+archive, renames it, checks target/source origins and runs public cooperative
+initialization with tests OFF. The managed-Core distribution is separately packed
+and checked; extracted Arduino basic/owner S2/S3 and native CLI S2/S3 images supply
+framework link evidence. See [package commands](development.md#archive-and-clean-consumers).
+The checker is maintainer tooling, not a core dependency or arbitrary-code sandbox.
+No install/export, release publication or physical hardware qualification is claimed.

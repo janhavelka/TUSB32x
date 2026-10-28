@@ -205,6 +205,16 @@ tusb32x_strict_warnings(tusb32x_header_contracts)
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+add_test(NAME tusb32x_package_safety
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_check_package.py" -v)
+set_tests_properties(tusb32x_package_safety PROPERTIES TIMEOUT 60)
+add_test(NAME tusb32x_package_consumer
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/check_package.py"
+    --test-archive --out "${CMAKE_CURRENT_BINARY_DIR}/package-check"
+    --cmake "${CMAKE_COMMAND}" --compiler "${CMAKE_CXX_COMPILER}"
+    --make-program "${CMAKE_MAKE_PROGRAM}" --generator "${CMAKE_GENERATOR}"
+    --config "$<IF:$<CONFIG:Debug>,Debug,Release>")
+set_tests_properties(tusb32x_package_consumer PROPERTIES TIMEOUT 120)
 add_test(NAME tusb32x_idf_example_config
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_idf_example.py"
     --compiler "${CMAKE_CXX_COMPILER}" --cmake "${CMAKE_COMMAND}" --generator "${CMAKE_GENERATOR}")

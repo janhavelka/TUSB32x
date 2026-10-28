@@ -2296,3 +2296,72 @@ or remote CI was needed for host runner/test/docs changes. The lead commits and
 syncs this complete checked prompt on the same branch, verifies fetched upstream
 equality/zero ahead-behind and no task changes, and reports the commit in the
 handoff; record its hash in the next progress update. Prompt32 is unstarted.
+
+## Prompt 32 complete: safe archives and clean consumers, 2026-10-28
+
+Starting HEAD/upstream458706ae7ebedeb24d43e2e7a7f6a48732865ba5 (prompt31),
+clean index/worktree; fetch and comparison equal on the existing
+promptset/tusb32x-implementation-20261023 branch. No branch/worktree, release,
+hardware or remote-CI action was introduced. Fresh audits are
+[peer/consumer](audit/execution-32-peers.md) and
+[framework](audit/execution-32-frameworks.md); all five peers were clean and
+unchanged. Read parent/local rules, COMMON, prompt32, workflow/maintainability,
+package/ownership baseline/rules, actual manifests/CMake/generated files and
+current example commands before editing.
+
+Disjoint delegation: gpt-6.1-sol/high owns copied public consumer and peer audit;
+gpt-6-astra/high owns independent extraction review and hostile archive tests;
+gpt-6.1-sol/high owns installed-tool and six extracted-image evidence. Lead owns
+checker, explicit content rules, registration, integration and Git. No sibling
+writes or Git mutations by agents. Frozen interfaces preceded test implementation.
+
+Implemented matching literal76file manifests, exact-content/source-equality check,
+bounded private archive snapshots/manual extraction, copied renamed CMake consumer
+and two finite real CTests. Framework links use one frozen managed-Core archive,
+SHA256230c31cafbfce9932ff4732075f1f8619f39855adaf0b0f50688c148d1454e08;
+exported source/docs are frozen while those links run. Core/public APIs and stable
+Version.h are unchanged. No install/export infrastructure is added.
+
+Independent red regressions found hidden concatenated tar content, recursive PAX
+headers, semantic PAX size concealment and a reported hash from reopened input.
+The checker now rejects nonzero trailing bytes and unsupported extensions before
+interpretation, accepts only actual packer mtime metadata, bounds physical headers
+and reports its immutable bounded snapshot hash. All30hostile/archive cases pass.
+First CTest package run also exposed an isolation check correctly rejecting its
+nested checkout workspace; compilation now always uses an external clean tree.
+Focused Debug/Release package reruns pass2/2 each; all63prior suites passed in
+both initial full runs. Final full checks, framework links and sync follow below.
+
+Final prompt32 evidence supersedes its in-progress artifact above: final actual
+managed-Core archive SHA25697549728fd29eae2660630a011a0005991e39bc99ce2ad62aea703821a357316,
+76source-equal regular files and173local package links/anchors. The copied CMake
+consumer compiles/links/runs with tests OFF and no maintainer tools, including
+beneath a temporary unrelated Git parent. The ordinary tests-OFF host example
+also runs. Explicit export rules retain all shared/example sources and firmware
+identity scripts while rejecting private/vendor/generated content. Version truth
+and stable Version.h are unchanged; no install/export API is introduced.
+
+Final Debug and Release suites PASS65/65 each; affected package suites rerun2/2
+each after fixes. The safety unit file finishes35runtime tests, including malformed
+DEFLATE, exact invocation exits and immutable snapshot hashing. Full source diff,
+Doxygen/public visibility, version stability, all local links and UTF-8/docstrings
+are checked. Final commands, paths, tools and limits are in
+[validation](validation.md#prompt-32-archives-and-clean-consumers-2026-10-28).
+Independent requirements review found and fixed one stale README completion claim
+and the malformed-DEFLATE error path, in addition to the extraction review fixes.
+
+All6final-artifact framework images link from fresh renamed extracted sources:
+4Arduino basic/owner S2/S3 plus2genuine native-IDF CLI images. The lead verifies
+actual ELF/BIN/map hashes, source paths and native app_main/APIs/noArduino.
+Native build/SDKCONFIG/lock paths are separate; every image reports Git/treeunknown
+even beneath an unrelated parent repository. No source file in extraction changed.
+See [exact framework evidence](audit/execution-32-frameworks.md). A retracted
+intermediate documentation artifact has cancelled partial output, never a final
+success claim; the final matrix and clean consumer use the final reported hash.
+
+Physical serial/I2C/CC/INT/VBUS/VCONN and timing are NOT RUN. No firmware flash,
+fixture action, SDK installation, release publication, sibling edit or remote CI
+was performed. Prompt33 remains unstarted. Lead commits and syncs this complete
+checked unit on the existing branch and verifies fetched upstream equality,
+zero ahead/behind and no remaining task edits before handoff. Record its completed
+commit hash in the next progress entry, avoiding a self-referencing hash loop.

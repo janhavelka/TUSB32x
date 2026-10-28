@@ -585,3 +585,29 @@ retained timeout/cancel effects, output-full take and fresh-session rejection of
 stale successes/boots. Two actual zero-output writes preserve a full response;
 64 force real whole-record LOSS and failed/unrestored evidence. No physical USB,
 power, CC or electrical timing claim follows. All previous registrations remain.
+
+## Package archives and clean consumers
+
+```text
+ctest --test-dir build/native -C Debug -R tusb32x_package --output-on-failure
+python tools/test_check_package.py -v
+scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz
+python tools/check_package.py --archive build/TUSB32x.tar.gz --out build/package-check
+```
+
+tusb32x_package_safety (60s) executes bounded synthetic hostile archives before
+accepting ordinary files; outside sentinels and the absence of extracted payloads
+prove early failure. tusb32x_package_consumer (120s) builds a real temporary tar
+from the literal trusted export list, validates/extracts it and runs the copied
+public-API consumer. It needs the existing maintainer Python/CMake/toolchain,
+while the child build has tests OFF and no Git/Python/Doxygen/PlatformIO on PATH.
+No PIO installation or hardware is required for those registrations. The explicit
+managed-Core pack/check above verifies the actual distributable archive.
+
+The fixture directly includes every public header, checks bus-silent admission,
+zero/one callback budgets, six ordered simulated initialization reads, exact-token
+take, operation status/effect and independent copied snapshots. CMake and compiler
+provenance must remain under the renamed extraction/workspace. Builds live outside
+the source checkout, even when --out points into build/. See printed absolute
+paths and package-report.json; temporary evidence is preserved. No install/export
+contract is added. Extracted firmware links remain a separate explicit check.

@@ -9,6 +9,15 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ## Unreleased
 
+### Added
+
+- Literal matching PlatformIO/IDF package lists, bounded archive validation and
+  hostile-path/type/collision/size tests. Clean renamed archive consumers compile,
+  link and run the public cooperative API with tests OFF and no maintainer tools.
+  Packaged shared CLI, board files and example identity scripts support extracted
+  S2/S3 Arduino and genuine native-IDF image links; physical qualification remains
+  separate. The source-checkout package guide records commands and tool limits.
+
 ### Fixed
 
 - Python runner suite groups share the original absolute deadline without rejecting
