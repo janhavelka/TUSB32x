@@ -19,6 +19,10 @@ Entries below distinguish those artifacts from planned device-driver functionali
   matrix. Native candidates are the previously audited 5.5.5 and current 6.1
   (SDK version 6.1.0); remote verification remains PENDING. Physical qualification
   is separate.
+  Linux package provenance queries exact compiler objects, separating CMake 4
+  linker dependencies. Runner checkpoints reuse their already validated JSON
+  bytes, and verbose per-case evidence preserves timeout diagnostics without
+  changing the suite or operation deadline bounds.
 
 - One local validation entry point with explicit check ownership, saved logs,
   finite child deadlines and failed/incomplete/interrupted verdicts. Registered

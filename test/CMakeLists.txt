@@ -234,7 +234,7 @@ add_test(NAME cli_transcript
     --host "$<TARGET_FILE:tusb32x_cli_host>")
 set_tests_properties(cli_transcript PROPERTIES TIMEOUT 30)
 add_test(NAME hil_runner
-  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_tusb32x_hil_runner.py")
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_tusb32x_hil_runner.py" -v)
 set_tests_properties(hil_runner PROPERTIES TIMEOUT 90)
 add_test(NAME cli_contract
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/check_cli_contract.py"

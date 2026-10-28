@@ -2557,3 +2557,40 @@ selected compiler in generated compiler metadata, not CMakeCache. The inspector
 is corrected and the original failure remains saved. Remote execution is PENDING;
 workflow source and local links are not remote PASS. Exact commands/results and
 tested SHA/run URL will follow after verification.
+
+
+Implementation commit f521f55b2d713a2be30686d2c22fe4c1a76b7bc1 was pushed and
+final-fetch verified equal to upstream, zero ahead/behind and clean worktree.
+Its existing push run [40775037702](https://github.com/janhavelka/TUSB32x/actions/runs/40775037702)
+is the first remote checkpoint attempt. Five Linux host rows and documentation
+passed; the package gate failed and correctly prevented firmware links. The
+failure is being diagnosed before a grouped correction; no failed/skipped row
+is reported as passed. The actual tested SHA remains explicit.
+
+
+The first remote run f521f55 retained FAIL: package consumers linked but their
+blanket Ninja dependency count included ELF linker records enabled by CMake 4 /
+modern GNU ld. Querying only actual compile_commands object outputs preserves
+exact nonempty VALID records and all used-header escape checks. The 41-case
+package unit suite and three actual Release package registrations pass locally.
+
+All five Linux host rows passed (53 native plus 6 contracts each), including
+Clang ASan/UBSan, and the two real Doxygen checks passed. Python's other six
+registrations passed; hil_runner alone hit the old 90-second suite ceiling.
+An independent timed run completed all 311 cases successfully in 65.922 seconds
+locally, with finite multi-suite artifact tests dominating and no isolated hang.
+The independent CPU profile identified duplicate complete JSON serialization
+at every checkpoint: 20.56 of 28.7 instrumented seconds in the hottest case,
+versus 0.525 seconds in fsync. Checkpoints now reuse their already validated
+encoding. Registration saves verbose per-case progress; the original 90-second
+suite ceiling, serial/operation deadlines and all evidence checks remain intact. The original failed artifacts remain attached to run40775037702.
+The grouped corrections will be checked by the next exact-commit push run.
+
+
+After the encoding correction, all 312 runner cases pass locally in 56.997 seconds
+(previous 311-case baseline 65.922 seconds). All 31 focused artifact cases pass,
+including fresh-state/exact-byte, once-per-save encoding and invalid-state checks.
+No report limit, atomic replacement order, fsync or failure/correction path changes.
+The extra case is owned by the existing hil_runner registration. Package41-case
+negatives and actual positive/outside-header Release consumers pass. The original
+failed CI reports remain intact; these changes are grouped for the next push.

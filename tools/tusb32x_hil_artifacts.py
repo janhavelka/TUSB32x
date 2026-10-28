@@ -276,6 +276,15 @@ class Artifacts:
         JSON numbers. Residual strings are at most 4096 chars. save_error preserves
         the first checkpoint I/O failure in at most 512 characters.
         """
+        report, _ = self._encoded_snapshot()
+        return report
+
+    def _encoded_snapshot(self) -> tuple[dict, bytes]:
+        """Validate current state once and return its detached report and bounded JSON.
+
+        Checkpoint uses these exact bytes instead of encoding the same growing
+        report twice. Nothing is cached across calls or after a save failure.
+        """
         _status(self.primary)
         _status(self.cleanup)
         if type(self.interrupted) is not bool or type(self.metadata) is not dict:
@@ -300,8 +309,7 @@ class Artifacts:
                         "tail": self._tail[-MAX_REPORT_TAIL_BYTES:].decode("ascii")},
             "exit_code": self._outcome(),
         }
-        self._json(report)
-        return report
+        return report, self._json(report)
 
     @staticmethod
     def _json(report: dict) -> bytes:
@@ -371,8 +379,7 @@ class Artifacts:
         recording the incomplete save; do not retry Markdown. Disk failure can
         also prevent that correction, which is included in the raised error.
         """
-        report = self.snapshot()
-        encoded = self._json(report)
+        report, encoded = self._encoded_snapshot()
         summary = self._summary(report)
         json_replaced = False
         try:
@@ -388,7 +395,7 @@ class Artifacts:
                     # The just-published PASS must disclose the failed save when
                     # JSON storage still works. Preserve the earlier report if
                     # this one best-effort correction also fails.
-                    self._replace("report.json", self._json(self.snapshot()))
+                    self._replace("report.json", self._encoded_snapshot()[1])
                 except (EvidenceError, OSError) as correction_error:
                     message += f"; cannot record save failure: {correction_error}"
             raise EvidenceError(message) from error

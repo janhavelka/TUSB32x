@@ -324,7 +324,7 @@ def make_dependencies(text):
     return paths
 
 
-def check_dependencies(root, fixture, build, args, environment, compile_count):
+def check_dependencies(root, fixture, build, args, environment, compiles):
     """Reject actual compiler inputs outside the copied sources or compiler/SDK roots.
 
     Read Ninja's dependency database or GNU/Clang Make depfiles after the build.
@@ -333,25 +333,41 @@ def check_dependencies(root, fixture, build, args, environment, compile_count):
     The Ninja query has the same 60-second subprocess bound as the build.
     """
     if args.generator in ("Ninja", "Ninja Multi-Config"):
+        # ELF linkers can add their own dependency records in CMake 4. Query the
+        # actual compile outputs rather than confusing those records with C++ inputs.
+        outputs = []
+        for entry in compiles:
+            if not entry.get("output"):
+                raise PackageError("missing compiled object selection")
+            target = (Path(entry["directory"]) / entry["output"]).resolve()
+            if not target.is_relative_to(build.resolve()):
+                raise PackageError("compiled object outside clean build")
+            outputs.append(target.relative_to(build.resolve()).as_posix())
+        if not outputs or len(set(outputs)) != len(outputs):
+            raise PackageError("missing or duplicate compiled objects")
         result = subprocess.run(
-            [args.make_program, "-C", str(build), "-t", "deps"],
+            [args.make_program, "-C", str(build), "-t", "deps", *outputs],
             env=environment, text=True, capture_output=True, check=True, timeout=60)
+        (build / "package-ninja-dependencies.log").write_text(result.stdout, encoding="utf-8")
         records = []
+        observed = set()
         for line in result.stdout.splitlines():
             if line.startswith("    "):
                 if not records:
                     raise PackageError("unexpected Ninja dependency output")
                 records[-1].append(line[4:])
             elif line:
-                if not re.fullmatch(r".+: #deps [0-9]+, deps mtime [0-9]+ \(VALID\)", line):
+                match = re.fullmatch(r"(.+): #deps [0-9]+, deps mtime [0-9]+ \(VALID\)", line)
+                if not match or match[1] not in outputs or match[1] in observed:
                     raise PackageError(f"invalid Ninja dependency record: {line}")
+                observed.add(match[1])
                 records.append([])
     elif args.generator in ("Unix Makefiles", "MinGW Makefiles"):
         depfiles = sorted(build.rglob("*.o.d")) + sorted(build.rglob("*.obj.d"))
         records = [make_dependencies(path.read_text(encoding="utf-8")) for path in depfiles]
     else:
         raise PackageError(f"compiler dependency inspection unsupported: {args.generator}")
-    if len(records) != compile_count or any(not record for record in records):
+    if len(records) != len(compiles) or any(not record for record in records):
         raise PackageError("missing or incomplete compiler dependency records")
     approved = [root.resolve(), fixture.resolve()]
     for directory in (build / "package-toolchain-includes.txt").read_text(
@@ -428,8 +444,7 @@ def consume(root, checkout, args):
     for entry in entries:
         if not Path(entry["file"]).resolve().is_relative_to(workspace):
             raise PackageError("compiled source outside clean workspace")
-    check_dependencies(root, fixture, build, args, environment,
-                       len({entry["file"] for entry in entries}))
+    check_dependencies(root, fixture, build, args, environment, entries)
     filename = "tusb32x_package_consumer" + (".exe" if os.name == "nt" else "")
     executable = build / filename
     if not executable.exists():
@@ -504,6 +519,9 @@ def main(argv=None):
             for name in ("package-consumer-origin.txt", "package-compiler-dependencies.txt",
                          "package-toolchain-includes.txt"):
                 shutil.copyfile(root.parent / "consumer-build" / name, args.out / name)
+            ninja_log = root.parent / "consumer-build/package-ninja-dependencies.log"
+            if ninja_log.is_file():
+                shutil.copyfile(ninja_log, args.out / ninja_log.name)
         print(json.dumps(report, indent=2))
         return 0
     except (PackageError, OSError, ValueError, KeyError, IndexError,

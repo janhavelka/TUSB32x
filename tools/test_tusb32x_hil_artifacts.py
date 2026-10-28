@@ -57,6 +57,32 @@ class ArtifactTests(unittest.TestCase):
             self.artifacts()
         self.assertEqual(transcript.read_bytes(), b"previous run")
 
+    def test_checkpoint_encodes_each_current_report_once_without_reusing_stale_state(self) -> None:
+        """Bound repeated checkpoint work while preserving validated snapshots and exact bytes."""
+        artifacts = self.artifacts()
+        artifacts.metadata = {"firmware": {"identity": "unknown", "count": 1}}
+        with mock.patch.object(artifacts, "_json", wraps=artifacts._json) as encode:
+            artifacts.checkpoint()
+            self.assertEqual(encode.call_count, 1)
+            encode.reset_mock()
+            report = artifacts.snapshot()
+            self.assertEqual(encode.call_count, 1)
+            expected = (json.dumps(report, ensure_ascii=False, allow_nan=False,
+                                   sort_keys=True, indent=2) + "\n").encode("utf-8")
+            self.assertEqual((self.directory / "report.json").read_bytes(), expected)
+            artifacts.metadata["firmware"]["count"] = 2
+            encode.reset_mock()
+            artifacts.checkpoint()
+            self.assertEqual(encode.call_count, 1)
+            self.assertEqual(self.report()["metadata"]["firmware"]["count"], 2)
+            self.assertEqual(report["metadata"]["firmware"]["count"], 1)
+        artifacts.metadata["invalid"] = float("nan")
+        with self.assertRaises(EvidenceError):
+            artifacts.snapshot()
+        with self.assertRaises(EvidenceError):
+            artifacts.checkpoint()
+        self.assertEqual(self.report()["metadata"]["firmware"]["count"], 2)
+
     def test_invalid_limits_rejected_before_file_creation(self) -> None:
         """Invalid, noninteger and excessive bounds never touch the output directory."""
         self.assertEqual(CaptureLimits().transcript_bytes, 32 * 1024 * 1024)

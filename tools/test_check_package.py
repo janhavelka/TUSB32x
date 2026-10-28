@@ -22,6 +22,7 @@ import tempfile
 import shutil
 import subprocess
 import sys
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -417,7 +418,32 @@ class ArchiveContracts(unittest.TestCase):
 
 
 class DependencyContracts(unittest.TestCase):
-    """Check the compiler's Make dependency quoting without requiring a compiler."""
+    """Check Ninja object provenance and Make quoting without requiring a compiler."""
+
+    def test_ninja_selects_actual_compile_objects_and_rejects_bad_evidence(self) -> None:
+        """Linker dependencies cannot inflate compiler counts or hide missing objects."""
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary).resolve()
+            source = build / "main.cpp"
+            source.write_text("fixture", encoding="utf-8")
+            (build / "package-toolchain-includes.txt").write_text("", encoding="utf-8")
+            compiles = [{"directory": str(build), "output": "main.cpp.o"}]
+            good = f"main.cpp.o: #deps 1, deps mtime 1 (VALID)\n    {source}\n\n"
+            args = SimpleNamespace(generator="Ninja", make_program="ninja")
+            with mock.patch.object(package.subprocess, "run") as run:
+                run.return_value.stdout = good
+                package.check_dependencies(build, build, build, args, {}, compiles)
+                self.assertEqual(run.call_args.args[0][-3:], ["-t", "deps", "main.cpp.o"])
+                for bad in ("", good + good, good.replace("VALID", "STALE"),
+                            good.replace("main.cpp.o:", "linked-image:"),
+                            "main.cpp.o: #deps 0, deps mtime 1 (VALID)\n"):
+                    run.return_value.stdout = bad
+                    with self.subTest(bad=bad), self.assertRaises(package.PackageError):
+                        package.check_dependencies(build, build, build, args, {}, compiles)
+                for bad in ([{}], compiles + compiles,
+                            [{"directory": str(build), "output": "../outside.o"}]):
+                    with self.subTest(compiles=bad), self.assertRaises(package.PackageError):
+                        package.check_dependencies(build, build, build, args, {}, bad)
 
     def test_make_spaces_and_continuations(self) -> None:
         """A continued rule preserves escaped spaces as part of a header path."""
