@@ -3922,3 +3922,78 @@ whole-suite CPU margin. The single registration now permits180seconds and retain
 every test, assertion, cap and simulated operation deadline. No retry, test omission
 or protocol timeout change is introduced. This replaces the measured inadequate
 wall-clock ceiling; prior90-second failures and positive results remain recorded.
+
+## Prompt 34 completed remote checkpoint
+
+**PASS:** [run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875),
+exact tested implementation SHA `9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`,
+branch `promptset/tusb32x-implementation-20261023`. The existing push-triggered run
+completed successfully at 2026-10-28 22:20:36 UTC: **14/14 jobs passed**, with no
+skipped/allowed-failure matrix rows. No manual dispatch or automatic retry was
+needed. Prior failed runs remain FAIL and are documented above.
+
+| Final gate | Actual evidence |
+| --- | --- |
+| Workflow/metadata | Actual YAML, immutable action/image pins, job ownership/timeouts and stable generated versions PASS |
+| Five strict host rows | GCC 14.2.0 Debug/Release, Clang 18.1.3 Debug/Release and Clang 18.1.3 ASan/UBSan Debug; each executes 53 native plus 6 contracts, PASS |
+| Registration/execution | 71 unique Linux suites, finite timeouts and exact JUnit/inventory names; no skipped/failed cases; 307 registered executions across owners/configurations |
+| Python | 7 registrations PASS: runner 312 cases in 93.180s (CTest 93.380s, 180s bound); real C++ transcript 20.680s; IDF config 4, Arduino config 7, version 18, validator/CI 33 and firmware guard 23 cases |
+| Documentation | 2 real-Doxygen/negative registrations PASS with official Doxygen 1.13.2; actual XML/HTML visibility and warning checks retained |
+| Package | 3 registrations PASS, then actual PlatformIO archive and clean tests-OFF consumer compile/link/run; 76 source-equal files and 175 package/local links |
+| Extracted Arduino | Four basic/owner-service images on S2/S3 PASS; 11 project sources each, 193/194/193/194 approved used dependencies, five extracted public headers each, required symbols and 12 independently rehashed ELF/BIN/map files |
+| Extracted native IDF | Both S2/S3 on oldest audited 5.5.5 and current v6.1 (SDK 6.1.0) PASS; 11 project sources each, native app_main/APIs and no Arduino linkage; target/version build and SDKCONFIG/lock isolation |
+| Native 6.1 ABI provenance | Actual generated cxxflags/specs and compiler roots retained; 205 used dependencies per target checked, correct picolibc/no-rtti headers, exact response references for all 11 sources |
+| Artifacts | All 15 named artifacts exist for the exact tested SHA, seven-day retention; failed-attempt logs, inventories/JUnit, archive provenance, compiler/ABI metadata and actual images/maps retained |
+
+One real archive supplied every firmware job:
+
+```text
+SHA256 c492a92e2d1feb65356283329bc09d8a2e6bfda13a428d081e6e41715d287eb7
+301887 bytes; 76 files
+```
+
+The distribution consumer extracted into `/tmp/package-opg1_28o/renamed-tusb32x`;
+Arduino used `/tmp/package-mpobk3ua/renamed-tusb32x`. Native targets have separate
+absolute build/SDKCONFIG/lock paths under each job's `build/idf/firmware/` private
+work directory. The compiler dependency reports identify all extracted sources,
+not this checkout or siblings. Archive firmware correctly reports unknown Git/tree;
+external source-sha.log identifies the tested host checkout separately.
+
+Independent reviewers downloaded and checked the exact-SHA artifacts. The lead
+also rehashed both 5.5.5 ELF/BIN/map/SDKCONFIG/lock sets and checked native symbols,
+source counts, archive identity and target configuration. Retained local evidence:
+
+- `build/p34-ci-final-host9aa`: inventories/JUnit and host/docs/package/Python reports.
+- `build/p34-ci-final-arduino-9aa`: common archive and all four Arduino image records.
+- `build/p34-ci-final-idf555-9aa/verification.json`: both 5.5.5 rows and five hashes each.
+- `build/p34-ci-final-idf61-9aa/verification.json`: both 6.1 rows, ABI roots and hashes.
+- `build/p34-final-checkpoint.json`: terminal job/artifact inventory and tested SHA.
+
+CI tools are Python 3.12.16, CMake 4.0.3, Ninja 1.13.0, Doxygen 1.13.2,
+PyYAML 6.0.3 and isolated PlatformIO 6.1.19. Hosted Ubuntu 24.04 provides GCC
+14.2.0 and Clang 18.1.3; the standalone package consumer uses GNU 13.3.0.
+Arduino is the retained pioarduino 55.03.311 / Arduino 3.3.11 / bundled IDF 5.5.5
+row, with Xtensa GCC 14.2.0 esp-14.2.0_20260121. The immutable native containers
+use Python 3.12.3; 5.5.5 has CMake 3.30.2 and GCC 14.2.0, while 6.1 has
+CMake 4.0.3 and GCC 15.2.0 esp-15.2.0_20251204. Native Ninja is the container's
+/usr/bin/ninja, recorded through its pinned image rather than a separate version
+probe. Official pins, source commits, hashes and Docker digests are in the audit.
+
+Actual commands are the committed workflow's canonical validate.py selections,
+PIO pack, check_package.py clean consumer/extraction and check_firmware.py calls.
+All subprocess argument lists, finite bounds, selected environment and build paths
+are retained in command JSON/logs. Source-build diagnostic commands remain in the
+application guides; an identical source-checkout matrix was not added as a gate.
+
+The lead synchronized each implementation unit: f521f55 (workflow/SDK audit),
+aa377ce (Ninja provenance/report encoding), 0ec200d (actual ABI/tool materialization)
+and 9aa8898 (measured suite margin). The final reporting commit changes documents
+only; it is checked locally and synchronized without requiring another remote
+checkpoint. Automatic push runs may occur; this record deliberately retains the
+actual successful tested SHA rather than assigning its result to a reporting SHA.
+
+**NOT RUN:** physical serial/USB input/output, adapter waveforms/aggregate blocking,
+CC attachment/current, INT/supply/enable timing and exact-board qualification.
+No serial port, flashing, fixture power control, publication, release or registry
+action occurred. Image links and host/fake-serial tests do not establish hardware
+qualification. Later numbered prompts use local verification and retain this CI SHA.

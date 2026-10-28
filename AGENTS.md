@@ -486,3 +486,10 @@ operator step; carry it across suite sessions, and clear it only after a newly
 qualified explicit typed recovery. UFP fault success and old startup declarations
 cannot grant later source-capable work. These are host evidence guards, not a core
 scheduler or automatic recovery policy.
+
+
+The completed prompt 34 checkpoint is run40778512875 at
+9aa8898c65ca1eebc5f7ea241dfac4bbc815283b: 14 jobs PASS, eight extracted firmware
+images, no hardware qualification. See docs/validation.md for actual artifacts
+and prior failed attempts. Retain this tested SHA during later prompts; reporting
+commits and later local checks do not retroactively extend its remote proof.

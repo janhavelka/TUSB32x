@@ -620,20 +620,21 @@ No validator selection invokes physical HIL, flashing, publication or remote CI.
 The [declared matrix](development.md#declared-ci-matrix) and source-checkout
 [workflow](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/.github/workflows/ci.yml)
 separate check ownership and consume one identified archive for firmware.
-**Remote verification is PENDING.** Configuration and official pin identity are
-source evidence; they do not establish that the jobs or image links passed.
+[Run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) passed all 14 jobs on
+`9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`. The rows below have actual artifact evidence;
+physical qualification remains NOT RUN.
 
 | Required check | Declared coverage | Evidence boundary |
 | --- | --- | --- |
-| Host | GCC 14 and Clang 18 Debug/Release; Clang 18 ASan/UBSan Debug | Five Linux rows, strict warnings and active Release assertions; actual job results pending |
-| Python/documentation/package | One Release owner for each registered suite group | Existing validator inventory/JUnit checks reused; actual job results pending |
+| Host | GCC 14 and Clang 18 Debug/Release; Clang 18 ASan/UBSan Debug | Five Linux rows, strict warnings and active Release assertions; PASS at the recorded checkpoint SHA |
+| Python/documentation/package | One Release owner for each registered suite group | Existing validator inventory/JUnit checks reused; PASS at the recorded checkpoint SHA |
 | Workflow contract | Actual YAML, verified action release pins, matrix/ownership/artifact bounds | PyYAML 6.0.3 required by check_ci.py; negative fixtures integrated into validate_runner |
-| Arduino distribution | Basic CLI and owner service on S2/S3 from the shared archive | Four images, PlatformIO 6.1.19/pioarduino 55.03.311/Arduino 3.3.11; actual checkpoint links pending |
-| Native distribution | Genuine native CLI on S2/S3, IDF 5.5.5 and v6.1 (SDK 6.1.0) | Four images with immutable container digests and isolated configurations; actual checkpoint links pending |
+| Arduino distribution | Basic CLI and owner service on S2/S3 from the shared archive | Four images, PlatformIO 6.1.19/pioarduino 55.03.311/Arduino 3.3.11; all four links PASS at the recorded SHA |
+| Native distribution | Genuine native CLI on S2/S3, IDF 5.5.5 and v6.1 (SDK 6.1.0) | Four images with immutable container digests and isolated configurations; all four links PASS at the recorded SHA |
 | Evidence retention | Logs, JUnit, package/consumer provenance and useful firmware outputs | Seven days, expected paths checked; no physical HIL, flash or publication |
 
 The manifest's `idf >=5.3.0` remains portable-core admission metadata. The example
 adapter's declared exact SDK audit rows are 5.5.5/6.1.0; the floor does not qualify
 the adapter on intervening or later SDKs. Earlier recorded 5.5.5 and Arduino
-links retain their original tested revisions. The new checkpoint cannot extend
-them to a different commit before its actual results are recorded.
+links retain their original tested revisions. The checkpoint records its own
+verified SHA; later commits do not inherit its remote result.

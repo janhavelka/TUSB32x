@@ -3,7 +3,8 @@
 Checked official sources on 2026-10-28. This record verifies source identity and
 availability; it does not report a firmware link, remote CI pass or hardware test.
 The lead owns the selected workflow, SDK audit, builds and final result record.
-The declared prompt 34 remote checkpoint is PENDING.
+The completed [remote checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) is recorded separately in
+[validation](../validation.md#prompt-34-completed-remote-checkpoint).
 
 ## Current checkout and peers
 
@@ -86,7 +87,8 @@ those are not substitutes for the existing audited Wire row.
 The declared native matrix is 5.5.5 (oldest actually qualified adapter SDK) plus
 6.1 (SDK version 6.1.0, current stable release), both on S2/S3. Qualification of
 the new row requires the complete transport/lifetime audit, guards, host
-regressions and real extracted images. Remote verification remains PENDING.
+regressions and real extracted images. The completed checkpoint supplies that
+software evidence at its exact recorded SHA; it does not qualify physical hardware.
 Do not call an added version guard or a sibling link support.
 [Espressif release/version guidance](https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32h2/versions.html)
 requires checking framework compatibility and retesting migration changes.

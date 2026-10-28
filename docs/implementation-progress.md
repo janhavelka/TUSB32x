@@ -43,7 +43,7 @@ Current authorization: implement prompt 34, dedicated CI and extracted firmware 
 | [31: recovery-fixture-suites](prompts/31-recovery-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
 | [32: package-consumers](prompts/32-package-consumers.md) | COMPLETE (software evidence; hardware separate) |
 | [33: validation-guards](prompts/33-validation-guards.md) | COMPLETE (software evidence; hardware separate) |
-| [34: ci-matrix](prompts/34-ci-matrix.md) | IN PROGRESS (exact-commit remote verification) |
+| [34: ci-matrix](prompts/34-ci-matrix.md) | COMPLETE (14 CI jobs; eight extracted images; hardware NOT RUN) |
 | [35: user-documentation](prompts/35-user-documentation.md) | NOT STARTED |
 | [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | NOT STARTED |
 | [37: final-core-review](prompts/37-final-core-review.md) | NOT STARTED |
@@ -2520,7 +2520,7 @@ and reports final commit/upstream equality in the handoff. Record that completed
 commit in the next progress update, avoiding a self-reference commit loop.
 
 
-## Prompt 34: dedicated CI and extracted firmware checkpoint (in progress)
+## Prompt 34: dedicated CI and extracted firmware checkpoint (complete)
 
 Started from synchronized clean fc77aae9f81e908ffaa72f2f83781fcb9cba9750 on
 promptset/tusb32x-implementation-20261023; fetch showed zero ahead/behind and no
@@ -2647,3 +2647,29 @@ whole-suite CPU margin. The single registration now permits180seconds and retain
 every test, assertion, cap and simulated operation deadline. No retry, test omission
 or protocol timeout change is introduced. This replaces the measured inadequate
 wall-clock ceiling; prior90-second failures and positive results remain recorded.
+
+Prompt 34 is complete. The final implementation commit
+9aa8898c65ca1eebc5f7ea241dfac4bbc815283b is synchronized and its existing
+[push run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875)
+completed SUCCESS with all 14 jobs PASS. Five strict host configurations execute
+53 native plus 6 contracts each; docs 2, package 3 and Python 7 registrations all
+pass with exact inventory/JUnit names. The 312-case runner completes in 93.180s
+under the measured 180s host suite limit; all operation/assertion checks remain.
+
+The single final archive SHA256 is
+c492a92e2d1feb65356283329bc09d8a2e6bfda13a428d081e6e41715d287eb7,
+301887 bytes / 76 source-equal files. The clean CMake consumer runs without
+maintainer tools. All eight extracted images link and pass provenance: four
+Arduino basic/owner S2/S3 images and four genuine native IDF 5.5.5/6.1 target rows.
+Independent artifact audits rehash actual images/maps, verify 11 project sources
+per image, exact headers/SDK roots, unknown archive Git identity and native
+linkage without Arduino. All 15 bounded artifacts exist; seven-day retention is verified.
+
+[Final validation](validation.md#prompt-34-completed-remote-checkpoint) records
+commands, actual tool versions, run/job evidence, artifact paths/hashes, prior
+failed attempts and corrections. The stale progress-table rows 30-33 are aligned
+with their recorded completed software work; later prompts remain NOT STARTED.
+This documentation-only reporting unit receives local link/format/version checks
+and its own commit/sync. It does not create another remote gate or extend the
+9aa8898 CI result to its reporting commit. Physical serial/I2C/CC/INT/power/timing
+remains NOT RUN; no flashing, publication or sibling modification occurred.

@@ -136,7 +136,9 @@ Python, documentation and package suites each have one Release owner. Four Ardui
 images and native IDF 5.5.5/6.1 images on S2/S3 consume the same identified archive;
 do not add another identical source-checkout firmware gate. All workflow jobs use
 finite timeouts and retain useful logs, JUnit and package/firmware evidence for
-seven days. Remote verification is PENDING until the exact commit's jobs finish.
+seven days. [Checkpoint 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) passed all 14 jobs at
+`9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`. Later edits use their own local checks and
+retain this actual CI SHA; documentation commits do not require another remote gate.
 
 Before editing CI, install its source-checkout parser dependency and run:
 

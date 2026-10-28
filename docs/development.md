@@ -61,7 +61,7 @@ admission floor adopted from current TMP1x2/24Cxx and checked against the
 and [component registration](https://github.com/espressif/esp-idf/blob/v5.3.2/tools/cmake/component.cmake).
 The [native adapter](idf-transport.md) has a narrower exact-version audit boundary:
 IDF 5.5.5 and 6.1.0 (release tag v6.1) are the declared CI rows on S2/S3.
-Earlier recorded links cover 5.5.5; the new remote checkpoint remains PENDING.
+The verified checkpoint links both SDK rows; earlier links retain their original revisions.
 The admission floor does not qualify other SDK versions. No Arduino, driver peripheral,
 RTOS or consumer-product dependency is required by this component.
 
@@ -186,9 +186,10 @@ framework names do not qualify untested versions.
 ## Declared CI matrix
 
 The source-checkout [workflow](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/.github/workflows/ci.yml)
-defines the prompt 34 checkpoint. **Remote verification is PENDING.** Its rows
-describe required checks; they do not report successful jobs, new firmware links
-or physical qualification. Actual results and tested SHA belong in the
+defines the prompt 34 checkpoint. [Run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) passed **14/14 jobs**
+on `9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`: five host configurations,
+workflow/Python/docs/package checks and eight extracted firmware images. Physical
+qualification remains NOT RUN. Commands, artifact hashes and tested SHA are in the
 [validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
 
 | Job | Declared rows and ownership |

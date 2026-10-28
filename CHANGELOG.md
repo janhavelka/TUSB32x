@@ -16,9 +16,9 @@ Entries below distinguish those artifacts from planned device-driver functionali
   native-IDF S2/S3 image rows. Actions and SDK containers use verified immutable
   pins; expected logs, JUnit, package and firmware evidence have seven-day
   retention. The actual-YAML checker and validator negative fixtures guard the
-  matrix. Native candidates are the previously audited 5.5.5 and current 6.1
-  (SDK version 6.1.0); remote verification remains PENDING. Physical qualification
-  is separate.
+  matrix. Native rows are audited 5.5.5 and current 6.1 (SDK version 6.1.0).
+  The recorded checkpoint passes all 14 jobs and links eight extracted firmware
+  images; physical qualification remains NOT RUN.
   Linux package provenance queries exact compiler objects, separating CMake 4
   linker dependencies. Runner checkpoints reuse their already validated JSON
   bytes, and verbose per-case evidence preserves timeout diagnostics. The
