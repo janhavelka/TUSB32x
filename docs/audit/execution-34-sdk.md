@@ -174,3 +174,27 @@ Both registered suites passed. They exercise the actual adapter against the
 recording backend at 1000Hz and 100Hz; they do not execute the IDF driver.
 The required real 5.5.5/6.1 extracted S2/S3 links belong to the separate prompt34
 matrix evidence. Hardware qualification remains NOT RUN.
+
+
+## Extracted compiler provenance
+
+The first 6.1 image attempts linked both S2/S3 applications, then correctly
+failed the bare-compiler header-origin check. IDF 6.1 selects picolibc and no-RTTI
+multilib headers through its generated toolchain/cxxflags response file.
+[Toolchain flags](https://github.com/espressif/esp-idf/blob/fff9895c82d744c7237be8847347bdd1b07c6643/tools/cmake/toolchain_flags.cmake)
+and [libc integration](https://github.com/espressif/esp-idf/blob/fff9895c82d744c7237be8847347bdd1b07c6643/components/esp_libc/project_include.cmake)
+rerun ABI detection after specs/RTTI changes. The generated compiler metadata
+file can predate those changes, so its include list alone is not sufficient.
+The inspector must probe the compiler with the actual generated response file
+used by the compile database; it must not guess a wider installation parent.
+Compiler metadata, response flags and discovered roots remain saved evidence.
+This does not change SDK transfer bounds, adapter callbacks or firmware sources.
+
+The pinned Arduino platform uses metadata-only toolchain packages before its
+normal build installer runs. Its [platform code](https://github.com/pioarduino/platform-espressif32/blob/55.03.311/platform.py)
+materializes Core/tools/toolchain-xtensa-esp-elf, then installs that into the
+ordinary Core/packages/toolchain-xtensa-esp-elf location. Resolving nm/compiler
+before pio run incorrectly rejects a fresh Linux environment. Inspect the
+materialized tools after the actual build; retain the existing deterministic
+paths and Windows managed-Core launcher. This is not permission to install a
+second Core or silently change a platform/tool pin.

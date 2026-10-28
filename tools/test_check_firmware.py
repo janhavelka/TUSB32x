@@ -143,6 +143,97 @@ class FirmwareChecks(unittest.TestCase):
         result = json.loads((self.output / "firmware-result.json").read_text(encoding="utf-8"))
         self.assertIn("did not all complete", result["error"])
 
+    def test_native_abi_response_matches_every_compiled_source(self):
+        """The current SDK probe uses precisely the response file in actual commands."""
+        response = self.output / "toolchain/cxxflags"
+        response.parent.mkdir()
+        response.write_text('"-specs=/sdk/picolibc.specs"\n-fno-rtti\n', encoding="utf-8")
+        selected = [{"command": f'compiler @"{response.as_posix()}" -c source.cpp'},
+                    {"command": f'compiler @"{response.as_posix()}" -c other.cpp'}]
+        self.assertEqual(firmware.native_compile_flags(self.output, selected, "6.1.0"),
+                         ["@" + str(response)])
+        self.assertEqual(firmware.native_compile_flags(self.output, [], "5.5.5"), [])
+        for bad in ([], [{"command": "compiler -c source.cpp"}],
+                    [{"command": "compiler @toolchain/cxxflags -c source.cpp"}],
+                    [{"command": 'compiler @"${BUILD}/toolchain/cxxflags"'}],
+                    [{"command": f'compiler @"{self.root.as_posix()}/other"'}],
+                    selected + [{"command": selected[0]["command"] + ' @"second"'}]):
+            with self.subTest(bad=bad), self.assertRaises(firmware.FirmwareError):
+                firmware.native_compile_flags(self.output, bad, "6.1.0")
+        response.write_text("\n", encoding="utf-8")
+        with self.assertRaisesRegex(firmware.FirmwareError, "nonempty"):
+            firmware.native_compile_flags(self.output, selected, "6.1.0")
+        response.unlink()
+        with self.assertRaisesRegex(firmware.FirmwareError, "nonempty"):
+            firmware.native_compile_flags(self.output, selected, "6.1.0")
+
+    def test_include_probe_preserves_abi_response_and_build_directory(self):
+        """Compiler-selected multilib roots are approved without their broader parents."""
+        root = self.root / "picolibc/include/target/no-rtti"
+        root.mkdir(parents=True)
+        response = "@" + str(self.output / "toolchain/cxxflags")
+        output = f"#include <...> search starts here:\n {root}\nEnd of search list.\n"
+        with mock.patch.object(firmware, "run_logged", return_value=output) as child:
+            roots = firmware.compiler_roots(Path("compiler"), {}, self.root, "idf-s3",
+                                            [response], self.output)
+        self.assertEqual(roots, [root])
+        self.assertEqual(child.call_args.args[0],
+                         [Path("compiler"), response, "-E", "-x", "c++", "-", "-v"])
+        self.assertEqual(child.call_args.args[1], self.output)
+        self.assertEqual(child.call_args.kwargs["input_text"], "")
+        for bad in ("", "relative/include", "${SDK}/include", str(self.package / "library.json")):
+            output = f"#include <...> search starts here:\n {bad}\nEnd of search list.\n"
+            with self.subTest(bad=bad), \
+                    mock.patch.object(firmware, "run_logged", return_value=output), \
+                    self.assertRaises(firmware.FirmwareError):
+                firmware.compiler_roots(Path("compiler"), {}, self.root, "idf-s3")
+
+    def test_arduino_build_materializes_tools_before_inspection(self):
+        """Metadata-only installed packages become executable during the build child."""
+        manifest = self.root / "platforms/espressif32/platform.json"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(json.dumps({"name": "espressif32", "version": "55.03.311"}),
+                            encoding="utf-8")
+        framework = self.root / "packages/framework-arduinoespressif32/package.json"
+        framework.parent.mkdir(parents=True)
+        framework.write_text('{"version":"3.3.11"}', encoding="utf-8")
+        (self.root / "packages/framework-arduinoespressif32-libs").mkdir()
+        pio = self.root / ".platformio/penv/Scripts/pio.exe"
+        pio.parent.mkdir(parents=True)
+        pio.touch()
+        events = []
+        suffix = ".exe" if os.name == "nt" else ""
+        tool_names = ("xtensa-esp-elf-nm", "xtensa-esp32s2-elf-g++", "xtensa-esp32s3-elf-g++")
+        binary = self.root / "packages/toolchain-xtensa-esp-elf/bin"
+
+        def build(command, *_args, **kwargs):
+            """Model package materialization, without creating or certifying firmware."""
+            self.assertIn("run", command)
+            self.assertEqual(kwargs["timeout"], 1800)
+            events.append("build")
+            binary.mkdir(parents=True)
+            for name in tool_names:
+                (binary / (name + suffix)).touch()
+
+        def inspect(*_args):
+            """Stop at inspection; no simulated image can yield a passing row."""
+            self.assertEqual(events, ["build"])
+            self.assertTrue(all((binary / (name + suffix)).is_file() for name in tool_names))
+            events.append("inspect")
+            raise firmware.FirmwareError("inspection boundary reached")
+
+        args = SimpleNamespace(core_dir=self.root, package=self.package, checks=("arduino",))
+        rows = []
+        with mock.patch.object(firmware, "run_logged", side_effect=build), \
+                mock.patch.object(firmware, "inspect_row", side_effect=inspect), \
+                mock.patch.object(Path, "home", return_value=self.root), \
+                mock.patch.object(firmware.shutil, "which",
+                                  side_effect=lambda name: str(pio) if name == "pio" else None):
+            with self.assertRaisesRegex(firmware.FirmwareError, "inspection boundary"):
+                firmware.execute(args, self.output, rows)
+        self.assertEqual(events, ["build", "inspect"])
+        self.assertEqual(rows, [])
+
     def test_unusable_output_directory_is_invocation_incomplete(self):
         """An ordinary output file is preserved and returns two before any SDK work."""
         output = self.root / "ordinary-file"

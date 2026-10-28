@@ -3,7 +3,9 @@
 
 Use an already validated, renamed extraction with --package and a disjoint --out.
 --checks accepts arduino,idf-s2,idf-s3; Arduino includes all four shipped examples.
-Existing tools are required; this helper installs nothing and never opens hardware.
+An installed Core/SDK is required; this helper never installs another Core or opens
+hardware. The pinned PlatformIO platform materializes its declared toolchain
+packages during the ordinary build when only package metadata was installed.
 Each build has an 1800-second limit and a 16 MiB saved log; inspection children
 have 60 seconds. Exit 0 means requested links and evidence passed, 1 means failure,
 2 means invocation/missing tools/incomplete, and 130 preserves interrupted logs.
@@ -228,17 +230,19 @@ def arduino_platform(core):
     raise Incomplete(f"installed pioarduino55.03.311 platform is missing: {core}")
 
 
-def compiler_roots(compiler, environment, work, row):
-    """Probe actual compiler system includes and preserve its diagnostic evidence."""
-    text = run_logged([compiler, "-E", "-x", "c++", "-", "-v"], work, environment,
+def compiler_roots(compiler, environment, work, row, flags=(), cwd=None):
+    """Probe selected compiler/ABI includes and preserve the command and diagnostics."""
+    text = run_logged([compiler, *flags, "-E", "-x", "c++", "-", "-v"], cwd or work, environment,
                       work / f"{row}-compiler-includes.log", input_text="")
     match = re.search(r"#include <\.\.\.> search starts here:(.*?)End of search list\.",
                       text, flags=re.DOTALL)
     if not match:
         raise FirmwareError(f"compiler did not report include roots: {row}")
-    roots = [Path(line.strip()).resolve(strict=True)
-             for line in match[1].splitlines() if line.strip()]
-    if not roots or not all(root.is_dir() for root in roots):
+    paths = [line.strip() for line in match[1].splitlines() if line.strip()]
+    if not paths or any(not Path(path).is_absolute() or "$" in path for path in paths):
+        raise FirmwareError(f"invalid compiler include roots: {row}")
+    roots = [Path(path).resolve(strict=True) for path in paths]
+    if not all(root.is_dir() for root in roots):
         raise FirmwareError(f"invalid compiler include roots: {row}")
     return roots
 
@@ -342,6 +346,33 @@ def native_compiler(build):
     return require_file(compiler)
 
 
+def native_compile_flags(build, selected, version):
+    """Use IDF6.1's actual ABI response file; reject absent or mismatched commands.
+
+    IDF6.1 adds libc specs and RTTI multilib selection to toolchain/cxxflags after
+    initial CMake compiler detection. Its generated compiler metadata can retain
+    earlier include roots, so probe with the response file used by every source.
+    IDF5.5.5 has no such response file and uses the compiler's default libc.
+    """
+    if version == "5.5.5":
+        return []
+    if version != "6.1.0":
+        raise FirmwareError(f"unsupported native compiler configuration: {version}")
+    response = build / "toolchain/cxxflags"
+    if not response.is_file() or not response.read_text(encoding="utf-8").strip():
+        raise FirmwareError("native IDF6.1 requires a nonempty compiler ABI response file")
+    if not selected:
+        raise FirmwareError("native compiler ABI response requires compiled source evidence")
+    for entry in selected:
+        references = re.findall(r'@(?:"([^"\r\n]+)"|([^\s"]+))', entry["command"])
+        paths = [quoted or plain for quoted, plain in references]
+        if (len(paths) != 1 or not Path(paths[0]).is_absolute()
+                or any(char in paths[0] for char in ("$", ";"))
+                or Path(paths[0]).resolve() != response.resolve()):
+            raise FirmwareError("native compile command differs from its compiler ABI response file")
+    return ["@" + str(response)]
+
+
 def inspect_row(args, row, work, environment, sdk, ninja, nm):
     """Inspect actual image, identity, sources, compiler inputs and native configuration."""
     native = row.startswith("idf-")
@@ -360,8 +391,6 @@ def inspect_row(args, row, work, environment, sdk, ninja, nm):
         compiler = native_compiler(build)
     else:
         compiler = tool(args.core_dir, "toolchain-xtensa-esp-elf", f"xtensa-{target}-elf-g++")
-    approved = [args.package, build.resolve(),
-                *compiler_roots(compiler, environment, work, row), *sdk]
     records = []
     if native:
         database = json.loads((build / "compile_commands.json").read_text(encoding="utf-8"))
@@ -378,6 +407,14 @@ def inspect_row(args, row, work, environment, sdk, ninja, nm):
                  for entry in selected}
         if names != expected_sources(row) or len(selected) != len(names):
             raise FirmwareError("native compile database omitted or duplicated extracted sources")
+        flags = native_compile_flags(build, selected, idf_version(sdk[0]))
+        roots = compiler_roots(compiler, environment, work, row, flags, build)
+        evidence = {"compiler": str(compiler), "probe_flags": flags,
+                    "include_roots": [str(root) for root in roots]}
+        if flags:
+            evidence["abi_response"] = artifact(build / "toolchain/cxxflags")
+        (build / "firmware-compiler.json").write_text(
+            json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
         for index, entry in enumerate(selected):
             text = run_logged([ninja, "-C", build, "-t", "deps", entry["output"]],
                               work, environment, work / f"{row}-deps-{index}.log")
@@ -397,8 +434,10 @@ def inspect_row(args, row, work, environment, sdk, ninja, nm):
                 raise FirmwareError(f"missing native application setting: {setting}")
         artifacts += [artifact(build / "sdkconfig"), artifact(build / "dependencies.lock")]
     else:
+        roots = compiler_roots(compiler, environment, work, row)
         depfiles = sorted((build / "src").rglob("*.cpp.d"))
         records = [make_dependencies(path.read_text(encoding="utf-8")) for path in depfiles]
+    approved = [args.package, build.resolve(), *roots, *sdk]
     dependency = verify_dependencies(records, args.package, build, approved,
                                      expected_sources(row), build if native else args.package)
     return {"row": row, "result": "PASS", "artifacts": artifacts,
@@ -410,9 +449,10 @@ def inspect_row(args, row, work, environment, sdk, ninja, nm):
 def execute(args, work, results):
     """Build requested rows once each, then verify every successful linked image."""
     environment = environment_for(args, work)
-    nm = tool(args.core_dir, "toolchain-xtensa-esp-elf", "xtensa-esp-elf-nm")
+    nm = None
     ninja = None
     if any(name.startswith("idf-") for name in args.checks):
+        nm = tool(args.core_dir, "toolchain-xtensa-esp-elf", "xtensa-esp-elf-nm")
         ninja = tool(args.core_dir, "tool-ninja", "ninja")
         cmake = tool(args.core_dir, "tool-cmake", "cmake")
         sdk, python = idf_settings(args, environment)
@@ -424,8 +464,6 @@ def execute(args, work, results):
     for check in args.checks:
         if check == "arduino":
             arduino_platform(args.core_dir)
-            for target in ("esp32s2", "esp32s3"):
-                tool(args.core_dir, "toolchain-xtensa-esp-elf", f"xtensa-{target}-elf-g++")
             arduino = args.core_dir / "packages/framework-arduinoespressif32"
             metadata = json.loads(
                 require_file(arduino / "package.json").read_text(encoding="utf-8"))
@@ -447,6 +485,11 @@ def execute(args, work, results):
             for row in ARDUINO_ROWS:
                 command += ["-e", row]
             run_logged(command, work, environment, work / "arduino-build.log", timeout=1800)
+            # The pinned platform materializes metadata-only toolchain packages
+            # during this build. Inspect executable tools only after that step.
+            nm = tool(args.core_dir, "toolchain-xtensa-esp-elf", "xtensa-esp-elf-nm")
+            for target in ("esp32s2", "esp32s3"):
+                tool(args.core_dir, "toolchain-xtensa-esp-elf", f"xtensa-{target}-elf-g++")
             for row in ARDUINO_ROWS:
                 results.append(inspect_row(args, row, work, environment,
                                            [arduino.resolve(), libs.resolve()], ninja, nm))

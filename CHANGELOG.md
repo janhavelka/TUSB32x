@@ -23,6 +23,8 @@ Entries below distinguish those artifacts from planned device-driver functionali
   linker dependencies. Runner checkpoints reuse their already validated JSON
   bytes, and verbose per-case evidence preserves timeout diagnostics without
   changing the suite or operation deadline bounds.
+  IDF 6.1 header provenance uses its actual compiler ABI response file; fresh
+  Arduino builds materialize their pinned toolchain before executable inspection.
 
 - One local validation entry point with explicit check ownership, saved logs,
   finite child deadlines and failed/incomplete/interrupted verdicts. Registered

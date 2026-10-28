@@ -270,5 +270,8 @@ jobs:
             build/idf/**/tusb32x_idf_cli.bin
             build/idf/**/sdkconfig
             build/idf/**/dependencies.lock
+            build/idf/**/CMakeCXXCompiler.cmake
+            build/idf/**/toolchain/cxxflags
+            build/idf/**/picolibc.specs
           retention-days: 7
           if-no-files-found: error

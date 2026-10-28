@@ -2594,3 +2594,44 @@ No report limit, atomic replacement order, fsync or failure/correction path chan
 The extra case is owned by the existing hil_runner registration. Package41-case
 negatives and actual positive/outside-header Release consumers pass. The original
 failed CI reports remain intact; these changes are grouped for the next push.
+
+
+Correction commit aa377ceee86d7c4f23177e987e8769151471df9f was synchronized
+and tested by push run [40776243182](https://github.com/janhavelka/TUSB32x/actions/runs/40776243182).
+All five host rows, workflow guard, documentation, Python and package jobs passed.
+Each host row executes 53 native plus 6 contracts; docs2/package3/Python7 have
+matching inventory/JUnit names, no omitted/skipped tests. Actual host compilers
+are GCC 14.2.0 and Clang 18.1.3. Python runs all 312 runner cases in 86.915 seconds
+(CTest87.094), under the unchanged90-second ceiling; transcript also passes.
+
+The real 76-file archive SHA256 is
+57aeb72a99727f013aab98d3828edb311ceba062596326424a3da06bb9d78cfe,
+with tests-OFF consumer PASS at /tmp/package-348po76v/renamed-tusb32x.
+Both genuine IDF5.5.5 S2/S3 image rows pass. The lead downloaded artifacts
+12854373225/12854693178 and rehashed ELF/BIN/map/SDKCONFIG/lock bytes; each
+records11extracted sources, native symbols/noArduino and unknown archive Git.
+
+The run correctly remains FAIL: Arduino stopped before build because its
+metadata-only toolchain is materialized by the pinned platform during pio run,
+after the helper's premature executable check. Both IDF6.1 images linked, then
+header-provenance inspection rejected picolibc/no-rtti headers absent from the
+bare compiler probe. These are helper defects, not authority to broaden roots,
+remove gates or replace real links with SDK-header compilation. The next grouped
+correction uses actual configured compiler evidence and defers Arduino inspection
+until platform materialization. Additional generated compiler metadata is retained
+for diagnosis. Failed/incomplete artifacts remain unchanged. Physical proof is
+still NOT RUN.
+
+
+The next firmware-helper correction passes23focused cases and an actual existing
+5.5.5 S2 image reinspection (11sources/5artifacts), saved separately under
+reinspection-abi/result.json. IDF6.1 now requires every extracted source command
+to name the exact generated compiler response file, then probes with those ABI
+flags and the build directory. Missing, empty, relative, variable, mismatched or
+duplicate response references fail. Precise returned roots remain existing absolute
+directories; there is no wider installation allowlist. Compiler/probe/root/response
+hash metadata is saved, together with flags/specs/generated CMake evidence.
+Arduino performs its normal pinned platform build before resolving materialized
+nm/compiler executables; the mocked sequencing regression cannot yield image PASS.
+Existing Windows paths and managed Core remain unchanged. No SDK/tool pin or
+firmware source was changed to bypass these failures.
