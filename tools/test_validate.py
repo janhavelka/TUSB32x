@@ -233,6 +233,7 @@ class ValidatorTests(unittest.TestCase):
         """Actual selection code constructs one disjoint CTest call per group/config."""
         args = validate.parser().parse_args(
             ["--checks", "native,python,native", "--configs", "Debug"])
+        args.sanitize = True
         calls, records = [], []
         groups = validate.registration(inventory())
 
@@ -249,19 +250,32 @@ class ValidatorTests(unittest.TestCase):
             return validate.Result(name, "PASS", "fixture", log=str(log))
 
         with patch.object(validate, "run_command", side_effect=child), \
-                patch.object(validate.shutil, "which", return_value="tool"):
+                patch.object(validate.shutil, "which", return_value="clang++"), \
+                patch.object(Path, "resolve", side_effect=AssertionError("launcher resolved")):
             validate.run_ctests(args, self.root, lambda result: records.append(result) or result)
         names = [name for name, command in calls]
         self.assertEqual(names, ["debug-configure", "debug-build", "debug-inventory",
                                  "debug-native", "debug-python"])
         self.assertIn(f"-DPython3_EXECUTABLE={sys.executable}", calls[0][1])
         self.assertTrue(Path(args.make_program).is_absolute())
+        self.assertEqual(Path(args.compiler).name, "clang++")
         self.assertIn(f"-DCMAKE_MAKE_PROGRAM={args.make_program}", calls[0][1])
+        self.assertIn("-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      calls[0][1])
+        self.assertIn("-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined", calls[0][1])
         for name, command in calls[-2:]:
+            self.assertIn("--verbose", command)
             selected = command[-1]
             if name.endswith("native"):
                 self.assertNotIn("hil_runner", selected)
             self.assertNotIn("cli_contract", selected)
+
+
+def load_tests(loader, tests, pattern):
+    """Own CI guard negatives once in the existing validator test registration."""
+    import test_check_ci
+    tests.addTests(loader.loadTestsFromModule(test_check_ci))
+    return tests
 
 
 if __name__ == "__main__":

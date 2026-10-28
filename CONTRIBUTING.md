@@ -130,6 +130,26 @@ rewriting history. Remote CI belongs only to prompt 34 in this initial execution
 preserve required hooks and merge/release protections. Firmware links, package
 qualification and physical hardware checks remain separate evidence.
 
+The [declared CI matrix](docs/development.md#declared-ci-matrix) has five Linux
+host rows: GCC 14 and Clang 18 in Debug/Release, plus Clang 18 Debug with ASan/UBSan.
+Python, documentation and package suites each have one Release owner. Four Arduino
+images and native IDF 5.5.5/6.1 images on S2/S3 consume the same identified archive;
+do not add another identical source-checkout firmware gate. All workflow jobs use
+finite timeouts and retain useful logs, JUnit and package/firmware evidence for
+seven days. Remote verification is PENDING until the exact commit's jobs finish.
+
+Before editing CI, install its source-checkout parser dependency and run:
+
+```text
+python -m pip install PyYAML==6.0.3
+python tools/check_ci.py
+```
+
+The checker reads the actual YAML, verifies action/release pins, matrix rows,
+ownership and artifact bounds. Its negative fixtures belong to the registered
+`validate_runner` suite. CI pins Python 3.12.16 on Linux; this is not a new
+consumer dependency or a Windows binary requirement.
+
 For package changes also run:
 
 ```text
@@ -155,8 +175,9 @@ validation of trusted local source, not authentication or a CMake sandbox.
 Before release, pack and check the exact revision and link extracted Arduino and
 genuine native-IDF S2/S3 consumers with independent SDKCONFIG paths. The selected
 rows and commands are in [development](docs/development.md#archive-and-clean-consumers)
-and [validation](docs/validation.md). Prompt34 owns the full supported CI matrix;
-no tag, registry upload or release publication is implied by package checks.
+and [validation](docs/validation.md). Prompt 34 declares the matrix above and owns
+its remote checkpoint; configuration alone is not verification. No tag, registry
+upload or release publication is implied by package checks.
 
 For recovery plan edits, test base power-cycle readiness across separate session
 groups as well as within one combined plan. The saved run fact takes precedence

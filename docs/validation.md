@@ -3801,3 +3801,43 @@ Other host compilers and unavailable MinGW sanitizer runtimes retain earlier
 NOT RUN limits. Physical serial/I2C/CC/INT/supply/timing remains NOT RUN; remote
 CI belongs to prompt34 and was not contacted. No tags, registry or release was
 published. Git commit/sync evidence is reported in the prompt handoff.
+
+
+## Prompt 34 local preparation, 2026-10-28
+
+Remote checkpoint implementation starts at fc77aae9f81e908ffaa72f2f83781fcb9cba9750
+on promptset/tusb32x-implementation-20261023. The working tree was clean and
+synchronized before edits. Official pins and read-only peer revisions are in
+[audited pins](audit/execution-34-pins.md) and the [SDK audit](audit/execution-34-sdk.md).
+
+| Actual local command | Outcome and evidence |
+| --- | --- |
+| python tools/check_ci.py --ctest-json build/p34-registration.json | PASS: actual YAML and 72-test Windows inventory, five host/four native matrix rows, immutable action/image pins, finite jobs and single CTest ownership |
+| python tools/test_validate.py -v | PASS: 33 cases including 18 CI guard negative cases; missing/disabled jobs, wrong pins, omitted compiler/sanitizers and missing image bindings fail |
+| python tools/test_check_firmware.py -v | PASS: 20 cases; official SDK metadata, exact 5.5.5/6.1.0 gate, launcher spelling and generated compiler selection |
+| python tools/validate.py --checks native,contracts,python,package,doxygen --configs Debug Release --out build/p34-local | run-zzypjaz6: Debug 72/72 PASS, Release 71/72 with a real package fixture NameError; missing os import corrected. Report retains FAIL. |
+| ctest --test-dir build/p34-local/run-zzypjaz6/Release -C Release -R '^(tusb32x_package_safety\|tusb32x_package_consumer\|tusb32x_package_origins\|validate_runner\|firmware_guard)$' --output-on-failure --output-junit build/p34-local/release-corrections.xml | PASS 5/5 after corrections; Debug same focused selection also PASS 5/5 with debug-corrections.xml. All final individual groups pass; no failed report rewritten. |
+| python tools/validate.py --checks idf-s2 --accept-missing-idf-constraints --out build/p34-local-firmware | run-ot3on3tb: managed pack and clean consumer PASS; native image linked but inspection failed on an incorrect CMakeCache assumption. Corrected inspector reads unique generated CMake compiler metadata. |
+| Explicit reinspection of that existing image with the corrected helper | PASS: firmware-216i669k/reinspection/result.json, all 11 extracted sources, used-header origins, native symbols/no Arduino, ELF/BIN/map and isolated SDKCONFIG/lock. Original failure preserved; no redundant rebuild. |
+| python build/p10-docs.py | PASS: 138 Markdown files/851 local or own-source links/anchors, Python syntax/docstrings/style, UTF-8/LF/whitespace, eight vendor hashes and no-op version sync |
+
+Local tools remain Python 3.12.10, CMake/CTest 4.0.1, Ninja 1.12.1, GNU 15.1.0,
+Doxygen 1.13.2, Git 2.52.0.windows.1 and managed PlatformIO 6.1.19. Native SDK
+5.5.5 uses CMake 4.0.3, Ninja 1.13.1 and Xtensa GCC 14.2.0. The local missing
+constraint-cache waiver is explicit and retained. Remote official SDK containers
+must pass their dependency checks without this waiver. Linux Clang/ASan/UBSan and
+SDK 6.1 are unavailable on this Windows host; the selected remote jobs prove them.
+
+CI declares 71 Linux registrations (53 native, 6 contracts, 7 Python, 2 Doxygen,
+3 package). Native/contracts run once per each of five host configurations;
+Python/docs/package each run once in Release. Firmware shares one identified
+archive for four Arduino images and four genuine native SDK/target images. Source
+builds remain diagnostic alternatives, not another final firmware gate. Full
+verbose CTest logs and seven-day artifacts preserve actual executed test evidence.
+The Windows all selection still uses the managed launcher; Linux CI supplies its
+isolated installed Core or official IDF environment to the existing helpers.
+
+Remote verification is PENDING until terminal jobs on the exact implementation
+SHA are inspected. No physical serial/I2C/CC/INT/power/timing, HIL, flashing or
+publication occurred. A configured workflow, local image and successful push
+are distinct from remote PASS.

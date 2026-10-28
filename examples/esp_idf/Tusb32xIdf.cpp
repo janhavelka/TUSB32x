@@ -1,5 +1,5 @@
 /// @file Tusb32xIdf.cpp
-/// @brief Native IDF 5.5.5 synchronous STOP-separated transfers with one callback budget.
+/// @brief Native IDF 5.5.5/6.1 synchronous STOP-separated transfers with one callback budget.
 #include "Tusb32xIdf.h"
 
 #include <esp_idf_version.h>
@@ -10,7 +10,8 @@
 #include <cstring>
 #include <limits>
 
-#if ESP_IDF_VERSION != ESP_IDF_VERSION_VAL(5, 5, 5)
+#if ESP_IDF_VERSION != ESP_IDF_VERSION_VAL(5, 5, 5) && \
+    ESP_IDF_VERSION != ESP_IDF_VERSION_VAL(6, 1, 0)
 #error "Re-audit native I2C waits and buffer lifetime before changing the supported IDF"
 #endif
 #if CONFIG_PM_ENABLE || CONFIG_I2C_ENABLE_DEBUG_LOG || CONFIG_LOG_MAXIMUM_LEVEL != 0 || \
@@ -25,8 +26,10 @@ namespace {
 using TUSB32x::Err;
 using TUSB32x::Status;
 constexpr uint64_t TICK_US = (1000000ULL + configTICK_RATE_HZ - 1) / configTICK_RATE_HZ;
-// IDF b774170ff46 i2c_master.c: bus lock, <=4 command waits, final event,
-// NACK-busy wait; <=2 bus clears of 50ms plus a tick. See docs/idf-transport.md.
+// IDF b774170ff46 (5.5.5) and fff9895c82d7 (6.1), i2c_master.c: bus lock,
+// <=4 command waits, final event, NACK-busy wait; <=2 bus clears of 50ms plus
+// a tick. Short frames fit FIFO32 on S2/S3. CPU work and RCC critical-section
+// contention belong to qualified maxOverheadUs. See docs/idf-transport.md.
 constexpr uint64_t WAIT_COUNT = 7;
 constexpr uint64_t CLEANUP_US = 2 * (50000 + TICK_US);
 constexpr uint64_t BUS_FREE_US = 2; // TI STOP-to-START minimum is 1.3us.
@@ -108,7 +111,7 @@ Status transfer(uint8_t address, const uint8_t* tx, size_t txLength, uint8_t* rx
     add(bus.stats.receiveCalls, 1);
     status = sdkStatus(i2c_master_receive(context.device, candidate, rxLength, timeout));
     if (!status.ok()) {
-      // IDF5.5.5 contains_read survives some error paths. Interrupts are masked
+      // Both audited SDKs retain contains_read on some error paths. Interrupts are masked
       // before return, and the owner runs on the interrupt's core. No later SDK
       // transfer may awaken that retained read descriptor; retire ALL bus users.
       bus.retired = true;

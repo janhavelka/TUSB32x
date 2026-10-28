@@ -445,6 +445,8 @@ def main(argv=None):
     selection.add_argument("--archive", type=Path, help="trusted locally packed .tar.gz")
     selection.add_argument("--test-archive", action="store_true",
                            help="create a bounded test tar from the explicit export list")
+    parser.add_argument("--extract-only", action="store_true",
+                        help="validate/extract without compiling; not consumer linkage evidence")
     parser.add_argument("--out", type=Path, required=True,
                         help="artifact parent (created if absent)")
     parser.add_argument("--cmake", default=shutil.which("cmake"))
@@ -453,13 +455,14 @@ def main(argv=None):
     parser.add_argument("--generator", default="Ninja")
     parser.add_argument("--config", choices=("Debug", "Release"), default="Release")
     args = parser.parse_args(argv)
-    if not all((args.cmake, args.compiler, args.make_program)):
+    if not args.extract_only and not all((args.cmake, args.compiler, args.make_program)):
         parser.error("CMake, a C++ compiler and the generator's build tool are required")
-    for key in ("cmake", "compiler", "make_program"):
+    for key in (() if args.extract_only else ("cmake", "compiler", "make_program")):
         executable = shutil.which(str(getattr(args, key)))
         if executable is None:
             parser.error(f"missing build tool: {getattr(args, key)}")
-        setattr(args, key, str(Path(executable).resolve()))
+        # The C++ driver name (for example clang++) must survive symlink lookup.
+        setattr(args, key, os.path.abspath(executable))
     checkout = Path(__file__).resolve().parents[1]
     try:
         names = package_files(checkout)
@@ -483,14 +486,24 @@ def main(argv=None):
                 raise PackageError(f"archive differs from trusted checkout: {name}")
         links = markdown_links(root, names)
         source_links = markdown_links(checkout, names)
-        consume(root, checkout, args)
+        if not args.extract_only:
+            consume(root, checkout, args)
         digest = hashlib.sha256((root.parent / "archive.tar.gz").read_bytes()).hexdigest()
         report = {"archive": str(args.archive.resolve()), "sha256": digest,
                   "validated_snapshot": str(root.parent / "archive.tar.gz"),
                   "extracted": str(root), "files": len(names), "package_links": links,
-                  "source_links": source_links, "consumer": "PASS"}
+                  "source_links": source_links,
+                  "scope": "extraction" if args.extract_only else "consumer",
+                  "consumer": "NOT RUN" if args.extract_only else "PASS"}
         (root.parent / "package-report.json").write_text(
             json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        # Keep a bounded copy beside requested artifacts even when compilation
+        # deliberately occurs in a clean system-temporary workspace.
+        shutil.copyfile(root.parent / "package-report.json", args.out / "package-report.json")
+        if not args.extract_only:
+            for name in ("package-consumer-origin.txt", "package-compiler-dependencies.txt",
+                         "package-toolchain-includes.txt"):
+                shutil.copyfile(root.parent / "consumer-build" / name, args.out / name)
         print(json.dumps(report, indent=2))
         return 0
     except (PackageError, OSError, ValueError, KeyError, IndexError,

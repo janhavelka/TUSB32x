@@ -638,3 +638,11 @@ compiler dependency guard. The positive consumer must still compile/link/run.
 The standalone default package unit tests require no build tools; dependency
 parsing cases accompany the archive negatives. Compiler and dependency reports
 are retained in the printed private workspace for review.
+
+The dedicated CI workflow runs native/contracts once in each GCC 14/Clang 18
+Debug/Release row and in Clang 18 Debug with ASan/UBSan. Python, documentation and
+package suites each have one separate Release owner. `validate_runner` also owns
+the CI structure/pin/matrix negative fixtures; there is no second test registration.
+`python tools/check_ci.py --ctest-json <saved-inventory.json>` checks actual YAML
+and registration with PyYAML 6.0.3. Remote jobs save verbose CTest logs, inventories
+and JUnit; required test counts and timeouts are checked before accepting results.

@@ -2518,3 +2518,42 @@ dispatched; no hardware, flashing or publication action occurred. The lead
 reviews/stages this coherent unit, commits and syncs the same execution branch,
 and reports final commit/upstream equality in the handoff. Record that completed
 commit in the next progress update, avoiding a self-reference commit loop.
+
+
+## Prompt 34: dedicated CI and extracted firmware checkpoint (in progress)
+
+Started from synchronized clean fc77aae9f81e908ffaa72f2f83781fcb9cba9750 on
+promptset/tusb32x-implementation-20261023; fetch showed zero ahead/behind and no
+staged changes. This is the promptset's sole remote checkpoint. Parent/local
+AGENTS, COMMON, workflow/maintainability/verification contracts and prompt 34
+were re-read. Prior prompt 33 is committed and synchronized at that starting SHA.
+
+Fresh read-only peer audits and official pin sources are recorded in
+[audited pins](audit/execution-34-pins.md) and [SDK comparison](audit/execution-34-sdk.md).
+TMP1x2, OPT4001, LDC1614, INA3221 and 24Cxx were inspected at their actual clean
+revisions; no sibling files or Git state were changed. Adopt separate bounded
+jobs, immutable official actions, explicit CTest ownership and actual extracted
+image links; reject duplicated source/package matrices and inherited SDK claims.
+
+Parallel agents owned the workflow guard/negatives, official-pin audit and native
+SDK comparison/version gate. An independent strong read-only review found POSIX
+launcher symlink bugs and missing negative guard cases. Fixes preserve compiler
+and virtualenv executable spelling, enforce actual compiler/sanitizer/container
+arguments and reject conditionally disabled required steps. The lead owns the
+workflow, helper integration, documentation and Git. Current IDF 6.1 is audited
+separately from Arduino's retained IDF 5.5.5 dependency.
+
+The workflow declares five strict Linux host rows, one Python/docs/package owner
+each, four Arduino images and four native IDF SDK/target images. Firmware consumes
+one hashed PlatformIO archive, validated and renamed by the existing hardened
+extractor. A new explicit extraction-only mode claims no consumer link. Package
+consumer evidence is copied into bounded CI artifacts. Full verbose CTest output,
+registration JSON, JUnit, failed logs and firmware ELF/map/identity evidence are
+retained seven days. No HIL, flashing, publication or physical fixture is invoked.
+
+Local checks are underway before the implementation commit. The first native
+firmware check linked its image but correctly failed inspection: IDF records the
+selected compiler in generated compiler metadata, not CMakeCache. The inspector
+is corrected and the original failure remains saved. Remote execution is PENDING;
+workflow source and local links are not remote PASS. Exact commands/results and
+tested SHA/run URL will follow after verification.

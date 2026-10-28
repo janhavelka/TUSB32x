@@ -1,7 +1,7 @@
 # Native ESP-IDF transport
 
 `examples/esp_idf/Tusb32xIdf.h/.cpp` provides the example-only
-`tusb32x_idf` callbacks for ESP32-S2/S3 and **ESP-IDF 5.5.5**. It directly uses
+`tusb32x_idf` callbacks for ESP32-S2/S3 and **ESP-IDF 5.5.5 and 6.1.0**. It directly uses
 the native master API. It does not wrap Arduino, create buses, change speed,
 retry transfers or implement USB policy. The root component still contains only
 the portable core. The independent SDK fixture and host tests are software
@@ -70,6 +70,9 @@ application-owned devices and delete the application-owned bus on its creating
 core. Check cleanup results before releasing context storage. Never delete a
 shared bus owned by another application. A failed cleanup requires keeping
 remaining live resources/storage, not returning success and destroying context.
+IDF 6.1 can return an error after freeing a bus; an error therefore leaves resource
+ownership uncertain. The example attempts teardown once and retains static context
+storage. Do not retry deletion using an uncertain handle.
 
 ## Aggregate timeout and buffer proof
 
@@ -80,6 +83,15 @@ The installed file is byte-identical to official v5.5.5: 69,303 bytes, SHA-256
 The [SDK I2C guide](https://docs.espressif.com/projects/esp-idf/en/v5.5.5/esp32s3/api-reference/peripherals/i2c.html)
 describes the public calls; the bound below comes from the actual synchronous
 implementation, not the timeout parameter name.
+
+The second audited implementation is official
+[IDF 6.1 i2c_master.c](https://github.com/espressif/esp-idf/blob/fff9895c82d744c7237be8847347bdd1b07c6643/components/esp_driver_i2c/i2c_master.c).
+Its synchronous short-transfer waits, cleanup and retained-read restriction preserve
+the conservative bound below. CPU overhead includes its RCC critical-section
+contention. IRAM-safe receive requires internal RAM; keep the callback stack in
+internal memory. The exact-version gate accepts 5.5.5 and 6.1.0 only. The
+repository-only [SDK audit](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-34-sdk.md)
+records the source comparison; linked image evidence is recorded separately.
 
 Let q = ceil(1000000 / tickRateHz) microseconds, T the positive SDK wait timeout
 in milliseconds and C the qualified whole-callback overhead:
@@ -142,9 +154,11 @@ and SLLSEO5D section 6.5 pp15-16, as recorded in the [transport guide](transport
 It does not claim an atomic multi-register observation or physical waveform proof.
 
 ESP_OK maps to OK and returned ESP_ERR_TIMEOUT to I2C_TIMEOUT. All other errors
-map to I2C_ERROR with full signed esp_err_t detail. In this SDK,
+map to I2C_ERROR with full signed esp_err_t detail. In IDF 5.5.5,
 `s_i2c_transaction_start` returns ESP_ERR_INVALID_STATE for several non-DONE
 outcomes, including errors that lose more specific NACK/timeout information.
+IDF 6.1 uses ESP_ERR_INVALID_RESPONSE for non-DONE outcomes instead. It remains
+I2C_ERROR, with its original detail; it does not establish a NACK phase.
 Do not infer an address NACK, partial byte count or no device effect. No owner
 TIMEOUT is returned by this adapter. IDF has no short-count success interface:
 its synchronous ESP_OK promises completion; fake tests can model partial data

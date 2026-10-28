@@ -1,6 +1,6 @@
 # Feature, source and verification coverage
 
-Prompts 2-28, updated 2026-10-28. This matrix defines the capability boundary;
+Prompts 2-34, updated 2026-10-28. This matrix defines the capability boundary;
 values/Status, pure validators/decoding/composition, private transport/identity,
 the owner facade with read-only initialization, profile observation and
 reconciliation, explicit apply/desired verification, reset/base recovery, complete
@@ -27,7 +27,7 @@ encodings, comparison/composition and negative cases. Rows below that name
 prompt 3 now have their register specification evidence. Read-only initialization,
 profile observation, apply, verification, reconciliation, reset, base recovery,
 port refresh and IRQ acknowledgement/service have owner behavior; raw diagnostics and passive health are also delivered. CLI and framework
-adapters remain planned. Prompt 10 implements and tests the pure
+adapters are implemented as described in the later prompt rows. Prompt 10 implements and tests the pure
 field codecs/comparison and qualified byte composer, without executing any
 procedure. No unresolved gate was closed by byte arithmetic.
 
@@ -614,3 +614,26 @@ cover source documentation. Existing CLI parity, version, archive, session and
 transcript registrations are reused; runner modules are not discovered twice.
 See the repository-only [validation guide](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md#local-validation-entry-point).
 No validator selection invokes physical HIL, flashing, publication or remote CI.
+
+## Prompt 34 declared CI checkpoint
+
+The [declared matrix](development.md#declared-ci-matrix) and source-checkout
+[workflow](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/.github/workflows/ci.yml)
+separate check ownership and consume one identified archive for firmware.
+**Remote verification is PENDING.** Configuration and official pin identity are
+source evidence; they do not establish that the jobs or image links passed.
+
+| Required check | Declared coverage | Evidence boundary |
+| --- | --- | --- |
+| Host | GCC 14 and Clang 18 Debug/Release; Clang 18 ASan/UBSan Debug | Five Linux rows, strict warnings and active Release assertions; actual job results pending |
+| Python/documentation/package | One Release owner for each registered suite group | Existing validator inventory/JUnit checks reused; actual job results pending |
+| Workflow contract | Actual YAML, verified action release pins, matrix/ownership/artifact bounds | PyYAML 6.0.3 required by check_ci.py; negative fixtures integrated into validate_runner |
+| Arduino distribution | Basic CLI and owner service on S2/S3 from the shared archive | Four images, PlatformIO 6.1.19/pioarduino 55.03.311/Arduino 3.3.11; actual checkpoint links pending |
+| Native distribution | Genuine native CLI on S2/S3, IDF 5.5.5 and v6.1 (SDK 6.1.0) | Four images with immutable container digests and isolated configurations; actual checkpoint links pending |
+| Evidence retention | Logs, JUnit, package/consumer provenance and useful firmware outputs | Seven days, expected paths checked; no physical HIL, flash or publication |
+
+The manifest's `idf >=5.3.0` remains portable-core admission metadata. The example
+adapter's declared exact SDK audit rows are 5.5.5/6.1.0; the floor does not qualify
+the adapter on intervening or later SDKs. Earlier recorded 5.5.5 and Arduino
+links retain their original tested revisions. The new checkpoint cannot extend
+them to a different commit before its actual results are recorded.

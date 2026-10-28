@@ -1,14 +1,15 @@
 # Native ESP-IDF CLI application
 
 This complete native example links the portable core, synchronous native adapter
-and the same 55-row CLI used by Arduino. ESP-IDF **5.5.5** and ESP32-S2/S3 are the
+and the same 55-row CLI used by Arduino. ESP-IDF **5.5.5 and 6.1.0** and ESP32-S2/S3 are the
 implemented SDK/target subset. No Arduino component, Wire, Serial or duplicate
 command parser is used. Real linked images are software evidence; no board was
 flashed or electrically qualified for this work.
 
 ## Build and console
 
-Activate the ESP-IDF 5.5.5 environment first. In PowerShell, from the library root:
+Activate the selected ESP-IDF environment first. In PowerShell, from the library root
+(use separate version-labelled paths for 6.1 as well):
 
 ```powershell
 $s2Build = Join-Path (Get-Location) 'build/idf-5.5.5-s2'

@@ -238,9 +238,15 @@ maintained guides. Repository implementation proceeds through the
 on one execution branch, with source/tests/docs, commits and verified sync for
 each completed unit. Remote CI is confined to prompt 34 in this first execution.
 
+The [declared CI matrix](docs/development.md#declared-ci-matrix) runs five Linux
+host rows, separate Python/documentation/package checks, four extracted Arduino
+images and native IDF 5.5.5/6.1 images on both S2/S3. Firmware jobs consume one
+identified archive. Remote verification of this matrix is **PENDING**; workflow
+configuration does not establish a passed build or qualify hardware.
+
 Project code is MIT, owned by Thymos Solution s.r.o with Jan Havelka as maintainer.
 Archived vendor references retain their original terms and are excluded from
 normal library packages. Native tests prove software values and linkage;
 Arduino and native-IDF applications also link from renamed extracted packages
-for the recorded S2/S3 configurations. The full supported CI matrix and physical
-hardware qualification remain separate work.
+for the recorded S2/S3 configurations. The declared CI matrix awaits its actual
+remote results; physical hardware qualification remains separate.

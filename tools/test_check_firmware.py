@@ -88,6 +88,54 @@ class FirmwareChecks(unittest.TestCase):
         self.assertEqual(result["hardware"], "NOT RUN")
         self.assertIn("xtensa-esp-elf-nm", result["error"])
 
+    def test_executable_paths_preserve_driver_and_virtual_environment_names(self):
+        """Tool lookup must not resolve symlink names that select C++ or a Python venv."""
+        python = self.root / "python-env/bin/python"
+        compiler = self.root / "packages/compiler/bin/clang++"
+        suffix = ".exe" if os.name == "nt" else ""
+        installed = compiler.with_name(compiler.name + suffix)
+        for path in (python, installed):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("modeled executable", encoding="utf-8")
+        # Resolving any executable path is forbidden even on Windows, where
+        # creating an actual symlink may require privileges unavailable to CI.
+        with mock.patch.object(Path, "resolve", side_effect=AssertionError("resolved executable")):
+            self.assertEqual(firmware.require_file(python), python)
+            self.assertEqual(firmware.tool(self.root, "compiler", "clang++"), installed)
+            with mock.patch.object(firmware.shutil, "which", return_value=str(python)):
+                self.assertEqual(firmware.tool(self.root, "missing", "python"), python)
+
+    def test_native_compiler_uses_unique_generated_metadata(self):
+        """A real CMake compiler record works without a cache entry; uncertain records fail."""
+        compiler = self.root / "compiler with spaces/xtensa-g++"
+        compiler.parent.mkdir()
+        compiler.write_text("modeled compiler", encoding="utf-8")
+        metadata = self.output / "CMakeFiles/4.0.3/CMakeCXXCompiler.cmake"
+        metadata.parent.mkdir(parents=True)
+        with self.assertRaisesRegex(firmware.FirmwareError, "exactly one"):
+            firmware.native_compiler(self.output)
+        good = f'set(CMAKE_CXX_COMPILER "{compiler.as_posix()}")\n'
+        metadata.write_text(good, encoding="utf-8")
+        self.assertEqual(firmware.native_compiler(self.output), compiler)
+        second = self.output / "CMakeFiles/3.30.0/CMakeCXXCompiler.cmake"
+        second.parent.mkdir()
+        second.write_text(good, encoding="utf-8")
+        with self.assertRaisesRegex(firmware.FirmwareError, "exactly one"):
+            firmware.native_compiler(self.output)
+        second.unlink()
+        for text in ("", good + good, 'set(CMAKE_CXX_COMPILER compiler)\n',
+                     'set(CMAKE_CXX_COMPILER "relative/compiler")\n',
+                     'set(CMAKE_CXX_COMPILER "${PREFIX}/compiler")\n',
+                     good.replace('g++"', 'g++;second"'),
+                     good + 'set(CMAKE_CXX_COMPILER other)\n'):
+            with self.subTest(text=text), self.assertRaises(firmware.FirmwareError):
+                metadata.write_text(text, encoding="utf-8")
+                firmware.native_compiler(self.output)
+        metadata.write_text(good, encoding="utf-8")
+        compiler.unlink()
+        with self.assertRaises(firmware.Incomplete):
+            firmware.native_compiler(self.output)
+
     def test_zero_or_omitted_images_cannot_pass(self):
         """A successful wrapper with no inspected images is incomplete evidence, not PASS."""
         with mock.patch.object(firmware, "execute"):
@@ -156,7 +204,10 @@ class FirmwareChecks(unittest.TestCase):
         sdk = self.root / "sdk"
         (sdk / "tools").mkdir(parents=True)
         (sdk / "tools/idf.py").write_text("fixture", encoding="utf-8")
-        (sdk / "version.txt").write_text("5.5.5\n", encoding="utf-8")
+        metadata = sdk / "tools/cmake/version.cmake"
+        metadata.parent.mkdir()
+        metadata.write_text("set(IDF_VERSION_MAJOR 5)\nset(IDF_VERSION_MINOR 5)\n"
+                            "set(IDF_VERSION_PATCH 5)\n", encoding="utf-8")
         python = self.root / "python-env/Scripts/python.exe"
         python.parent.mkdir(parents=True)
         python.write_text("fixture", encoding="utf-8")
@@ -167,9 +218,24 @@ class FirmwareChecks(unittest.TestCase):
             firmware.idf_settings(args, environment)
             self.assertEqual(environment.get("IDF_PYTHON_CHECK_CONSTRAINTS"),
                              "no" if allowed else None)
-        (sdk / "version.txt").write_text("6.0.1", encoding="utf-8")
+        metadata.write_text("set(IDF_VERSION_MAJOR 6)\nset(IDF_VERSION_MINOR 0)\n"
+                            "set(IDF_VERSION_PATCH 1)\n", encoding="utf-8")
         with self.assertRaises(firmware.Incomplete):
             firmware.idf_settings(args, {})
+
+    def test_official_sdk_version_metadata_and_current_release(self):
+        """Official SDKs need no optional archive version.txt; malformed fields fail."""
+        metadata = self.root / "sdk/tools/cmake/version.cmake"
+        metadata.parent.mkdir(parents=True)
+        good = "set(IDF_VERSION_MAJOR 6)\nset(IDF_VERSION_MINOR 1)\nset(IDF_VERSION_PATCH 0)\n"
+        metadata.write_text(good, encoding="utf-8")
+        self.assertEqual(firmware.idf_version(self.root / "sdk"), "6.1.0")
+        self.assertIn("6.1.0", firmware.IDF_VERSIONS)
+        for bad in (good.replace("set(IDF_VERSION_PATCH 0)", ""), good + good,
+                    good.replace("PATCH 0", "PATCH unknown")):
+            metadata.write_text(bad, encoding="utf-8")
+            with self.assertRaises(firmware.Incomplete):
+                firmware.idf_version(self.root / "sdk")
 
     def test_ninja_requires_valid_nonempty_used_dependency_record(self):
         """A stale or absent Ninja database cannot prove compiler header provenance."""

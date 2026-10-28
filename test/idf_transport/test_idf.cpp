@@ -349,9 +349,13 @@ void supportedBusConfiguration() {
 }
 
 /// @brief Preserve full terminal backend detail; only the SDK's timeout code denotes timeout.
+/// @details IDF6.1 uses INVALID_RESPONSE for every non-DONE transfer, including
+/// some timeout paths. Exercise it at pointer and receive boundaries without
+/// inferring a NACK; failed receives must still retire all controller users.
 void failuresAndRetirement() {
   constexpr esp_err_t codes[]{ESP_FAIL, ESP_ERR_NO_MEM, ESP_ERR_INVALID_ARG,
     ESP_ERR_INVALID_STATE, ESP_ERR_NOT_FOUND, ESP_ERR_NOT_SUPPORTED, ESP_ERR_TIMEOUT,
+    ESP_ERR_INVALID_RESPONSE,
     0x12345678, -123456789};
   for (const esp_err_t code : codes) {
     for (const bool receiving : {false, true}) {

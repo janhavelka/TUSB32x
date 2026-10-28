@@ -1,0 +1,274 @@
+name: TUSB32x CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Start evidence
+        run: |
+          mkdir -p build/ci-check
+          printf '%s\n' "$GITHUB_SHA" > build/ci-check/source-sha.log
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.16'
+      - run: python -m pip install PyYAML==6.0.3
+      - name: Audit actual workflow and stable metadata
+        run: |
+          python tools/check_ci.py > build/ci-check/workflow.log 2>&1
+          python scripts/generate_version.py check > build/ci-check/version.log 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: workflow-evidence
+          path: build/ci-check/**
+          retention-days: 7
+          if-no-files-found: error
+
+  host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: gcc-debug, compiler: g++-14, config: Debug, sanitize: false}
+          - {name: gcc-release, compiler: g++-14, config: Release, sanitize: false}
+          - {name: clang-debug, compiler: clang++-18, config: Debug, sanitize: false}
+          - {name: clang-release, compiler: clang++-18, config: Release, sanitize: false}
+          - {name: clang-sanitized, compiler: clang++-18, config: Debug, sanitize: true}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Start evidence
+        run: |
+          mkdir -p build/host
+          printf '%s\n' "$GITHUB_SHA" > build/host/source-sha.log
+          "${{ matrix.compiler }}" --version > build/host/compiler.log
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.16'
+      - run: python -m pip install cmake==4.0.3 ninja==1.13.0
+      - name: Registered native and contract checks
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: >-
+          python tools/validate.py --checks native,contracts --configs '${{ matrix.config }}'
+          --compiler '${{ matrix.compiler }}' --out build/host
+          ${{ matrix.sanitize && '--sanitize' || '' }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: host-${{ matrix.name }}
+          path: |
+            build/host/**/*.log
+            build/host/**/*.json
+            build/host/**/*.xml
+          retention-days: 7
+          if-no-files-found: error
+
+  python:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          mkdir -p build/python
+          printf '%s\n' "$GITHUB_SHA" > build/python/source-sha.log
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.16'
+      - run: python -m pip install cmake==4.0.3 ninja==1.13.0
+      - run: python tools/validate.py --checks python --configs Release --out build/python
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: python-evidence
+          path: |
+            build/python/**/*.log
+            build/python/**/*.json
+            build/python/**/*.xml
+          retention-days: 7
+          if-no-files-found: error
+
+  docs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          mkdir -p build/docs
+          printf '%s\n' "$GITHUB_SHA" > build/docs/source-sha.log
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.16'
+      - run: python -m pip install cmake==4.0.3 ninja==1.13.0
+      - name: Verified official Doxygen 1.13.2 binary
+        run: |
+          curl --fail --location --max-time 180 --output "$RUNNER_TEMP/doxygen.tar.gz" https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.linux.bin.tar.gz
+          printf '%s\n' "f2c0a349403bc5b5ade3f501301e32b49ea31b3182666954bc398452fbc0dd1c  $RUNNER_TEMP/doxygen.tar.gz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/doxygen"
+          tar -xzf "$RUNNER_TEMP/doxygen.tar.gz" -C "$RUNNER_TEMP/doxygen" --strip-components=1
+          printf '%s\n' "$RUNNER_TEMP/doxygen/bin" >> "$GITHUB_PATH"
+      - name: Registered documentation and omission checks
+        run: |
+          doxygen --version > build/docs/tool.log
+          python tools/validate.py --checks doxygen --configs Release --out build/docs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: documentation-evidence
+          path: |
+            build/docs/**/*.log
+            build/docs/**/*.json
+            build/docs/**/*.xml
+          retention-days: 7
+          if-no-files-found: error
+
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          mkdir -p build/package
+          printf '%s\n' "$GITHUB_SHA" > build/package/source-sha.log
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.16'
+      - name: Isolated Linux CI tools
+        run: python -m pip install cmake==4.0.3 ninja==1.13.0 platformio==6.1.19
+      - run: python tools/validate.py --checks package --configs Release --out build/package
+      - name: Build and consume one identified distribution
+        run: |
+          pio pkg pack . --output build/package/TUSB32x.tar.gz > build/package/pack.log 2>&1
+          sha256sum build/package/TUSB32x.tar.gz > build/package/archive-sha.log
+          python tools/check_package.py --archive build/package/TUSB32x.tar.gz --out build/package/distribution > build/package/consumer.log 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tusb32x-package
+          path: |
+            build/package/TUSB32x.tar.gz
+            build/package/archive-sha.log
+            build/package/source-sha.log
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: package-evidence
+          path: |
+            build/package/**/*.log
+            build/package/**/*.json
+            build/package/**/*.xml
+            build/package/**/*.txt
+          retention-days: 7
+          if-no-files-found: error
+
+  arduino:
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          mkdir -p build/arduino
+          printf '%s\n' "$GITHUB_SHA" > build/arduino/source-sha.log
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.16'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tusb32x-package
+          path: build/package
+      - name: Isolated pinned Linux PlatformIO
+        run: |
+          python -m pip install platformio==6.1.19
+      - name: Validate extraction and link all four actual examples
+        run: |
+          sha256sum --check build/package/archive-sha.log
+          python tools/check_package.py --archive build/package/TUSB32x.tar.gz --extract-only --out build/arduino/distribution > build/arduino/extract.log 2>&1
+          package=$(python -c 'import json; print(json.load(open("build/arduino/distribution/package-report.json"))["extracted"])')
+          pio pkg install --project-dir "$package" > build/arduino/install.log 2>&1
+          python tools/check_firmware.py --package "$package" --out "$GITHUB_WORKSPACE/build/arduino/firmware" --checks arduino > build/arduino/link.log 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: arduino-images
+          path: |
+            build/arduino/**/*.log
+            build/arduino/**/*.json
+            build/arduino/**/*.elf
+            build/arduino/**/*.map
+            build/arduino/**/firmware.bin
+          retention-days: 7
+          if-no-files-found: error
+
+  idf:
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: '5.5.5'
+            target: esp32s2
+            image: espressif/idf:v5.5.5@sha256:a9231d0697ab8f7517cc072e93b7c83e04907bfbfba80b6440d7dbbf90665cf2
+          - version: '5.5.5'
+            target: esp32s3
+            image: espressif/idf:v5.5.5@sha256:a9231d0697ab8f7517cc072e93b7c83e04907bfbfba80b6440d7dbbf90665cf2
+          - version: '6.1'
+            target: esp32s2
+            image: espressif/idf:v6.1@sha256:81893c71bb5e570088901f21def8684c25cd2a9020281bd01b843a7655edb18c
+          - version: '6.1'
+            target: esp32s3
+            image: espressif/idf:v6.1@sha256:81893c71bb5e570088901f21def8684c25cd2a9020281bd01b843a7655edb18c
+    container:
+      image: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          mkdir -p build/idf
+          printf '%s\n' "$GITHUB_SHA" > build/idf/source-sha.log
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tusb32x-package
+          path: build/package
+      - name: Genuine SDK environment and extracted native application
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          . "$IDF_PATH/export.sh" > build/idf/environment.log 2>&1
+          sha256sum --check build/package/archive-sha.log
+          python tools/check_package.py --archive build/package/TUSB32x.tar.gz --extract-only --out build/idf/distribution > build/idf/extract.log 2>&1
+          package=$(python -c 'import json; print(json.load(open("build/idf/distribution/package-report.json"))["extracted"])')
+          check=idf-s2
+          if [ "$TARGET" = esp32s3 ]; then check=idf-s3; fi
+          python tools/check_firmware.py --package "$package" --out "$GITHUB_WORKSPACE/build/idf/firmware" --checks "$check" --idf-path "$IDF_PATH" --idf-python "$(command -v python)" > build/idf/link.log 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: idf-${{ matrix.version }}-${{ matrix.target }}
+          path: |
+            build/idf/**/*.log
+            build/idf/**/*.json
+            build/idf/**/*.elf
+            build/idf/**/*.map
+            build/idf/**/tusb32x_idf_cli.bin
+            build/idf/**/sdkconfig
+            build/idf/**/dependencies.lock
+          retention-days: 7
+          if-no-files-found: error

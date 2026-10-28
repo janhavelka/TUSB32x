@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Link and inspect the declared Arduino and native IDF5.5.5 package consumers.
+"""Link and inspect the declared Arduino and native IDF package consumers.
 
 Use an already validated, renamed extraction with --package and a disjoint --out.
 --checks accepts arduino,idf-s2,idf-s3; Arduino includes all four shipped examples.
@@ -29,6 +29,7 @@ from check_package import PackageError, make_dependencies
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECKS = ("arduino", "idf-s2", "idf-s3")
+IDF_VERSIONS = ("5.5.5", "6.1.0")
 ARDUINO_ROWS = ("esp32s2dev", "esp32s3dev", "esp32s2_owner_service", "esp32s3_owner_service")
 CORE_SOURCES = (
     "src/TUSB32x.cpp", "src/TUSB32xProtocol.cpp", "src/TUSB32xCodecs.cpp",
@@ -62,8 +63,8 @@ def snapshot(package):
 
 
 def require_file(path):
-    """Return an absolute existing tool path or report incomplete prerequisites."""
-    path = Path(path).resolve()
+    """Return an absolute file path while preserving venv and driver symlink names."""
+    path = Path(os.path.abspath(path))
     if not path.is_file():
         raise Incomplete(f"required file is missing: {path}")
     return path
@@ -150,10 +151,10 @@ def tool(core, package, name):
                   core / "packages" / package / (name + suffix))
     for candidate in candidates:
         if candidate.is_file():
-            return candidate.resolve()
+            return require_file(candidate)
     found = shutil.which(name)
     if found:
-        return Path(found).resolve()
+        return require_file(found)
     raise Incomplete(f"required installed tool is missing: {name} ({core})")
 
 
@@ -172,15 +173,15 @@ def environment_for(args, work):
 
 
 def idf_settings(args, environment):
-    """Require audited IDF5.5.5 and an explicit or known installed Python environment."""
+    """Read SDK version truth and select an existing qualified Python environment."""
     sdk = (args.idf_path or Path(environment.get(
         "IDF_PATH", args.core_dir / "packages/framework-espidf"))).resolve()
     require_file(sdk / "tools/idf.py")
-    version = require_file(sdk / "version.txt").read_text(encoding="utf-8").strip()
-    if version != "5.5.5":
-        raise Incomplete(f"native adapter requires audited IDF5.5.5; found {version}")
+    version = idf_version(sdk)
+    if version not in IDF_VERSIONS:
+        raise Incomplete(f"native adapter requires audited {IDF_VERSIONS}; found {version}")
     python_root = Path(environment.get(
-        "IDF_PYTHON_ENV_PATH", args.core_dir / "penv/.espidf-5.5.5"))
+        "IDF_PYTHON_ENV_PATH", args.core_dir / f"penv/.espidf-{version}"))
     python = require_file(args.idf_python or python_root / (
         "Scripts/python.exe" if os.name == "nt" else "bin/python"))
     environment["IDF_PATH"] = str(sdk)
@@ -194,6 +195,18 @@ def idf_settings(args, environment):
     if rom.is_dir():
         environment["ESP_ROM_ELF_DIR"] = str(rom)
     return sdk, python
+
+
+def idf_version(sdk):
+    """Read official CMake version fields; archive-only version.txt is not required."""
+    text = require_file(sdk / "tools/cmake/version.cmake").read_text(encoding="utf-8")
+    fields = []
+    for name in ("MAJOR", "MINOR", "PATCH"):
+        matches = re.findall(r"set\(IDF_VERSION_" + name + r"\s+([0-9]+)\)", text)
+        if len(matches) != 1:
+            raise Incomplete(f"invalid SDK version metadata: {sdk}: {name}")
+        fields.append(matches[0])
+    return ".".join(fields)
 
 
 def idf_prerequisites(sdk, python, environment, work):
@@ -313,6 +326,22 @@ def artifact(path):
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
+def native_compiler(build):
+    """Read the single generated CMake compiler selection without evaluating CMake."""
+    metadata = list((build / "CMakeFiles").glob("*/CMakeCXXCompiler.cmake"))
+    if len(metadata) != 1:
+        raise FirmwareError("native build requires exactly one generated C++ compiler metadata file")
+    text = metadata[0].read_text(encoding="utf-8")
+    matches = re.findall(r'^set\(CMAKE_CXX_COMPILER "([^"\r\n]+)"\)$', text, re.MULTILINE)
+    declarations = re.findall(r'^\s*set\(CMAKE_CXX_COMPILER(?:\s|\))', text, re.MULTILINE)
+    if len(matches) != 1 or len(declarations) != 1:
+        raise FirmwareError("native build has invalid generated C++ compiler selection")
+    compiler = Path(matches[0])
+    if not compiler.is_absolute() or any(char in matches[0] for char in ("$", ";", "\\")):
+        raise FirmwareError("native C++ compiler metadata must contain one literal absolute path")
+    return require_file(compiler)
+
+
 def inspect_row(args, row, work, environment, sdk, ninja, nm):
     """Inspect actual image, identity, sources, compiler inputs and native configuration."""
     native = row.startswith("idf-")
@@ -327,7 +356,10 @@ def inspect_row(args, row, work, environment, sdk, ninja, nm):
     identity = build / ("esp-idf/main/example_identity/FirmwareBuild.h" if native
                         else "example_identity/FirmwareBuild.h")
     identity_text = verify_identity(identity, target if native else row)
-    compiler = tool(args.core_dir, "toolchain-xtensa-esp-elf", f"xtensa-{target}-elf-g++")
+    if native:
+        compiler = native_compiler(build)
+    else:
+        compiler = tool(args.core_dir, "toolchain-xtensa-esp-elf", f"xtensa-{target}-elf-g++")
     approved = [args.package, build.resolve(),
                 *compiler_roots(compiler, environment, work, row), *sdk]
     records = []

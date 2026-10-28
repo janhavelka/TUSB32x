@@ -11,6 +11,15 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Dedicated CI configuration with five Linux host rows, separate Python/docs/
+  package ownership and one identified archive shared by four Arduino and four
+  native-IDF S2/S3 image rows. Actions and SDK containers use verified immutable
+  pins; expected logs, JUnit, package and firmware evidence have seven-day
+  retention. The actual-YAML checker and validator negative fixtures guard the
+  matrix. Native candidates are the previously audited 5.5.5 and current 6.1
+  (SDK version 6.1.0); remote verification remains PENDING. Physical qualification
+  is separate.
+
 - One local validation entry point with explicit check ownership, saved logs,
   finite child deadlines and failed/incomplete/interrupted verdicts. Registered
   boundary, real-Doxygen and validator negative fixtures prove checker failures;

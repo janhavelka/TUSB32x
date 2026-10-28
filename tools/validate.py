@@ -48,6 +48,17 @@ REQUIRED_TESTS = {
 }
 if os.name == "nt":
     REQUIRED_TESTS["python"].add("tusb32x_pio_launcher")
+REQUIRED_TESTS["native"].update("tusb32x_arduino_app_" + scenario for scenario in (
+    "startup", "startup-failure", "begin-failure", "preparation-failure", "cleanup-failure",
+    "end-failure", "existing-bus", "shutdown", "usb_sda", "usb_irq"))
+REQUIRED_TESTS["native"].update("tusb32x_idf_app_" + scenario for scenario in (
+    "startup", "startup-failure", "shutdown-active", "shutdown-startup", "backpressure",
+    "bus-failure", "device-failure", "uart-config-failure", "uart-pin-failure",
+    "uart-install-failure", "console-already-owned", "device-remove-failure",
+    "bus-delete-failure", "uart-delete-failure", "rx-overflow", "raw-error",
+    "rx-overflow-after-read", "rx-event-flood", "device-cleanup-failure",
+    "teardown-fifo-pending", "teardown-fifo-stalled", "existing-bus", "irq-configured",
+    "irq-config-failure", "irq-cleanup-failure", "diagnostic", "pin_conflict", "runtime"))
 
 
 @dataclass
@@ -217,6 +228,8 @@ def parser():
     result.add_argument("--make-program", default="ninja")
     result.add_argument("--generator", default="Ninja")
     result.add_argument("--doxygen", default="doxygen")
+    result.add_argument("--sanitize", action="store_true",
+                        help="Linux host ASan/UBSan; never applied to firmware builds")
     result.add_argument("--timeout", type=positive_seconds, default=900,
                         help="host command bound in seconds; CTest has per-test bounds too")
     result.add_argument("--core-dir", type=Path,
@@ -243,12 +256,13 @@ def run_ctests(args, directory, record):
     # Clean consumers deliberately remove maintainer tools from PATH. Record
     # absolute tool paths in CMake so their children still find the selected tool.
     for key in ("cmake", "ctest", "compiler", "make_program"):
-        setattr(args, key, str(Path(shutil.which(getattr(args, key))).resolve()))
+        # Preserve launcher names: clang++ and venv Python symlinks carry semantics.
+        setattr(args, key, os.path.abspath(shutil.which(getattr(args, key))))
     if "doxygen" in requested and shutil.which(args.doxygen) is None:
         record(Result("doxygen", "INCOMPLETE", f"missing tool: {args.doxygen}"))
         requested.remove("doxygen")
     elif "doxygen" in requested:
-        args.doxygen = str(Path(shutil.which(args.doxygen)).resolve())
+        args.doxygen = os.path.abspath(shutil.which(args.doxygen))
     if not requested:
         return
     environment = os.environ.copy()
@@ -256,10 +270,13 @@ def run_ctests(args, directory, record):
     for configuration in dict.fromkeys(args.configs):
         build = directory / configuration
         prefix = configuration.lower()
+        sanitizer = (["-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined"]
+                     if args.sanitize else [])
         configure = record(run_command(prefix + "-configure", [args.cmake, "-S", ROOT, "-B", build,
             "-G", args.generator, "-DTUSB32X_BUILD_TESTS=ON", f"-DCMAKE_BUILD_TYPE={configuration}",
             f"-DCMAKE_CXX_COMPILER={args.compiler}", f"-DCMAKE_MAKE_PROGRAM={args.make_program}",
-            f"-DPython3_EXECUTABLE={sys.executable}"],
+            f"-DPython3_EXECUTABLE={sys.executable}", *sanitizer],
             directory, args.timeout, environment=environment))
         if configure.status != "PASS":
             for group in requested:
@@ -284,7 +301,7 @@ def run_ctests(args, directory, record):
         for group in requested:
             names = groups[group]
             junit = directory / f"{prefix}-{group}.xml"
-            command = [args.ctest, "--test-dir", build, "-C", configuration, "--output-on-failure",
+            command = [args.ctest, "--test-dir", build, "-C", configuration, "--verbose",
                        "--no-tests=error", "--output-junit", junit, "-R",
                        "^(" + "|".join(re.escape(name) for name in names) + ")$"]
             checked = run_command(f"{prefix}-{group}", command, directory, args.timeout,

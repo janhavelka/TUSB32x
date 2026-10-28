@@ -14,6 +14,8 @@ import argparse
 import gzip
 import hashlib
 import io
+import json
+import os
 from pathlib import Path
 import tarfile
 import tempfile
@@ -42,6 +44,21 @@ class ArchiveContracts(unittest.TestCase):
     def tearDown(self) -> None:
         """Remove only this test's owned temporary directory."""
         self.temporary.cleanup()
+
+    def test_extract_only_needs_no_compiler_and_claims_no_linkage(self) -> None:
+        """CI reuses one archive safely without repeating its clean host consumer."""
+        output = self.work / "evidence"
+        with mock.patch.object(package, "consume") as consume, \
+                mock.patch.object(package.shutil, "which", return_value=None), \
+                redirect_stdout(io.StringIO()):
+            result = package.main(["--test-archive", "--extract-only", "--out", str(output)])
+        self.assertEqual(result, 0)
+        consume.assert_not_called()
+        report = json.loads((output / "package-report.json").read_text())
+        self.assertEqual(report["consumer"], "NOT RUN")
+        self.assertEqual(report["scope"], "extraction")
+        checkout = Path(__file__).resolve().parents[1]
+        self.assertEqual(report["files"], len(package.package_files(checkout)))
 
     def archive(self, entries: list[tuple[tarfile.TarInfo, bytes]]) -> Path:
         """Write a small real gzip tar, including deliberately hostile headers."""
@@ -446,7 +463,7 @@ def consumer_origins(argv):
         resolved = shutil.which(tool) if tool else None
         if resolved is None:
             parser.error(f"missing required build tool: {key}: {tool}")
-        setattr(args, key, str(Path(resolved).resolve()))
+        setattr(args, key, os.path.abspath(resolved))
     checkout = Path(__file__).resolve().parents[1]
     evidence = Path(tempfile.mkdtemp(prefix="tusb32x-package-origins-")).resolve()
     copied = evidence / "trusted-copy"

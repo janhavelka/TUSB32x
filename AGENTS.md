@@ -164,7 +164,7 @@ to each numbered implementation prompt and to completed maintenance work here.
   Arduino examples use `scripts/pio.cmd run -e esp32s2dev -e esp32s3dev
   -e esp32s2_owner_service -e esp32s3_owner_service`; board qualification and
   default diagnostic-only operation are in `docs/arduino-examples.md`.
-  Native application commands use IDF5.5.5 with separate absolute build and
+  Native application commands use audited IDF 5.5.5 or 6.1.0 with separate absolute build and
   SDKCONFIG paths; see `examples/esp_idf/basic/README.md`. Register/run the native
   application fault cases and `tusb32x_idf_example_config` when changing this path.
 
@@ -416,10 +416,24 @@ retirement after a failed receive are required. Framework types stay outside cor
 Prompt 25 adds `tusb32x_idf_transport_1000` and `tusb32x_idf_transport_100` to the
 registered host matrix (32 Windows suites). Run independent actual SDK links with
 `scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3`. The adapter supports the
-audited native IDF5.5.5 configuration only; read `docs/idf-transport.md` for copied
+audited native IDF5.5.5/6.1.0 configurations only; read `docs/idf-transport.md` for copied
 handle metadata, synchronous mode, same-core task pinning, shared serialization,
 qualified overhead and controller retirement. Do not introduce Arduino into the
 native fixture or infer board timing qualification from a linked image.
+
+## Dedicated CI checkpoint
+
+Prompt 34 owns `.github/workflows/ci.yml`: five Linux host configurations, separate
+Python/docs/package owners, four extracted Arduino images and native IDF 5.5.5/6.1
+images for S2/S3. Firmware jobs share one identified archive; source builds remain
+diagnostic alternatives. `python tools/check_ci.py` requires pinned PyYAML 6.0.3
+and checks the actual workflow. Its negative fixtures run once in validate_runner.
+Use `python tools/validate.py --checks native,contracts --configs Debug --compiler
+clang++-18 --sanitize` for the Linux sanitizer row. Never resolve compiler or Python
+launcher symlinks before execution: driver spelling and virtualenv location matter.
+CI artifacts retain logs, inventories, JUnit and package/image evidence for seven
+days. Only terminal jobs on the recorded tested SHA establish remote PASS; later
+documentation commits do not inherit that proof or require another remote gate.
 
 ## Explicit fixture runner checks
 

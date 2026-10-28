@@ -11,3 +11,4 @@ constexpr esp_err_t ESP_ERR_INVALID_STATE = 0x103;
 constexpr esp_err_t ESP_ERR_NOT_FOUND = 0x105;
 constexpr esp_err_t ESP_ERR_NOT_SUPPORTED = 0x106;
 constexpr esp_err_t ESP_ERR_TIMEOUT = 0x107;
+constexpr esp_err_t ESP_ERR_INVALID_RESPONSE = 0x108;

@@ -59,9 +59,10 @@ the ordinary host target TUSB32x. The manifest's `idf >=5.3.0` is a dependency
 admission floor adopted from current TMP1x2/24Cxx and checked against the
 [official IDF 5.3.2 C++ guide](https://github.com/espressif/esp-idf/blob/v5.3.2/docs/en/api-guides/cplusplus.rst)
 and [component registration](https://github.com/espressif/esp-idf/blob/v5.3.2/tools/cmake/component.cmake).
-The [native adapter fixtures](idf-transport.md) now link against the narrower
-audited IDF 5.5.5 configuration on S2/S3; the admission floor does not qualify other
-SDK versions. No Arduino, driver peripheral,
+The [native adapter](idf-transport.md) has a narrower exact-version audit boundary:
+IDF 5.5.5 and 6.1.0 (release tag v6.1) are the declared CI rows on S2/S3.
+Earlier recorded links cover 5.5.5; the new remote checkpoint remains PENDING.
+The admission floor does not qualify other SDK versions. No Arduino, driver peripheral,
 RTOS or consumer-product dependency is required by this component.
 
 On Windows, use the existing VS Code-managed Core through `scripts/pio.cmd`:
@@ -178,8 +179,58 @@ not establish USB console input/output, I2C framing or electrical Type-C behavio
 | Arduino basic and two-device examples, S2/S3 | Managed Core 6.1.19; pioarduino 55.03.311; Arduino 3.3.11; IDF 5.5.5 | Four extracted image links; hardware NOT RUN |
 | Native CLI, S2/S3 | ESP-IDF 5.5.5; Xtensa GCC 14.2.0 esp-14.2.0_20260121 | Two genuine extracted image links; no Arduino; hardware NOT RUN |
 
-Other SDK/toolchain rows await the full supported matrix at prompt 34; manifest
-admission floors and framework names do not qualify them.
+Those rows retain their actual earlier evidence. The declared checkpoint below
+has its own exact commit and result boundary; manifest admission floors and
+framework names do not qualify untested versions.
+
+## Declared CI matrix
+
+The source-checkout [workflow](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/.github/workflows/ci.yml)
+defines the prompt 34 checkpoint. **Remote verification is PENDING.** Its rows
+describe required checks; they do not report successful jobs, new firmware links
+or physical qualification. Actual results and tested SHA belong in the
+[validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
+
+| Job | Declared rows and ownership |
+| --- | --- |
+| Workflow | Actual YAML/pin/matrix audit and stable metadata check |
+| Host | GCC 14 Debug/Release; Clang 18 Debug/Release; Clang 18 Debug with ASan/UBSan. Each owns registered native and contract checks; Release assertions remain active. |
+| Python | Registered Python/session/transcript/validator checks once in Release |
+| Documentation | Actual Doxygen and documentation negative fixtures once in Release |
+| Package | Registered package checks once in Release, then one identified PlatformIO archive and clean standalone consumer |
+| Arduino | Four extracted images: basic CLI and owner-service examples, each on S2/S3; PlatformIO 6.1.19, pioarduino 55.03.311, Arduino 3.3.11 and bundled IDF 5.5.5 |
+| Native IDF | Four extracted genuine native CLI images: oldest audited SDK 5.5.5 and current stable v6.1 (SDK 6.1.0), each on S2/S3; independent absolute build/SDKCONFIG paths and no Arduino component |
+
+Firmware jobs download the same identified archive, verify its hash and consume
+validated extractions. Their links satisfy the matching firmware/distribution
+gate; CI does not repeat that matrix from the source checkout. Source builds in
+the Arduino/native application guides remain diagnostic paths. The literal
+76-file package allowlist is unchanged; CI/checker machinery remains checkout-only.
+
+All jobs have finite timeouts. Logs, JUnit/partial reports, Doxygen evidence,
+archive/consumer provenance and useful firmware identity/ELF/map outputs have
+seven-day retention. Expected artifact paths must exist on success and failure;
+an upload configuration is not proof that evidence was produced. Ordinary CI
+does not open a hardware port, flash, publish or control board power.
+
+| CI tool or image | Declared pin |
+| --- | --- |
+| Host Python | 3.12.16 on Linux only; consumers retain their existing requirements |
+| Workflow parser | PyYAML 6.0.3 |
+| Host CMake/Ninja Python distributions | CMake 4.0.3 / Ninja 1.13.0 |
+| Host compilers | `g++-14` / `clang++-18` on Ubuntu 24.04; actual OS/compiler patch versions are runtime evidence |
+| Documentation | Official Doxygen 1.13.2 Linux binary, checked against its recorded SHA-256 |
+| Arduino/package tooling | PlatformIO 6.1.19; established pioarduino/Arduino pins above |
+| IDF 5.5.5 container | `espressif/idf:v5.5.5@sha256:a9231d0697ab8f7517cc072e93b7c83e04907bfbfba80b6440d7dbbf90665cf2` |
+| IDF 6.1 container | `espressif/idf:v6.1@sha256:81893c71bb5e570088901f21def8684c25cd2a9020281bd01b843a7655edb18c` |
+
+The source-checkout [pin audit](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-34-pins.md)
+records official URLs, action release SHAs, SDK source commits and image digests.
+The [workflow checker](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/tools/check_ci.py)
+requires `python -m pip install PyYAML==6.0.3`, then
+`python tools/check_ci.py` from a source checkout. Its rejected-workflow fixtures
+are integrated into the registered `validate_runner` suite; suite ownership stays
+with the existing validator rather than a second discovery path.
 
 Thymos Solution s.r.o and maintainer Jan Havelka follow current sibling manifests
 and MIT terms. CODEOWNERS uses the evidenced @janhavelka account from the current
