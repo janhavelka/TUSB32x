@@ -30,7 +30,7 @@ and the adapter's timing bound are supplied. The [native IDF adapter](../docs/id
 uses borrowed synchronous bus/device handles, a shared controller gate and
 source-derived timeout bounds. Its independent S2/S3 component fixtures link
 without Arduino or the CLI. The complete [native CLI application](esp_idf/basic/README.md)
-links that adapter, core and shared CLI for IDF5.5.5 on S2/S3, with exclusive UART0,
+links that adapter, core and shared CLI for IDF 5.5.5 and 6.1.0 on S2/S3, with exclusive UART0,
 explicit readiness, read-only startup ownership and checked bounded teardown.
 Builds do not qualify electrical behavior or application timing.
 See [development metadata](../docs/development.md).
@@ -43,7 +43,9 @@ All shared CLI/console/owner/board sources, native CMake/sdkconfig defaults and
 both firmware identity scripts are explicit export members. The package does not
 need a version-generation step. Use the root Arduino environments for S2/S3 basic
 and two-device images; native CLI builds use separate absolute build and SDKCONFIG
-paths per target. These examples compile/link from a renamed archive without this
-checkout or sibling paths. Firmware identity reports unknown Git/tree for extracted
+paths per target and SDK version. These examples compile/link from a renamed
+archive without this checkout or sibling paths. Firmware identity reports unknown Git/tree for extracted
 sources instead of borrowing a parent repository. No install/export interface,
-flashing, fixture action or physical Type-C qualification is implied.
+flashing, fixture action or physical Type-C qualification is implied. The
+[repository-only validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md) identifies the actual tested revisions
+and artifacts; a later documentation revision does not inherit an earlier CI run.

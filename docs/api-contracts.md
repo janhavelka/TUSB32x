@@ -1,35 +1,18 @@
 # Portable values, decoding and owner API
 
-Prompts 5-18, updated 2026-10-27. The five headers under `include/TUSB32x/` provide
-complete passive values, constexpr Status/token helpers, pure validators/health projection,
-public pure register decoding and stable package version constants.
-They require C++17 and standard headers only. The validators link through target
-`TUSB32x`. Prompt 9 implements [private register transport/identity](transport.md),
-without publishing bus-access methods. Prompt 10 adds pure codecs/composition.
-Prompt 11 implements the non-copyable device facade, lifecycle/token/result
-handling, cached evidence and read-only initialization. Prompt 12 adds
-`startReadProfile` and `startReconcile`; prompt 13 adds `startApplyProfile` and
-`startVerifyProfile`; prompt 14 adds explicit `startReset` and original-part
-`startRecoverDeadBattery`; prompt 15 adds complete read-only `startRefreshPort`
-and cached port publication; prompt 16 adds `startAcknowledgeInterrupt` and
-`startServiceInterrupt`. Prompt 17 adds safe `readRegisterSync`/`writeRegisterSync`,
-complete diagnostics views and pure `validateHealthPolicy`/`projectHealth`.
-The callable inventory below is delivered. The [shared CLI](CLI.md) routes these
-operations without reimplementing protocol or retaining a second result. Framework
-adapters and complete S2/S3 applications are implemented in example code, with
-physical qualification separate. The fixed CLI inventory now includes public raw,
-decoder, health and diagnostic APIs, with executable alias/help parity.
+The C++17 library provides fixed-storage values, pure validation and decoding,
+and a non-copyable owner facade through `<TUSB32x/TUSB32x.h>` and CMake target
+`TUSB32x`. Public headers use standard C++ only. Framework transports and the
+[shared CLI](CLI.md) are example code; they reuse the same protocol and engine.
 
-Prompt 18's [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
-connects these owner, interrupt and raw contracts to named runtime tests. The
-audit adds coverage without changing admission, effects, timing or silicon gates.
-
-The [baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md), [register map](register-map.md)
-and [procedure guide](device-behavior.md) remain the state and silicon contracts.
-The [architecture](architecture.md) identifies file responsibilities. The
-[compile-only inventory](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/planned_api.cpp) checks delivered signatures
-without claiming runtime behavior. See [diagnostics and health](diagnostics.md)
-for safe raw usage and the separate evidence views.
+Start with [owner operations](owner-operations.md) for the bind/start/poll/take
+workflow and failure handling. This page owns the detailed API admission,
+output-preservation, lifetime, time and evidence tables. Header Doxygen owns
+exact declarations and field defaults. The [architecture](architecture.md),
+[transport](transport.md), [register map](register-map.md),
+[device procedures](device-behavior.md) and [diagnostics](diagnostics.md) cover
+their respective boundaries. Software checks and physical qualification are
+reported separately in [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
 
 TUSB322I DRP00/11 semantic equality does not prove the old literal mode bits are
 still safe to write. An observed recoding revokes that 0A write image while
@@ -162,19 +145,19 @@ do not roll back effects of previously attempted hardware writes.
 | CONFIGURATION_MISMATCH | Successfully observed persistent controls differ from desired/required postcondition. No transport fault; complete proof may still establish KNOWN actual settings. |
 | CHIP_ID_MISMATCH | Complete successful signature/revision acquisition contradicts configured expectation; retain raw evidence, do not enable writes. |
 | I2C_ERROR | Terminal callback failure, including normalized illegal callback codes; write acceptance can be uncertain. |
-| I2C_NACK_ADDR | Backend positively identifies address NACK; only its phase guarantee can prove no effect for that attempt, never undo earlier writes. |
+| I2C_NACK_ADDR | Backend positively identifies address NACK; the Status-only write path still retains possible acceptance and all earlier effects. |
 | I2C_NACK_DATA | Backend identifies data NACK; earlier data can already have affected hardware. |
 | I2C_TIMEOUT | Callback cannot complete within its finite aggregate budget; counted callback attempt, not proof of physical bus traffic. |
 | I2C_BUS | Backend-reported bus fault; recovery stays outside core, effects may be uncertain. |
 | I2C_BUSY | Backend cannot acquire/use the bus within its contract; counted callback attempt, unlike local BUSY. |
 
-Library-generated statuses use detail zero unless a later documented method
-assigns another meaning. Backend detail is never narrowed or reinterpreted.
+Library-generated statuses use detail zero unless the method documents another
+meaning. Backend detail is never narrowed or reinterpreted.
 There is no detached or OFFLINE error: detach is normal, health is a projection.
 Operation-status propagation, callback normalization and counters are implemented
 for initialization, profile observation, apply, verification, reconciliation,
 reset/base recovery, port refresh and IRQ acknowledgement/service. Public raw
-diagnostic behavior is implemented in prompt 17.
+diagnostics use the same normalization and all-callback accounting.
 
 ## Borrowed transport and owner boundary
 
@@ -197,7 +180,7 @@ policy. Null context is permitted when callbacks need none. The pinned backend's
 own cleanup/bounds need adapter evidence; these pointer types cannot prove it.
 
 Callbacks may return only OK or I2C_* errors. The transport wrapper normalizes any other
-code to I2C_ERROR, preserve full detail and retain conservative write uncertainty.
+code to I2C_ERROR, preserving full detail and conservative write uncertainty.
 Status carries no completion time: the next freshly sampled owner timestamp
 anchors hardware waits and time-sensitive success. Owner intervals are strictly
 between zero and 2^63 ms; the separate 1 ms hardware margin never extends the
@@ -211,23 +194,9 @@ the callbacks/context from a copied accepted DriverConfig. Construction and
 destruction perform no hardware work. All calls require one serialized owner;
 none is ISR-safe.
 
-| Delivered methods | Behavior and bound |
-| --- | --- |
-| bind, end, invalidateDeviceState, forgetDeviceEvidence | Bus-silent atomic binding and evidence lifecycle. Invalid replacement preserves the old binding. End cancels active work into its retained result; it never rolls back hardware effects. Forget requires unbound, inactive, result-free state. |
-| startInitialize | Copies timing and admits one nonzero uint64 instance-local token; IN_PROGRESS means admitted. Reads exact identity/revision and persistent controls only, with B5/L/A6/V5 callback ceilings. No profile adoption, reset, ACK or writes. |
-| startReadProfile | Binding only; reads P without identity, desired adoption or trust promotion. Complete contradiction invalidates old current trust. B/L/A4 and V3 callback ceilings; partial failed acquisition preserves the prior complete observation. |
-| startReconcile | Binding only; read-only F can establish initialization and KNOWN actual controls after invalidation. Retained reset evidence may require a 96-tick wait before the single F pass. B5/L/A6/V5 callback ceilings; no replay or cleanup writes. |
-| startApplyProfile | Current identity, KNOWN actual controls and resolved transition proof required. Validate complete input/gates before copying desired and advancing its generation; changed fields only, followed by F. At most B10/L/A12/V8 callbacks; no-op F performs no writes. |
-| startVerifyProfile | Retained desired input required; run read-only F and compare without adopting or replaying desired. Complete mismatching proof can establish KNOWN actual controls; B5/L/A6/V5 callback ceilings. |
-| startReset | Current validated identity required; UNKNOWN actual configuration allowed when a fresh 0A read supplies a safe command image. Send one command, wait 96 elapsed owner ticks, then run F once; B7/L/A8/V7 callbacks. Never compare or replay desired. |
-| startRecoverDeadBattery | Original 320/I only, current validated identity and caller-established stable VDD/readiness. Read 45, literal 04, wait 31 ticks, literal 00, read 45; at most 4 callbacks, 6 TX/2 RX. Own interrupted recovery permits a new explicit attempt; a different unresolved mode/reset transition rejects locally. |
-| startRefreshPort | Binding only, including UNKNOWN configuration; read 09/08/09 once, at most 3 callbacks and 3 TX/3 RX bytes. Complete-only cached publication; no identity/configuration promotion, reset, ACK or write. |
-| startAcknowledgeInterrupt | Current validated identity; UNKNOWN configuration allowed with a safe fresh actual09 image. B/L/A only; TUSB322I rejects before traffic. R09/W09: at most 2 callbacks, 3 TX/1 RX bytes. Explicit W1C only; no port refresh or recheck. |
-| startServiceInterrupt | Same identity/variant gate as ACK-only. R09/R08/R09 publication, W09 ACK and one R09 recheck: at most 5 callbacks, 6 TX/4 RX bytes. Preserve pre-ACK publication if later work fails; no loop until clear. |
-| poll | Exact token and owner uint64 time; zero budget means zero callbacks, any larger budget permits at most one terminal callback. Clips timeout to remaining deadline and yields after every callback for fresh owner time. |
-| cancel | Exact active token becomes a retained CANCELLED result while delivery returns OK. Matching terminal cancellation returns OK without changing the result. No callbacks. |
-| resultSnapshot, takeResult | Exact terminal token copies fixed evidence, returning delivery OK even if result.status failed. Snapshot repeats; take consumes once. Rejected delivery preserves caller output. |
-| progress, configurationSnapshot, portSnapshot, transportStats, diagnostics, clearTransportStats | Fixed cached copies or clearing all-callback totals; no bus, clock sampling, retry or trust repair. Port retains historical data with explicit invalidation, age and field validity. Clearing totals does not clear managed evidence or retained results. |
+The [method responsibilities](#complete-method-responsibilities) below list every
+public operation, its prerequisites and callback ceiling. The [owner guide](owner-operations.md)
+explains how to choose and advance them without automatic writes or recovery.
 
 The next successful admission cannot replace an active operation or retained
 terminal result. Tokens never reset through end/bind/forget and never wrap.
@@ -246,190 +215,20 @@ lifecycle/cache/result methods and cancellation are bus-silent. See the exact
 precedence/lifetime/time tables below and the repository-only
 [validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
 
-Profile observation uses P = R(08,1), R(09,1), R(0A,1), then R(45,1) on
-B/L/A only. Its callback/TX/RX ceilings are 4/4/4 for B/L/A and 3/3/3 for V.
-F reads identity first: R(00,8), R(A0,1) on L/A/V only, then P. Reconciliation
-therefore has ceilings 5/5/12 for B, 6/6/13 for L/A and 5/5/12 for V.
-Both operations have `HardwareEffect::NONE`. A complete profile read returns OK
-even when its valid controls contradict old verified settings; it invalidates
-that old trust and never promotes the replacement. Complete reserved encodings
-retain raw validity, clear the affected typed flags and return
-CONFIGURATION_UNKNOWN. A failed or cancelled partial acquisition does not publish
-a mixed observation.
-
-Reconciliation establishes KNOWN only with matching identity, every applicable
-persistent field and required termination/reset/sequence proof. KNOWN describes
-actual controls independently of desired settings. It increments the saturating
-verified generation on each complete proof commit and never adopts desired.
-Complete raw acquisition may establish initialized even when reserved controls
-or unresolved history prevent KNOWN. A clear reset bit cannot replace a required
-settling interval or prove a historical recovery sequence. If reset is already
-pending without an owner-time anchor, the first fresh poll starts a 96-tick wait
-before F; reset first discovered in F finishes CONFIGURATION_UNKNOWN without
-a second pass. Neither operation repairs port invalidation.
-
-`startApplyProfile` retains its whole validated candidate and advances the
-saturating desired generation once at admission. Rejected input, gated changes
-and failed admission preserve desired and outputs. Admission, cancellation or
-expiry before the first mutating callback preserves still-proved actual and port
-evidence. Unknown actual controls require read-only observation/reconciliation
-before applying; a valid candidate alone is insufficient proof for safe writes.
-The entire bounded plan is composed and checked before desired input changes.
-
-Only differing persistent fields are written. Base MODE_SELECT changes read
-attachment before any writes and reject attached state; unchanged mode with a
-current-only change is allowed. Cable attachment can race that precheck, so the
-application still owns electrical/power policy. Extended 320 mode changes use
-separate disable/mode/enable steps while preserving non-mode controls. The TI
-5 ms wait becomes six elapsed owner ticks after fresh completion time; a mode
-write completion sample of 108 enables no earlier than 114, or 116 when the
-first fresh sample is 110. The separate one-tick margin never extends deadline.
-Requested final disableTerm/disableRdRp settings remain effective and distinct.
-
-TUSB322I DFP/UFP uses its own disable/mode/enable procedure without adding a
-5 ms wait. Actual advertisement changes, every 09 write and a direct mode
-change to DRP are rejected before traffic. Unchanged proved gated controls and
-semantic DRP00/11 equivalence permit independently supported changes. Role changes
-can have autonomous VCONN effects; board power and USB policy stay with the owner.
-
-Before any possible port-affecting write, current configuration and port usability
-are invalidated, retaining historical values. Effect evidence is set before the
-callback because error return does not prove that the data was rejected. The
-first backend error/detail survives; no retry, rollback or cleanup follows
-failure, cancellation, expiry or end. No-op apply runs full F with effect NONE;
-a completed changed-image procedure needs final proof for CONFIRMED.
-
-The maximum apply callback/TX/RX buffer-byte ceilings are 10/14/13 for B,
-12/18/13 for L/A and 8/11/12 for V. Requested final disableTerm reduces a mode
-change ceiling to 11/16/13 on L/A or 7/9/12 on V by omitting the final enable.
-These are worst-case changed-field plans, bounded by six writes; unchanged
-fields reduce work. F-only no-op/verify costs 5/5/12 on B, 6/6/13 on L/A and
-5/5/12 on V. Waits add no callbacks. Byte counts are requested buffer lengths,
-including pointers, excluding address/ACK framing; they are not physical traffic.
-
-Apply and `startVerifyProfile` share F identity/control/effect proof. Verify needs
-retained desired input and has no writes. Complete proof of a different actual
-image publishes KNOWN actual settings and CONFIGURATION_MISMATCH while keeping
-desired unchanged. Unresolved transition/reset history keeps trust UNKNOWN even
-when some bytes match. After an interrupted apply, read-only reconciliation can
-wait and prove a different actual image, allowing a new explicit apply. It never
-claims the earlier operation succeeded or discards its retained effect evidence.
-The [procedure guide](device-behavior.md#fixed-observations-and-shared-proof) documents
-the proof and independent termination controls.
-
-`startReset` qualifies actual 0A persistent controls with one fresh read and
-sets command bit 08 in their safe composed image. It never sends literal 01
-under mask 08, substitutes reset defaults for actual controls or resends a
-possibly accepted command. Successful callback acceptance starts no clock inside
-core: the next fresh poll anchors 96 elapsed ticks for TI's 95 ms maximum plus
-the separate one-tick clock margin. Then one complete F pass proves clear reset
-and applicable postconditions. Callback/TX/RX ceilings are B7/8/13, L/A8/9/14,
-V7/8/13, including the pre-read, command and F. No wait turn invokes transport.
-
-Reset affects digital logic, can resample PORT on the six 320 parts and returns
-TUSB322I to DRP. It is not POR or attachment-ready proof, and does not promise a
-whole-byte reset image or restore desired settings. TUSB322I accepts either
-documented semantic DRP code in final proof; a complete non-DRP image returns
-CONFIGURATION_MISMATCH, retains raw observation and leaves reset MAY_BE_PENDING
-with configuration/termination UNKNOWN. VCONN can change with source-role/attachment behavior, subject to
-the board's supply prerequisite. Historical desired/observed/verified values
-remain separate from present trust. An older unresolved recovery can keep
-configuration UNKNOWN even when this explicit reset succeeds.
-
-`startRecoverDeadBattery` requires original TUSB320/TUSB320I identity and the
-owner's decision that stable-VDD startup needs Rp recovery. Missing VDD with no
-cable is also a documented dead-battery case; the core has no battery monitor.
-It reads 45 and fails CONFIGURATION_UNKNOWN before writing when internal bits 03
-are nonzero, then writes literal 04, waits 31 elapsed owner ticks from fresh
-post-write time, writes literal 00 and reads 45 once. Final `(value & 0x07)==0` is
-required; mismatch returns CONFIGURATION_MISMATCH. Four callbacks, 6 TX/2 RX is the
-whole procedure ceiling. A final 04 can establish termination DISABLED while
-the failed sequence remains unresolved; nonzero internal bits keep termination
-UNKNOWN. The internal-zero qualification and final readback are
-library policy beyond TI's recipe. Other variants reject before transport.
-
-Recovery invalidates current configuration/port usability before a possible
-write and publishes no transient port observation between writes. Its own
-successful sequence can have CONFIRMED effect while configuration remains UNKNOWN
-until full F. Cancellation, expiry, end and failed callbacks never undo effects
-or trigger cleanup. The first error/detail, reset acceptance uncertainty and
-independent recovery obligation survive result take and same-target rebind.
-Later clear 45 can describe present controls but cannot prove the historical
-writes/wait; reconciliation observes once and never replays them. Only a new
-explicit recovery request can attempt that sequence again. Exact reset/retention
-and recovery citations are in the [procedure guide](device-behavior.md).
+The [device procedure guide](device-behavior.md#fixed-observations-and-shared-proof)
+defines the fixed profile/full-proof plans, differences-only apply, reset and
+original-part recovery sequences. Its [callback and requested-byte ceilings](device-behavior.md#callback-and-requested-byte-ceilings)
+are the authoritative per-variant work bounds. Local admission never performs
+those callbacks; only `poll` advances an admitted operation.
 
 ## Complete design inventory
 
-This inventory summarizes the delivered API. The compile-only fixture checks
-these real public declarations without defining a second facade. Profile observation and
-read-only reconciliation are delivered in prompt 12; application and desired-profile
-verification are delivered in prompt 13; reset and recovery in 14; port refresh
-and publication in 15; explicit IRQ acknowledgement/service in 16. Raw access
-and health helpers are delivered in 17.
-No begin/init/unbind aliases or successful placeholder methods are provided.
-
-```cpp
-namespace TUSB32x {
-Status validateHealthPolicy(const HealthPolicy& policy);
-Status projectHealth(const ManagedTransportEvidence& evidence,
-                     const HealthPolicy& policy, HealthSnapshot& out);
-Status decodeRegister(Variant variant, uint8_t reg, uint8_t value, RegisterDecode& out);
-
-class TUSB32x {
- public:
-  TUSB32x();
-  ~TUSB32x();
-  TUSB32x(const TUSB32x&) = delete;
-  TUSB32x& operator=(const TUSB32x&) = delete;
-  TUSB32x(TUSB32x&&) = delete;
-  TUSB32x& operator=(TUSB32x&&) = delete;
-  Status bind(const DriverConfig& config);
-  Status end();
-  Status invalidateDeviceState(const Status& reason);
-  Status forgetDeviceEvidence();
-  Status startInitialize(const OperationTiming& timing, OperationToken& token);
-  Status startReadProfile(const OperationTiming& timing, OperationToken& token);
-  Status startApplyProfile(const DeviceProfile& profile,
-                          const OperationTiming& timing, OperationToken& token);
-  Status startVerifyProfile(const OperationTiming& timing, OperationToken& token);
-  Status startReconcile(const OperationTiming& timing, OperationToken& token);
-  Status startRefreshPort(const OperationTiming& timing, OperationToken& token);
-  Status startAcknowledgeInterrupt(const OperationTiming& timing, OperationToken& token);
-  Status startServiceInterrupt(const OperationTiming& timing, OperationToken& token);
-  Status startReset(const OperationTiming& timing, OperationToken& token);
-  Status startRecoverDeadBattery(const OperationTiming& timing, OperationToken& token);
-  Status poll(OperationToken token, uint64_t nowMs, uint8_t maxTransfers = 1);
-  Status cancel(OperationToken token);
-  Status resultSnapshot(OperationToken token, OperationResult& out) const;
-  Status takeResult(OperationToken token, OperationResult& out);
-  OperationProgress progress() const;
-  PortSnapshot portSnapshot() const;
-  ConfigurationSnapshot configurationSnapshot() const;
-  TransportStats transportStats() const;
-  DriverDiagnostics diagnostics() const;
-  void clearTransportStats();
-  Status readRegisterSync(uint8_t reg, uint8_t& out);
-  Status writeRegisterSync(uint8_t reg, uint8_t value);
-};
-}  // namespace TUSB32x
-```
-
-Validation, binding, starts, cancellation, end/invalidation/forgetting and cached
-delivery are bus-silent. Only poll advances managed I2C; the two explicit Sync
-methods have a one-callback limit and cannot bypass silicon procedures. Admission
-retains desired input separately; initialization observes only, reconciliation
-does not replay, and reset never reapplies a desired profile. The tables below
-finish the baseline's precedence, result retention and interruption rules.
-
-Pure binding/profile validators are implemented in prompt 7, decoding in 10,
-and the delivered owner subset, including IRQ acknowledgement/service, in 11–16.
-Raw access and health helpers remain prompt 17 work.
-No unavailable function may appear in a runnable quick start before that work.
-The health validator requires offlineThreshold >= 1. Invalid policy returns
-INVALID_CONFIG, and projectHealth preserves out on that failure; otherwise it
-copies the supplied managed evidence and effective threshold into its projection.
-It performs no I2C, retry, clock read or evidence repair.
+The [public facade](../include/TUSB32x/TUSB32x.h),
+[configuration types](../include/TUSB32x/Config.h) and
+[decoder](../include/TUSB32x/CommandTable.h) contain the complete implemented
+signatures. The repository's compile-only signature fixture checks those real
+headers. It is not a second facade or a behavioral test. Raw access, health,
+profile, reset, recovery, port and interrupt methods are implemented.
 
 ## Pure register decoder boundary
 
@@ -439,7 +238,7 @@ It interprets one caller-supplied byte using the exact
 [field tables](register-map.md#explicit-field-encodings).
 It performs zero callbacks, changes no instance/counter/cache and requires no
 binding or constructed driver. Work is a fixed register/variant branch, no loops
-over hardware, allocation or retry. CLI prompt 22 formats this same result.
+over hardware, allocation or retry. The CLI formats this same result.
 
 Validation order: invalid/UNSPECIFIED Variant returns INVALID_PARAM, then an
 unmapped register returns INVALID_PARAM, then an absent documented family
@@ -475,7 +274,7 @@ authorizes a write or removes an unresolved silicon/board prerequisite.
 
 These tables are implemented for the delivered owner and raw methods and are
 exercised by the registered suites. The
-[current peer review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-11-peers.md) records the implementations
+[historical peer review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-11-peers.md) records the implementations
 and tests compared. The baseline's precedence is unchanged. Evaluate the
 following rows in order; stop at the first applicable rejection. Rejections
 preserve all caller outputs and instance state, including token allocation,
@@ -732,14 +531,14 @@ clear, successful unrelated read, end or same-target bind erases obligations.
 | All intended writes and required final postconditions proved | CONFIRMED |
 
 Mark possible effect before invoking a write callback, after local budget guards.
-Only an actual backend phase guarantee can prove an address-NACK attempt had no
-effect; no generic error guesses that phase. ACK acceptance is the ACK operation's
+Every invoked failed write retains possible acceptance, including I2C_NACK_ADDR
+and I2C_BUSY. These Status-only callbacks provide no separate acceptance/phase
+evidence that could discharge an attempted write. ACK acceptance is the ACK operation's
 postcondition, not proof the latch remained clear. Software CANCELLED with
 INDETERMINATE, and READY health with UNKNOWN configuration, are valid pairs.
-If an authoritative backend guarantee proves a settings-write attempt had no
-effect, preserve the earlier configurationWriteUnresolved value; do not clear
-an older obligation or introduce one for that disproved attempt. Pure ACK that
-preserves actual controls does not set this settings flag. Reset/mode/recovery
+Local rejection before invoking the callback creates no new write obligation
+and preserves any older one. Pure ACK that preserves actual controls does not
+set this settings flag. Reset/mode/recovery
 retain their own proof flags; any settings they may change also needs complete
 current proof. Explicit forgetting clears all target obligations without proving
 hardware recovery. ConfigurationWrite uncertainty never changes a frozen result.
@@ -809,17 +608,15 @@ allowed. A raw reset observation has no time argument: a later explicit reconcil
 must establish its conservative anchor. Never use an old last-poll time for it.
 
 The compile-only [arithmetic fixture](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/contract/time_arithmetic.cpp) checks
-the unsigned rules independently of any future engine. The external owner
+the unsigned rules independently of runtime engine tests. The external owner
 example extends a uint32 source using checked modulo deltas below 2^31, sampling
 more often than that horizon; reject ambiguous/backward input without changing
 the stored extension. Simply widening a wrapping raw counter is incorrect.
 
-Keep the engine a direct bounded pass: validate time, settle at most one pending
-callback, process at most one wait boundary, evaluate completion, select one
-next callback, and invoke it at most once. Each of these six local stages runs
-at most once per poll; no loop to drain a plan or stabilize silicon is needed.
-If implemented as a transition loop, use a named private limit of six local
-stages and prove the mapping in engine tests. Identity checks inspect at most
+Each poll makes a direct bounded pass: validate time, settle at most one pending
+callback, process at most one wait boundary, evaluate completion and select and
+invoke at most one next callback. It does not drain a plan or loop until silicon
+stabilizes. Identity checks inspect at most
 eight bytes; profile checks at most eight fields; fixed register plans never
 exceed the procedure guide's twelve callbacks. No allocation, unbounded scan,
 sleep, retry, log, scheduler or physical bus recovery belongs in this work.
@@ -947,7 +744,7 @@ With basic Status-only callbacks, completion timestamps are unavailable at
 return: update the affected last-success/failure validity to false, retaining
 its old numeric storage as unusable history. Do not relabel a pre-call sample
 as completion or annotate these counters later from an unrelated operation.
-The first implementation leaves these callback-time flags false; operation
+The Status-only callback contract leaves these callback-time flags false; operation
 completion and acquisition timestamps have the separate fresh-poll rules above.
 Last failed transport status/detail remains after later success, raw or managed.
 No callback means no transport accounting, including owner timeout, cancellation,
@@ -975,15 +772,12 @@ New targets reset current target readiness, but instance transport history remai
 
 ## Behavioral acceptance vectors
 
-These acceptance vectors cover the delivered engine and diagnostics. Prompt 11's
-`tusb32x_operations` suite exercises initialization, lifecycle, token/result and
-time behavior. Prompts 12-13 add profile observation, read-only proof, apply,
-desired verification and their write/effect boundaries. Prompt 14 adds reset and
-base-recovery sequence, timing and retained-effect cases. Prompts 15-16 add the
-registered port suite for publication and explicit IRQ boundaries. Raw/health
-cases are exercised by the registered `tusb32x_diagnostics` suite in prompt 17.
-Actual commands/results are recorded
-in validation; the complete table also guides later conformance work.
+These acceptance vectors cover the delivered engine and diagnostics. Registered
+suites exercise lifecycle/token/time behavior, profile observation/application,
+reset/recovery, port publication, interrupt handling and raw diagnostics/health.
+The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
+connects subtle boundaries to named runtime cases. Actual commands/results are
+recorded in [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md); compile-only fixtures are separate.
 Combine the rejection ordering above with every write/failure boundary in the
 procedure guide; test callback counts, outputs, state and original status together.
 

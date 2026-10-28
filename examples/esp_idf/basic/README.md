@@ -8,8 +8,8 @@ flashed or electrically qualified for this work.
 
 ## Build and console
 
-Activate the selected ESP-IDF environment first. In PowerShell, from the library root
-(use separate version-labelled paths for 6.1 as well):
+Activate ESP-IDF 5.5.5 first and verify `idf.py --version`. In PowerShell,
+from the library root:
 
 ```powershell
 $s2Build = Join-Path (Get-Location) 'build/idf-5.5.5-s2'
@@ -17,6 +17,20 @@ $s3Build = Join-Path (Get-Location) 'build/idf-5.5.5-s3'
 idf.py -C examples/esp_idf/basic -B "$s2Build" "-DSDKCONFIG=$s2Build/sdkconfig" -DIDF_TARGET=esp32s2 build
 idf.py -C examples/esp_idf/basic -B "$s3Build" "-DSDKCONFIG=$s3Build/sdkconfig" -DIDF_TARGET=esp32s3 build
 ```
+
+For ESP-IDF 6.1.0, activate that SDK in a separate shell, verify
+`idf.py --version`, and use independent absolute paths from the library root:
+
+```powershell
+$s2Build = Join-Path (Get-Location) 'build/idf-6.1.0-s2'
+$s3Build = Join-Path (Get-Location) 'build/idf-6.1.0-s3'
+idf.py -C examples/esp_idf/basic -B "$s2Build" "-DSDKCONFIG=$s2Build/sdkconfig" -DIDF_TARGET=esp32s2 build
+idf.py -C examples/esp_idf/basic -B "$s3Build" "-DSDKCONFIG=$s3Build/sdkconfig" -DIDF_TARGET=esp32s3 build
+```
+
+These commands build diagnostic-only images with the default readiness inputs.
+They neither flash a board nor open a physical console. The exact supported
+SDK gate is 5.5.5 or 6.1.0; an arbitrary newer version is not qualified.
 
 Use the same absolute build and SDKCONFIG paths on later build/reconfigure/monitor
 invocations. Separate `-B` directories alone do not normally separate a project's
@@ -95,6 +109,14 @@ deadline or prove a hardware timing bound.
 | VBUS_DET | Use the exact TI resistor-coupled sensing network: 855/887/920kohm min/typ/max versus common 900kohm prose. A 28V system-rail limit is not the pad rating; do not wire that rail directly to the pad. The 320 DFP-only omission exception does not apply to 322I, which requires its resistor connection. |
 | 322I VCONN | Automatic on the unused CC line after source attachment with Ra, removed on detach. No qualified software VCONN-enable API exists. The board supplies 5V VDD after Attached.SRC; the VCONN range is 4.75-5.5V with VDD=5V. Current limit is 225/300/375mA min/typ/max, FET resistance at most 1.25ohm, bulk capacitance 10-200uF. The typical 300mA is not guaranteed output capability; generic 4.5-5.5V device operation does not establish the VCONN condition. |
 
+HI/HAI EN high is limited to 1.05..3.65 V, with a 4 V absolute maximum;
+5 V VDD does not permit a direct EN-to-VDD strap. Optional INT_N is active-low
+open-drain and needs a qualified external pull-up to an MCU-safe rail. An ISR
+only signals the owner. Respect supply-off and non-failsafe pin limits to avoid
+back-powering through ADDR, PORT/DIR, VBUS_DET or other external connections.
+The [hardware guide](../../../docs/hardware-validation.md) retains exact-part
+startup conflicts and sensing limits, including the 4 V VBUS_DET pad maximum.
+
 These values were rechecked against archived TI SLLSEQ8D recommended operating/
 electrical tables and SLLSEO5D sections 5.3, 6.3.6 and 6.3.8. The
 [variant guide](../../../docs/variant-matrix.md) retains capability/access limits
@@ -127,6 +149,10 @@ outside their own Git root report unknown; an unrelated parent repository is
 never borrowed. Native transmit/receive SDK totals are not mislabeled as adapter
 callback-kind counters: optional adapter counts remain unknown, while core
 all-callback and managed statistics are available through existing commands.
+The Python runner's complete readonly/soak plans require those optional counts
+to prove no data-write callbacks, so they report BLOCKED on this front end.
+Individual CLI observation and owned-result commands remain available under
+the [single CLI reference](../../../docs/CLI.md).
 
 Application `requestStop()` or TUSB32X_RUN_MS stops command admission, cancels and
 consumes only startup-owned work, ends the binding, and snapshots/reports retained

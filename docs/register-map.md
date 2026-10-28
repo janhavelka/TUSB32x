@@ -1,6 +1,7 @@
 # Register access and encoding contract
 
-Specified in prompt 3 on 2026-10-23 and implemented through prompt 17.
+Specified in prompt 3 on 2026-10-23; implementation and guides rechecked in
+prompt 35 on 2026-10-29.
 TUSB320LAI remains the primary target; physical qualification is separate.
 Prompt 9 now implements its private access allowlist and identity comparisons;
 prompt 10 implements pure codecs/composition. Prompts 11–16 implement owner
@@ -18,8 +19,8 @@ variant/register/raw byte and separate field-valid masks. Reserved advertisement
 preference and accessory codes keep only their affected flags clear. Base absent
 controls have no validity; present identity/revision bytes remain raw only.
 Single-byte CC1/CC2 and current codes establish no attachment applicability,
-current measurement, USB PD contract or permission to draw power. Complete port
-interpretation, including detached NOT_APPLICABLE, belongs to prompt 15.
+current measurement, USB PD contract or permission to draw power. Implemented
+complete port interpretation, including detached NOT_APPLICABLE, is below.
 
 Private `TUSB32xCodecs` encodes typed candidates and compares persistent settings,
 including fieldwise TUSB322I DRP00/11 equivalence. Encoding a readable field does
@@ -144,8 +145,9 @@ never from these defaults or zero-initialized buffers.
 The tables do not establish that I2C software reset restores every register to
 its listed reset value. Reset may affect detected current, active cable,
 accessory, attachment and direction. V additionally returns to DRP (V §6.3.2 p9).
-Direction default1 does not prove an attached CC2 cable. Reset completion,
-PORT sampling and recovery sequence proof remain prompt 4 work.
+Direction default1 does not prove an attached CC2 cable. The implemented reset
+and recovery operations follow the [device procedures](device-behavior.md);
+PORT sampling itself remains a silicon behavior requiring board qualification.
 
 ## Separate masks by access and effect
 
@@ -263,6 +265,22 @@ library policy; it does not add a reserved silicon code. Extended UFP-debug
 current is withheld as unresolved paired applicability, not declared inapplicable.
 Debug-local context remains in `Accessory`, not an inferred ordinary peer role.
 
+`DeviceProfile.portMode` requests a local policy (PORT/UFP/DFP/DRP), while
+`PortSnapshot.localRole` reports the sampled attachment. A DRP or Try preference
+does not predict the resulting role. Ordinary detach is a successful observation,
+with valid NOT_APPLICABLE role/orientation/current fields under the table above;
+it is neither a callback failure nor a reason for passive health to go OFFLINE.
+
+Use `rawValidMask` for available bytes and `validFields` for interpretations.
+After invalidation, retained flags and bytes describe historical evidence even
+when a field's flag remains set. Require `invalidated == false`, the relevant
+field flag, acceptable coherence and an acceptable owner-computed age before
+using an observation. `observedUptimeMs` timestamps the boundary before the first
+required read, not publication; `observedTimeValid` qualifies that timestamp.
+The core supplies no implicit age threshold. The CLI's `sample` and `freshness`
+are cached queries; only an explicit `read`/`irq read` obtains a new port sample.
+An unrelated successful raw read or reconciliation cannot clear port invalidation.
+
 Rechecked printed TI pages on 2026-10-26: B SLLSEN9F Table7-1 and section7.3.1.2 p11,
 Table7-7 pp17-18; L SLLSEP2D / A SLLSEQ8D Tables8-9 pp17-18 and accessory
 sections7.2.3.1-2 pp11-12; V SLLSEO5D Tables6-8/9 pp18-19, section6.3.4.2 p12 and
@@ -368,7 +386,7 @@ Public file revisions/hashes/licenses remain in the
 [chip evidence](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CHIP_EVIDENCE.md).
 Implemented codec masks carry TI revision/table/page citations, and the public
 decoder documents raw validity, error preservation and zero-I2C bounds.
-The independent [vectors](register-vectors.md) now have pure codec and transport
-checks through prompt 10. Owner procedures, timing and complete port observations
-also have registered host checks through prompt 16, including bounded IRQ
-acknowledgement/service. Physical hardware qualification remains separate.
+The independent [vectors](register-vectors.md) map to current codec, transport,
+owner, timing, port and IRQ suites. [Feature coverage](feature-coverage.md) maps
+the same contract to exact API/CLI routes and named tests. These are source and
+host proofs; physical hardware qualification remains NOT RUN.

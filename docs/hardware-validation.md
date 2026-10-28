@@ -129,12 +129,17 @@ $fixturePort = Read-Host 'Explicit authorized physical serial port'
 $fixtureCommit = Read-Host 'Expected flashed firmware commit (40 hex characters)'
 $fixtureFramework = Read-Host 'Expected firmware framework name'
 $fixtureTarget = Read-Host 'Expected firmware target'
-python tools/tusb32x_hil_runner.py --port "$fixturePort" --variant tusb320lai --address 0x47 --expect-commit "$fixtureCommit" --expect-framework "$fixtureFramework" --expect-target "$fixtureTarget" --suite readonly --suite soak --count 20 --interval-ms 1000 --duration-ms 30000 --run-timeout 90 --out build/qualified-fixture-observation-001 --dtr unchanged --rts unchanged
+$fixtureDtr = Read-Host 'DTR on/off/unchanged (Arduino S2: on; S3: off)'
+$fixtureRts = Read-Host 'RTS on/off/unchanged (Arduino S2/S3: off)'
+python tools/tusb32x_hil_runner.py --port "$fixturePort" --variant tusb320lai --address 0x47 --expect-commit "$fixtureCommit" --expect-framework "$fixtureFramework" --expect-target "$fixtureTarget" --suite readonly --suite soak --count 20 --interval-ms 1000 --duration-ms 30000 --run-timeout 90 --out build/qualified-fixture-observation-001 --dtr "$fixtureDtr" --rts "$fixtureRts"
 ```
 
 See the [runner guide](hil-runner.md) for optional pyserial installation, finite
-limits and exit meanings. Expected values are operator expectations until fresh
-firmware records match them. Host checkout identity and labels are separate
+limits, console-specific DTR/RTS settings and exit meanings. Its full readonly/soak
+plans require adapter callback-kind counters: the native-IDF front end currently
+reports those as unknown, so these plans are BLOCKED there even though individual
+CLI observation commands are available. Expected values are operator expectations
+until fresh firmware records match them. Host checkout identity and labels are separate
 facts. The plans initialize read-only, own and take each admitted result, inspect
 ordinary mapped registers and restore only saved local CLI settings. They never
 apply, reset, ACK or recover dead battery. In particular, base 320/I recovery is
@@ -210,21 +215,21 @@ Role-current needs a controlled dual-role partner capable of the selected CC
 categories, fixture-owned safe VBUS and sufficient supply for each local source
 advertisement. The plan changes the same attached peer's advertisement and
 compares the current indication with physical fixture evidence. Original
-SLLSEN9F section7.3.1.2 p11 requires explicit software reset to update current;
-the mutation plan records each reset plus identity/profile/port revalidation.
+SLLSEN9F section 7.3.1.2, printed page 11 requires explicit software reset to
+update current; the mutation plan records each reset plus identity/profile/port revalidation.
 No such reset occurs in readonly/soak. Later variants' attached-current wording
 is not resolved by a timestamp or passing model. All local source-capable 3 A
-candidates, including cleanup, need VDD at least3.5V; a remote3A indication does
+candidates, including cleanup, need VDD at least 3.5 V; a remote 3 A indication does
 not establish that local requirement or any measured current/PD contract.
 
 Interrupt needs a wired opt-in application reader checked before I2C/mutations,
 active-low assertion and deassertion, a second physical event and multiple events
-while the latch is pending. The plan records applied50/staged30 ACK preservation,
+while the latch is pending. The plan records applied 50/staged 30 ACK preservation,
 an unrelated duty write retaining the pending latch and one bounded service's
 ACK/recheck. It cannot count every edge or infer fault clear from RCU. TUSB322I
-fixture mutation plans remain BLOCKED before I2C due unresolved09/fault/advertisement
-and return-to-DRP gates. Its required4.5..5.5V VDD, VBUS_DET and autonomous
-VCONN225/300/375mA min/typ/max remain applicable; typical300mA is no guarantee
+fixture mutation plans remain BLOCKED before I2C due to unresolved 0x09/fault/advertisement
+and return-to-DRP gates. Its required 4.5..5.5 V VDD, VBUS_DET and autonomous
+VCONN 225/300/375 mA min/typ/max remain applicable; typical 300 mA is no guarantee
 or software output permission.
 
 Cleanup requires an explicit original-partner/supply/target attestation, fresh
@@ -255,16 +260,17 @@ an authorized exact-part/board/firmware/fixture run saves physical observations.
 The runner now has nine explicit families; the three recovery plans and their
 strict action declarations are described in [runner setup](hil-runner.md#reset-fault-and-console-setup).
 Reset-termination uses the real typed reset/recovery operations. Record both
-0A.disableTerm and45.disableRdRp where applicable, aggregate termination,
+0x0A.disableTerm and 0x45.disableRdRp where applicable, aggregate termination,
 configuration trust and original result effects independently. Missing evidence
 for either control cannot mean globally enabled. Capture actual pre-mutation
 configuration, target, firmware, supply/startup assumptions and all outcome/cleanup
 evidence. Cancellation and timeout cannot undo a write or a USB event.
 
-Original320/I recovery needs a separately selected source-capable startup after
-verified stable VDD and identity: qualified45=04, at least30ms,45=00 and readback
-(SLLSEN9F7.4.3p14). Software uses the separate1ms margin; modeled31/96ms waits
-do not qualify an electrical clock. A clear final45 alone proves no historical
+Original 320/I recovery needs a separately selected source-capable startup after
+verified stable VDD and identity: qualified 0x45=0x04, at least 30 ms, then
+0x45=0x00 and readback (SLLSEN9F section 7.4.3, printed page 14). Software uses
+the separate 1 ms margin; modeled 31/96 ms waits do not qualify an electrical
+clock. A clear final 0x45 alone proves no historical
 sequence. A new power epoch invalidates earlier recovery readiness. Original-part
 recovery experiments require a fresh coherent detached port before the first write.
 Supply attestation alone does not establish current attachment. Base fault
@@ -280,11 +286,11 @@ Authorize NACK/disconnect/power-cycle and serial backpressure/reconnect/reboot
 individually in the actual setup. The operator owns fixture transitions, supply,
 VBUS and partner safety; the runner sends no power-control command. Avoid
 back-powering unpowered parts through SDA/SCL/CC/enable networks (SLLSEN9F p14,
-SLAAE24 p7). Retain resistor-coupled VBUS_DET sensing, including322 DFP sensing.
-Its4.5..5.5V supply and225/300/375mA VCONN min/typ/max are not a guaranteed300mA
-current budget. EN_N high-to-low or software reset establishes322 DRP operation
-(SLLSEO5D6.3.2p9), not a complete POR register image. Its mutation-suite gates
-remain closed; the native role-reset test is software evidence only.
+SLAAE24 p7). Retain resistor-coupled VBUS_DET sensing, including 322 DFP sensing.
+Its 4.5..5.5 V supply and 225/300/375 mA VCONN min/typ/max are not a guaranteed 300 mA
+current budget. EN_N high-to-low or software reset establishes 322 DRP operation
+(SLLSEO5D section 6.3.2, printed page 9), not a complete POR register image.
+Its mutation-suite gates remain closed; the native role-reset test is software evidence only.
 
 Reopening a serial port can itself reset firmware. Close old local state, create
 fresh framing and verify reported firmware and target before later work; old

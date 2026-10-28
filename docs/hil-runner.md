@@ -3,7 +3,8 @@
 The executable `tools/tusb32x_hil_runner.py` runs finite `readonly` and `soak`
 plans from `tools/tusb32x_hil_plans.py`, using the existing Session and pure CLI
 contract. `tools/tusb32x_hil_artifacts.py` owns streamed capture and atomic reports.
-Explicit `orientation`, `accessory`, `role-current` and `interrupt` suites use
+Explicit `orientation`, `accessory`, `role-current`, `interrupt`,
+`reset-termination`, `fault` and `console` suites use
 `tools/tusb32x_hil_fixtures.py` and its bounded setup/operator helper. Native/fake-serial tests
 prove software behavior; physical serial, I2C timing, CC, VBUS and IRQ
 qualification remain separate and NOT RUN. Read the
@@ -34,7 +35,9 @@ $observationPort = Read-Host 'Explicit authorized physical serial port'
 $observationCommit = Read-Host 'Expected flashed firmware Git commit (40 hex characters)'
 $observationFramework = Read-Host 'Expected firmware framework name'
 $observationTarget = Read-Host 'Expected firmware target'
-python tools/tusb32x_hil_runner.py --port "$observationPort" --variant tusb320lai --address 0x47 --expect-commit "$observationCommit" --expect-framework "$observationFramework" --expect-target "$observationTarget" --suite readonly --out build/readonly-hardware-001 --command-timeout 5 --write-timeout 1 --dtr unchanged --rts unchanged
+$observationDtr = Read-Host 'DTR on/off/unchanged (Arduino S2: on; S3: off)'
+$observationRts = Read-Host 'RTS on/off/unchanged (Arduino S2/S3: off)'
+python tools/tusb32x_hil_runner.py --port "$observationPort" --variant tusb320lai --address 0x47 --expect-commit "$observationCommit" --expect-framework "$observationFramework" --expect-target "$observationTarget" --suite readonly --out build/readonly-hardware-001 --command-timeout 5 --write-timeout 1 --dtr "$observationDtr" --rts "$observationRts"
 ```
 
 The runner compares the selected variant/address with firmware records. It
@@ -61,8 +64,17 @@ are checkpointed before open; successful open also records the observed pre-open
 properties. Unchanged makes no setter call, but does not guarantee the OS preserves
 an existing electrical level. The driver may pulse or ignore these lines. Port
 open has no portable deadline and can reset a board. No scan, enumeration, URL
-backend, retry, reconnect, flashing, buffer flush or hidden reset is performed.
+backend, automatic retry/reconnect, flashing, buffer flush or hidden reset is
+performed. The separately selected console plan can explicitly close and reopen
+the same authorized port after its declared reconnect/reboot transitions.
 Real serial timeout/close behavior still needs backend and board qualification.
+
+Select line values for the actual console: the Arduino S2 TinyUSB CDC example
+requires `--dtr on --rts off` for transmission; S3 defaults use
+`--dtr off --rts off`. Use the prompted line values in every invocation;
+`unchanged` is not a portable working default for either board. Native-IDF uses UART0 through
+a bridge whose reset/boot wiring must be inspected separately. Close any serial
+monitor before the runner opens its port. See [console wiring](arduino-examples.md).
 
 ## Readonly, soak and register observation
 
@@ -92,6 +104,10 @@ and backend physical transactions are separate quantities. A combined pointer/re
 callback is one callback, even though it transfers a register pointer. The plan
 requires adapter counter availability, checks that no data-write callback occurs,
 and blocks rather than inventing that proof when the adapter cannot supply it.
+The current native-IDF front end reports these optional callback-kind counts as
+unknown, so these complete readonly/soak plans are BLOCKED there. Its ordinary
+CLI read commands remain available; native transmit/receive SDK totals cannot
+substitute for callback-kind proof.
 Saturated adapter-write or all-source counters cannot prove exact deltas; regressed
 or inconsistent totals fail. Exact staging/validation and rejected verify aliases
 also require zero callback deltas.
@@ -132,7 +148,7 @@ separate portability limit described above.
 For example, after choosing the same explicit operator values above:
 
 ```powershell
-python tools/tusb32x_hil_runner.py --port "$observationPort" --variant tusb320lai --address 0x47 --expect-commit "$observationCommit" --expect-framework "$observationFramework" --expect-target "$observationTarget" --suite readonly --suite soak --count 20 --interval-ms 1000 --duration-ms 30000 --run-timeout 90 --out build/observation-hardware-002
+python tools/tusb32x_hil_runner.py --port "$observationPort" --variant tusb320lai --address 0x47 --expect-commit "$observationCommit" --expect-framework "$observationFramework" --expect-target "$observationTarget" --suite readonly --suite soak --count 20 --interval-ms 1000 --duration-ms 30000 --run-timeout 90 --out build/observation-hardware-002 --dtr "$observationDtr" --rts "$observationRts"
 ```
 
 Register observation issues individual ordinary `reg` commands over this finite
@@ -156,7 +172,7 @@ cached evidence unchanged.
 
 Every admitted operation must reach its original matching terminal records and
 have its result taken before the next admission. Repeated queries are copies,
-not additional completions. Failure stops the run and retains the transcript,
+not additional completions. Unexpected failure stops the run and retains the transcript,
 unexpected effects, incomplete results and restoration uncertainty. Only saved
 local staging, auto stepping, color and verbosity may be restored in a verified
 idle session. Lost identity/session evidence prevents replay; no later apply or
@@ -181,7 +197,10 @@ RESULT/RESULT_DETAIL/END without taking
 the result. `take_result()` sends the exact owned token, verifies the copied
 payload and consumes the slot only on delivery OK. Inspect payload code/state,
 signed detail, effect and configuration independently of delivery. Failed owned
-payloads set a sticky failed check even when result delivery and cleanup succeed.
+payloads that differ from the preregistered expected terminal code set a sticky
+failed check even when result delivery and cleanup succeed. Ordinary operations
+expect OK; the explicit negative-test exception is described under
+[reset, fault and console setup](#reset-fault-and-console-setup).
 
 Only this run's admitted token can be queried, stepped, cancelled or consumed.
 No replacement admission occurs before explicit consumption. Generic cancel,
@@ -314,11 +333,11 @@ be consumed, restores local values and verifies a fresh end marker.
 | Exit | Meaning |
 | --- | --- |
 | 0 | Complete PASS with all required proof and no residual uncertainty |
-| 1 | Test/protocol failure, including failed owned payload or session capture loss |
+| 1 | Test/protocol failure, including an unexpected owned payload outcome or session capture loss |
 | 2 | Dry-run without hardware proof, invocation, missing tool, blocked prerequisite, incomplete capture/report/cleanup |
 | 130 | Saved interruption |
 
-## Executed host tests
+## Host checks
 
 ```text
 python tools/test_tusb32x_hil_runner.py
@@ -399,13 +418,13 @@ Wiring must explicitly describe VBUS_DET; parsing that text cannot prove safety.
 See [electrical prerequisites](hardware-validation.md) for the actual pad limits.
 
 All TUSB320 VDD is 2700..5000mV; HI/HAI's 1050..3650mV range describes EN,
-not VDD. TUSB322I VDD is 4500..5500mV. Role-current setup requires at least3500mV
+not VDD. TUSB322I VDD is 4500..5500mV. Role-current setup requires at least 3500 mV
 because it includes local 3 A advertisement. Every source-capable apply,
 including cleanup, separately checks the candidate current and measured VDD;
 an existing sink profile with 3 A cannot bypass this check by changing mode.
 Remote current detection has no local 3 A advertisement prerequisite.
 
-This saves a concrete plan without opening a port; exit2 and hardware NOT RUN are
+This saves a concrete plan without opening a port; exit 2 and hardware NOT RUN are
 expected, including when equipment/setup is missing:
 
 ```text
@@ -415,15 +434,15 @@ python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47
 For real work add the operator-selected port, actual setup/fixture ID and expected
 firmware values using the variables in the earlier recipe. Use a fresh output
 directory. Set --run-timeout for the entire finite plan, including physical
-transitions and cleanup (maximum86400s). Each operator prompt has at most300s,
+transitions and cleanup (maximum 86400 s). Each operator prompt has at most 300 s,
 clipped to that immutable deadline. The plan checks the exact transition deadline
 after any injected fixture callback returns, including a false/missing reply;
 remaining whole-run time cannot rescue a late reply. On a local TTY, type exactly `ready` only
 after performing and externally observing the displayed transition; it attests
 the same declared target, partner and measured supply. Type `skip` to leave proof
-NOT RUN, or Ctrl-C to save interruption130. There is no unbounded input/readline
-thread: Windows key polling and POSIX ready reads accept at most64 characters,
-with at most50ms waits and checked monotonic time. Local prompt output assumes
+NOT RUN, or Ctrl-C to save interruption 130. There is no unbounded input/readline
+thread: Windows key polling and POSIX ready reads accept at most 64 characters,
+with at most 50 ms waits and checked monotonic time. Local prompt output assumes
 the host output sink returns; OS console/serial-open blocking still needs host
 qualification. A host or firmware report cannot replace physical CC/INT evidence.
 
@@ -432,27 +451,27 @@ qualification. A host or firmware report cannot replace physical CC/INT evidence
 | orientation | Identified reversible source partner; detached baseline, UFP apply/verify, both CC1 and CC2 with valid local-sink/peer-source fields, then detach |
 | accessory | Each explicitly declared exact accessory type/wiring; detached DFP apply (UFP for debug-local-ufp), valid typed accessory/raw bytes, detach after each. Base audio/debug/charge-through supported; base debug-local variants denied before traffic |
 | role-current | Controlled same dual-role peer and selected safe power capability; sink detects externally varied default/1.5A/3A while attached; detach, source advertises each category through stage/apply/verify and external CC observation; detach, DRP resolves as sink; detach |
-| interrupt | Wired, opt-in application INT input checked before I2C; applied50/staged30 ACK preserves50; explicit reassertion; unrelated duty30 apply leaves latch pending; multiple physical events show coalescing; one service proves ACK/recheck and INT deassertion; detach |
+| interrupt | Wired, opt-in application INT input checked before I2C; applied 50/staged 30 ACK preserves 50; explicit reassertion; unrelated duty 30 apply leaves latch pending; multiple physical events show coalescing; one service proves ACK/recheck and INT deassertion; detach |
 | reset-termination | Explicit authorized reset, fresh COMPLETED timing, unchanged desired state, unrelated raw-read/trust fence and read-only reconcile; pre-callback cancel and owner timeout; independently disable each applicable termination control and prove aggregate state. Base-only typed recovery after stable-VDD/source-startup attestation; later parts reject it without traffic |
 | fault | Separately authorized NACK, target disconnect and power cycle; exact predeclared backend errors and counters; explicit local invalidation; cached responsiveness, unrelated read fence and fresh identity/reconcile. Never apply an old profile after power loss |
 | console | Arm bounded physical output backpressure for help; record loss counters; restore old local state before each authorized reconnect/MCU reboot; explicitly reopen selected port, create fresh nonces/identity/target and initialize read-only. No old token or profile replay |
 
 Original TUSB320/I uses **explicit reset operations** after each attached peer
-advertisement change (SLLSEN9F7.3.1.2p11), followed by identity, reconciliation,
-profile and port evidence. A read alone cannot prove that current update.
+advertisement change (SLLSEN9F section 7.3.1.2, printed page 11), followed by
+identity, reconciliation, profile and port evidence. A read alone cannot prove that current update.
 Later variants do not inherit these resets. Their successful register observation
 still does not resolve all TI wording about physical attached-current tracking.
 CC categories are neither measured load nor PD contract nor authorization to draw
 power. TUSB322I mutation fixture plans are BLOCKED before initialization/I2C: advertisement,
-mixed09/fault-clear and return-to-DRP gates prevent this complete mutation/cleanup
+mixed 0x09/fault-clear and return-to-DRP gates prevent this complete mutation/cleanup
 plan. Its read-only observation and console plans remain separately available with access context.
 
-Each operation admits once, uses at most512 explicit job-step1 exchanges with
-at most5ms sleeps, and takes the exact owned original result once. The command
+Each operation admits once, uses at most 512 explicit `job step 1` exchanges with
+at most 5 ms sleeps, and takes the exact owned original result once. The command
 deadline includes admission, waits and take. Rejected admission, late callback,
-unexpected cancellation, failed payload or BUSY take stops the plan; no uncertain write,
+unexpected cancellation/payload outcome or BUSY take stops the plan; no uncertain write,
 ACK, reset, cancel or take is automatically retried. Port reads retain the CLI's
-fixed1000ms owner timeout. Up to64 physical steps save bounded attestation plus
+fixed 1000 ms owner timeout. Up to 64 physical steps save bounded attestation plus
 raw/typed/validity/sequence/time evidence; no growing transcript journal is added.
 
 Before writes, capture firmware, configured target, observed profile/trust and
@@ -460,8 +479,8 @@ generations, current coherent attachment and supply assumptions. Stage from the
 proved actual profile, not CLI defaults. Generations remain history.
 CONFIG acquisition/field masks and known raw bytes must agree with the
 observed profile. Successful local validation must report the complete intended
-staging, including consistent raw disable flags, before apply or the staged30/
-actual50 ACK experiment. Verify the complete candidate after apply, including
+staging, including consistent raw disable flags, before apply or the staged 30/
+actual 50 ACK experiment. Verify the complete candidate after apply, including
 unchanged fields; status OK alone is insufficient. The same current-edit proof
 applies to readonly staging, which still never writes the device. On successful
 plans only, cleanup requires a new original-partner/supply attestation, fresh
@@ -498,14 +517,14 @@ read-only identification returning OK; it is not a general repair entrypoint for
 an already unresolved sequence. The pre-recovery raw/configuration/profile,
 target and supply evidence is saved before the readiness step and first write.
 That step also requires a fresh coherent detached-port observation before the
-first45 write; supply readiness cannot substitute for current fixture evidence.
-The operation uses the core's qualified45=04, at least30ms plus1ms scheduling
-margin,45=00 and readback; the host requires confirmed typed completion and
-fresh elapsed evidence. Reset requires COMPLETED and at least95+1 owner ms.
+first 0x45 write; supply readiness cannot substitute for current fixture evidence.
+The operation uses the core's qualified 0x45=0x04, at least 30 ms plus 1 ms scheduling
+margin, 0x45=0x00 and readback; the host requires confirmed typed completion and
+fresh elapsed evidence. Reset requires COMPLETED and at least 95+1 owner ms.
 Native traces check individual write ordering; host timestamps alone cannot prove
 electrical timing. No runner raw write implements either sequence.
 
-The normal reset plan cancels and expires a1ms owner deadline before any callback,
+The normal reset plan cancels and expires a 1 ms owner deadline before any callback,
 requiring NONE and zero callbacks. The host command deadline remains separate so
 the exact terminal result can be taken. Failed/cancelled/late writes after possible
 effect are failure paths: stop, preserve UNKNOWN/PARTIAL/INDETERMINATE and do not
@@ -521,7 +540,7 @@ then removes each bounded fixture fault. The runner takes the failed result once
 invalidates locally and explicitly identifies/observes the restored target. It
 never switches supplies or automatically retries a failed transaction.
 After a source-capable original-part power cycle, previous base recovery readiness
-is invalid: cleanup stays BLOCKED with manual typed-recovery facts. A clear45 byte
+is invalid: cleanup stays BLOCKED with manual typed-recovery facts. A clear 0x45 byte
 and fresh identity cannot prove the historical procedure. This limitation cannot
 be overridden by the initial base_recovery_complete declaration.
 Before a base power-cycle action, the report checkpoints
@@ -556,7 +575,7 @@ evidence; unexpected OK/error, protocol loss, effects, timing or cleanup defects
 still prevent PASS. Existing commands default to required OK. No prior FAIL check
 can be replaced by passing cleanup or a fresh session.
 
-Portless planning remains incomplete hardware evidence (exit2):
+Portless planning remains incomplete hardware evidence (exit 2):
 
 ```text
 python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite reset-termination --suite fault --suite console --run-timeout 1800 --out build/recovery-plan
@@ -567,4 +586,4 @@ the actual fixture declaration. No port, COM name, SHA, supply measurement or tr
 in these examples is claimed as executed. Every mutation/physical-action intent
 is checkpointed before work. `manual_reconciliation` gives current owner facts
 when cleanup is blocked; saved failure, residual effects and interrupted cleanup
-remain independent (exit1 failure,2 incomplete,130 interruption).
+remain independent (exit 1 failure, 2 incomplete, 130 interruption).

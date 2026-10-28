@@ -1,254 +1,161 @@
 # TUSB32x
 
-TUSB32x is a framework-neutral C++17 library in development, starting with
-TI TUSB320LAI. It currently provides passive public values, constexpr Status
-helpers, pure binding/profile validators, public supplied-byte register decoding
-and stable package version constants.
-The library also contains [private transport/identity helpers](docs/transport.md)
-and the non-copyable `TUSB32x::TUSB32x` owner facade. It provides bus-silent
-binding/lifecycle, token-checked polling/cancellation/result delivery, cached
-evidence, read-only initialization, profile observation, explicit profile apply,
-desired-profile verification, read-only reconciliation, explicit reset and
-original TUSB320/I dead-battery recovery, complete read-only port refresh and
-explicit interrupt acknowledgement/bounded service, one-callback raw diagnostics
-and pure passive health projection. An [example-only CLI](docs/CLI.md) now
-implements bounded local queries, target/lifecycle edits and independent staging.
-Managed CLI operations now use the core engine, preserve request/nonce/token
-correlation and retain results until explicit take. All 55 contracted CLI rows now
-include raw diagnostics, pure decoding, cached health/counters and explicit external
-invalidation. Executable parity checks exercise the real shared C++ fixture;
-the [Arduino Wire adapter](docs/arduino-transport.md) now provides terminal callbacks
-for a narrowly qualified pinned S2/S3 SDK configuration. The [Arduino CLI and
-two-device owner examples](docs/arduino-examples.md) use it with read-only startup,
-bounded console work and isolated USB transmission. Default builds keep hardware
-work disabled until explicit board/timing qualification. The [native IDF adapter](docs/idf-transport.md)
-now supplies borrowed synchronous callbacks with a bounded aggregate budget and
-independent ESP32-S2/S3 SDK link fixtures. The complete
-[native CLI application](examples/esp_idf/basic/README.md) also links for S2/S3,
-with an exclusive bounded UART console, read-only startup and checked teardown.
-The development version is defined in library.json; it is not a release or
-hardware-support claim.
+A framework-neutral C++17 driver for TI Type-C configuration-channel controllers.
+The application owns transport, time, scheduling and USB power policy. The library
+provides cooperative operations, cached observations, explicit profile changes,
+reset/recovery, interrupt service, bounded raw diagnostics and passive health.
+It neither measures load current nor negotiates USB Power Delivery.
 
-The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
-maps TI/software requirements to named host tests, including both legal addresses,
-ambiguous writes, interrupted recovery and retained observations. These tests
-verify software contracts; physical adapters and hardware remain unqualified.
-The [owner portability checks](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/owner-portability.md)
-add two-device fairness/backpressure, independent late-callback timing and an
-isolated two-translation-unit consumer exercising the public API with allocation
-traps. These are host checks; framework and electrical qualification remain separate.
-For TUSB322I, an observed equivalent DRP recoding retains semantic trust but
-requires fresh complete proof before using a literal 0A write image again.
+## Device and evidence boundary
 
-`validateDriverConfig` checks callbacks, the explicit variant/address pair and
-positive timeout. `validateProfile` checks value/variant semantics and distinguishes
-invalid inputs from unsupported settings. Both are bounded, allocation-free and
-perform zero callbacks or device mutation. TUSB322I write gates remain separate
-from profile validity. See the [API guide](docs/api-contracts.md) and
-[variant boundary](docs/variant-matrix.md).
+| Configured part | Seven-bit addresses | Implemented scope |
+| --- | --- | --- |
+| TUSB320LAI / TUSB320HAI | `0x47 / 0x67` | Primary extended family; documented profile, port, reset and IRQ operations |
+| TUSB320LI / TUSB320HI | `0x47 / 0x67` | Extended family with its own debounce map and silicon recommendations |
+| TUSB320 / TUSB320I | `0x60 / 0x61` | Original family, restricted profile controls and explicit dead-battery recovery |
+| TUSB322I | `0x47 / 0x67` | Partial support: separate identity and port/profile decoding; qualified DFP/UFP changes and reset. Advertisement writes, all `0x09` writes/ACK/service and direct apply back to DRP remain gated |
+| TUSB321 family and unlisted devices | — | Outside this I2C API; no scan, auto-detection or compatibility claim |
 
-`decodeRegister` in `<TUSB32x/CommandTable.h>` preserves raw bytes and reports
-variant-specific field validity without a binding or device access. Reserved
-codes remain raw evidence. Single-byte direction/current codes need complete
-port context before use; CC indications are not measured current or permission
-to draw power. The private codecs also compare settings and compose qualified
-write bytes. The owner engine executes supported profile changes, reset and
-base-part recovery and explicit IRQ operations.
+Select the exact variant and address explicitly. Identity/revision checks do not
+prove enable polarity, board wiring or electrical qualification. TUSB322I has no
+`0x45`, and its reset-to-DRP behavior does not prove every register is at its
+power-on value. See the [variant matrix](docs/variant-matrix.md) and
+[hardware prerequisites](docs/hardware-validation.md).
 
-## Consume the library
+CC advertisement and detected-current categories are separate from measured
+VBUS delivery, a PD contract or permission to draw/supply power. The guides retain
+exact-part supply, VBUS_DET and VCONN limits. A fresh register read alone does not
+prove attached-current tracking; original TUSB320/I require the documented
+explicit reset for that refresh. Reset is never hidden in an observation plan.
 
-Use CMake 3.16+ and a C++17 compiler:
+## Build and use
+
+Use CMake 3.16+ and a C++17 compiler. Tests default OFF:
 
 ```cmake
 add_subdirectory(path/to/TUSB32x)
 target_link_libraries(app PRIVATE TUSB32x)
 ```
 
-The [package guide](docs/development.md#archive-and-clean-consumers) describes
-the exact archive content, bounded safety checks and renamed clean consumers.
-Use `add_subdirectory()` with target `TUSB32x`; no install/export interface is claimed.
+Target `TUSB32x` supplies the public include directory and C++17 requirement.
+Core consumption needs no Git, Python, Doxygen, PlatformIO, framework headers or
+sibling project. The [package guide](docs/development.md#archive-and-clean-consumers)
+describes renamed archive consumption through `add_subdirectory()`; no
+install/export/`find_package()` interface is claimed.
 
-Tests default OFF. The target supplies its public include directory and C++17
-requirement; ordinary consumers need no Git, Python, Doxygen, PlatformIO,
-framework headers or sibling checkout. For example:
+This complete function uses application callbacks and a monotonic millisecond
+clock. `binding` must select the exact target and provide terminal callbacks whose
+aggregate bound includes bus locking, all phases and SDK cleanup. The callbacks
+and their borrowed context stay alive through `end()`. `serviceOthers` performs
+bounded unrelated owner work without re-entering this driver. The local 128-turn
+limit is example policy; a real owner normally returns to its event loop each turn.
 
 ```cpp
-#include <TUSB32x/Config.h>
-#include <TUSB32x/Version.h>
+#include <TUSB32x/TUSB32x.h>
+#include <cstdint>
 
-const auto status = TUSB32x::validateProfile(
-    TUSB32x::Variant::TUSB320LAI, TUSB32x::DeviceProfile{});
+bool observeOnce(const TUSB32x::DriverConfig& binding,
+                 std::uint64_t (*nowMs)(), void (*serviceOthers)()) {
+  if (nowMs == nullptr || serviceOthers == nullptr) return false;
+  namespace t = TUSB32x;
+  t::TUSB32x driver;
+  bool passed = false;
+  if (driver.bind(binding).ok()) {
+    t::OperationToken token{};
+    const auto start = nowMs();
+    auto status = driver.startInitialize({start, start + 1000}, token);
+    if (status.inProgress()) {  // IN_PROGRESS means accepted work.
+      for (unsigned turn = 0; turn < 128 && status.inProgress(); ++turn) {
+        serviceOthers();
+        status = driver.poll(token, nowMs(), 1);  // At most one callback.
+      }
+      if (driver.progress().state == t::OperationState::ACTIVE)
+        status = driver.cancel(token);
+      t::OperationResult result{};
+      const auto delivery = driver.takeResult(token, result);
+      const auto observed = driver.configurationSnapshot();  // No I2C.
+      passed = status.ok() && delivery.ok() && result.status.ok() &&
+               result.hardwareEffect == t::HardwareEffect::NONE &&
+               observed.hasObservedProfile;
+    }
+  }
+  const auto ended = driver.end();  // Local unbind; no hardware reset.
+  return passed && ended.ok();
+}
 ```
 
-The [real host consumer](examples/host/basic/README.md) builds and runs multiple
-translation units with CMake or pinned native PlatformIO. Its callbacks are
-explicitly simulated. It binds, polls one callback per turn, takes exact results,
-checks effects and demonstrates invalidation/reconciliation without a physical
-device. The [integration guide](docs/integration.md) maps this to ordinary owners
-and a two-device fairness/lifetime fixture, without FieldCore dependencies. If native IDF's
-`idf_component_register` exists, the root CMake file registers the same real
-sources as a component. Registration and dependency admission are not linked
-firmware evidence.
+Initialization identifies and observes only. It does not apply defaults, ACK,
+reset or establish base-part recovery history. Result delivery may return OK
+while `result.status` reports failure; inspect outcome and effect independently.
+The README function is compiled and executed from this exact code block by the
+registered contract suite, using explicitly simulated transport and time.
 
-The [Python session layer](docs/hil-runner.md) provides strict serial framing,
-owned-result correlation, finite deadlines and streamed evidence with atomic
-reports. Local restoration requires available, valid saved staging and matching
-readback; missing terminal proof or an interrupted/failed save cannot produce PASS.
-The command-line runner implements complete readonly, finite soak and mapped
-register observation, plus portless dry-runs. Those observation suites never
-apply, reset or IRQ ACK. Explicit orientation, accessory, role-current and interrupt
-plans require identified fixtures, setup/identity/supply prerequisites and bounded
-operator observations. They use ordinary operations and conditional cleanup;
-unknown or failed effects are never automatically retried/restored.
-Explicit reset-termination, fault and console plans also cover typed reset/base
-recovery, separately authorized fault actions and fresh sessions after reconnect.
-Expected negative outcomes are declared before admission; actual effects and
-cleanup remain independent. No runner controls a supply or restores an old source
-role after a power/reboot event. Original-part power-cycle recovery readiness
-is retained across suite sessions; a later source request needs fresh explicit
-recovery even when the fault plan finished safely in UFP.
-One absolute deadline covers selected suite groups. Actual acquisition masks and
-validated staging must support the complete candidate before device writes.
-[Hardware prerequisites](docs/hardware-validation.md)
-keep physical serial and Type-C qualification separate from native/fake-serial tests.
+The runnable [plain C++ example](examples/host/basic/README.md) demonstrates full
+result/status/effect inspection and invalidation/reconciliation. The
+[owner guide](docs/owner-operations.md) explains immutable deadlines, fresh samples
+after callbacks, one active operation plus one retained result, cancellation and
+shutdown. Call all APIs from one serialized owner; an ISR signals that owner only.
+The [integration guide](docs/integration.md) covers shared-bus fairness, one
+configuration owner per physical target and borrowed lifetimes without a
+FieldCore dependency.
 
-## Develop from a source checkout
+## Examples, console and runners
+
+- [Arduino](docs/arduino-examples.md): shared CLI and two-device owner applications
+  for the pinned S2/S3 configuration, with explicit board/timing readiness.
+- [Native ESP-IDF](examples/esp_idf/basic/README.md): genuine S2/S3 application,
+  audited SDK 5.5.5/6.1.0, bounded UART console and application-owned resources.
+- [CLI reference](docs/CLI.md): the authoritative 55-row grammar, aliases, staging,
+  operation/result ownership, diagnostics and machine records.
+- [Python runner](docs/hil-runner.md): finite readonly/soak and seven explicitly
+  selected fixture suites, strict identities/deadlines and streamed artifacts.
+  Dry-run performs no hardware I/O and exits 2 with hardware NOT RUN.
+- [Hardware validation](docs/hardware-validation.md): exact wiring, fixture,
+  supply/attachment prerequisites, conditional cleanup and qualification limits.
+
+CLI staging is separate from retained desired, observed and verified settings.
+Only accepted explicit apply changes core desired state. ACK preserves actual
+controls. Raw access cannot bypass required mode/reset/termination/recovery
+sequences. An unrelated successful read cannot repair uncertain trust or make
+historical port fields fresh. Host checks and linked images establish software
+behavior and linkage; physical serial, I2C, CC, INT and supply timing remain
+unqualified.
+
+## Development and recorded checks
 
 ```text
 python scripts/generate_version.py sync
 python scripts/generate_version.py check
-cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/native --config Debug
 ctest --test-dir build/native -C Debug --output-on-failure
 ```
 
-For maintainer validation, `python tools/validate.py --checks all` runs the
-declared local release checks: strict Debug/Release CTest groups, boundary and
-documentation guards, Python/session tests, clean packages and extracted S2/S3
-firmware links. It saves logs and partial verdicts under build/validation.
-Each command log retains at most 16 MiB; overflow fails the check.
-Focused selections such as `--checks native,contracts,python` report only their
-requested scope. Missing required tools return INCOMPLETE, never a successful skip.
-See the source-checkout [validation guide](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md#local-validation-entry-point)
-for names, tool prerequisites and the explicit managed-IDF constraint-cache choice.
-No selection runs HIL, remote CI, flashing or publication. These maintainer tools
-are excluded from the package and are not consumer dependencies.
+Tests ON require Python 3.10+. Runtime assertions remain active in Release.
+Use the installed managed Core through `scripts/pio.cmd` on Windows; do not
+install another Core. The [development guide](docs/development.md) covers stable
+`library.json` version truth, generator exits, package rules and supported tools.
 
-Initialization reads identity and persistent settings without writing defaults,
-resetting, acknowledging IRQ or replaying a desired profile. The application
-serializes calls, supplies a uint64 millisecond clock and keeps each accepted
-token with its driver instance. `poll` performs at most one terminal callback;
-the next poll supplies fresh time before accepting successful completion.
-`startReadProfile` reads persistent controls without adopting desired settings
-or promoting configuration trust. `startReconcile` reads identity and all
-applicable controls once and can establish initialized, KNOWN actual settings
-after external invalidation. It performs no repair or replay writes; unresolved
-reset or sequence evidence keeps trust UNKNOWN. Readable TUSB322I controls do
-not grant permission to write gated fields.
+Source-checkout `python tools/validate.py --checks all` selects the declared local
+non-HIL release checks. Focused selections report only their requested scope.
+Missing required tools are INCOMPLETE/nonzero. Logs retain a maximum 16 MiB prefix;
+overflow fails. No selection runs HIL, flashing, publication or remote CI.
+See the repository-only
+[validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)
+for commands, environments, revisions and PASS/FAIL/NOT RUN limits.
 
-`startApplyProfile` validates a complete candidate against proved actual controls,
-retains desired input at admission and writes only changed fields. A no-op still
-runs complete identity/control verification and has no write effect. Base mode
-changes require an unattached precheck; current-only changes do not inherit that
-restriction. Extended 320 mode changes use separate disable/mode/enable writes
-and the TI 5 ms wait plus a separate one-tick owner-clock margin. TUSB322I uses
-its own DFP/UFP sequence; advertisement, all 09 writes and direct return to DRP
-remain gated.
+The recorded [CI checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910)
+passed 14 jobs at `c50f8ddda8809425ede2161586466c95fa650ae6`: five strict
+Linux host configurations, Python/docs/package checks, four extracted Arduino
+images and four native-IDF images. Later guide changes do not inherit that CI
+result or require another remote run. No physical board is qualified by that run.
 
-`startVerifyProfile` reads the full proof and compares retained desired settings.
-A complete differing actual image can be KNOWN while the result reports
-CONFIGURATION_MISMATCH. Cancellation or failure never rolls back hardware:
-desired input, historical values and unresolved effects survive. Reconcile can
-observe an interrupted apply, after its required wait, so a later explicit apply
-can proceed from proved actual settings. It never replays the old request.
+Start with the [documentation index](docs/README.md) and
+[examples index](examples/README.md). The repository retains the
+[38-prompt implementation plan](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts)
+and [dated 2026-10-23 audit](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/library-comparison.md)
+as source-only history. They are review inputs, not hardware evidence.
 
-`startReset` reads actual 0A controls, sends the reset command once, waits
-96 elapsed owner ticks and performs one identity/control verification. The
-95 ms TI reset maximum and separate one-tick clock margin do not prove attachment
-readiness or a power-on reset. Reset can resample PORT on the six 320 parts and
-returns TUSB322I to DRP. Desired settings remain retained for explicit owner policy.
-
-`startRecoverDeadBattery` is only for original TUSB320/TUSB320I with validated
-identity and application-established stable VDD/readiness. It reads 45, requires
-internal bits 1:0 clear, writes literal 04, waits 31 elapsed owner ticks, writes
-literal 00 and verifies bits 2:0 clear. This is at most four callbacks; the
-30 ms TI minimum has a separate one-tick margin. Interrupted sequence evidence
-survives result take, end/rebind and read-only reconciliation. Clear controls
-alone cannot prove the required sequence ran. Other variants reject recovery
-without traffic. Neither operation retries, replays desired settings or publishes
-transient recovery port observations. See the [procedure guide](docs/device-behavior.md).
-
-`startRefreshPort` needs a binding and reads 09/08/09 once, within three callbacks,
-three requested TX bytes and three RX bytes. `portSnapshot` returns a cached copy
-without traffic. Only complete observations publish; failed or cancelled reads
-retain the previous snapshot. Matching attachment/direction bookends provide
-`BOOKENDS_MATCH`, not atomic sampling; changed bookends keep raw data and invalidate
-fields that depend on both registers. Check per-field validity, invalidation,
-coherence and age before using a field. Time identifies the owner boundary before
-the first read; sequence counts publications and saturates.
-
-Source advertisement and local-sink detected current are separate categories;
-neither measures load or establishes USB PD or board power permission. A fresh
-register read cannot prove physical current tracking after attachment. Connector
-orientation mapping and electrical behavior need separate exact-board evidence.
-Refresh observes the IRQ latch without acknowledging it; TUSB322I fault bit 3
-remains raw evidence with unresolved access/clear semantics.
-
-`startAcknowledgeInterrupt` reads fresh 09 controls and writes the explicit W1C
-command once: at most two callbacks, three requested TX bytes and one RX byte.
-`startServiceInterrupt` publishes the complete 09/08/09 port observation, ACKs
-once, then reads 09 once: at most five callbacks, six TX bytes and four RX bytes.
-Both require current validated identity; UNKNOWN configuration is allowed when
-fresh controls establish a safe write image. TUSB322I rejects both before traffic
-while its fault/09-write gate remains unresolved. Actual controls are preserved;
-staged desired settings never enter the ACK byte.
-
-Service retains the complete pre-ACK snapshot if ACK or recheck later fails.
-Sampled pending-before, ACK attempt, callback acceptance and pending-after are
-independent facts; callback acceptance does not prove a cleared latch. A pending
-recheck is a valid successful bounded service result. The owner decides whether
-to request more work. Coalescing and races prevent lossless edge counting. ACK
-preserves the historical port snapshot, whose sampled IRQ field can be old.
-Polling needs no IRQ pin; GPIO/ISR handling and policy remain application-owned.
-
-`readRegisterSync` and `writeRegisterSync` each perform at most one callback.
-Raw writes require proved actual controls and cannot shortcut role, reset,
-termination or recovery procedures. `transportStats` counts every callback;
-`diagnostics().managedTransport` excludes raw Sync. `projectHealth` displays
-UNINIT/READY/DEGRADED/OFFLINE from copied managed evidence without controlling
-access, recovery or configuration trust. See [diagnostics](docs/diagnostics.md).
-
-One terminal result blocks replacement until `takeResult` delivers it. Result
-delivery returns OK even when the copied operation failed. See the
-[implemented owner API](docs/api-contracts.md#implemented-owner-api) for timing,
-output preservation and evidence lifetime.
-
-Tests ON require Python 3.10+. For single-config generators also select
-`-DCMAKE_BUILD_TYPE=Debug` at configure time. The registered checks cover C++
-contracts, validators, transport/codecs, owner operations, port publication,
-raw safety/accounting/passive health, local CLI/console/transcript behavior and
-isolated generator fixtures. Run `doxygen Doxyfile`
-for strict current API documentation. On Windows use the existing VS Code Core
-through `scripts/pio.cmd`; do not install another Core.
-
-[Development metadata](docs/development.md) documents generator sync/check/bump/set,
-exact exit codes, tool pins, package contents and evidence limits.
-[Documentation](docs/README.md) and [examples](examples/README.md) index the
-maintained guides. Repository implementation proceeds through the
-[38 prompts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts)
-on one execution branch, with source/tests/docs, commits and verified sync for
-each completed unit. Remote CI is confined to prompt 34 in this first execution.
-
-The [declared CI matrix](docs/development.md#declared-ci-matrix) runs five Linux
-host rows, separate Python/documentation/package checks, four extracted Arduino
-images and native IDF 5.5.5/6.1 images on both S2/S3. Firmware jobs consume one
-identified archive. The [verified checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) passed all 14 jobs on
-`9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`. It links eight firmware images; physical qualification remains separate.
-
-Project code is MIT, owned by Thymos Solution s.r.o with Jan Havelka as maintainer.
-Archived vendor references retain their original terms and are excluded from
-normal library packages. Native tests prove software values and linkage;
-Arduino and native-IDF applications also link from renamed extracted packages
-for the recorded S2/S3 configurations. The checkpoint verifies its recorded SHA;
-later documentation or code commits do not inherit that result. Physical hardware
-qualification remains separate.
+Development version `0.1.0-dev.1` is not a release claim. Project code is MIT,
+owned by Thymos Solution s.r.o with Jan Havelka as maintainer. Archived vendor
+references retain their own terms and are excluded from normal packages.

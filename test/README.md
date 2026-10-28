@@ -80,7 +80,8 @@ The same `cli_transcript` registration now covers diagnostics and input/raw faul
 sessions. `cli_contract` and `cli_contract_negative` execute the sole checker with
 `$<TARGET_FILE:tusb32x_cli_host>` and finite 60-second timeouts. Its help comparison
 is reused by the transcript; a broken alias or required record field must fail.
-Windows has 14 registered CTests, other hosts 13. No build-only passing fixture
+At prompt 22 there were 14 Windows registrations, 13 elsewhere; the current
+inventory is stated at the top of this guide. No build-only passing fixture
 or second transcript registration is added.
 
 ```text
@@ -99,7 +100,10 @@ NDEBUG in Release. Tests ON require Python 3.10+ and CTest must run these suites
   consumer translation units into a fresh tree; builds/runs without repository or
   framework dependencies. Checks all current public methods, allocation traps and
   deliberate failure exits. See [consumer instructions](consumer/portable/README.md).
-- `tusb32x_compile_contracts`: executed passive/Status checks across two TUs.
+- `tusb32x_compile_contracts`: executed passive/Status checks across multiple TUs,
+  plus the exact README quick start extracted by CMake. Simulated callbacks
+  exercise successful initialization, failed transport/identity, deadline expiry
+  and bus-silent input rejection in Debug and Release.
 - `tusb32x_validators`: variant/address/callback/timeout checks, exhaustive valid
   profile combinations, invalid enum bytes, input preservation and zero counting
   callbacks; unavailable valid fields return UNSUPPORTED_FEATURE.
@@ -304,36 +308,30 @@ are compile checks, with no behavioral CTest entry or stub driver definitions. T
 and run separately with tests OFF. It links real validators/decoder/health and needs no Python,
 Git, Doxygen, PlatformIO, framework headers or sibling include paths.
 
-The older direct compiler commands below remain useful for focused passive-only
-checks; CMake/CTest above is the full registered native check.
+The direct compiler commands below check independent headers and signature/time
+fixtures. Use CMake/CTest above for the linked contracts and README simulation.
 
 Run from the repository root with a C++17 compiler. These PowerShell commands
-use the available GCC and put generated files outside the source tree:
+use GCC without producing executable files:
 
 ```powershell
-$contractOutput = Join-Path $env:TEMP 'tusb32x-contract-checks'
-New-Item -ItemType Directory -Force -Path $contractOutput | Out-Null
 $contractFlags = @('-std=c++17', '-Wall', '-Wextra', '-Wpedantic',
              '-Wconversion', '-Wsign-conversion', '-Werror', '-I', 'include')
 foreach ($header in @('Status.h', 'Config.h', 'TUSB32x.h', 'CommandTable.h', 'Version.h')) {
     "#include <TUSB32x/$header>" | & g++ @contractFlags -x c++ -fsyntax-only -
     if ($LASTEXITCODE -ne 0) { throw "Header failed: $header" }
 }
-& g++ @contractFlags -DNDEBUG test/test_compile_contracts.cpp `
-    test/consumer/status_other_tu.cpp -o "$contractOutput/passive-contracts.exe"
-if ($LASTEXITCODE -ne 0) { throw 'Passive consumer compile/link failed' }
-& "$contractOutput/passive-contracts.exe"
-if ($LASTEXITCODE -ne 0) { throw 'Passive consumer checks failed' }
 & g++ @contractFlags -fsyntax-only test/contract/planned_api.cpp `
     test/contract/owner_examples.cpp test/contract/time_arithmetic.cpp
 if ($LASTEXITCODE -ne 0) { throw 'API contract compilation failed' }
 ```
 
-The linked executable checks all 23 error names/order across translation units,
+The registered contract executable checks all 23 error names/order across translation units,
 constant evaluation, explicit success conversion, invalid error names, full
 int32 backend details, callback shapes, exact addresses and fixed passive values.
 Runtime checks remain active with NDEBUG. Defaults preserve raw and interpreted
-validity separately. No driver/decoder function is linked or simulated.
+validity separately. The same suite runs the literal README function against
+explicitly simulated LAI initialization callbacks; it proves no physical traffic.
 
 The historical `planned_api.cpp` filename now checks only delivered public
 signatures. The former future-declaration header and derived fixture facade were

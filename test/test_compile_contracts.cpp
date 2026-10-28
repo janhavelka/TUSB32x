@@ -1,5 +1,5 @@
 /// @file test_compile_contracts.cpp
-/// @brief Linked passive-value, constexpr Status and independent validity contracts; no driver I/O.
+/// @brief Linked passive contracts and exact README operation with simulated transport/time.
 #include <TUSB32x/Config.h>
 #include <TUSB32x/CommandTable.h>
 #include <TUSB32x/Status.h>
@@ -16,6 +16,7 @@
 const char* errorNameFromOtherTranslationUnit(TUSB32x::Err code);
 TUSB32x::Status statusFromOtherTranslationUnit();
 const char* versionFromOtherTranslationUnit();
+int checkReadmeQuickstart();
 
 namespace {
 
@@ -333,7 +334,8 @@ int main() {
   operationAndIdentityDefaults();
   diagnosticDefaults();
   registerValueDefaults();
+  failures += checkReadmeQuickstart();
   if (failures != 0) return 1;
-  std::puts("PASS passive values, 23 error names, constexpr Status and multiple translation units");
+  std::puts("PASS passive values, 23 error names, constexpr Status, multiple TUs and README simulation");
   return 0;
 }

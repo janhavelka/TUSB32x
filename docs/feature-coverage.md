@@ -1,82 +1,71 @@
 # Feature, source and verification coverage
 
-Prompts 2-34, updated 2026-10-28. This matrix defines the capability boundary;
-values/Status, pure validators/decoding/composition, private transport/identity,
-the owner facade with read-only initialization, profile observation and
-reconciliation, explicit apply/desired verification, reset/base recovery, complete
-read-only port refresh, explicit IRQ acknowledgement/bounded service, native
-builds, raw diagnostics, passive health, bounded local CLI and host checks exist.
-The fixed CLI inventory and Arduino/native-IDF example firmware are implemented;
-physical hardware qualification remains separate.
-**Planned** means the
-source boundary is established and implementation/testing is still due.
-**Gated** means the named dependent operation/claim remains unavailable.
-**Outside API** means board/application responsibility or an excluded device.
-These are documentation labels, not new runtime health/status values.
+Reconciled against the implemented headers, engine, CLI and registered tests on
+2026-10-29 (prompt 35). The seven configured I2C variants have the capabilities
+below. **Implemented** describes software; **gated** names unavailable dependent
+operations; **outside API** identifies board responsibility or excluded devices.
+Physical qualification is **NOT RUN**. Configured variant, matching identity,
+passing host tests and linked firmware are separate evidence.
 
-Source IDs/revisions and unresolved gate IDs are defined in
-[variant matrix](variant-matrix.md). B/L/A name two exact variants each, as
-listed there; V names TUSB322I alone. Later operation tests below remain future
-evidence; the implemented-values table records the subset delivered in prompts 5-17.
-Actual checks are in
-[validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md). Planned commands follow [CLI_CONTRACT](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/CLI_CONTRACT.md).
+The [variant matrix](variant-matrix.md) owns exact electrical limits and named
+conflicts. Source IDs mean B = SLLSEN9F March 2022 (TUSB320/I), L = SLLSEP2D
+May 2017 (LI/HI), A = SLLSEQ8D May 2017 (LAI/HAI), V = SLLSEO5D March 2021
+(TUSB322I), N = SLAAE24 May 2021 and G = SDAA284 March 2026. G0/G1 are
+SLLSEO6C August 2018 / SLLSER2A May 2017 (GPIO-only TUSB321/TUSB321AI).
+All citations below use printed pages of the [repository-only archived sources](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/README.md).
 
-Prompt 3 completed the [register contract](register-map.md) and
-[independent vectors](register-vectors.md): map/access/defaults, semantic
-encodings, comparison/composition and negative cases. Rows below that name
-prompt 3 now have their register specification evidence. Read-only initialization,
-profile observation, apply, verification, reconciliation, reset, base recovery,
-port refresh and IRQ acknowledgement/service have owner behavior; raw diagnostics and passive health are also delivered. CLI and framework
-adapters are implemented as described in the later prompt rows. Prompt 10 implements and tests the pure
-field codecs/comparison and qualified byte composer, without executing any
-procedure. No unresolved gate was closed by byte arithmetic.
+The [register map](register-map.md) and [device procedures](device-behavior.md)
+are the authoritative field and sequence contracts. The [CLI guide](CLI.md)
+defines exact grammar and aliases: profile setters only stage a candidate;
+`apply` explicitly admits a core operation. `read` performs live observation;
+`sample` and `freshness` report cached evidence. All 55 command rows are implemented.
 
-Prompt 4 completed the [device procedure guide](device-behavior.md). Every enabled
-plan now has exact source citations, prerequisites, wait anchors, retained effects,
-verification, callback/TX/RX ceilings and negative/failure vectors. Initialization,
-profile reads and read-only reconciliation are implemented through prompt 12;
-prompt 13 adds explicit profile application and desired verification; prompt 14
-adds explicit reset and original-part recovery; prompt 15 adds complete port
-refresh and cached publication; prompt 16 adds explicit IRQ acknowledgement and
-bounded service; prompt 17 adds raw diagnostics and passive health. Prompt 18's
-[protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
-maps the complete core requirement set to actual runtime test functions and
-commands, including both legal addresses and both outcomes of failed raw writes.
-The source-to-operation mapping
-below supplements the feature rows without turning a future test into a PASS.
+Tests below are real source files under `test/`, with named functions also mapped
+in [repository-only protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md). P = `test_protocol.cpp`,
+C = `test_codecs.cpp`, O = `test_operations.cpp`, F = `test_profile_observation.cpp`,
+A = `test_profile_application.cpp`, R = `test_reset_recovery.cpp`,
+S = `test_port.cpp`, I = `test_interrupt.cpp`, D = `test_diagnostics.cpp`,
+Vd = `test_validators.cpp`. P/C run in `tusb32x_protocol`, O/F/A/R in
+`tusb32x_operations`, S/I in `tusb32x_port`, D in `tusb32x_diagnostics` and
+Vd in `tusb32x_validators`. CLI tests run in `tusb32x_cli` from
+`cli/test_cli.cpp`, `cli/test_cli_operations.cpp` and `cli/test_cli_diagnostics.cpp`;
+`cli_contract` and `cli_transcript` execute the built host fixture. The rows map
+existing coverage; [repository-only validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md) records actual runs and their SHA,
+including prompt 34's separate firmware/remote evidence. Fixture-plan tests use
+modeled hardware and do not close physical qualification or silicon gates.
 
-| Feature and state | Variants | Evidence class; exact source | Planned API / CLI | Required test or qualification evidence; owning prompts |
+| Feature and state | Variants | Evidence class; exact source | Implemented API / CLI | Required test or qualification evidence; owning prompts |
 | --- | --- | --- | --- | --- |
-| Register access/defaults and safe byte composition — Pure helpers and safe owner raw access implemented | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; PASS private access/transport9 and pure codecs/composition10; owner conformance18 PASS; CLI21/22 remains planned |
-| Explicit variant/address validation and binding — Implemented; CLI Planned | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | Every legal pair, address/variant rejection and zero validator callbacks7; atomic owner binding and target association11; CLI20 |
-| Eight-byte identity — Implemented through initialization | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / future init, probe, capabilities | Independent fixed/private transport vectors9 and read-only engine11; failure/mismatch retains raw evidence without inferred model; broader conformance18, CLI22 |
-| Revision acceptance — Implemented through initialization; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize; readRegisterSync / init, reg, diag | Private comparisons9 and read-only engine11; B omits A0, unknown revision retains raw/mismatch evidence and cannot create KNOWN; conformance18, CLI22 |
-| Read-only initialization/profile observation/reconciliation/verify — Implemented | All seven I2C variants with per-feature gates | TI fact: documented identity/control maps B pp16–19, L/A pp16–20, V pp17–20. Policy: no automatic writes | startInitialize/startReadProfile/startReconcile/startVerifyProfile / future init, profile read, verify, reconcile | Read-only initialize transcripts11 and P/F owner sequences12; separate raw/typed validity, partial-read preservation, no desired adoption or writes, all applicable termination controls and retained reset wait; desired mismatch and full-F verification13, conformance18 |
-| Port attachment, role and orientation — Implemented; physical mapping unqualified | B/L/A/V | TI fact: B §7.3/Table 7-7 pp10–13,17–18; L/A §7.2/Tables 8–9 pp10–12,17–18; V §6.3/Tables 6-8–9 pp9–13,17–19 | startRefreshPort, portSnapshot / read, sample, freshness | Local/peer distinction, CC1/CC2 raw polarity, detached validity, CC/VBUS separately controlled, sequential-coherence changes; 3/15/18/30 |
-| Current detection category — Implemented decoding/publication; physical freshness gated | B/L/A/V | TI fact/conflict ATTACHED_CURRENT: B §7.3.1.2 p11; L/A §7.2.1.2 p10; V §§6.3.2.2–3 pp10–11; G Figure 2-1 p8 | startRefreshPort / read, sample | Default is not unconditional 500/900 mA; charge-through category separate; no hidden reset on read; controlled attached advertisement-change fixture before fresh-measurement claim; 15/18/30 |
-| Current advertisement — Implemented B/L/A; gated change on V | B/L/A/V | TI fact: B §7.3.2 p12/Table 7-7 p17, L/A §7.2.2 p11/Table 8 p17; conflict V_ADVERTISEMENT, V Figure 6-3/Table 6-8 p17 | DeviceProfile.sourceCurrent, startApplyProfile / current, apply | Reserved setting rejection, preserve other fields, no-op uses no writes; ≥3.5 V local-source prerequisite documented; V unchanged proved field permits other closed operations, changed field rejects; 3/13/18/30 |
-| Base mode selection — Implemented | TUSB320, TUSB320I | TI fact: B §§7.4.1–2 p14/Table 7-7 p19 | DeviceProfile.portMode, startApplyProfile / mode, apply | Actual mode change rejects attached; unchanged mode does not block otherwise legal current change; no promise of race-free cable state; 3/4/13/18 |
-| Extended mode selection — Implemented; LI/HI application caution | LI/HI/LAI/HAI | TI fact: L/A §7.3.2 p14, Tables 9–11 pp18–20; current LI/HI product-page recommendation in variant guide | startApplyProfile / mode, apply, capabilities | Separate termination-disable/mode/enable actions and wait after mode write; failures/cancellation each boundary; no LI/HI DFP/DRP qualification claim; 4/13/18/31 |
-| 322 DFP/UFP selection — Implemented with write gates | TUSB322I | TI fact: V §§6.3.2.1–2 pp10–11, Table 6-10 p20 | startApplyProfile / mode, apply | Use exact V procedure, no inherited PORT mode or invented 5 ms rule; original errors/effects retained without cleanup; 4/13/18 |
-| 322 direct return to DRP — Gated | TUSB322I | Unresolved V_RETURN_DRP: V §6.3.2 p9, §6.3.2.3 p11, Table 6-10 p20 | startApplyProfile / mode drp, apply | Resolve exact non-reset transition before enabling changes; valid existing DRP codes remain readable; no implicit reset fallback; 4/13/18 |
-| Try.SNK / Try.SRC, UFP accessories, termination disable — Implemented; V UFP-accessory writes gated | L/A/V; absent on B | TI fact: L/A §7.2/Tables 8–10 pp10–11,17–19; V §6.3/Tables 6-8–10 pp9–12,17–20; V_FAULT_CLEAR affects 09 bit0 writes | DeviceProfile fields / preference, ufpaccessory, termination, apply | Reject B unsupported fields; reserved Try.SRC code2 never accepted; preferences not guaranteed role; termination effects not conflated with 45; V accessory changes reject without writes until safe 09 composition is proved; 3/4/10/13/18 |
-| Duty/debounce and accessory decoding — Codes/apply/port implemented; V duty writes gated | B/L/A/V, exact per-variant encodings | TI fact: B Table 7-7 pp17–19; L/A Tables 8–10 pp17–19; V Tables 6-8–10 pp17–20; V_FAULT_CLEAR affects 09 bits2:1 writes | validateProfile, codecs, startApplyProfile, portSnapshot / duty, debounce, decode | Base and extended debounce differ; base accessory7 reserved; retain raw unknown values without fabricated semantic state; V duty changes reject without writes, while unchanged proved 09 controls permit independently supported 0A changes; derive complete cases in 3, implement 10/13/15/18 |
-| Separate 45 Rd/Rp control — Implemented B/L/A; unavailable V | Six 320 parts only | TI fact: B Table 7-7 p19; L/A Table 11 p20; V complete map pp17–20 lacks45 | DeviceProfile.disableRdRp / rd-rp, apply | Internal bits preserved, no register45 on V, clear0A disable does not prove Rd/Rp enabled; safe transition procedure specified4 and implemented13; 3/4/10/13/18 |
-| Explicit reset — Implemented, effect differences retained | B/L/A/V | TI fact: B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | Actual reset mask emitted, no repeat after uncertain write, timed completion proof; six-part PORT resampling, V returns DRP, no automatic desired replay; 4/14/18/31 |
-| Post-dead-battery Rp recovery — Implemented B only | TUSB320, TUSB320I | TI fact: B §7.4.3 p14; conservative identity/readback prerequisites are library policy | startRecoverDeadBattery / recover-dead-battery | Exact base-only operation, owner-qualified VDD, transient statuses not published, timed sequence/effects tested; other variants reject before callbacks; 4/14/18/31 |
-| IRQ observation — Implemented in refresh; ACK / bounded service — Implemented B/L/A, gated V | B/L/A/V | TI fact: B Table 7-7 p18; L/A Table 9 p18; V Table 6-9 pp18–19; N §8 p9. Unresolved V_FAULT_CLEAR | startRefreshPort, startAcknowledgeInterrupt, startServiceInterrupt / future irq read, irq ack, irq service | Explicit W1C, fresh actual controls preserved, no implicit ACK in reads, separate before/attempt/acceptance/after evidence; V raw fault retained, ACK/service rejected before traffic; finite race/failure tests16, conformance18 and physical qualification30 |
-| VCONN — Autonomous silicon effect, no software enable API; fault clear gated | TUSB322I only | TI fact: V §5.3 p4/§5.5 p6/§6.3.8 p13; unresolved Table 6-9 p19 | Raw port/fault evidence / read, decode; no VCONN setter | Ra/source/detach physical fixture with board-owned 5 V VDD prerequisite and 4.75–5.5 V VCONN qualification; limit225/300/375 mA, R_ON1.25 Ω max documented; active cable not powered-VCONN proof; six-part APIs reject invented control; 3/15/30 |
-| Safe raw register diagnostics — Implemented; V 08/09 writes gated | All seven, exact allowlists | TI fact: complete maps above; policy: explicit pointers, no bypass of identity/access/procedure gates including V_FAULT_CLEAR | readRegisterSync, writeRegisterSync / reg, wreg, decode | Base A0/V45 absent; holes/wrap rejected; mixed fields safely composed; V 09 raw writes rejected until safe fault handling is proved; reset/role/termination sequence bypass rejected; runtime diagnostics17, conformance18/21/22 |
-| GPIO-only parts — Outside API | TUSB321 (321I in G summary), TUSB321AI (321A summary) | TI fact: G0/G1 §5 p3 and G Figure 2-1 p8 | No Variant members or probe addresses | Enum/address negative tests; guide identifies no I2C/enable pin; 5/9/35 |
-| Power, straps, pin levels, bus timing — Outside API | Each exact variant | TI fact/conflicts: detailed tables and STARTUP_EN/SUPPLY_SUMMARY/L_CC_RATING/ID_OFF_RATING/BASE_VALID_TIME in variant guide | Application adapter/BoardConfig; bus/capabilities reports assumptions only | Wiring/supply/enable traces, aggregate adapter timing and fixture identity; ACK is not electrical qualification; 4/23–27/30–31 |
-| USB policy, PD and board interchangeability — Outside API | Entire family | TI fact: N §3 p4; B §7.3.1.1 p11, L/A §7.2.1.1 p10 and V §6.3.2.1 p10 DFP exception; exact pin tables | No USB stack, charger/VBUS switch or mux control in core | Framework-free consumer builds; no PD/e-marker/ADC claims; board-specific orientation mapping and interoperability qualification; 19/27/30/35 |
+| Register access/defaults and safe byte composition — Pure helpers and safe owner raw access implemented | B/L/A/V with exact write gates | TI fact: B Tables 7-6/7-7 pp16–19, L/A Tables 6–12 pp16–20, V Tables 6-6–6-11 pp17–20; masks, partial base defaults and policy in register guide | CommandTable, codecs, raw diagnostics / reg, wreg, decode | Literal D01–D36/C01–C21/N01–N25; eight access-mask partitions; base unknown defaults never asserted zero; separate profile comparison masks; PASS private access/transport9 and pure codecs/composition10; owner conformance18 PASS; CLI rawReadAliasesAndFailures, pureDecodeAndVariantGates and rawWriteEffectsAndProcedureDenial |
+| Explicit variant/address validation and binding — Implemented | Six 320 parts + V | TI fact: B pins p4/§7.5 p15; L/A pins p3/§7.4 p15; V pins p3/§6.5 p15. Policy: no auto-detection | validateDriverConfig, bind / variant, addr, bind, capabilities | P::addressesAndBindings; Vd::bindingAddressesCallbacksAndTimeouts; CLI stagingAndAtomicTargets; no callbacks on rejected pairs |
+| Eight-byte identity — Implemented through initialization | B/L/A: 30 32 33 42 53 55 54 00; V: 32 32 33 42 53 55 54 00 | TI fact: B Table 7-7 p16; L/A Table 7 p16; V Table 6-7 p17 | startInitialize, diagnostics / init, probe, capabilities | P::identityAndRevision, transportedIdentityAndRevision; O::identityAndUnsafeControls; CLI admissionAndAliases and successfulReadOnlyRoutesAndReset |
+| Revision acceptance — Implemented through initialization; unknown revisions gated | L 01, A/V 02; B no A0 | TI fact: L/A Table 12 p20, V Table 6-11 p20; policy in variant guide; code observation REVISION_06 | startInitialize; readRegisterSync / init, reg, diag | P::identityAndRevision; O::identityAndUnsafeControls; D::rawReadMapAndSlot; CLI failuresAndVariantGates; revision 06 remains rejected |
+| Read-only initialization/profile observation/reconciliation/verify — Implemented | All seven I2C variants with per-feature gates | TI fact: documented identity/control maps B pp16–19, L/A pp16–20, V pp17–20. Policy: no automatic writes | startInitialize/startReadProfile/startReconcile/startVerifyProfile / init, profile read, verify, reconcile | O::initializationAndBudgets; F::everyReadFailureAndInterruption; A::noOpAndVerification; CLI successfulReadOnlyRoutesAndReset; no writes or desired adoption |
+| Port attachment, role and orientation — Implemented; physical mapping unqualified | B/L/A/V | TI fact: B §7.3/Table 7-7 pp10–13,17–18; L/A §7.2/Tables 8–9 pp10–12,17–18; V §6.3/Tables 6-8–9 pp9–13,17–19 | startRefreshPort, portSnapshot / read, sample, freshness | S::independentStatusEncodings, changedBookends, ccAndVbusEvidence; CLI successfulReadOnlyRoutesAndReset and portFormatterAndStatusMessageBounds; physical mapping NOT RUN |
+| Current detection category — Implemented decoding/publication; physical freshness gated | B/L/A/V | TI fact/conflict ATTACHED_CURRENT: B §7.3.1.2 p11; L/A §7.2.1.2 p10; V §§6.3.2.2–3 pp10–11; G Figure 2-1 p8 | startRefreshPort / read, sample | S::independentStatusEncodings; modeled role-current fixture tests exercise explicit base reset; exact-part attached-current tracking remains unqualified |
+| Current advertisement — Implemented B/L/A; gated change on V | B/L/A/V | TI fact: B §7.3.2 p12/Table 7-7 p17, L/A §7.2.2 p11/Table 8 p17; conflict V_ADVERTISEMENT, V Figure 6-3/Table 6-8 p17 | DeviceProfile.sourceCurrent, startApplyProfile / current, apply | C::encodeDomains; A::baseAttachmentAndWriteOrder, noOpAndVerification, gated322Changes; CLI stagingAndAtomicTargets, irqAndApplyEffects; local-source supply qualification remains external |
+| Base mode selection — Implemented | TUSB320, TUSB320I | TI fact: B §§7.4.1–2 p14/Table 7-7 p19 | DeviceProfile.portMode, startApplyProfile / mode, apply | A::baseAttachmentAndWriteOrder, interruptedBaseModeEvidence; CLI irqAndApplyEffects; base cable-race prevention remains an owner prerequisite |
+| Extended mode selection — Implemented; LI/HI application caution | LI/HI/LAI/HAI | TI fact: L/A §7.3.2 p14, Tables 9–11 pp18–20; current LI/HI product-page recommendation in variant guide | startApplyProfile / mode, apply, capabilities | A::literalModePlans, physicalModeWait, exactWaitGatesAndLateFinalTime; CLI irqAndApplyEffects; no LI/HI physical DFP/DRP claim |
+| 322 DFP/UFP selection — Implemented with write gates | TUSB322I | TI fact: V §§6.3.2.1–2 pp10–11, Table 6-10 p20 | startApplyProfile / mode, apply | A::literalModePlans, ufpAndSettingsOnlyPlans, tusb322ModeWriteFailures; CLI failuresAndVariantGates; no inherited 5 ms wait |
+| 322 direct return to DRP — Gated | TUSB322I | Unresolved V_RETURN_DRP: V §6.3.2 p9, §6.3.2.3 p11, Table 6-10 p20 | startApplyProfile / mode drp, apply | A::gated322Changes; D::rawWriteGuards; gate rejects actual changes without a reset fallback; existing equivalent DRP remains readable |
+| Try.SNK / Try.SRC, UFP accessories, termination disable — Implemented; V UFP-accessory writes gated | L/A/V; absent on B | TI fact: L/A §7.2/Tables 8–10 pp10–11,17–19; V §6.3/Tables 6-8–10 pp9–12,17–20; V_FAULT_CLEAR affects 09 bit0 writes | DeviceProfile fields / preference, ufpaccessory, termination, apply | C::decodeBytesAndErrors, encodeDomains; Vd::profileCapabilityCombinations; A::ufpAndSettingsOnlyPlans, gated322Changes; CLI stagingAndAtomicTargets |
+| Duty/debounce and accessory decoding — Codes/apply/port implemented; V duty writes gated | B/L/A/V, exact per-variant encodings | TI fact: B Table 7-7 pp17–19; L/A Tables 8–10 pp17–19; V Tables 6-8–10 pp17–20; V_FAULT_CLEAR affects 09 bits2:1 writes | validateProfile, codecs, startApplyProfile, portSnapshot / duty, debounce, decode | C::decodeBytesAndErrors, encodeDomains; S::independentStatusEncodings; A::gated322Changes; CLI pureDecodeAndVariantGates and stagingAndAtomicTargets |
+| Separate 45 Rd/Rp control — Implemented B/L/A; unavailable V | Six 320 parts only | TI fact: B Table 7-7 p19; L/A Table 11 p20; V complete map pp17–20 lacks45 | DeviceProfile.disableRdRp / rd-rp, apply | A::internal45QualificationAndStagedControls; O::independentTerminationEvidence; D::rawWriteGuards; CLI failuresAndVariantGates; no 45 access on V |
+| Explicit reset — Implemented, effect differences retained | B/L/A/V | TI fact: B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | R::literalSuccessAndDesiredRetention, everyCallbackFault, independentPhysicalWaits; CLI successfulReadOnlyRoutesAndReset; modeled reset-termination plans; physical reset timing NOT RUN |
+| Post-dead-battery Rp recovery — Implemented B only | TUSB320, TUSB320I | TI fact: B §7.4.3 p14; conservative identity/readback prerequisites are library policy | startRecoverDeadBattery / recover-dead-battery | R::admissionAndPrechecks, literalSuccessAndDesiredRetention, recoveryHistoryAndExplicitRestart; CLI failuresAndVariantGates; modeled base reset-termination plans; no inferred readiness from clear 45 |
+| IRQ observation — Implemented in refresh; ACK / bounded service — Implemented B/L/A, gated V | B/L/A/V | TI fact: B Table 7-7 p18; L/A Table 9 p18; V Table 6-9 pp18–19; N §8 p9. Unresolved V_FAULT_CLEAR | startRefreshPort, startAcknowledgeInterrupt, startServiceInterrupt / irq read, irq ack, irq service | I::everyAckByteAndStaged02, serviceUsesFinalControlsAndBookends, finiteLatchRaces, everyTransportFailure; S::admissionAndPublication; CLI irqAndApplyEffects and cachedInterruptHistory |
+| VCONN — Autonomous silicon effect, no software enable API; fault clear gated | TUSB322I only | TI fact: V §5.3 p4/§5.5 p6/§6.3.8 p13; unresolved Table 6-9 p19 | Raw port/fault evidence / read, decode; no VCONN setter | Ra/source/detach physical fixture with board-owned 5 V VDD prerequisite and 4.75–5.5 V VCONN qualification; limit 225/300/375 mA min/typ/max, R_ON1.25 Ω max documented; active cable not powered-VCONN proof; six-part APIs reject invented control; 3/15/30 |
+| Safe raw register diagnostics — Implemented; V 08/09 writes gated | All seven, exact allowlists | TI fact: complete maps above; policy: explicit pointers, no bypass of identity/access/procedure gates including V_FAULT_CLEAR | readRegisterSync, writeRegisterSync / reg, wreg, decode | D::rawReadMapAndSlot, rawWriteGuards, rawOrdinaryWrites, rawAckUsesOnlyActualControls; CLI rawReadAliasesAndFailures and rawWriteEffectsAndProcedureDenial |
+| GPIO-only parts — Outside API | TUSB321 (321I in G summary), TUSB321AI (321A summary) | TI fact: G0/G1 §5 p3 and G Figure 2-1 p8 | No Variant members or probe addresses | Vd::bindingAddressesCallbacksAndTimeouts; P::accessAndRanges; no GPIO-only Variant member or discovery probe |
+| Power, straps, pin levels, bus timing — Outside API | Each exact variant | TI fact/conflicts: detailed tables and STARTUP_EN/SUPPLY_SUMMARY/L_CC_RATING/ID_OFF_RATING/BASE_VALID_TIME in variant guide | Application adapter/BoardConfig; bus/capabilities reports assumptions only | Actual recording-backend Arduino/native-IDF tests and linked SDK fixtures; board supply/startup/aggregate timing traces remain NOT RUN; no core GPIO/rail control |
+| USB policy, PD and board interchangeability — Outside API | Entire family | TI fact: N §3 p4; B §7.3.1.1 p11, L/A §7.2.1.1 p10 and V §6.3.2.1 p10 DFP exception; exact pin tables | No USB stack, charger/VBUS switch or mux control in core | tusb32x_portable_consumer and tusb32x_host_basic; no PD, e-marker, ADC, power switch or connector-mux API; physical interoperability remains outside host evidence |
 
 ## Procedure-to-API, CLI and test coverage
 
 Source IDs and exact revisions above apply to these citations. P/T vector IDs
 refer to the device guide, with arithmetic verification recorded in validation.
 
-| Specified plan / variants | TI source and selected policy | Planned API / CLI | Future evidence |
+| Specified plan / variants | TI source and selected policy | Implemented API / CLI | Coverage and remaining qualification |
 | --- | --- | --- | --- |
 | Explicit pointer/STOP transport; B/L/A/V | B §7.5 pp15–16; L/A §7.4 p15; V §6.5 pp15–16; one aggregate terminal callback | Callback adapters / bus, reg | P27–P28; lock across both phases, no retries/pending DMA; scope traces and aggregate SDK bounds in 9/23/25 |
 | I/P/F read-only proof; B/L/A/V; initialize/read/verify/reconcile implemented | Exact identity/map tables above; scalar controls, fixed one-pass proof and incomplete-effect restrictions are policy | startInitialize, startReadProfile, startVerifyProfile, startReconcile / init, probe, profile read, verify, reconcile | P/F exact reads, fresh completion, termination, reserved/partial/cancel/deadline and reset-pending proof12; no second F or writes; desired mismatch and mode-write history13; recovery history14/18 |
@@ -87,26 +76,24 @@ refer to the device guide, with arithmetic verification recorded in validation.
 | One-shot reset; B/L/A/V | B Table 7-7 p19/§6.7 p7; L/A Table 10 p19/§6.7 p6; V Table 6-10 p20/§5.7 p7/§6.3.2 p9 | startReset / reset | P17–P20; T04/T07–T12; 96 ticks, actual controls not defaults, V semantic-DRP consistency policy, no desired replay;14/18–19/31 |
 | Base recovery; B only | B §7.4.3 p14/Table 7-7 p19; identity, internal-zero/pre-read, final proof and other-transition gate are library policy | startRecoverDeadBattery / recover-dead-battery | P13–P16/P30; T03/T06–T12; 4 callbacks/6 TX/2 RX,31 ticks, no transient publication/hidden cleanup;14/18–19/31 |
 | Fixed port observation; B/L/A/V; implemented | Status tables above;09/08/09 and E0 coherence comparison are policy | startRefreshPort / read, sample, irq read | P24/P26/P28; no retry-until-stable, no fresh physical-current inference;15/18/30 |
-| ACK/service; B/L/A only; implemented | B Table 7-6 p16/Table 7-7 p18; L/A Table 9 p18; N §8 p9; bounded recheck policy | startAcknowledgeInterrupt, startServiceInterrupt / future irq ack, irq service | P21–P26; ACK 2 callbacks/3 TX/1 RX, service 5 callbacks/6 TX/4 RX; complete pre-ACK observation survives later error; coalescing/reassertion, V rejects before traffic;16/18/30 |
+| ACK/service; B/L/A only; implemented | B Table 7-6 p16/Table 7-7 p18; L/A Table 9 p18; N §8 p9; bounded recheck policy | startAcknowledgeInterrupt, startServiceInterrupt / irq ack, irq service | P21–P26; ACK 2 callbacks/3 TX/1 RX, service 5 callbacks/6 TX/4 RX; complete pre-ACK observation survives later error; coalescing/reassertion, V rejects before traffic;16/18/30 |
 
 Initialization, profile observation, apply, desired verification, read-only
 reconciliation, reset, base recovery, port refresh and IRQ acknowledgement/service
-have host behavioral tests. Other procedure implementations and
-all hardware qualification remain planned.
+have registered host behavioral tests. All physical hardware qualification
+remains NOT RUN.
 V_ADVERTISEMENT, V_FAULT_CLEAR, V_RETURN_DRP and the board/electrical/current
 gates remain open. Prompt 4 did not qualify adapters or close those gates.
 
-The completion path is deliberately incremental: prompt 3 closed per-register
-read/write permissions and encodings; prompt 4 closed enabled silicon procedures
-and effect/timing specification; prompts 5–6 fix the value/state contracts using those
-results. Later rows become implemented/tested only when their real suites and
-relevant physical checks run. Gated rows remain explicit without blocking
-independent, verified capabilities.
+The following sections retain delivery-stage provenance. Their earlier suite
+counts and checks belong to the stated prompt; the current registered matrix and
+framework link results are in validation. No dated host result substitutes for
+physical qualification or a later commit's remote result.
 
-## Prompts 5-10 implemented values, validators, codecs and planned API mapping
+## Prompts 5-10 implemented values, validators, codecs and API mapping
 
-These entries distinguish executable passive-value checks from future device
-behavior. Exact fields and planned signatures are in [API contracts](api-contracts.md).
+These entries retain passive-value and build evidence from the initial stages.
+Current method contracts are in [API contracts](api-contracts.md).
 
 | Feature / state | API or value | Source / provenance | Actual check; remaining owner |
 | --- | --- | --- | --- |
@@ -120,7 +107,7 @@ behavior. Exact fields and planned signatures are in [API contracts](api-contrac
 | Host foundation — Implemented | TUSB32x target, tusb32x_compile_contracts and tusb32x_validators suites; examples/host/basic | Prompt7 and current peer build audit | Debug/Release native linkage, independent headers and standalone tests-OFF multi-file consumer; source-tree consumption only, packaging8/32, firmware23-27 |
 | Source docs — Present | Five public headers with file/type/member/enum/function and generated version Doxygen | Maintainability baseline and current peer documentation conventions | PASS strict Doxygen, visibility of17 public structs and four version constants; complete omission guard33 |
 | Metadata/version — Implemented | library.json truth, Version.h, generator sync/check/bump/set, aligned CMake/component/Doxygen fields | Current metadata peer audit and official manifest/build documentation | Isolated version fixtures, duplicate-declaration rejection, no-Git/enclosing-Git/dirty-example/no-op behavior; tests-OFF consumers need no maintainer tools |
-| Component/native tool configuration — Implemented; firmware Planned | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration fixture, launcher argument/exit fixtures and native linkage; native-IDF firmware25-26, full packages32 |
+| Component/native tool configuration — Implemented; firmware linked | Explicit-source IDF registration, managed pio.cmd, pinned native PlatformIO consumer | IDF 5.3.2 and platformio/native1.2.1 upstream sources | Host registration and launcher fixtures; native consumer and independent IDF links in prompts 25-26, extracted package links in 32/34 |
 
 Host checks exercise read-only procedures, profile writes and reset/recovery through terminal fake
 callbacks. No pass above represents a physical I2C transaction, framework
@@ -137,19 +124,20 @@ and vectors O01–O25 remain normative for broader conformance checks.
 Peer provenance is [execution-6-peers](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-6-peers.md); register and
 procedure sources remain the exact TI revisions already listed above.
 
-| Feature / variant | API / CLI mapping | Completed specification and actual evidence | Future behavioral owner |
+| Feature / variant | API / CLI mapping | Completed specification and actual evidence | Delivered behavioral coverage |
 | --- | --- | --- | --- |
 | Admission/results, all bound I2C variants | bind/start/poll/cancel/end/take; CLI operation correlation | Exact precedence, output preservation, one token/result slot, lifetime and different-target gates; signature and owner-example syntax PASS | 11, conformance18/19, CLI20–22 |
 | Time/callback budgets, all | OperationTiming/Progress; owner scheduling, CLI limits | Immutable half-range deadlines, one callback, fresh wait anchors, immediate transport failure, six local stages; 60 constexpr vectors and earlier fractional-time arithmetic PASS | 9/11/14/19, adapters23/25/26 |
 | Configuration proof, exact applicable fields | initialize/read/apply/verify/reconcile; CLI profile commands | I/P/F publication, generations, identity readiness versus KNOWN, mismatch semantics and no replay; passive configurationWriteUnresolved default/copy PASS | 11–14/17–19 |
-| Recovery/reset/termination, variant-gated | reset/recover; explicit CLI mutations | Separate obligations, current disable controls, acceptance and completion; p4 sequence ceilings unchanged; future O08/O09/O18/O19 | 13/14/18/19 |
-| Port/IRQ, B/L/A plus gated V | refresh/ACK/service; future CLI observation and service | Delivered S timestamps/bookends/validity, publication before ACK, retained complete/partial evidence and finite work; O20/O21; no queue or automatic reservice | 15/16, broader conformance18 and CLI21/22 |
+| Recovery/reset/termination, variant-gated | reset/recover; explicit CLI mutations | Separate obligations, current disable controls, acceptance and completion; p4 sequence ceilings unchanged; O08/O09/O18/O19 | 13/14/18/19 |
+| Port/IRQ, B/L/A plus gated V | refresh/ACK/service; CLI observation and service | Delivered S timestamps/bookends/validity, publication before ACK, retained complete/partial evidence and finite work; O20/O21; no queue or automatic reservice | 15/16, broader conformance18 and CLI21/22 |
 | Raw diagnostics/health, capability-gated | read/write Sync, stats/diagnostics/projectHealth; CLI reg/wreg/probe/health | Raw/all/managed accounting, unknown callback times, passive thresholds, no OFFLINE gate; source Doxygen and public behavioral diagnostics17; O22/O23/O25 | broader conformance18/19, CLI21/22 |
 | Generic external owner, all | Two driver/token pairs on borrowed shared bus | Initial compile contracts plus delivered public runtime owner cases; no FieldCore include or core scheduler | Runtime owner27 below; framework adapters23–26 |
 
 No runtime operation, health helper or validator is linked by prompt 6. The
 configurationWriteUnresolved addition was passive at that stage; prompt 13 now
-exercises its managed apply/effect update rules. Hardware and firmware remain NOT RUN.
+exercises its managed apply/effect update rules. Firmware link evidence is recorded
+in prompts 23-26/32/34 below; physical qualification remains NOT RUN.
 
 ## Prompt 12 delivered observation and proof
 
@@ -307,8 +295,8 @@ UINT32_MAX and invalid0 cases, OFFLINE explicit work, failed initialization,
 clear invariance and unresolved recovery after result take use runtime behavior.
 The [diagnostics guide](diagnostics.md) states the independent views and limits.
 Prompt 18 completes the core protocol coverage audit. Prompt 19 completes owner
-portability checks. Prompt 22 completes CLI diagnostics below; adapters and
-electrical qualification remain later work.
+portability checks. Prompt 22 completes CLI diagnostics below; prompts 23-26 deliver the adapters
+and linked firmware. Electrical qualification remains NOT RUN.
 
 ## Independent prompts 16-18 audit
 
@@ -345,7 +333,8 @@ records, executes help parity against the Python rows and rejects damaged frames
 The fixture has no separate passing build-only CTest. Queue 8192/record 512/drain 256
 and input 192/token 12/payload 32/turn 64 remain explicit. Lost SESSION notices retain
 their reason until capacity returns. Prompt 21 adds operation/control/result
-routes below; remaining device coverage belongs to 22, framework qualification later.
+routes below; prompt 22 completes the inventory. Adapter and firmware evidence
+is recorded separately below.
 
 ## Prompt 21 managed CLI coverage
 
@@ -581,7 +570,7 @@ NOT RUN. Console may observe322 while its mutation-suite gates remain closed.
 
 ## Prompt 32 package mechanics
 
-The literal 76-file PlatformIO/IDF contract includes core/public headers, metadata,
+The original 76-file PlatformIO/IDF contract includes core/public headers, metadata,
 licenses and complete shared/framework example inputs. Bounded hostile archive
 fixtures run in tusb32x_package_safety; tusb32x_package_consumer extracts a real
 archive, renames it, checks target/source origins and runs public cooperative
@@ -590,6 +579,8 @@ and checked; extracted Arduino basic/owner S2/S3 and native CLI S2/S3 images sup
 framework link evidence. See [package commands](development.md#archive-and-clean-consumers).
 The checker is maintainer tooling, not a core dependency or arbitrary-code sandbox.
 No install/export, release publication or physical hardware qualification is claimed.
+The current 77-file contract also includes the owner guide; local package checks
+verify that addition separately from the earlier extracted firmware links.
 
 ## Independent prompts 31/32 audit
 
@@ -626,8 +617,8 @@ No validator selection invokes physical HIL, flashing, publication or remote CI.
 The [declared matrix](development.md#declared-ci-matrix) and source-checkout
 [workflow](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/.github/workflows/ci.yml)
 separate check ownership and consume one identified archive for firmware.
-[Run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) passed all 14 jobs on
-`9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`. The rows below have actual artifact evidence;
+The completed audit's [run 40782369910](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910) passed all 14 jobs on
+`c50f8ddda8809425ede2161586466c95fa650ae6`. The rows below have actual artifact evidence;
 physical qualification remains NOT RUN.
 
 | Required check | Declared coverage | Evidence boundary |

@@ -1,11 +1,12 @@
 # Independent register vectors
 
-Prompt 3, 2026-10-23. These are literal expected values derived from the exact TI
+Specified in prompt 3, 2026-10-23; coverage reconciled in prompt 35, 2026-10-29.
+These are literal expected values derived from the exact TI
 tables in [register-map](register-map.md), independently of production helpers.
 Prompt 10 now tests pure field decoding, encoding, comparison and qualified
 composition in `test/test_codecs.cpp`, plus manually composed transport frames
-in `test/test_protocol.cpp`. Owner procedure, timing and hardware vectors remain
-future behavioral evidence.
+in `test/test_protocol.cpp`. Owner procedure and timing boundaries also have
+registered runtime tests; physical hardware qualification remains NOT RUN.
 Hexadecimal bytes omit `0x`. B/L/A/V have the exact variant meanings and sources
 defined in that guide. All non-target fields and prerequisites are assumed valid
 unless the case explicitly says otherwise; no vector overrides a capability gate.
@@ -94,7 +95,7 @@ For each C row, verify the expected byte against the exact variant masks and
 independent integer arithmetic. Also verify no bits outside the legal output
 mask are set, and no ordinary write includes IRQ/reset. These checks were run
 in prompt 3. Prompt 10 adds real pure-codec and manually composed callback checks;
-operation effects and timing remain future tests. C09 is proved by field
+operation effects and timing are covered by the owner tests below. C09 is proved by field
 encoding without granting a reset-pending write; C17/C18's arithmetic is still
 unqualified and the safe composer rejects those nonzero internal images.
 
@@ -104,7 +105,7 @@ Admission-time argument/access/capability rejections produce no callback or writ
 preserve output arguments and do not increment transport totals. Validation during
 polling may reject after a required read; that callback still counts even when
 no write follows, as in N18. N24/N25 instead exercise actual callback failures.
-These are future test requirements. Method-specific status precedence remains
+These are implemented rejection/failure contracts. Method-specific status precedence remains
 the baseline and prompt6 contract; this table adds no alternate error vocabulary.
 
 | ID | Request or condition | Required rejection/evidence |
@@ -139,10 +140,25 @@ N14 is a positive admission boundary placed beside the gated cases to prevent
 over-broad rejection. N21 is a helper defect demonstration, not a library call.
 Prompt 9 tests N01-N05/N11-N13 access boundaries and N25 scratch-output
 preservation through the private transport. Its write fixtures inject before/after
-effects with the same backend error; the managed multi-step N24 sequence remains later work.
+effects with the same backend error; the managed multi-step N24 sequence is
+covered by owner and interrupt failure tests below.
 
-Later test owners: protocol/identity ranges in prompts9/18; exhaustive codecs and
-write images in10/18; profile/reset/recovery/IRQ effects in13/14/16/18; port
-applicability in15/18; safe raw CLI access in21/22. Extend these seeds with every
-small field code and failure boundary. Do not generate expected values with the
-production codec or let a permissive fake define silicon behavior.
+## Registered behavioral coverage
+
+Vector IDs are specification references, not runtime test names. These existing
+test functions exercise their observable boundaries; see
+[repository-only protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md) for detailed failure/time mapping
+and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md) for recorded executions and revisions.
+
+| Vectors / contract | Actual source and named cases | Registered suite |
+| --- | --- | --- |
+| D01–D09, N01–N05, N23/N25: identity, ranges and failed scratch output | `test/test_protocol.cpp`: `identityAndRevision`, `transportedIdentityAndRevision`, `accessAndRanges`, `framingTimeoutsAndScratch` | `tusb32x_protocol` |
+| D10–D36: codes, reserved fields, comparison and partial defaults | `test/test_codecs.cpp`: `decodeBytesAndErrors`, `encodeDomains`, `compareSettings`; `test/test_port.cpp`: `independentStatusEncodings`, `changedBookends` | `tusb32x_protocol`, `tusb32x_port` |
+| C01–C21, N06–N22: literal composition and gates | `test/test_codecs.cpp`: `composeIrqResetAndOrdinary`, `composeModesAndRecovery`, `composeRejections`; `test/test_protocol.cpp`: `composedWriteFrames` | `tusb32x_protocol` |
+| N24/N25: managed writes, resets, recovery and ACK failures | `test/test_profile_application.cpp`: `faultsAtEveryWriteAndProofRead`; `test/test_reset_recovery.cpp`: `everyCallbackFault`, `everyInterruptionBoundary`; `test/test_interrupt.cpp`: `everyTransportFailure` | `tusb32x_operations`, `tusb32x_port` |
+| N11–N20: public raw rejection without procedure shortcuts | `test/test_diagnostics.cpp`: `rawWriteGuards`, `protected45EvidenceIsIndependent`, `rawReadSafetyEvidence`; `test/cli/test_cli_diagnostics.cpp`: `rawWriteEffectsAndProcedureDenial` | `tusb32x_diagnostics`, `tusb32x_cli` |
+
+The [procedure vectors](device-behavior.md#independent-procedure-and-failure-vectors)
+add fixed sequences and fresh-time/interruption boundaries. Literal expected
+bytes remain independent of production codecs. Passing host tests cannot settle
+an unresolved TI access/clear procedure or prove physical current/CC/VBUS behavior.

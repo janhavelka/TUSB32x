@@ -71,7 +71,7 @@ Implemented help topics are `common`, `connection`, `lifecycle`, `port`, `profil
 command ID or a listed alias; `profile`
 selects its complete topic, and `profile.show` selects that single help row.
 Internal IDs such as `profile.show` name machine responses; input uses `profile show`.
-Unknown topics and later-stage commands reject as `INVALID_PARAM`.
+Unknown topics and unsupported command names reject as `INVALID_PARAM`.
 
 The accepted variant names are `tusb320`, `tusb320i`, `tusb320li`, `tusb320hi`,
 `tusb320lai`, `tusb320hai` and `tusb322i`. Addresses accept complete decimal or
@@ -450,7 +450,7 @@ TUSB LOSS schema=1 dropped_records=2 dropped_bytes=534
 TUSB SESSION schema=1 code=TOKEN_EXHAUSTED detail=0 reason=request_exhausted
 ```
 
-## Verification and later scope
+## Verification and evidence
 
 From the source checkout:
 
@@ -468,10 +468,11 @@ path and link `TUSB32x`; core never links the CLI. The normal package includes
 the four common files and this guide, while Python contracts/tests remain
 source-checkout tools. No consumer linkage invokes Python or Git.
 
-The current x86-64 host ABI measures `sizeof(Cli)=9416` bytes, including the
-8192-byte output queue; this is not firmware RAM/link qualification. Board-specific
-placement, front-end stack budgets and linked S2/S3 memory evidence arrive with
-the actual firmware examples. No smaller unproved queue is substituted here.
+The recorded x86-64 host ABI measures `sizeof(Cli)=9416` bytes, including the
+8192-byte output queue. This host measurement does not establish firmware RAM use
+or stack margin. The implemented front ends use static CLI storage; their linked
+S2/S3 image evidence is recorded in [repository-only validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md). Stack margin,
+serial delivery and electrical timing still need exact-board qualification.
 
 The registered `tusb32x_cli` and `tusb32x_console` suites exercise the real shared
 sources. `tusb32x_cli_host` is a persistent, explicitly fake-bus fixture used by
@@ -487,10 +488,10 @@ CTest registers cli_contract and cli_contract_negative with explicit fixture pat
 and finite timeouts, retaining the single cli_transcript registration. All 33
 schemas include full-width record bounds including newline and C terminator.
 
-Prompts 20–22 complete the fixed shared CLI. The Arduino front ends below add
-actual SDK linkage. Native-IDF integration below also links S2/S3; serial/CC/INT fixtures and board
-memory/electrical qualification remain separate work; the native fixture is
-software evidence only.
+The Arduino and native-IDF front ends below compile the same fixed shared CLI
+and have linked S2/S3 image evidence. Host fixtures and linked images remain
+software evidence; serial/CC/INT behavior and board memory/electrical
+qualification require separate physical observations.
 
 ## Independent prompts 20-22 audit
 
@@ -525,7 +526,7 @@ actual firmware configuration, not proof of a connected fixture.
 
 ## Native ESP-IDF front end
 
-The [IDF5.5.5 S2/S3 application](../examples/esp_idf/basic/README.md) compiles the
+The [IDF 5.5.5/6.1.0 S2/S3 application](../examples/esp_idf/basic/README.md) compiles the
 same shared processor, without Arduino. The application's startup owner takes
 each read-only init/status result before admitting console commands. Startup
 failure leaves diagnostics available without retry or an unowned pending result.

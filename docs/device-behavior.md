@@ -1,8 +1,8 @@
 # Transport and silicon procedure contract
 
-Initially specified in prompt 4 on 2026-10-23; implemented through explicit interrupt acknowledgement/service
-in prompt 16 on 2026-10-26. Host checks
-prove software behavior, not adapter timing or physical hardware qualification.
+Initially specified in prompt 4 on 2026-10-23; implemented through raw diagnostics
+in prompt 17 and rechecked against the current engine in prompt 35 on 2026-10-29.
+Host checks prove software behavior, not adapter timing or physical hardware qualification.
 Read the [variant matrix](variant-matrix.md), [register map](register-map.md),
 [encoding vectors](register-vectors.md) and [owner baseline](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/prompts/ENGINEERING_BASELINE.md).
 The API guide identifies delivered methods. Admission/result contracts were
@@ -53,8 +53,9 @@ their safe control image; apply requires known actual controls at admission.
 
 Prompt 9 implements the [private terminal transport](transport.md) and its host
 protocol checks. The facade and owner procedures through interrupt service are
-implemented in prompts 11-16. The [Arduino adapter](arduino-transport.md) now
-implements the selected framing for a pinned SDK;
+implemented in prompts 11-16. The [Arduino adapter](arduino-transport.md)
+and [native IDF adapter](idf-transport.md) implement the selected framing for
+their audited SDK configurations;
 physical framing/timing qualification is separate and has not been performed.
 
 Every logical read selects a one-byte pointer, including repeated reads of the
@@ -318,8 +319,10 @@ must already support the requested current and supply conditions.
 
 B §7.4.3 p14 requires the 04/wait/00 sequence after VDD returns when source-capable
 operation needs Rp recovery. Dead battery includes VDD absent with no cable.
-The caller establishes stable VDD/I2C readiness and decides when this is required;
-read-only initialization alone does not perform or prove it. `startRecoverDeadBattery`
+The caller establishes stable VDD/I2C readiness and decides when this is required,
+including source-capable startup after target power was absent. Read-only
+initialization and a clear 45 disable bit do not perform or prove that sequence.
+The core does not monitor supply history or measure its stability. `startRecoverDeadBattery`
 requires current validated identity. A different unresolved reset/mode transition
 gives CONFIGURATION_UNKNOWN before callbacks; reconcile it first. This gate does
 not reject the operation's own retained recovery uncertainty, which an explicit
@@ -556,8 +559,11 @@ pins govern polarity, but no universal disputed50 ms startup recipe is claimed.
 The base 0.9 ns unit conflict requires TI clarification/physical timing evidence.
 The full supply/pull-up/pad limits remain in the variant guide.
 
-B §7.3.1.2 p11 recommends periodic explicit software reset to update detected
-current while attached. A fresh read does not perform it. L/A and V once-per-
+B §7.3.1.2 p11 calls for periodic explicit software reset to update detected
+current while attached. The owner must account for the reset's attachment/PORT
+effects, take its result and acquire a separate complete port observation;
+reset itself publishes no new port snapshot. A fresh register read alone does
+not perform that refresh of silicon detection. L/A and V once-per-
 attachment prose conflicts with the selection guide's active-detection summary;
 retain ATTACHED_CURRENT and require controlled exact-part traces before claiming
 fresh physical detection. Do not add reset to initialize, refresh or IRQ service.
@@ -567,9 +573,12 @@ the core nor a raw active-cable bit supplies or proves board power.
 
 ## Independent procedure and failure vectors
 
-These literal specifications supplement the register vectors. They are future
-scripted-transport/owner/hardware tests, not tests already executed against a
-driver. Non-target controls are valid and proved unless the case states otherwise.
+These literal specifications supplement the register vectors. Their software
+boundaries are exercised by the registered protocol, operations, port and
+diagnostics suites, with named runtime mappings in
+[repository-only protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md) and
+[feature coverage](feature-coverage.md). Physical fixture/timing evidence remains
+NOT RUN. Non-target controls are valid and proved unless the case states otherwise.
 
 | ID | Input / trace | Required outcome |
 | --- | --- | --- |
@@ -631,12 +640,14 @@ the next fresh sample, and failure at each following verification read. Include
 role disable, mode, wait, enable, recovery04/00, reset command and ACK separately.
 Assert no subsequent write after failure, unchanged desired input, correct
 PARTIAL/INDETERMINATE evidence, retained terminal result, byte/callback ceilings
-and no premature trust. An unambiguous address-NACK guarantee can prove no effect
-for that attempt only; it cannot erase an earlier write.
+and no premature trust. Status-only callbacks carry no separate acceptance
+evidence: every invoked failed write retains possible effect, including an
+address NACK or BUSY result, and cannot erase an earlier write.
 
-Implementation owners: transport9, codecs10, engine11, observation/proof12,
-apply13, reset/recovery14, snapshots15, IRQ16, diagnostics17, regression/timing18–19,
-adapters23/25 and physical fixtures30–31. Future source Doxygen and phase comments
-must carry exact revision/section/page, units, effect limits and policy distinctions.
-No TODO silicon rule, hidden replay engine or unspecified retry remains in these
-enabled plans. Named unresolved gates and physical qualification remain explicit.
+Implementation and runtime coverage live in the existing transport, codecs,
+engine and diagnostics files; no separate test-only engine implements these plans.
+The [feature matrix](feature-coverage.md) names their API/CLI routes and test owners.
+Source comments cite the applicable TI revision/section/page and distinguish wait
+policy from silicon durations. The Python fixture plans in prompts 30–31 exercise
+modeled/native software paths; their presence does not establish physical timing.
+Named unresolved gates and physical qualification remain explicit.

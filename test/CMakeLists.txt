@@ -1,6 +1,16 @@
 # Runtime suites and compile-only specification fixtures have separate roles.
+# Compile the actual README example rather than a separately maintained copy.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${PROJECT_SOURCE_DIR}/README.md")
+file(READ "${PROJECT_SOURCE_DIR}/README.md" readme)
+string(REGEX MATCH "```cpp\n([^`]+)```" readme_example "${readme}")
+if(NOT readme_example)
+  message(FATAL_ERROR "README must contain its tested C++ quick start")
+endif()
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/readme_quickstart.inc" "${CMAKE_MATCH_1}")
 add_executable(tusb32x_compile_contracts
-  test_compile_contracts.cpp consumer/status_other_tu.cpp)
+  test_compile_contracts.cpp consumer/status_other_tu.cpp consumer/readme.cpp)
+target_include_directories(tusb32x_compile_contracts PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 add_executable(tusb32x_validators test_validators.cpp)
 add_executable(tusb32x_protocol test_protocol.cpp test_codecs.cpp)
 target_include_directories(tusb32x_protocol PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")

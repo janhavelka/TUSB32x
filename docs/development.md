@@ -107,7 +107,7 @@ URLs; links between shipped guides remain relative.
 The IDF manifest excludes all files and explicitly re-includes the same consumer
 set: IDF include rules are re-inclusions, as its
 [manifest reference](https://docs.espressif.com/projects/idf-component-manager/en/latest/reference/manifest_file.html#files)
-explains. Both manifests enumerate the same 76 literal filenames, including each
+explains. Both manifests enumerate the same 77 literal filenames, including each
 public header. The checker rejects any missing or extra member; it compares every
 payload with this trusted checkout before executing build files.
 
@@ -189,8 +189,8 @@ framework names do not qualify untested versions.
 ## Declared CI matrix
 
 The source-checkout [workflow](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/.github/workflows/ci.yml)
-defines the prompt 34 checkpoint. [Run 40778512875](https://github.com/janhavelka/TUSB32x/actions/runs/40778512875) passed **14/14 jobs**
-on `9aa8898c65ca1eebc5f7ea241dfac4bbc815283b`: five host configurations,
+defines the prompt 34 checkpoint. The completed audit's [run 40782369910](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910) passed **14/14 jobs**
+on `c50f8ddda8809425ede2161586466c95fa650ae6`: five host configurations,
 workflow/Python/docs/package checks and eight extracted firmware images. Physical
 qualification remains NOT RUN. Commands, artifact hashes and tested SHA are in the
 [validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md).
@@ -208,8 +208,10 @@ qualification remains NOT RUN. Commands, artifact hashes and tested SHA are in t
 Firmware jobs download the same identified archive, verify its hash and consume
 validated extractions. Their links satisfy the matching firmware/distribution
 gate; CI does not repeat that matrix from the source checkout. Source builds in
-the Arduino/native application guides remain diagnostic paths. The literal
-76-file package allowlist is unchanged; CI/checker machinery remains checkout-only.
+the Arduino/native application guides remain diagnostic paths. That tested
+archive had 76 files; the current 77-file allowlist adds the owner guide.
+CI/checker machinery remains checkout-only. Later guide edits use local checks
+and do not inherit that exact-SHA remote result.
 
 All jobs have finite timeouts. Logs, JUnit/partial reports, Doxygen evidence,
 archive/consumer provenance and useful firmware identity/ELF/map outputs have

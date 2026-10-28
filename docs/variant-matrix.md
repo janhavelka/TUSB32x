@@ -1,6 +1,7 @@
 # Variant capabilities and board prerequisites
 
-Prompt 2 evidence review: 2026-10-23. TUSB320LAI is the primary acceptance target.
+Prompt 2 source review: 2026-10-23; prompt 35 reconciliation: 2026-10-29.
+TUSB320LAI is the primary acceptance target.
 This source-backed capability specification distinguishes implemented software
 from physical qualification. Register encodings are specified in the
 [register guide](register-map.md); prompt 4 completed the
@@ -15,8 +16,9 @@ this does not grant write permission or exact-part identification from a shared
 signature. Original TUSB320/I dead-battery recovery is also implemented;
 read-only port refresh is implemented for all seven variants. Explicit IRQ
 acknowledgement and bounded service are implemented for the six 320 variants;
-TUSB322I rejects both before traffic under V_FAULT_CLEAR. Prompt 17 adds safe raw
-Sync diagnostics and pure passive health. CLI names below remain planned contracts.
+TUSB322I rejects both before traffic under V_FAULT_CLEAR. Safe raw
+Sync diagnostics and pure passive health are implemented. The CLI routes below are implemented;
+their exact grammar and staging/live/cached effects are in the [CLI guide](CLI.md).
 The [protocol conformance matrix](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md)
 covers all seven configured variants at both legal addresses through public
 operations. This checks address propagation, not physical part identification,
@@ -38,7 +40,9 @@ Reset never reapplies desired settings. Device-side VCONN can change with role
 and attachment, subject to the 322I supply limits below.
 
 Only original TUSB320/TUSB320I admit `startRecoverDeadBattery`, after validated
-identity and caller-established stable VDD/readiness. Internal 45 bits 03 must be
+identity and caller-established stable VDD/readiness. The owner selects this
+operation when source-capable startup needs Rp after a VDD-off epoch; a clear
+45 bit cannot establish that the historical sequence ran. Internal 45 bits 03 must be
 zero before the literal 04/31-tick-wait/00 sequence and final readback. The
 qualification, clock margin and readback are library policy beyond B §7.4.3 p14.
 LI/HI, LAI/HAI and 322I reject recovery before traffic; their own dead-battery
@@ -100,9 +104,10 @@ retrieval and current-download verification times are in
 | N | SLAAE24, May 2021 | Family Table 2-1 p3; startup §4.1 p5; non-failsafe pins §5 p7; IRQ §8 p9 |
 | G | SDAA284, March 2026 | Family Figure 2-1 p8; comparison Figure 2-2 and selection Figure 2-3 p9 |
 
-All seven previously archived PDFs matched fresh official downloads byte for
-byte. G1 was added without replacing an old source. Current TI product pages
-still link the revisions above. No separate applicable silicon errata was found
+In the 2026-10-23 source review, all seven previously archived PDFs matched fresh
+official downloads byte for byte; G1 was added without replacing an old source.
+The TI product pages inspected then linked the revisions above. No separate
+applicable silicon errata was found
 in the inspected product document lists and targeted TI searches; that is a
 bounded search result, not proof of absence. See the dated
 [current-source review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/README.md#prompt-2-current-source-review).
@@ -126,10 +131,10 @@ internal descriptor can share verified behavior.
 | TUSB321 (TUSB321I in G summary) | Not I2C targets | No enable pin | Not applicable | Outside this I2C API | GPIO pins replace the interface; G0 pp1,3 and G Figure 2-1 p8 |
 | TUSB321AI (summary name TUSB321A) | Not an I2C target | No enable pin | Not applicable | Outside this I2C API | Separate exact-part source, no SDA/SCL/ADDR/EN; G1 pp1,3 |
 
-TI currently advises against LI/HI in DFP or DRP configurations on the
+The 2026-10-23 TI source review found advice against LI/HI in DFP or DRP configurations on the
 [LI product page](https://www.ti.com/product/TUSB320LI) and
 [HI product page](https://www.ti.com/product/TUSB320HI). This is a current
-**TI product recommendation**, not evidence that the documented registers do not
+**TI product recommendation recorded on that date**, not evidence that the documented registers do not
 exist. **Library policy:** retain their documented capability definitions for
 existing consumers, expose the caveat in capability/help/integration documentation,
 and use LAI for new DFP/DRP examples and acceptance. Do not claim LI/HI DFP/DRP
@@ -211,7 +216,7 @@ switch, charger, mux, enable signal or USB power/data policy.
 | Shutdown | Supply remains present, enable deasserted; Rd remains. Shutdown is not disconnected CC pins | B Table 7-4 p14/§7.4.4 p15; L/A §7.3.4 p14; V §6.4.3 p14 |
 | Post-dead-battery recovery | Explicit Rp recovery is documented only for base 320/I. No transfer is possible merely because dead-battery Rd exists | B §7.4.3 p14; L/A §7.3.3 p14; V §6.4.4 p14 |
 | CC source signaling | Default 64/80/96 µA; medium 166/180/194 µA; high 304/330/356 µA min/typ/max | B §6.5 p6; L/A §6.5 p5; V §5.5 p5; these are not VBUS load amps |
-| VCONN on 322I | Autonomous output from VDD to unused CC after source attachment with Ra; removed on detach. §6.3.8 requires a 5 V source at VDD after Attached.SRC; §5.3 lists VCONN 4.75–5.5 V with VDD at 5 V. Current limit 225/300/375 mA; FET resistance 1.25 Ω maximum; VDD bulk 10–200 µF | V §5.3 p4, §5.5 p6 and §6.3.8 p13; board-owned supply prerequisite, not a core switching sequence or a VCONN guarantee over the whole 4.5–5.5 V device range. No software-enable register established |
+| VCONN on 322I | Autonomous output from VDD to unused CC after source attachment with Ra; removed on detach. §6.3.8 requires a 5 V source at VDD after Attached.SRC; §5.3 lists VCONN 4.75–5.5 V with VDD at 5 V. Current limit 225/300/375 mA min/typ/max; FET resistance 1.25 Ω maximum; VDD bulk 10–200 µF | V §5.3 p4, §5.5 p6 and §6.3.8 p13; board-owned supply prerequisite, not a core switching sequence or a VCONN guarantee over the whole 4.5–5.5 V device range. No software-enable register established |
 | VCONN on six 320 parts | Not provided; active-cable indication is not measured/powered VCONN | N Table 2-1 p3, G Figure 2-2 p9, exact B/L/A feature descriptions |
 
 | Generation | Exact non-failsafe list and supply-off constraints |
@@ -227,7 +232,7 @@ qualification needs TI clarification. Device-VDD pull-ups avoid depending on
 that exception. V §5.3's broad 5.5 V control-line row also does not override the
 specific 3.6 V I2C rail limit or VDD-referenced pad absolute maxima.
 
-## Timing boundary for later procedure and adapter work
+## Timing boundary for procedures and adapters
 
 | Quantity | TI value and meaning | Source |
 | --- | --- | --- |
@@ -261,7 +266,7 @@ No unspecified capability becomes enabled because another family member has it.
 | ATTACHED_CURRENT | B §7.3.1.2 p11 recommends explicit periodic reset; L/A §7.2.1.2 p10 and V pp10–11 describe one report while attached; G Figure 2-1 p8 advertises active detection from L generation | Fresh register reads are not proof of fresh physical current detection. No hidden reset in read/init/IRQ. Clarification or controlled exact-part attached-current traces needed |
 | REVISION_06 | Betrusted code names 06 in a commented-out revision assertion; L/A/V exact tables establish only 01/02 | Reject unexpected revision for initialization/writes under the policy above. Need TI revision identification and capabilities before accepting it |
 | V_ADVERTISEMENT | V Figure 6-3 p17 says RW while Table 6-8 says R for advertisement | Raw observation remains available; changing 322 source-current advertisement is unavailable. Require resolved TI access evidence; unchanged proved field must not block unrelated supported changes |
-| V_FAULT_CLEAR | V Table 6-9 pp18–19 places RCU fault bit3, W1C IRQ bit4, RW duty bits2:1 and RW UFP-accessory bit0 in the same byte; only IRQ has an explicit clear transaction | Retain raw fault; no claim that read, IRQ ACK or a guessed write clears it. Read-only means no software write, not proved non-destructive fault observation. Gate every 09 write, including ACK/service, duty, UFP-accessory and raw writes, until exact fault handling and safe byte composition are established in prompts 3/4. Unchanged proved 09 controls must not block independently supported changes in other registers |
+| V_FAULT_CLEAR | V Table 6-9 pp18–19 places RCU fault bit3, W1C IRQ bit4, RW duty bits2:1 and RW UFP-accessory bit0 in the same byte; only IRQ has an explicit clear transaction | Retain raw fault; no claim that read, IRQ ACK or a guessed write clears it. Read-only means no software write, not proved non-destructive fault observation. Gate every 09 write, including ACK/service, duty, UFP-accessory and raw writes, until exact fault handling and safe byte composition are established. Unchanged proved 09 controls must not block independently supported changes in other registers |
 | V_RETURN_DRP | V §6.3.2 p9 states reset-to-DRP; pp10–11 give explicit DFP/UFP recipes; Table 6-10 p20 defines DRP codes without a separate return recipe | Direct non-reset return to DRP unavailable until separately justified. No hidden reset fallback in apply. Explicit reset has its own documented role effect |
 | V_PORT_TEXT | V Table 6-4 p13 mentions PORT; pin table p3 has none | Reject FOLLOW_PORT_PIN on 322I. Do not invent a pin; exact mode00 is DRP |
 | TYPE_C10_DRP | B §7.3.1.1 p11, L/A §7.2.1.1 p10 and V §6.3.2.1 p10 exclude a Type-C 1.0 DRP peer with local DFP despite broad front-page compatibility text | Do not promise universal Type-C 1.0 interoperability; retain exact exception in examples/qualification |
@@ -273,4 +278,13 @@ claims and incomplete emulator behavior are counterexamples, not test oracles.
 See [focused peer/public source review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/audit/execution-2-peers.md) and the
 [pinned manifest](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/reference/public-implementations.json). No external code was
 copied into a driver. The [feature coverage](feature-coverage.md) maps each
-planned capability and gate to its implementation-stage evidence.
+implemented capability and open gate to API, CLI and registered test evidence.
+
+Prompt 35 re-opened the archived B/L/A/V pin, electrical, timing, procedure and
+register pages above and the N/G comparison evidence. V p6 was also rendered to
+check the MIN/TYP/MAX columns: 225/300/375 mA and 1.25 Ω maximum remain the exact
+VCONN limits. All eight local PDF hashes matched their provenance manifest.
+The pinned Linux driver and regmap header/core, armoryctl, Betrusted, Tiliqua,
+Xous emulator and Yocto patch were re-opened; their bytes matched the manifest's
+SHA-256 and Git blob IDs. This source inspection preserves the gates and recorded
+counterexamples; it adds no physical evidence and no revision-06 acceptance.

@@ -1,11 +1,11 @@
 # Private register transport and identity checks
 
-Prompt 9 implements src/TUSB32xProtocol.h/.cpp as a private library boundary.
-Its helpers are exercised by the registered tusb32x_protocol suite. The public
-owner facade added in prompt 11 uses this same callback path for read-only
-initialization. The transport boundary itself owns no lifecycle or scheduler;
-public raw diagnostic methods reuse it in prompt 17. See
-[diagnostics and health](diagnostics.md) for admission, effects and filtered health.
+The core uses one private register transport for managed operations and explicit
+synchronous raw diagnostics. It performs bounded register framing, normalizes
+callback results and records callback attempts. The application supplies the
+terminal callbacks declared in [Config.h](../include/TUSB32x/Config.h) and owns
+the bus lifecycle and serialization. See [owner operations](owner-operations.md)
+for scheduling and [diagnostics](diagnostics.md) for raw-access admission.
 
 ## Framing and work bounds
 
@@ -37,7 +37,7 @@ implicit pointer persistence and atomic hardware snapshots are not assumed.
 
 The timeout is the smaller of the positive uint64 available budget and the
 configured uint32 millisecond cap, narrowed only after clipping. A zero budget
-is INVALID_PARAM here; the later owner decides deadline outcomes before calling.
+is INVALID_PARAM here; the owner engine decides deadline outcomes before calling.
 One aggregate budget includes lock acquisition, both phases, inter-phase timing
 and terminal cleanup. The application owns the bus and serialization across all
 users, and must supply synchronous callbacks without delayed DMA or reentry.
@@ -58,8 +58,8 @@ UNSUPPORTED_FEATURE because V_ADVERTISEMENT/V_FAULT_CLEAR are unresolved.
 The private write primitive checks register access and receives an already
 composed byte. Its caller must enforce identity readiness, actual-state proof,
 safe mixed-register composition and silicon procedures. This helper grants no
-permission to bypass mode/reset/recovery prerequisites; composition is prompt 10
-and owner enforcement is implemented. Public raw writes share the composer
+permission to bypass mode/reset/recovery prerequisites; the shared composer
+and owner engine enforce those requirements. Public raw writes share the composer
 and require current proof; they cannot execute multi-step procedures.
 
 Identity comparisons require all eight ascending bytes, including the NUL:

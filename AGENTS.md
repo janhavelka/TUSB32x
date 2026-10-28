@@ -403,7 +403,7 @@ Do not create empty files or successful hardware stubs to fill the tree.
 ## Arduino adapter checks
 
 Prompt 23 adds two registered recording-backend suites for the actual example
-adapter at 1000Hz and 100Hz ticks. The current Windows host matrix has 32 tests,
+adapter at 1000Hz and 100Hz ticks. The current Windows host matrix has 72 tests,
 including actual application regressions.
 Run the real SDK fixtures with scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2
 -e arduino_s3. These link Arduino 3.3.11/IDF5.5.5 on pinned pioarduino 55.03.311;
@@ -415,7 +415,7 @@ retirement after a failed receive are required. Framework types stay outside cor
 ## Native IDF adapter checks
 
 Prompt 25 adds `tusb32x_idf_transport_1000` and `tusb32x_idf_transport_100` to the
-registered host matrix (32 Windows suites). Run independent actual SDK links with
+registered host matrix (72 Windows suites). Run independent actual SDK links with
 `scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3`. The adapter supports the
 audited native IDF5.5.5/6.1.0 configurations only; read `docs/idf-transport.md` for copied
 handle metadata, synchronous mode, same-core task pinning, shared serialization,
@@ -463,7 +463,7 @@ separately authorized MCU reboot. See the maintained runner/hardware guides.
 Run `python tools/test_check_package.py -v`, pack with
 `scripts\pio.cmd pkg pack . --output build/TUSB32x.tar.gz`, then
 `python tools/check_package.py --archive build/TUSB32x.tar.gz --out build/package-check`.
-The manifests contain the same76literal file names. Preserve the two firmware
+The manifests contain the same 77 literal file names. Preserve the two firmware
 identity scripts and shared example inputs; exclude local sdkconfig/locks, caches,
 binaries, private evidence and reference/vendor files. check_package validates
 bounded portable names/types/content and mtime-only PAX before manual extraction,
@@ -472,7 +472,7 @@ This is not a sandbox for arbitrary CMake; only trusted locally packed sources
 are built. Child core consumption requires no Git/Python/Doxygen/PlatformIO and
 uses add_subdirectory/target TUSB32x; no install/export API is claimed.
 CTest also registers tusb32x_package_safety (60s), tusb32x_package_consumer
-(120s) and tusb32x_package_origins (120s). The consumer creates a real test tar
+(120s) and tusb32x_package_origins (160s). The consumer creates a real test tar
 without requiring PIO; origins rejects injected checkout/outside compiler headers.
 There are71 runtime tests on all hosts plus the Windows launcher, with compile-only headers
 kept separate. The selected extracted Arduino/native-IDF S2/S3 rows are recorded
@@ -494,3 +494,7 @@ The completed prompt 34 checkpoint is run40778512875 at
 images, no hardware qualification. See docs/validation.md for actual artifacts
 and prior failed attempts. Retain this tested SHA during later prompts; reporting
 commits and later local checks do not retroactively extend its remote proof.
+
+The completed prompts33/34 audit additionally verified run40782369910 at
+c50f8ddda8809425ede2161586466c95fa650ae6: all14jobs PASS. Prompt35 uses that
+recorded evidence and local guide/snippet/package checks; no new remote gate.

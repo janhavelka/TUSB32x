@@ -33,7 +33,9 @@ part of TUSB32x.
 ## Admit, advance and deliver
 
 Create the application's bus/context before the driver and keep them alive until
-every borrowing binding ends. Configure exact callbacks, context, variant,
+every borrowing binding ends. An unchanged variant/address/context does not
+establish target association if the callbacks changed; a shared null context
+does not identify a bus. Configure exact callbacks, context, variant,
 seven-bit strapped address and positive aggregate callback timeout in DriverConfig.
 The owner selects the exact part: a shared identity signature is not model or
 enable-polarity discovery. `validateDriverConfig` and `bind` do no I2C.
@@ -45,6 +47,7 @@ operations. An accepted start returns IN_PROGRESS and a nonzero OperationToken.
 That is accepted work, not failure or completed success. The application records
 which requester owns the token and decides its own bounded queue capacity.
 Tokens are instance-local: two drivers can issue equal numeric token values.
+Retain the originating instance together with its token when routing work.
 
 For each selected service turn, call `poll(token, freshNowMs, 1)`. At most one
 terminal callback executes. A zero budget forbids callbacks while still allowing

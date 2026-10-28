@@ -1,6 +1,6 @@
 # Raw diagnostics and passive health
 
-Prompt 17 implements the methods below in `<TUSB32x/TUSB32x.h>`. They use the
+The methods below are declared in `<TUSB32x/TUSB32x.h>`. They use the
 same callback boundary and safe composer as managed operations. The application
 serializes every call, owns the bus and supplies terminal callbacks; no method
 is ISR-safe. These host-tested contracts do not qualify a hardware adapter.
@@ -48,11 +48,11 @@ CONFIGURATION_UNKNOWN without traffic. Staged desired settings never supply it.
 
 | Target | Permitted raw image |
 | --- | --- |
-| 08 | Legal advertisement bits C0 only; low RO/reserved bits zero; no advertisement code3 |
-| 09 settings | Persistent bits 06 on base, 07 on extended; W1C bit10 zero |
-| 09 ACK | Bit10 plus the exact proved actual persistent fields; no combined settings change |
-| 0A | Legal persistent fields F0/F7; reset08 zero; actual mode and disableTerm bits unchanged |
-| Present 45 | Actual disableRdRp and protected03 unchanged; qualified internal-zero image required |
+| 0x08 | Legal advertisement mask 0xC0 only; low RO/reserved bits zero; no advertisement code 3 |
+| 0x09 settings | Persistent mask 0x06 on base, 0x07 on extended; W1C mask 0x10 zero |
+| 0x09 ACK | Mask 0x10 plus the exact proved actual persistent fields; no combined settings change |
+| 0x0A | Legal persistent masks 0xF0/0xF7; reset mask 0x08 zero; actual mode and disableTerm bits unchanged |
+| Present 0x45 | Actual disableRdRp and protected mask 0x03 unchanged; qualified internal-zero image required |
 
 Actual mode or termination changes and all reset/recovery procedures require
 their [typed operations](device-behavior.md); raw access grants no shortcut.
@@ -82,8 +82,8 @@ three totals need not remain arithmetically equal.
 Sync. Managed callback success clears its consecutive-failure streak; raw traffic
 does not. Callback I2C_BUSY counts as a failure. Local BUSY, invalid arguments,
 waits, cancellation, callback-free deadlines, identity/configuration mismatch
-and valid detach add no transport failures. Later CLI `probe` will call
-initialization and therefore count as managed traffic.
+and valid detach add no transport failures. CLI `probe` calls initialization
+and therefore counts as managed traffic.
 
 The single transport wrapper accepts only OK and documented I2C_* outcomes.
 Other callback codes normalize to I2C_ERROR while retaining full int32 backend

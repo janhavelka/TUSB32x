@@ -9,6 +9,18 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ## Unreleased
 
+### Documentation
+
+- Reconciled the user guides with the delivered API, CLI, runner and linked
+  examples. Added a practical owner workflow covering fresh time, result delivery,
+  retained effects and shutdown, and compile/run the README quick start from its
+  literal code block under simulated success and failure.
+- Mapped variant features to exact TI citations and executable tests, corrected
+  stale planned-feature claims and conservative failed-write wording, and made
+  current SDK commands and native runner counter limits explicit. The owner guide
+  is included in both package manifests; repository-only evidence links remain
+  usable from extracted archives. Physical qualification remains separate.
+
 ### Added
 
 - Dedicated CI configuration with five Linux host rows, separate Python/docs/

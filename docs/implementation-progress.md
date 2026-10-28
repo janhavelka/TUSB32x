@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 34, dedicated CI and extracted firmware checkpoint.
+Current authorization: implement prompt 35, reconcile user guides and feature coverage.
 
 ## Prompt status
 
@@ -44,7 +44,7 @@ Current authorization: implement prompt 34, dedicated CI and extracted firmware 
 | [32: package-consumers](prompts/32-package-consumers.md) | COMPLETE (software evidence; hardware separate) |
 | [33: validation-guards](prompts/33-validation-guards.md) | COMPLETE (software evidence; hardware separate) |
 | [34: ci-matrix](prompts/34-ci-matrix.md) | COMPLETE (14 CI jobs; eight extracted images; hardware NOT RUN) |
-| [35: user-documentation](prompts/35-user-documentation.md) | NOT STARTED |
+| [35: user-documentation](prompts/35-user-documentation.md) | COMPLETE (local guides/snippets/package checks; physical qualification separate) |
 | [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | NOT STARTED |
 | [37: final-core-review](prompts/37-final-core-review.md) | NOT STARTED |
 | [38: final-integration-review](prompts/38-final-integration-review.md) | NOT STARTED |
@@ -2772,3 +2772,69 @@ and final CI passed. This final reporting unit changes documentation only and
 receives link/version/whitespace checks plus its own commit/sync. It does not
 create a further remote gate or extend the tested SHA to a reporting commit.
 Physical serial/I2C/USB/CC/INT/supply/timing qualification remains NOT RUN.
+
+## Prompt 35: user guides and feature coverage (2026-10-29)
+
+Started from `45da5296792ee4a38120e9c4a65f23ce6951adce`, the completed
+prompts 33/34 audit reporting commit. The tree and index were clean; fetch
+confirmed equality with the same-name origin branch and zero ahead/behind.
+The execution branch and original base remain unchanged. The recorded CI proof
+stays at `c50f8ddda8809425ede2161586466c95fa650ae6`, run 40782369910;
+this prompt neither requests nor inspects another remote run.
+
+Fresh review covered COMMON, AGENT_WORKFLOW, MAINTAINABILITY, prompt 35, current
+public headers, core operation/transport/diagnostics code, named runtime cases,
+the shared CLI/runner schemas, actual help/parity behavior, manifests and existing
+workflow commands. Three agents owned disjoint owner/API, CLI/example and
+silicon/coverage guide edits. An independent reviewer rechecked the silicon
+changes, source hashes, named tests and links; the owner reviewer checked the
+integrated README, extracted snippet, test dependencies and manifest changes.
+Only the lead handles Git. No sibling was modified.
+
+Re-audited peer revisions were clean:
+
+| Peer | HEAD | Concrete reviewed sources and choices |
+| --- | --- | --- |
+| TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | AGENTS, docs/README.md, docs/integration.md, docs/hil-runner.md, examples/README.md, examples/common/BoardConfig.h, examples/esp_idf/basic/main/CMakeLists.txt and CI. Adopt topical navigation and explicit firmware identity/console routing; reject inherited repeated-START, numeric DTR, 32-bit time and profile replay. |
+| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | AGENTS, docs/I2C_INTEGRATION.md, include/LDC1614/LDC1614.h, src/LDC1614.cpp, test/test_basic.cpp and CI. Adopt desired/actual separation, lifetimes and copied evidence; reject its queue/ID semantics, same-timestamp multi-callback assumptions, failed-delivery output resets and NACK no-effect inference. |
+| INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | AGENTS, docs/README.md, docs/CLI.md, tools/run_i2c_hil.py, tools/test_run_i2c_hil_parser.py, basic example README and CI. Adopt one command reference and framed provenance; reject scans, startup recovery and human-substring verdicts. |
+| FieldCore-node | `5ad9292dc8481cf08be9a61f662495a6474d1da0` | AGENTS, docs/guidelines/ownership.md, include/TunnelMonitor/i2c/{I2cTask,I2cOwnerTransport,I2cDeviceBinding,I2cLifetime}.h, contracts/Time.h, core/TimeService.h and src/i2c/I2cTask.cpp. Adopt serialized service/lifetimes and monotonic half-range time; reject product queues, richer completion/effect metadata and milliseconds presented as measured microseconds. |
+
+Reopened all eight archived TI PDFs and eight pinned public implementation/
+regmap source files. PDF hashes and public-source bytes/SHA-256/Git blob IDs
+match the provenance manifests; temporary reviewed bytes and extracted pages are
+under `build/prompt35-silicon`. Exact printed B pp11/14, L p14, A pp4/5/14/19,
+V pp4/6/9/13/18-20, N pp3/5/9 and G pp8-9 preserve current-refresh/reset,
+recovery, role waits, supply/VBUS_DET, enable conflict and VCONN min/typ/max
+boundaries. Public source examples remain counterexamples, not silicon authority.
+No unresolved feature gate or revision-06 policy was changed.
+
+README and the docs index now describe the delivered library and lead to one
+owner workflow, exact API/state tables and the authoritative CLI reference.
+Removed redundant API/procedure inventories and stale planned-feature claims.
+Coverage maps features to API, CLI, named runtime tests and exact TI evidence.
+Corrected remaining failed-write wording: Status-only NACK/BUSY cannot erase
+possible acceptance. Native SDK 5.5.5/6.1.0 commands use isolated configuration
+paths. The native frontend's unknown callback-kind counters visibly block full
+readonly/soak proof without hiding its usable manual CLI observations.
+
+The literal README C++ fence is extracted by CMake and executed in the existing
+contract registration. Nine simulated paths cover success, invalid inputs,
+transport/identity failure and immutable deadlines. The host-only fixture adds
+no production code, public hook, framework dependency or new test registration.
+Both literal manifests now ship the new owner guide (77 files); all repository-
+only evidence links remain valid outside the archive.
+
+Local evidence is detailed in [validation](validation.md#prompt-35-user-guides-and-compiling-examples).
+Debug/Release README checks, five relevant prior core suites, CLI parity and its
+negative check, standalone tests-OFF host execution, version, Doxygen visibility,
+boundary and all three package registrations pass. The final managed archive
+and renamed consumer pass with 206 packaged links; 139 repository Markdown files
+have 838 valid local links/fragments. Initial new package-link failures were
+fixed and the affected checks rerun. Registration remains 72 finite Windows
+tests with one owner each. Three documented portless plans save plan PASS and
+hardware NOT RUN/exit 2. No full firmware matrix, HIL, physical action, release
+or new CI checkpoint is required or claimed for these guide changes.
+
+Full scoped review and local checks are complete. Commit/sync evidence belongs
+in the handoff and next progress update; no self-referencing commit ID is added.
