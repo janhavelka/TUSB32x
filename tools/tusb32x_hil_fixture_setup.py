@@ -16,11 +16,16 @@ import sys
 import time
 
 
-FIXTURE_SUITES = ("orientation", "accessory", "role-current", "interrupt")
+FIXTURE_SUITES = ("orientation", "accessory", "role-current", "interrupt",
+                  "reset-termination", "fault", "console")
 CAPABILITIES = (
     "orientation", "audio", "debug", "charge-through", "debug-local-dfp",
-    "debug-local-ufp", "role-current", "interrupt",
+    "debug-local-ufp", "role-current", "interrupt", "reset-termination", "fault", "console",
 )
+AUTHORIZED_ACTIONS = {"reset", "recover-dead-battery", "nack", "disconnect", "power-cycle",
+                      "console-backpressure", "console-reconnect", "console-reboot"}
+FAULT_CODES = {"I2C_ERROR", "I2C_NACK_ADDR", "I2C_NACK_DATA", "I2C_TIMEOUT", "I2C_BUSY",
+               "I2C_BUS"}
 VARIANTS = (
     "tusb320", "tusb320i", "tusb320li", "tusb320hi", "tusb320lai", "tusb320hai",
     "tusb322i",
@@ -30,7 +35,8 @@ REQUIRED = {
     "board", "part", "adapter", "wiring", "addr_strap", "enable", "supply_mv",
     "partner", "operator", "variant", "capabilities",
 }
-OPTIONAL = {"startup_ready", "base_recovery_complete"}
+OPTIONAL = {"startup_ready", "base_recovery_complete", "stable_vdd", "source_startup",
+            "authorized_actions", "nack_code", "disconnect_code", "target_vdd_continuous"}
 
 
 def _text(value, name, maximum=256):
@@ -80,8 +86,9 @@ def load_setup(path, fixture_id, variant, suites):
     if not isinstance(variant, str) or variant not in VARIANTS:
         raise ValueError("select an explicit supported setup variant")
     allowed_suites = {"readonly", "soak", *FIXTURE_SUITES}
-    if (not isinstance(suites, (list, tuple)) or not 1 <= len(suites) <= 6 or
-            any(not isinstance(suite, str) or suite not in allowed_suites for suite in suites)):
+    if (not isinstance(suites, (list, tuple)) or not 1 <= len(suites) <= 9 or
+            any(not isinstance(suite, str) or suite not in allowed_suites for suite in suites) or
+            len(set(suites)) != len(suites)):
         raise ValueError("setup suites must be a bounded list of supported suite names")
     try:
         with Path(path).open("rb") as source:
@@ -109,9 +116,18 @@ def load_setup(path, fixture_id, variant, suites):
         raise ValueError(f"supply_mv must be integer VDD in [{minimum},{maximum}]")
     if "role-current" in suites and variant != "tusb322i" and supply < 3500:
         raise ValueError("local 3 A advertisement requires supply_mv >=3500")
-    for name in OPTIONAL & set(setup):
+    for name in {"startup_ready", "base_recovery_complete", "stable_vdd", "source_startup",
+                 "target_vdd_continuous"} & set(setup):
         if type(setup[name]) is not bool:
             raise ValueError(f"{name} must be a boolean")
+    actions = setup.get("authorized_actions", [])
+    if (not isinstance(actions, list) or len(actions) > len(AUTHORIZED_ACTIONS) or
+            any(not isinstance(action, str) or action not in AUTHORIZED_ACTIONS
+                for action in actions) or len(set(actions)) != len(actions)):
+        raise ValueError("authorized_actions must be a unique list of documented actions")
+    for name in ("nack_code", "disconnect_code"):
+        if name in setup and (not isinstance(setup[name], str) or setup[name] not in FAULT_CODES):
+            raise ValueError(name + " must name an exact documented I2C_* terminal status")
     capabilities = setup["capabilities"]
     if (not isinstance(capabilities, list) or len(capabilities) > len(CAPABILITIES) or
             any(not isinstance(value, str) or value not in CAPABILITIES

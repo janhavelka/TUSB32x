@@ -814,3 +814,22 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   from the runner's expected decoded values. Wrong expectations must fail against
   those same bytes; this strengthens modeled software proof without creating
   physical connector/current qualification.
+
+## Recovery fixture plans
+
+- A deliberate negative operation preregisters one exact terminal status at
+  admission. The owned token keeps that expectation before immediate completion
+  can arrive. Original failed status/detail/effect remain intact; unexpected
+  success, another error, protocol/host expiry or missing cleanup still fails.
+- Save pre-recovery actual raw/profile evidence before the first original-part
+  write. A later known cleanup baseline is separate. Historical uncertain reset
+  acceptance is not the same fact as current configuration established by
+  read-only reconciliation.
+- A new VDD epoch invalidates earlier base recovery readiness. Fault plans do not
+  replay recovery automatically; source-capable original parts stop with concrete
+  manual work. Console tests on original parts require continuous target VDD,
+  separately attested across MCU reboot.
+- Each recovery/fault/console suite uses its own verified session group under the
+  original run deadline. Authorized serial reconnect closes the old local state,
+  then creates a fresh Session with new nonces/identity/target proof. It carries no
+  old operation token, local restoration baseline or permission to replay a role.

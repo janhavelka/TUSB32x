@@ -51,6 +51,11 @@ Readonly/soak observation and dry-run checks use those same registrations. A
 portless `--dry-run --variant tusb320lai --address 0x47 --suite readonly --out
 build/readonly-plan` saves the concrete plan and exits 2 with hardware NOT RUN.
 Never add physical HIL invocation to ordinary tests or validation commands.
+Reset-termination/fault/console plans use the same runner/transcript registrations.
+For focused recovery checks run `python tools/test_tusb32x_recovery.py`. Keep exact
+negative outcomes declared before admission, actual status/detail/effects retained,
+and reboot/reconnect identity/ownership fresh. Physical actions require separate
+fixture authorization; tests only model them. See the [runner guide](docs/hil-runner.md).
 Native application builds use the pinned IDF5.5.5 environment and independent
 absolute build/SDKCONFIG paths, including on incremental builds. See the
 [native application guide](examples/esp_idf/basic/README.md) for wiring and commands.
@@ -101,7 +106,7 @@ doxygen Doxyfile
 Use generator bump/set only for intentional version changes; never hand-edit
 Version.h. No generator or Git discovery runs during consumer builds. On Windows
 use `scripts/pio.cmd` for the existing managed Core. The pinned native consumer
-environment is currently usable; later firmware environments remain planned.
+environment is usable; the Arduino/native guides record separate firmware links.
 [Development metadata](docs/development.md) defines version exits, pins, package
 allowlists, ownership and evidence limits. Extend the existing version fixture
 suite as guards mature; do not add a competing version source or fixture suite.

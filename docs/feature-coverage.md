@@ -555,3 +555,26 @@ was added. All physical serial/CC/INT/current/supply evidence remains NOT RUN.
 | Actual/staged evidence | CONFIG masks/raw bytes agree with observed fields; complete validated candidate and raw controls precede mutation and match post-verify actual settings | Missing acquisition proof, ignored staging, changed unrelated fields and staged50/applied50 ACK experiment reject before further device work |
 | Schema extension compatibility | Compare only frozen known fields; reuse Session result-copy validation | Changing extension telemetry remains recorded without false state/result mismatch |
 | Independent native oracle | Literal named LAI input bytes, separate from decoded expectations | Four complete plans plus wrong-CC and wrong-current expectations against the persistent C++ CLI; both mismatches save FAIL and blocked cleanup |
+
+## Prompt 31 and complete nine-family runner audit
+
+| Family | Real plan and prerequisites | Finite end and tested failure evidence |
+| --- | --- | --- |
+| readonly | run_plan; explicit target/port for hardware, firmware framing, idle ownership; no apply/reset/ACK | One bounded command/operation sequence and end marker; native normal/failed callback/output-full take, foreign ownership and parser-state fences |
+| soak | run_plan; current coherent observation, finite count/interval/duration/run ceilings | At most100000 observations under86400s; fake-clock deadline/invalidation/stale/unknown/counter failures, no hidden current-refresh reset |
+| orientation | run_fixture_plan; declared reversible partner, expected firmware and supply/startup readiness | Both CC1/CC2 then attested detach/conditional cleanup; actual native plan and deliberately wrong orientation rejection |
+| accessory | Same plan; exact declared capability/fixture type and variant | Finite supported accessory list with detach between types; native plan, reserved/absent/unsupported/invalidated rejection |
+| role-current | Same plan; controlled dual-role peer and local source supply capability | Finite sink/source categories and DRP; explicit base reset when required; native plan and wrong-current rejection, unexpected partner/supply/failure tests |
+| interrupt | Same plan; wired opt-in INT and physical assertion/reassertion | Single bounded ACK/service, actual50/staged30 preservation and unrelated pending latch; native plan and fault/coalescing/pending/missing-input cases |
+| reset-termination | Same plan; separately authorized reset, base-only stable-VDD/source-startup recovery action | Explicit normal reset, before-callback cancel/timeout, distinct controls and exact results; complete native LAI/320/320I plans plus literal bytes/31-96ms waits, failed/late/accepted writes and retained uncertainty |
+| fault | Same plan; separately authorized NACK/disconnect/power-cycle and exact adapter error codes | No automatic retry or profile restoration; fake and full native LAI faults, local invalidation/raw-read fence and fresh identity; original source power epoch blocks stale startup cleanup |
+| console | Same plan plus explicit reconnect owner; authorized finite backpressure/reconnect/reboot, base target-VDD continuity | Whole help response, two fresh Session domains and read-only initialization; complete native two-zero-write path,64-zero-write LOSS failure, reboot/stale/identity/target/cleanup exceptions |
+
+The existing hil_runner loads test_tusb32x_recovery.py; cli_transcript uses the
+same explicitly built C++ host. No second scheduler, hardware protocol, result
+store or test registration exists. Every new suite has setup/identity/action and
+transition rejection tests. Original result codes/details/effects remain raw;
+only preregistered exact negative statuses satisfy a negative experiment.
+Unexpected failure, missing cleanup, capture loss and interruption remain saved
+failed/incomplete evidence. Hardware serial/supply/CC/INT/reset timing remains
+NOT RUN. Console may observe322 while its mutation-suite gates remain closed.

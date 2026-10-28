@@ -10,6 +10,9 @@ from that run and never consumes another owner's retained result.
 Runner checks use the known schema fields; unknown extensions remain recorded.
 Fixture mutations require consistent actual/staged profile evidence, with one absolute
 deadline across selected suites. These checks add no firmware commands.
+Reset/fault/console runner plans use the same typed reset, original-part recovery,
+invalidation and result APIs. Expected negative terminal codes are fixed before
+admission; reconnect/reboot establishes a new session before any later work.
 
 The implemented CLI is example code in
 [examples/common](../examples/common/Tusb32xCli.h). It accepts local queries,

@@ -42,7 +42,7 @@ ROW_BY_COMMAND = {row["command"]: row for row in ROWS}
 ALIASES = {alias: row["command"] for row in ROWS for alias in row["aliases"].split(",")
            if alias != "none" and "." not in alias}
 ANSI = re.compile(rb"\x1b\[[0-9;]*m")
-BOOT = re.compile(rb"(?:ESP-ROM|ets |rst:|boot:|reboot|TUSB_BOOT)", re.IGNORECASE)
+BOOT = re.compile(rb"^(?:ESP-ROM|ets |rst:|boot:|reboot(?:ing)?\b|TUSB_BOOT)", re.IGNORECASE)
 
 
 class SessionError(RuntimeError):
@@ -152,6 +152,7 @@ class Exchange:
     ack: dict = field(default_factory=dict)
     records: list = field(default_factory=list)
     end: dict | None = None
+    expected_code: str = "OK"
 
     @property
     def admitted(self):
@@ -172,6 +173,7 @@ class OwnedOperation:
     records: dict = field(default_factory=dict)
     response_bytes: int = 0
     response_records: int = 0
+    expected_code: str = "OK"
 
     @property
     def complete(self):
@@ -357,9 +359,9 @@ class Session:
         counters["noise"] += len(line)
         if counters["noise"] > self.limits.noise_bytes:
             raise ProtocolError("boot/ANSI noise cap reached")
-        if not self._synchronizing and BOOT.search(line):
-            raise ProtocolError("new boot banner invalidates session")
         human = ANSI.sub(b"", line).rstrip(b"\r\n")
+        if not self._synchronizing and BOOT.search(human.lstrip()):
+            raise ProtocolError("new boot banner invalidates session")
         if b"TUSB " in human or any(byte < 32 or byte > 126 for byte in human):
             raise ProtocolError("machine record contaminated by ANSI/control bytes")
         return None
@@ -430,14 +432,17 @@ class Session:
                 raise ProtocolError(str(error)) from error
             self.artifacts.metadata["operation"] = {
                 "ack": op.ack, "result": op.records["RESULT"],
-                "detail": op.records["RESULT_DETAIL"], "end": record, "taken": False}
+                "detail": op.records["RESULT_DETAIL"], "end": record, "taken": False,
+                "expected_code": op.expected_code}
             result = op.records["RESULT"]
-            if result["code"] != "OK":
+            if result["code"] != op.expected_code:
                 self._payload_failed = True
                 self.artifacts.check("operation_payloads", "FAIL",
-                                     f"token={op.token} {result['code']} detail={result['detail']}")
+                                     f"token={op.token} expected={op.expected_code} "
+                                     f"actual={result['code']} detail={result['detail']}")
             elif not self._payload_failed:
-                self.artifacts.check("operation_payloads", "PASS", "owned payloads succeeded")
+                self.artifacts.check("operation_payloads", "PASS",
+                                     "owned payloads matched outcomes declared before admission")
             self._checkpoint()
 
     def _ingest(self, record):
@@ -479,7 +484,7 @@ class Session:
                 self.operation = OwnedOperation(
                     token, self.last_request, pending.command, pending.nonce, record,
                     self._exchange_deadline, response_bytes=self._record_bytes,
-                    response_records=1)
+                    response_records=1, expected_code=pending.expected_code)
             return
         request = int(record["request"])
         if self.operation and request == self.operation.request:
@@ -544,13 +549,14 @@ class Session:
                     if record[field_name] != original[field_name]:
                         raise ProtocolError("result query contradicts original payload")
 
-    def _exchange(self, text, name, deadline):
+    def _exchange(self, text, name, deadline, expected_code="OK"):
         """Write once, then collect one ACK/MARK plus closure or accepted admission."""
         if self._pending is not None or self.last_request == MAX_REQUEST:
             error = ProtocolError("pending request or exhausted request counter")
             self._abort(error)
             raise error
-        pending = Exchange(name, text.split()[1] if name == "hilmark" else self.nonce)
+        pending = Exchange(name, text.split()[1] if name == "hilmark" else self.nonce,
+                           expected_code=expected_code)
         if self.operation and not self.operation.complete:
             deadline = min(deadline, self.operation.deadline)
         self._exchange_deadline = deadline
@@ -699,9 +705,21 @@ class Session:
                 self.artifacts.metadata["device_intent"] = text
             self._checkpoint()  # Intent must survive interruption inside write().
 
-    def command(self, text, deadline=None):
-        """Execute one explicit contract route; no implicit apply/cancel/result consumption."""
+    def command(self, text, deadline=None, *, expected_code="OK"):
+        """Execute an explicit route without implicit apply/cancel/result consumption.
+
+        Managed admission may preregister an exact negative terminal code for a
+        deliberate fault experiment. Its actual failed payload is retained; any
+        mismatch remains failed evidence. This cannot excuse protocol/host timeouts,
+        effects or missing cleanup. Other routes accept only the default OK.
+        """
         name = canonical_command(text)
+        allowed = {"OK", "TIMEOUT", "CANCELLED", "I2C_ERROR", "I2C_NACK_ADDR",
+                   "I2C_NACK_DATA", "I2C_TIMEOUT", "I2C_BUSY", "I2C_BUS",
+                   "CONFIGURATION_MISMATCH", "CONFIGURATION_UNKNOWN"}
+        if (not isinstance(expected_code, str) or expected_code not in allowed or
+                expected_code != "OK" and name not in KINDS):
+            raise InvocationError("expected_code requires an exact managed terminal status")
         if name == "hilmark":
             raise InvocationError("use mark() for fresh session markers")
         deadline = self._deadline(deadline)
@@ -720,7 +738,11 @@ class Session:
         except BaseException as error:
             self._abort(error)
             raise
-        response = self._exchange(text, name, deadline)
+        if name in KINDS and expected_code != "OK":
+            self.artifacts.metadata["operation_intent"] = {
+                "command": text, "expected_code": expected_code}
+            self._checkpoint()
+        response = self._exchange(text, name, deadline, expected_code)
         if response.command == "invalid":
             # The exact ACK/END proves this input had no effect. Retain any
             # earlier local changes that still require restoration.
@@ -1034,19 +1056,43 @@ def main(argv=None):
             artifacts.metadata["serial"] = io.settings
             whole_deadline = time.monotonic() + plan.run_timeout
             artifacts.metadata["selected_plan"] = plan.describe()
+
+            def reconnect(old, deadline):
+                """Reopen only the explicitly selected port after a declared console transition.
+
+                The old session must be closed and idle. Native serial open has no
+                portable deadline guarantee; report that backend limit and reject
+                late return. Never reuse its token, correlation or local baseline.
+                """
+                nonlocal io
+                if old.valid or old.operation or old._changed or time.monotonic() >= deadline:
+                    raise SessionBlocked("reconnect requires closed idle old session and time")
+                artifacts.metadata["serial_reopen"] = {"port": args.port,
+                    "old_request": old.last_request, "open_deadline_supported": False}
+                artifacts.checkpoint()
+                io.close()
+                io = None
+                io = open_serial(args.port, timeouts=timeouts, dtr=args.dtr, rts=args.rts,
+                                 baud=args.baud)
+                if time.monotonic() >= deadline:
+                    raise SessionTimeout("serial reopen exceeded the remaining deadline")
+                artifacts.metadata["serial"] = io.settings
+                return Session(io, artifacts, timeouts=timeouts, limits=limits)
+
             # Consecutive plan groups share one immutable deadline and one open
             # transport. Each closes its session before another begins; no active
             # operation/result or changed local state crosses that boundary.
-            for fixture_group, selected in groupby(
-                    plan.suites, key=lambda suite: suite in FIXTURE_SUITES):
+            for group_kind, selected in groupby(plan.suites, key=lambda suite: (
+                    suite if suite in {"reset-termination", "fault", "console"} else
+                    "fixture" if suite in FIXTURE_SUITES else "observation")):
                 remaining = whole_deadline - time.monotonic()
                 if remaining <= 0:
                     raise SessionTimeout("whole-run deadline expired between selected suites")
                 group = replace(plan, suites=tuple(selected))
                 session = Session(io, artifacts, timeouts=timeouts, limits=limits)
-                if fixture_group:
+                if group_kind != "observation":
                     run_fixture_plan(session, group, setup, expected, clock=time.monotonic,
-                                     run_deadline=whole_deadline)
+                                     run_deadline=whole_deadline, reconnect=reconnect)
                 else:
                     run_plan(session, group, expected, clock=time.monotonic,
                              run_deadline=whole_deadline)

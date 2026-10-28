@@ -22,6 +22,8 @@ and saved outcomes. Prompt 29 implements finite readonly/soak/register observati
 plans and their live native integration. Prompt30 adds explicit orientation,
 accessory, role-current and interrupt plans with deterministic/native evidence;
 physical fixture qualification remains NOT RUN.
+Prompt31 completes reset-termination, fault and console plans with explicit
+action authorization, retained failure/effect evidence and fresh reconnect framing.
 
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split

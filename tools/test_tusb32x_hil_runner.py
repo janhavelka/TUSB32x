@@ -2175,11 +2175,13 @@ def load_tests(loader, tests, pattern):
     import test_tusb32x_fixtures
     import test_tusb32x_fixture_setup
     import test_tusb32x_fixture_invocation
+    import test_tusb32x_recovery
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_hil_artifacts))
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_observation))
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_fixtures))
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_fixture_setup))
     tests.addTests(loader.loadTestsFromModule(test_tusb32x_fixture_invocation))
+    tests.addTests(loader.loadTestsFromModule(test_tusb32x_recovery))
     return tests
 
 

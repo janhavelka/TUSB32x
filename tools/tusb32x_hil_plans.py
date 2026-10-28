@@ -16,7 +16,8 @@ from tusb32x_cli_contract import SCHEMAS
 BASE_VARIANTS = {"tusb320", "tusb320i"}
 EXTENDED_VARIANTS = {"tusb320li", "tusb320hi", "tusb320lai", "tusb320hai"}
 VARIANTS = BASE_VARIANTS | EXTENDED_VARIANTS | {"tusb322i"}
-SUITES = ("readonly", "soak", "orientation", "accessory", "role-current", "interrupt")
+SUITES = ("readonly", "soak", "orientation", "accessory", "role-current", "interrupt",
+          "reset-termination", "fault", "console")
 MAX_RUN_SECONDS = 86400
 MAX_SEQUENCE = (1 << 64) - 1
 CACHE_COMMANDS = (
@@ -142,10 +143,21 @@ class ObservationPlan:
                          "assert/observe INT; stage30; ACK and prove actual50; reassert; "
                          "apply30 with latch pending; multiple fixture events/coalescing; "
                          "service once, verify ACK/recheck/deassertion; detach",
+            "reset-termination": "explicit reset with completion evidence; no desired replay; "
+                                 "independent termination controls; cancel/owner-timeout before "
+                                 "callbacks; base-only qualified typed recovery after readiness; "
+                                 "uncertain writes stop with manual reconciliation facts",
+            "fault": "explicit authorized NACK/disconnect/power-cycle fixture transitions; "
+                     "preregister exact failed terminal codes; local invalidate; unrelated read "
+                     "cannot repair trust; fresh identity/reconcile, no old source-profile replay",
+            "console": "arm authorized bounded backpressure for help; retain loss counters; "
+                       "close local state before reconnect/reboot; new Session/nonces/identity "
+                       "and target, no old tokens or profile replay",
         }
         if any(suite in fixture_actions for suite in self.suites):
             actions.append("fixture prerequisites: explicit ID/config, expected firmware "
-                           "commit/framework/target, supply/startup readiness; no 322I writes; "
+                           "commit/framework/target, supply/startup readiness and declared "
+                           "physical actions; no 322I mutation suites; "
                            "init/read actual profile; attested initial detach")
             actions.append("each fixture operation: admit once; at most 512 job step 1 turns "
                            "with <=5ms waits; original RESULT/END and exact result take once; "
@@ -154,8 +166,9 @@ class ObservationPlan:
                        if suite in fixture_actions)
         if any(suite in fixture_actions for suite in self.suites):
             actions.append("successful fixture cleanup only: original partner/target/supply "
-                           "attestation, fresh detached/profile proof, restore observed original "
-                           "profile via apply/verify; failed work never triggers device restore")
+                           "attestation and fresh detached/profile proof; restore original "
+                           "settings only for unchanged-target settings plans, never fault/console "
+                           "power/reboot events; failed work never triggers device restore")
         actions.append("restore saved local staging/auto/output; hilmark <fresh>")
         return dict(asdict(self), suites=list(self.suites), registers=registers,
                     hardware="NOT RUN", actions=actions)

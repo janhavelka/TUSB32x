@@ -569,3 +569,19 @@ test identity; production CLI grammar is unchanged. It proves actual core ACK
 preservation and pending-latch effects, not physical INT/CC behavior. hil_runner
 has a finite90s limit for the expanded atomic-artifact tests; cli_transcript
 retains30s. No ordinary test opens a physical port or needs pyserial.
+
+Prompt31 completes all nine families using those same registrations. The recovery
+test module covers exact predeclared outcomes, action/identity/epoch guards, each
+finite transition, changed targets, uncertain writes, capture loss, interruption,
+cleanup and real command-line reconnect ownership. Run it alone with:
+
+```text
+python tools/test_tusb32x_recovery.py
+```
+
+The native transcript also executes complete reset plans for LAI/320/320I, fault
+and console plans, independent literal write/wait traces, failed/accepted writes,
+retained timeout/cancel effects, output-full take and fresh-session rejection of
+stale successes/boots. Two actual zero-output writes preserve a full response;
+64 force real whole-record LOSS and failed/unrestored evidence. No physical USB,
+power, CC or electrical timing claim follows. All previous registrations remain.

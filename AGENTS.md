@@ -37,6 +37,10 @@ readonly/soak and bounded mapped-register observations, plus portless dry-runs.
 Explicit orientation/accessory/role-current/interrupt fixture plans require declared
 setup, expected firmware identity and bounded operator observations. Ordinary tests
 use modeled hardware only; physical qualification remains separate.
+Reset-termination, fault and console plans complete the nine runner families.
+Physical fault/reconnect/reboot actions require separate setup authorization;
+negative operation outcomes must be declared before admission. Reconnects create
+new sessions and never inherit old owned tokens or restoration obligations.
 Do not describe planned interfaces, commands or builds as implemented or tested.
 
 Execute the numbered prompts when asked to implement the library. A request to
@@ -422,3 +426,12 @@ opened by ordinary tests. Missing equipment/input remains NOT RUN, closed silico
 gates BLOCKED, failed evidence FAIL. A successful local restoration cannot certify
 device cleanup. Never retry uncertain mutations or restore an old source role
 after partner, target or supply assumptions change.
+
+Prompt31 adds reset-termination/fault/console under the same registrations.
+Run tools/test_tusb32x_recovery.py for focused expectation/guard/plan failures,
+and the normal runner/transcript registrations for integration. Expected terminal
+codes are fixed before admission; actual failed payloads and effects stay recorded.
+Unplanned failure, capture loss or missing cleanup still prevents PASS. Base
+fault power-cycle source startup requires new owner-selected recovery, never old
+readiness replay. Base console requires declared continuous target VDD across the
+separately authorized MCU reboot. See the maintained runner/hardware guides.

@@ -345,8 +345,10 @@ Repeat `--suite orientation`, `--suite accessory`, `--suite role-current` and
 Selection authorizes the listed ordinary CLI mutations, not power control,
 flashing, a VBUS switch, autonomous retries or a change to board USB policy.
 Readonly remains the default. Consecutive observation and fixture groups retain
-selection order, one open transport and one immutable whole-run deadline. Each
+selection order and one immutable whole-run deadline. Each
 group finishes and restores local values before establishing the next session.
+Reset-termination, fault and console each use a separate group. Console explicitly
+closes/reopens only the selected port after authorized reconnect/reboot steps.
 The command-line owner passes the same absolute monotonic run deadline into each
 plan. Session construction and group entry consume that allowance; neither starts
 a new interval. A requested soak duration stays a ceiling, clipped to the original
@@ -358,7 +360,7 @@ Every fixture run requires `--fixture <id> --fixture-config <path>` and expected
 flashed `--expect-commit`, `--expect-framework`, `--expect-target`. Unknown firmware
 identity blocks physical transitions and writes. Missing equipment or operator
 input reported as skip/EOF is NOT RUN; unsupported variant/setup is BLOCKED.
-Contradictory observations, late input or failed operation payloads FAIL. These
+Contradictory observations, late input or unexpected failed operation payloads FAIL. These
 outcomes cannot become PASS through cleanup.
 
 Setup is strict UTF-8 JSON, at most 16KiB, with no duplicate/extra/missing keys.
@@ -387,10 +389,12 @@ actual authorized setup; save it outside shipped core as a local JSON file.
 Strings are printable ASCII, at most 256 characters (wiring 1024). Fixture IDs
 use 1..64 letters/digits/`_.-`. Capability names are exactly `orientation`, `audio`,
 `debug`, `charge-through`, `debug-local-dfp`, `debug-local-ufp`, `role-current`,
-`interrupt`; no duplicate names. The two readiness booleans are optional in JSON
+`interrupt`, `reset-termination`, `fault`, `console`; no duplicate names. Readiness booleans
+are optional in JSON
 but startup_ready must be true to run. Original TUSB320/I also requires the
 application's base_recovery_complete declaration after stable VDD and identity;
-the runner does not perform dead-battery recovery or infer it from a register.
+except reset-termination, which explicitly performs typed dead-battery recovery
+with additional readiness/authorization. A cleared register cannot prove its history.
 Wiring must explicitly describe VBUS_DET; parsing that text cannot prove safety.
 See [electrical prerequisites](hardware-validation.md) for the actual pad limits.
 
@@ -429,6 +433,9 @@ qualification. A host or firmware report cannot replace physical CC/INT evidence
 | accessory | Each explicitly declared exact accessory type/wiring; detached DFP apply (UFP for debug-local-ufp), valid typed accessory/raw bytes, detach after each. Base audio/debug/charge-through supported; base debug-local variants denied before traffic |
 | role-current | Controlled same dual-role peer and selected safe power capability; sink detects externally varied default/1.5A/3A while attached; detach, source advertises each category through stage/apply/verify and external CC observation; detach, DRP resolves as sink; detach |
 | interrupt | Wired, opt-in application INT input checked before I2C; applied50/staged30 ACK preserves50; explicit reassertion; unrelated duty30 apply leaves latch pending; multiple physical events show coalescing; one service proves ACK/recheck and INT deassertion; detach |
+| reset-termination | Explicit authorized reset, fresh COMPLETED timing, unchanged desired state, unrelated raw-read/trust fence and read-only reconcile; pre-callback cancel and owner timeout; independently disable each applicable termination control and prove aggregate state. Base-only typed recovery after stable-VDD/source-startup attestation; later parts reject it without traffic |
+| fault | Separately authorized NACK, target disconnect and power cycle; exact predeclared backend errors and counters; explicit local invalidation; cached responsiveness, unrelated read fence and fresh identity/reconcile. Never apply an old profile after power loss |
+| console | Arm bounded physical output backpressure for help; record loss counters; restore old local state before each authorized reconnect/MCU reboot; explicitly reopen selected port, create fresh nonces/identity/target and initialize read-only. No old token or profile replay |
 
 Original TUSB320/I uses **explicit reset operations** after each attached peer
 advertisement change (SLLSEN9F7.3.1.2p11), followed by identity, reconciliation,
@@ -436,14 +443,14 @@ profile and port evidence. A read alone cannot prove that current update.
 Later variants do not inherit these resets. Their successful register observation
 still does not resolve all TI wording about physical attached-current tracking.
 CC categories are neither measured load nor PD contract nor authorization to draw
-power. TUSB322I fixture plans are BLOCKED before initialization/I2C: advertisement,
+power. TUSB322I mutation fixture plans are BLOCKED before initialization/I2C: advertisement,
 mixed09/fault-clear and return-to-DRP gates prevent this complete mutation/cleanup
-plan. Its read-only observation remains separately available with access context.
+plan. Its read-only observation and console plans remain separately available with access context.
 
 Each operation admits once, uses at most512 explicit job-step1 exchanges with
 at most5ms sleeps, and takes the exact owned original result once. The command
 deadline includes admission, waits and take. Rejected admission, late callback,
-cancellation, failed payload or BUSY take stops the plan; no uncertain write,
+unexpected cancellation, failed payload or BUSY take stops the plan; no uncertain write,
 ACK, reset, cancel or take is automatically retried. Port reads retain the CLI's
 fixed1000ms owner timeout. Up to64 physical steps save bounded attestation plus
 raw/typed/validity/sequence/time evidence; no growing transcript journal is added.
@@ -464,6 +471,9 @@ original desired-profile generation. The original desired snapshot is preserved
 in the report; cleanup never blindly reapplies it. Refuse cleanup if the partner,
 target or power assumptions changed. Never restore an old source role on another
 partner. Device failure/uncertainty stops without automatic hardware restoration.
+Fault and console never restore an old device profile, including after successful
+power/reboot transitions. Their cleanup proves current identity/known enabled
+controls and attested detach. It cannot undo an earlier USB event.
 
 `metadata.hardware_cleanup`, primary outcome and local restoration are separate.
 `fixture_progress` counts confirmed transitions, consumed operations and
@@ -473,3 +483,80 @@ BLOCKED device cleanup. Residual effects, owned tokens and historical observatio
 remain saved; an explicit later owner decision must resolve them. Missing cleanup
 proof prevents overall PASS. Transcript fixture reports label modeled observations
 and physical hardware NOT RUN; real connector/INT/electrical evidence is separate.
+
+## Reset, fault and console setup
+
+Select these suites explicitly; no all-mutating option exists. Extend only the
+actual local setup declaration with the needed capability and separately authorized
+actions. The loader accepts a unique `authorized_actions` list drawn from `reset`,
+`recover-dead-battery`, `nack`, `disconnect`, `power-cycle`, `console-backpressure`,
+`console-reconnect`, `console-reboot`. An action name never operates board hardware.
+
+Reset-termination requires `reset`. Original TUSB320/I additionally requires
+`recover-dead-battery`, `stable_vdd: true` and `source_startup: true`. It starts with
+read-only identification returning OK; it is not a general repair entrypoint for
+an already unresolved sequence. The pre-recovery raw/configuration/profile,
+target and supply evidence is saved before the readiness step and first write.
+That step also requires a fresh coherent detached-port observation before the
+first45 write; supply readiness cannot substitute for current fixture evidence.
+The operation uses the core's qualified45=04, at least30ms plus1ms scheduling
+margin,45=00 and readback; the host requires confirmed typed completion and
+fresh elapsed evidence. Reset requires COMPLETED and at least95+1 owner ms.
+Native traces check individual write ordering; host timestamps alone cannot prove
+electrical timing. No runner raw write implements either sequence.
+
+The normal reset plan cancels and expires a1ms owner deadline before any callback,
+requiring NONE and zero callbacks. The host command deadline remains separate so
+the exact terminal result can be taken. Failed/cancelled/late writes after possible
+effect are failure paths: stop, preserve UNKNOWN/PARTIAL/INDETERMINATE and do not
+retry reset/recovery/apply. Observing only one enabled termination control does not
+prove aggregate ENABLED. Historical reset acceptance remains separate from current
+read-only reconciliation proof and cannot be erased by an unrelated read.
+
+Fault requires `nack`, `disconnect`, `power-cycle`, and exact `nack_code` and
+`disconnect_code` values from `I2C_ERROR`, `I2C_NACK_ADDR`, `I2C_NACK_DATA`,
+`I2C_TIMEOUT`, `I2C_BUSY`, `I2C_BUS`. Declare what the adapter actually reports;
+generic errors do not identify a physical failure phase. The operator performs and
+then removes each bounded fixture fault. The runner takes the failed result once,
+invalidates locally and explicitly identifies/observes the restored target. It
+never switches supplies or automatically retries a failed transaction.
+After a source-capable original-part power cycle, previous base recovery readiness
+is invalid: cleanup stays BLOCKED with manual typed-recovery facts. A clear45 byte
+and fresh identity cannot prove the historical procedure. This limitation cannot
+be overridden by the initial base_recovery_complete declaration.
+
+Console requires all three console actions and an application/backend arrangement
+that can arm finite backpressure for the next help response. Release it within
+the command deadline. Dropped output, stale frames, a new boot banner or changed
+identity is failed evidence, not a reconnect success. MCU reboot is explicit; on
+original parts `target_vdd_continuous: true` is additionally required and the
+operator must attest continuous chip VDD at each step. If chip power also changed,
+stop and select the separate original-part startup/recovery procedure.
+Each old session restores its own local values and ends before the physical
+transition. A new Session uses fresh begin/end nonces, expected firmware identity
+and exact variant/address. It inherits no requests, tokens or local baseline.
+Native zero-write callbacks and new host subprocesses model this behavior without
+qualifying USB hardware. The serial backend has no portable bounded-open primitive;
+late return fails, and its open/reset limits remain reported.
+
+The Session command API's optional keyword `expected_code` preregisters one exact
+managed terminal outcome before admission, including deliberate TIMEOUT/CANCELLED,
+I2C faults or read-only reconciliation mismatch/unknown. It is not available on
+step/cancel/result/take. The actual failed payload/detail/effect are saved unchanged
+beside the expectation. A matching expected rejection is successful negative-test
+evidence; unexpected OK/error, protocol loss, effects, timing or cleanup defects
+still prevent PASS. Existing commands default to required OK. No prior FAIL check
+can be replaced by passing cleanup or a fresh session.
+
+Portless planning remains incomplete hardware evidence (exit2):
+
+```text
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite reset-termination --suite fault --suite console --run-timeout 1800 --out build/recovery-plan
+```
+
+For real execution use the earlier operator-supplied port/identity variables and
+the actual fixture declaration. No port, COM name, SHA, supply measurement or trace
+in these examples is claimed as executed. Every mutation/physical-action intent
+is checkpointed before work. `manual_reconciliation` gives current owner facts
+when cleanup is blocked; saved failure, residual effects and interrupted cleanup
+remain independent (exit1 failure,2 incomplete,130 interruption).

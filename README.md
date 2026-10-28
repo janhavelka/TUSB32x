@@ -96,6 +96,11 @@ apply, reset or IRQ ACK. Explicit orientation, accessory, role-current and inter
 plans require identified fixtures, setup/identity/supply prerequisites and bounded
 operator observations. They use ordinary operations and conditional cleanup;
 unknown or failed effects are never automatically retried/restored.
+Explicit reset-termination, fault and console plans also cover typed reset/base
+recovery, separately authorized fault actions and fresh sessions after reconnect.
+Expected negative outcomes are declared before admission; actual effects and
+cleanup remain independent. No runner controls a supply or restores an old source
+role after a power/reboot event.
 One absolute deadline covers selected suite groups. Actual acquisition masks and
 validated staging must support the complete candidate before device writes.
 [Hardware prerequisites](docs/hardware-validation.md)

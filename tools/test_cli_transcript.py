@@ -8,6 +8,7 @@ the host is terminated on failure, and no serial device or physical bus is opene
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import json
 import queue
 import subprocess
@@ -19,10 +20,10 @@ from collections.abc import Callable, Mapping, Sequence
 
 from tusb32x_cli_contract import ROWS, SCHEMAS, parse_record, validate_record, validate_exchange
 from tusb32x_hil_artifacts import Artifacts
-from tusb32x_hil_runner import Session, SessionBlocked
+from tusb32x_hil_runner import ProtocolError, Session, SessionBlocked
 from tusb32x_hil_plans import ObservationPlan, PlanFailure, run_plan
 from tusb32x_hil_fixtures import run_fixture_plan
-from tusb32x_hil_fixture_setup import FIXTURE_SUITES, load_setup
+from tusb32x_hil_fixture_setup import load_setup
 
 
 class PersistentHost:
@@ -1171,7 +1172,9 @@ def exercise_fixture_plans(executable):
     the production operation engine and typed records. Saved reports explicitly
     identify all connector/CC/INT observations as modeled, with hardware NOT RUN.
     """
-    scenarios = [(suite, None) for suite in FIXTURE_SUITES] + [
+    scenarios = [(suite, None) for suite in (
+        "orientation", "accessory", "role-current", "interrupt",
+    )] + [
         ("orientation", ("orientation-cc1", "orientation", "CC2", "CC1")),
         ("role-current", ("sink-1a5", "detected_current", "MA_3000", "MA_1500")),
     ]
@@ -1272,6 +1275,593 @@ def exercise_fixture_plans(executable):
                 artifacts.close()
 
 
+@contextmanager
+def recovery_host(executable, *options):
+    """Own a bounded modeled device and independent callback trace, closing every subprocess.
+
+    The callback file records modeled owner time and literal bytes. It establishes
+    software ordering only; there is no board, measured CC state or electrical clock.
+    """
+    with tempfile.TemporaryDirectory(prefix="tusb32x-recovery-") as temporary:
+        trace = Path(temporary) / "callbacks.txt"
+        host = PersistentHost(executable, "--trace", str(trace), *options)
+        try:
+            yield host, trace
+            host.close()
+        finally:
+            if host.process.poll() is None:
+                host.process.kill()
+                host.process.wait(timeout=3)
+            host.reader.join(timeout=3)
+
+
+def callback_trace(path):
+    """Read independent I2C callback/zero-output records, rejecting malformed evidence."""
+    result = []
+    for line in path.read_text("ascii").splitlines():
+        fields = line.split()
+        if len(fields) != 9 or fields[2] not in {"R", "W", "Z"}:
+            raise AssertionError("malformed native callback trace")
+        entered, completed, direction, address, register, value, length, ok, detail = fields
+        record = dict(direction=direction, entered=int(entered), completed=int(completed),
+                      address=int(address), register=int(register), value=int(value),
+                      length=int(length), ok=int(ok), detail=int(detail))
+        if record["entered"] > record["completed"] or record["ok"] not in {0, 1}:
+            raise AssertionError("invalid native callback time/status evidence")
+        if (direction == "Z" and not 1 <= record["length"] <= 256 or
+                direction == "W" and record["length"] != 2 or
+                direction == "R" and record["length"] != 1 and not (
+                    record["register"] == 0 and record["length"] == 8)):
+            raise AssertionError("native callback used an unexpected transfer length")
+        result.append(record)
+    return result
+
+
+def trace_vectors(records):
+    """Project captured callbacks into literal direction/register/value assertions."""
+    return [(record["direction"], record["register"], record["value"])
+            for record in records]
+
+
+def native_turn_operation(host, command, *, code="OK"):
+    """Complete observation-mode work through finite real owner turns and retain its result."""
+    admitted = host.command(command, command.split()[0], wait=False)
+    token = payload(admitted, "ACK")["token"]
+    for _ in range(192):
+        host.command("job status", "job.status")
+        if token in host.completed:
+            return host.completion(token, code=code)
+    raise AssertionError("modeled operation exceeded its finite owner-turn bound")
+
+
+def exercise_reset_recovery_success(executable):
+    """Check explicit reset and base recovery against independent literal callback sequences.
+
+    SLLSEN9F 7.4.3 p14 specifies original-part 45=04, 30 ms, 45=00.
+    SLLSEN9F Table7-7 p19 and SLLSEQ8D Table10 p19 describe self-clearing reset;
+    the model retains other controls rather than inventing a complete reset image.
+    SLLSEO5D 6.3.2 p9 additionally requires 322 reset-to-DRP. Its fixture models
+    just that role change. The core must wait 95/30 ms plus its 1 ms policy margin.
+    """
+    for variant in ("tusb320", "tusb320i", "tusb320lai", "tusb322i"):
+        with recovery_host(executable, "--variant", variant) as (host, trace):
+            host.command("bind", "bind")
+            operation(host, "init", "init")
+            # Preserve the literal model's current advertisement, including 322's
+            # gated advertisement write. Apply only the explicit detached mode change.
+            host.command("current 3a0", "current")
+            host.command("debounce " + ("133" if variant in {"tusb320", "tusb320i"}
+                                        else "168"), "debounce")
+            host.command("mode dfp", "mode")
+            operation(host, "apply", "apply")
+            host.command("mode ufp", "mode")  # Unapplied staging must stay unapplied.
+            start = len(callback_trace(trace))
+            records = host.command("reset", "reset")
+            result, detail = payload(records, "RESULT"), payload(records, "RESULT_DETAIL")
+            reset = callback_trace(trace)[start:]
+            is_base = variant in {"tusb320", "tusb320i"}
+            expected = [("R", 0x0A, 0x20), ("W", 0x0A, 0x28),
+                        ("R", 0, 0x32 if variant == "tusb322i" else 0x30)]
+            if not is_base:
+                expected.append(("R", 0xA0, 2))
+            expected += [("R", 8, 0x80), ("R", 9, 0x14),
+                         ("R", 10, 0 if variant == "tusb322i" else 0x20)]
+            if variant != "tusb322i":
+                expected.append(("R", 0x45, 0))
+            if (trace_vectors(reset) != expected or
+                    any(r["address"] != (0x60 if is_base else 0x47) for r in reset) or
+                    reset[2]["length"] != 8 or
+                    reset[2]["entered"] - reset[1]["completed"] < 96 or
+                    result["effect"] != "CONFIRMED" or result["configuration"] != "KNOWN" or
+                    detail["reset"] != "COMPLETED" or detail["termination"] != "ENABLED" or
+                    int(result["callbacks"]) != len(expected)):
+                raise AssertionError(
+                    f"{variant}: reset vectors={trace_vectors(reset)}, result={result}, "
+                    f"detail={detail}, modeled_wait={reset[2]['entered'] - reset[1]['completed']}"
+                )
+            host.command("result take " + result["token"], "result.take")
+            profiles = host.command("profile show", "profile.show")
+            modes = {r["source"]: r["mode"] for r in profiles if r["type"] == "PROFILE"}
+            if modes != {"staged": "ufp", "desired": "dfp",
+                         "observed": "drp" if variant == "tusb322i" else "dfp",
+                         "applied": "drp" if variant == "tusb322i" else "dfp"}:
+                raise AssertionError("reset replayed staging/desired or erased observed role")
+            before = len(callback_trace(trace))
+            if not is_base:
+                host.command("recover-dead-battery", "recover-dead-battery",
+                             code="UNSUPPORTED_FEATURE")
+                if len(callback_trace(trace)) != before:
+                    raise AssertionError("later variant recovery rejection touched the bus")
+                continue
+            recovery = host.command("recover-dead-battery", "recover-dead-battery")
+            result = payload(recovery, "RESULT")
+            callbacks = callback_trace(trace)[before:]
+            if (trace_vectors(callbacks) != [("R", 0x45, 0), ("W", 0x45, 4),
+                                              ("W", 0x45, 0), ("R", 0x45, 0)] or
+                    any(r["address"] != 0x60 for r in callbacks) or
+                    callbacks[2]["entered"] - callbacks[1]["completed"] < 31 or
+                    result["callbacks"] != "4" or result["effect"] != "CONFIRMED" or
+                    payload(recovery, "RESULT_DETAIL")["termination"] != "ENABLED"):
+                raise AssertionError("base recovery omitted qualified bytes, wait or verification")
+            host.command("result take " + result["token"], "result.take")
+
+
+def exercise_recovery_interruptions(executable):
+    """Cancel before/after writes, preserving effects even when recovery already reads clear."""
+    for recovery in (False, True):
+        command = "recover-dead-battery" if recovery else "reset"
+        for boundary in ((0, 1, 2, 3) if recovery else (0, 1, 2)):
+            options = ("--variant", "tusb320") if recovery else ()
+            with recovery_host(executable, *options) as (host, trace):
+                host.command("bind", "bind")
+                operation(host, "init", "init")
+                host.command("job auto 0", "job.auto")
+                before = len(callback_trace(trace))
+                admitted = host.command(command + " 2147483647", command, wait=False)
+                token = payload(admitted, "ACK")["token"]
+                for _ in range(8):
+                    if len(callback_trace(trace)) - before == boundary:
+                        break
+                    host.command("job step 1", "job.step")
+                callbacks = callback_trace(trace)[before:]
+                expected = ([("R", 0x45, 0), ("W", 0x45, 4), ("W", 0x45, 0)]
+                            if recovery else [("R", 0x0A, 0x30), ("W", 0x0A, 0x38)])
+                if trace_vectors(callbacks) != expected[:boundary]:
+                    raise AssertionError("manual cancellation boundary did not execute exact bytes")
+                host.command("cancel " + token, "cancel")
+                terminal = host.completion(token, code="CANCELLED")
+                result = payload(terminal, "RESULT")
+                if (result["effect"] != ("PARTIAL" if boundary >= 2 else "NONE") or
+                        result["configuration"] != ("UNKNOWN" if boundary >= 2 else "KNOWN") or
+                        int(result["callbacks"]) != boundary or
+                        len(callback_trace(trace)) != before + boundary):
+                    raise AssertionError("cancel changed hardware or discarded callback effects")
+                copied = host.command("result take " + token, "result.take")
+                if payload(copied, "RESULT")["code"] != "CANCELLED":
+                    raise AssertionError("successful take repaired cancellation")
+                if boundary < 2:
+                    continue
+                raw = payload(host.command("reg 0x45" if recovery else "reg 0x0a", "reg"), "REG")
+                expected_raw = (0 if boundary == 3 else 4) if recovery else 0x30
+                if int(raw["value"]) != expected_raw:
+                    raise AssertionError("cancellation undid the fixture's accepted write")
+                host.command("reg 8", "reg")
+                diag = payload(host.command("diag", "diag"), "DIAG")
+                if (diag["configuration"] != "UNKNOWN" or
+                        (recovery and diag["recovery_unresolved"] != "1") or
+                        (not recovery and diag["reset"] != "MAY_BE_PENDING")):
+                    raise AssertionError("unrelated successful reads repaired interrupted trust")
+                host.command("job auto 1", "job.auto")
+                operation(host, "reconcile", "reconcile",
+                          code="CONFIGURATION_UNKNOWN" if recovery else "OK")
+                if recovery:
+                    diag = payload(host.command("diag", "diag"), "DIAG")
+                    if diag["recovery_unresolved"] != "1":
+                        raise AssertionError("current clear controls erased historical recovery")
+                    # This is a separately requested new operation after reconciliation,
+                    # never automatic cleanup or a retry of the cancelled token.
+                    operation(host, command, command)
+                    operation(host, "reconcile", "reconcile")
+                    if payload(host.command("diag", "diag"), "DIAG")["recovery_unresolved"] != "0":
+                        raise AssertionError("completed recovery retained a false obligation")
+
+
+def exercise_recovery_failures(executable):
+    """Keep callback failures, owner deadlines and late success separate from hardware effects."""
+    for recovery in (False, True):
+        command = "recover-dead-battery" if recovery else "reset"
+        options = ("--variant", "tusb320") if recovery else ()
+        with recovery_host(executable, *options) as (host, trace):
+            host.command("bind", "bind")
+            operation(host, "init", "init")
+            before = len(callback_trace(trace))
+            expired = host.command(command + " 1", command, code="TIMEOUT")
+            result = payload(expired, "RESULT")
+            if (len(callback_trace(trace)) != before or result["callbacks"] != "0" or
+                    result["effect"] != "NONE" or result["configuration"] != "KNOWN" or
+                    result["state"] != "TIMED_OUT"):
+                raise AssertionError("deadline before callbacks changed hardware or valid trust")
+            host.command("result take " + result["token"], "result.take")
+        faults = ("write", "write-applied", "readback", "late-write", None)
+        if recovery:
+            faults += ("enable-write", "enable-write-applied")
+        for fault in faults:
+            launch = options + (("--fault", fault) if fault else ())
+            with recovery_host(executable, *launch) as (host, trace):
+                host.command("bind", "bind")
+                operation(host, "init", "init")
+                before = len(callback_trace(trace))
+                deadline_failure = fault in {"late-write", None}
+                code = "TIMEOUT" if deadline_failure else "I2C_TIMEOUT"
+                records = host.command(command + (" 20" if deadline_failure else ""),
+                                       command, code=code)
+                result, detail = payload(records, "RESULT"), payload(records, "RESULT_DETAIL")
+                callbacks = callback_trace(trace)[before:]
+                expected_count = ((4 if recovery else 3) if fault == "readback" else
+                                  3 if fault in {"enable-write", "enable-write-applied"} else 2)
+                uncertain_write = fault in {"write", "write-applied", "enable-write",
+                                           "enable-write-applied"}
+                effect = "INDETERMINATE" if uncertain_write else "PARTIAL"
+                if (len(callbacks) != expected_count or result["effect"] != effect or
+                        result["configuration"] != "UNKNOWN" or
+                        result["state"] != ("TIMED_OUT" if deadline_failure else "FAILED") or
+                        result["detail"] != ("0" if deadline_failure else "-2147483648") or
+                        detail["completed_time_valid"] != ("1" if deadline_failure else "0")):
+                    raise AssertionError("failed operation lost exact status/effect/time evidence")
+                if fault == "late-write" and (
+                        callbacks[1]["completed"] <= callbacks[1]["entered"] + 20):
+                    raise AssertionError("late-success model did not exceed its original deadline")
+                if [r["direction"] for r in callbacks].count("W") != (
+                        2 if recovery and fault in {"readback", "enable-write",
+                                                    "enable-write-applied"} else 1):
+                    raise AssertionError("failure silently retried or replayed a mutation")
+                host.command("result take " + result["token"], "result.take")
+                raw = payload(host.command("reg 0x45" if recovery else "reg 0x0a", "reg"), "REG")
+                cleared = fault in {"write", "readback", "enable-write-applied"}
+                expected_raw = (0 if cleared else 4) if recovery else 0x30
+                if int(raw["value"]) != expected_raw:
+                    raise AssertionError("failed write's accepted/rejected image was invented")
+                diag = payload(host.command("diag", "diag"), "DIAG")
+                if (diag["configuration"] != "UNKNOWN" or
+                        (recovery and diag["recovery_unresolved"] != "1") or
+                        (not recovery and diag["reset"] != "MAY_BE_PENDING")):
+                    raise AssertionError("raw read repaired failed sequence trust")
+                count = len(callback_trace(trace))
+                host.command("invalidate power-loss", "invalidate")
+                invalid = payload(host.command("diag", "diag"), "DIAG")
+                if (invalid["initialized"] != "0" or invalid["configuration"] != "UNKNOWN" or
+                        len(callback_trace(trace)) != count):
+                    raise AssertionError("invalidation performed I/O or retained usability")
+
+
+def exercise_termination_controls(executable):
+    """Prove LAI 0A.disableTerm and 45.disableRdRp independently gate termination evidence."""
+    with recovery_host(executable) as (host, _trace):
+        host.command("bind", "bind")
+        operation(host, "init", "init")
+        host.command("current 3a0", "current")
+        for disable_term, disable_rd_rp, raw0a, raw45 in (
+                (True, False, 0x31, 0), (False, True, 0x30, 4),
+                (True, True, 0x31, 4), (False, False, 0x30, 0)):
+            host.command("termination " + ("off" if disable_term else "on"), "termination")
+            host.command("rd-rp " + ("off" if disable_rd_rp else "on"), "rd-rp")
+            operation(host, "apply", "apply")
+            profiles = host.command("profile show", "profile.show")
+            config, detail = payload(profiles, "CONFIG"), payload(profiles, "CONFIG_DETAIL")
+            if (int(config["raw0a"]) != raw0a or int(config["raw45"]) != raw45 or
+                    detail["termination"] != ("DISABLED" if disable_term or disable_rd_rp
+                                              else "ENABLED")):
+                raise AssertionError("one clear disable control proved termination enabled")
+
+
+def exercise_reset_take_backpressure(executable):
+    """Preserve a completed reset's exact retained result when output reservation denies take."""
+    with recovery_host(executable, "--observation", "1",
+                       "--fault", "reset-take-full") as (host, trace):
+        host.command("bind", "bind")
+        initialized = native_turn_operation(host, "init")
+        init_token = payload(initialized, "RESULT")["token"]
+        host.command("result take " + init_token, "result.take")
+        records = native_turn_operation(host, "reset")
+        result = payload(records, "RESULT")
+        before = len(callback_trace(trace))
+        host.command("result take " + result["token"], "result.take", code="BUSY")
+        job = payload(host.command("job status", "job.status"), "JOB")
+        copied = payload(host.command("result", "result"), "RESULT")
+        if (job["result_pending"] != "1" or copied["token"] == init_token or
+                copied["effect"] != "CONFIRMED" or
+                any(copied[key] != result[key] for key in SCHEMAS["RESULT"][3:]) or
+                len(callback_trace(trace)) != before):
+            raise AssertionError("congested take corrupted later reset ownership or evidence")
+        host.command("result take " + result["token"], "result.take")
+
+
+def exercise_reconnect_framing(executable):
+    """Invalidate old correlation and reject stale actual success after a new verified session.
+
+    Replacing a native process models fresh firmware framing only. It makes no
+    USB disconnect, serial buffering, physical board reboot or backpressure claim.
+    """
+    for damage in ("stale-success", "boot-banner", "identity-change"):
+        with tempfile.TemporaryDirectory(prefix="tusb32x-reconnect-") as temporary:
+            root = Path(temporary)
+            state = root / "state.txt"
+            state.write_text("0 0 16\n", encoding="ascii")
+            artifacts = Artifacts(root / "evidence", time.monotonic)
+            artifacts.metadata["native_simulation"] = {
+                "physical_hardware": "NOT RUN", "evidence": "native process reconnect model",
+            }
+            old = PersistentHost(executable, "--fixture", "1", "--fixture-state", str(state))
+            fresh = None
+            try:
+                expected = {"git": "0123456789abcdef0123456789abcdef01234567",
+                            "framework": "host", "target": "native"}
+                io = SessionFixtureIo(old)
+                session = Session(io, artifacts)
+                session.begin(expected)
+                session.command("bind")
+                session.command("init")
+                for _ in range(12):
+                    if session.operation.complete:
+                        break
+                    session.command("job status")
+                success = dict(session.wait_operation())
+                session.take_result()
+                old_nonce = session.nonce
+                session.invalidate("explicit native process reconnect model")
+                sent = io.writes
+                try:
+                    session.command("reset")
+                except SessionBlocked:
+                    pass
+                else:
+                    raise AssertionError("old session authorized work after reconnect")
+                if io.writes != sent:
+                    raise AssertionError("invalid old session wrote reconnect bytes")
+                io.close()
+                fresh = PersistentHost(executable, "--fixture", "1", "--fixture-state", str(state))
+                fresh_io = SessionFixtureIo(fresh)
+                new = Session(fresh_io, artifacts)
+                if damage == "identity-change":
+                    try:
+                        new.begin(dict(expected, target="wrong-target"))
+                    except SessionBlocked as error:
+                        if str(error) != "firmware identity mismatch/unknown: target":
+                            raise AssertionError("unrelated reconnect identity failure") from error
+                    else:
+                        raise AssertionError("changed identity authorized a reconnect session")
+                    if new.valid or new.operation is not None:
+                        raise AssertionError("mismatched identity established owned work")
+                else:
+                    new.begin(expected)
+                    if new.nonce == old_nonce or new.operation is not None or new.last_token != 0:
+                        raise AssertionError("reconnect inherited nonce, token or owned work")
+                    if damage == "boot-banner":
+                        fresh.lines.put(b"TUSB_BOOT modeled-restart\n")
+                    else:
+                        line = "TUSB RESULT " + " ".join(
+                            key + "=" + success[key] for key in SCHEMAS["RESULT"]
+                        ) + "\n"
+                        fresh.lines.put(line.encode("ascii"))
+                    try:
+                        new.command("bus")
+                    except ProtocolError as error:
+                        expected_error = ("new boot banner invalidates session"
+                                          if damage == "boot-banner" else
+                                          "unexpected/closed request or changed nonce")
+                        if str(error) != expected_error:
+                            raise AssertionError("reconnect failed for unrelated reason") from error
+                    else:
+                        raise AssertionError("new framing accepted old success or a fresh boot")
+                    if new.valid:
+                        raise AssertionError("damaged reconnect retained a valid session")
+                report = artifacts.snapshot()
+                if report["primary"] != ("BLOCKED" if damage == "identity-change" else "FAIL"):
+                    raise AssertionError("reconnect report concealed failed framing/identity")
+                fresh_io.close()
+            finally:
+                for host in (old, fresh):
+                    if host is not None and host.process.poll() is None:
+                        host.process.kill()
+                        host.process.wait(timeout=3)
+                artifacts.close()
+
+
+class ScriptedRecoveryFixture:
+    """Provide named detached inputs and separate, explicit native fixture actions.
+
+    No expected decoded field influences the physical input oracle. NACK and bus
+    faults are backend declarations, power-cycle uses the pinned LAI power-on
+    image, and backpressure means finite zero-write returns from a native pipe
+    sink. None represents USB, CC, electrical timing or physical supply evidence.
+    """
+
+    STATES = {
+        "initial-detached": (0x00, 0x10), "cleanup-detached": (0x00, 0x10),
+        "recovery-ready": (0x00, 0x10), "reset-detach": (0x00, 0x10),
+        "fault-nack": (0x00, 0x10), "fault-nack-restore": (0x00, 0x10),
+        "fault-disconnect": (0x00, 0x10), "fault-disconnect-restore": (0x00, 0x10),
+        "fault-power-cycle": (0x00, 0x10), "fault-detach": (0x00, 0x10),
+        "console-backpressure": (0x00, 0x10), "console-reconnect": (0x00, 0x10),
+        "console-reboot": (0x00, 0x10), "console-detach": (0x00, 0x10),
+    }
+    ACTIONS = {"fault-nack": "nack", "fault-disconnect": "disconnect",
+               "fault-power-cycle": "power-cycle", "console-backpressure": "backpressure"}
+
+    def __init__(self, path, *, output_loss=False):
+        """Start one monotonic external input stream with independently literal detached bytes."""
+        self.path, self.version, self.steps = path, 0, []
+        self.output_loss = output_loss
+        self.path.write_text("0 0 16\n", encoding="ascii")
+
+    def __call__(self, step, deadline):
+        """Apply exactly one declared action to the launch-only model, within its host bound."""
+        if time.monotonic() >= deadline:
+            raise AssertionError("native recovery fixture exceeded the finite deadline")
+        raw08, raw09 = self.STATES[step["id"]]
+        self.version += 1
+        self.steps.append(step["id"])
+        action = self.ACTIONS.get(step["id"], "")
+        if action == "backpressure" and self.output_loss:
+            action = "backpressure-loss"
+        self.path.write_text(f"{self.version} {raw08} {raw09} {action}\n", encoding="ascii")
+        return True
+
+
+def exercise_recovery_fixture_plans(executable):
+    """Run complete production reset, fault and console plans through actual C++ CLI/core.
+
+    All physical actions are separately declared modeled inputs. Exact callback
+    vectors, read-only failures, retained report fields, fresh Session domains and
+    real console zero-write responses are inspected independently after the plan.
+    One CTest transcript owns every process and no hardware is opened.
+    """
+    scenarios = (("reset-termination", "tusb320lai", False),
+                 ("reset-termination", "tusb320", False),
+                 ("reset-termination", "tusb320i", False), ("fault", "tusb320lai", False),
+                 ("console", "tusb320lai", False), ("console", "tusb320lai", True))
+    for suite, variant, output_loss in scenarios:
+        with tempfile.TemporaryDirectory(prefix="tusb32x-plan-" + suite + "-") as temporary:
+            root = Path(temporary)
+            setup_path = root / "setup.json"
+            setup_path.write_text(json.dumps({
+                "board": "native simulated board; no hardware", "part": "modeled " + variant,
+                "adapter": "actual C++ CLI/core recording callbacks",
+                "wiring": "modeled detached CC, INT and VBUS_DET; no electrical qualification",
+                "addr_strap": "modeled 0x60" if variant in {"tusb320", "tusb320i"}
+                              else "modeled 0x47",
+                "enable": "modeled active-low enable", "supply_mv": 5000,
+                "partner": "modeled disconnected fixture", "operator": "native model",
+                "variant": variant, "startup_ready": True, "stable_vdd": True,
+                "source_startup": True, "capabilities": [suite],
+                "authorized_actions": ["reset", "recover-dead-battery", "nack", "disconnect",
+                                       "power-cycle", "console-backpressure",
+                                       "console-reconnect", "console-reboot"],
+                "nack_code": "I2C_NACK_ADDR", "disconnect_code": "I2C_BUS",
+            }), encoding="utf-8")
+            setup = load_setup(setup_path, "native-recovery", variant, (suite,))
+            physical = ScriptedRecoveryFixture(root / "state.txt", output_loss=output_loss)
+            artifacts = Artifacts(root / "evidence", time.monotonic)
+            artifacts.metadata["native_simulation"] = {
+                "physical_hardware": "NOT RUN",
+                "evidence": "native input/fault/power/zero-write model; actual C++ CLI/core",
+            }
+            hosts, sessions = [], []
+
+            def launch():
+                """Create a separately traced native process borrowing the external input file."""
+                trace = root / f"callbacks-{len(hosts)}.txt"
+                host = PersistentHost(executable, "--fixture", "1", "--fixture-state",
+                                      str(physical.path), "--variant", variant,
+                                      "--trace", str(trace))
+                hosts.append((host, trace))
+                new = Session(SessionFixtureIo(host), artifacts)
+                sessions.append(new)
+                return new
+
+            def reconnect(old, deadline):
+                """Replace native framing only after the production plan closed its old session."""
+                if old.valid or old.operation or time.monotonic() >= deadline:
+                    raise AssertionError("production reconnect abandoned valid/owned old work")
+                old.io.close()
+                return launch()
+
+            try:
+                session = launch()
+                expected = {"git": "0123456789abcdef0123456789abcdef01234567",
+                            "framework": "host", "target": "native"}
+                try:
+                    summary = run_fixture_plan(
+                        session, ObservationPlan(
+                            variant=variant, address=0x60 if variant in {"tusb320", "tusb320i"}
+                            else 0x47, suites=(suite,), run_timeout=20),
+                        setup, expected, transition=physical, sleep=fixture_no_sleep,
+                        reconnect=reconnect if suite == "console" else None,
+                    )
+                except ProtocolError as error:
+                    if not output_loss or str(error) != "output loss or request exhaustion":
+                        raise
+                    report = artifacts.snapshot()
+                    trace = callback_trace(hosts[0][1])
+                    captured = (artifacts.directory / "transcript.log").read_bytes()
+                    if (report["primary"] != "FAIL" or session.valid or session.operation or
+                            report["checks"]["console"]["status"] != "FAIL" or
+                            not report["metadata"].get("unrestored_local") or
+                            b"TUSB LOSS schema=1" not in captured or
+                            sum(row["direction"] == "Z" for row in trace) != 64 or
+                            any(row["direction"] == "W" for row in trace) or
+                            physical.steps[-1] != "console-backpressure"):
+                        raise AssertionError("real output loss lost failed/unrestored evidence")
+                    session.io.close()
+                    continue
+                if output_loss:
+                    raise AssertionError("native help overflow became a successful console plan")
+                report = artifacts.snapshot()
+                if (report["primary"] != "PASS" or report["cleanup"] != "PASS" or
+                        artifacts.exit_code() != 0 or report["residual_uncertainty"] or
+                        report["metadata"]["hardware_cleanup"] != "PASS" or
+                        report["checks"][suite]["status"] != "PASS" or
+                        summary["transitions"] != len(physical.steps) or
+                        physical.steps[-1] != "cleanup-detached" or
+                        any(s.valid or s.operation for s in sessions)):
+                    raise AssertionError("recovery plan lost complete owned cleanup proof")
+                traces = [callback_trace(path) for _, path in hosts]
+                results = report["metadata"]["recovery_results"]
+                if suite == "reset-termination":
+                    if (results["reset"]["detail"]["reset"] != "COMPLETED" or
+                            results["reset-cancel"]["result"]["code"] != "CANCELLED" or
+                            results["reset-timeout"]["result"]["code"] != "TIMEOUT" or
+                            any(results[label]["result"]["callbacks"] != "0"
+                                for label in ("reset-cancel", "reset-timeout"))):
+                        raise AssertionError("reset plan erased intentional negative outcomes")
+                    if variant in {"tusb320", "tusb320i"}:
+                        writes = [(i, row) for i, row in enumerate(traces[0])
+                                  if row["direction"] == "W" and row["register"] == 0x45]
+                        first, second = writes[:2]
+                        if (first[1]["value"] != 4 or second[1]["value"] != 0 or
+                                second[1]["entered"] - first[1]["completed"] < 31 or
+                                trace_vectors(traces[0][first[0] - 1:second[0] + 2]) != [
+                                    ("R", 0x45, 0), ("W", 0x45, 4),
+                                    ("W", 0x45, 0), ("R", 0x45, 0)]):
+                            raise AssertionError("production recovery lost the literal TI sequence")
+                elif suite == "fault":
+                    failed = [row for row in traces[0] if row["ok"] == 0]
+                    if (results["nack"]["result"]["code"] != "I2C_NACK_ADDR" or
+                            results["disconnect"]["result"]["code"] != "I2C_BUS" or
+                            trace_vectors(failed) != [("R", 8, 0), ("R", 8, 0)] or
+                            any(row["detail"] != -2147483648 or row["length"] != 1 or
+                                row["address"] != 0x47 for row in failed) or
+                            any(row["direction"] == "W" for row in traces[0]) or
+                            report["metadata"]["fixture_profile"]["observed"]["mode"] != "port"):
+                        raise AssertionError(
+                            f"fault callbacks={failed}; observed="
+                            f"{report['metadata']['fixture_profile']['observed']}"
+                        )
+                else:
+                    zeroes = [row for trace in traces for row in trace if row["direction"] == "Z"]
+                    frames = report["metadata"]["console_sessions"]
+                    after = report["metadata"]["console_backpressure"]["after"]
+                    if (len(zeroes) != 2 or len(sessions) != 3 or
+                            any(row["direction"] == "W" for trace in traces for row in trace) or
+                            any(after[key] != "0" for key in (
+                                "dropped_records", "dropped_bytes", "loss_pending")) or
+                            set(frames) != {"console-reconnect", "console-reboot"} or
+                            any(item["old_nonce"] == item["new_nonce"] or
+                                not item["identity_verified"] for item in frames.values())):
+                        raise AssertionError("console plan skipped native stalls or fresh framing")
+                saved = json.loads((artifacts.directory / "report.json").read_text("utf-8"))
+                if saved != report:
+                    raise AssertionError("recovery plan did not stream its final evidence")
+                sessions[-1].io.close()
+            finally:
+                for host, _ in hosts:
+                    if host.process.poll() is None:
+                        host.process.kill()
+                        host.process.wait(timeout=3)
+                    host.reader.join(timeout=3)
+                artifacts.close()
+
+
 def main() -> int:
     """Run the bounded transcript; return zero only after all records and fixture exit pass."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1296,6 +1886,13 @@ def main() -> int:
         exercise_plan_denied_take(args.host)
         exercise_session_turns(args.host)
         exercise_fixture_plans(args.host)
+        exercise_reset_recovery_success(args.host)
+        exercise_recovery_interruptions(args.host)
+        exercise_recovery_failures(args.host)
+        exercise_termination_controls(args.host)
+        exercise_reset_take_backpressure(args.host)
+        exercise_reconnect_framing(args.host)
+        exercise_recovery_fixture_plans(args.host)
     except BaseException:
         if host.process.poll() is None:
             host.process.kill()
@@ -1303,7 +1900,9 @@ def main() -> int:
         raise
     print(f"CLI transcript: {requests} persistent requests and damaged-record checks passed; "
           "2 strict sessions, 3 native readonly plans, 2 owner-turn sessions and "
-          "4 modeled physical-fixture plans and 2 independent mismatch rejections passed; "
+          "4 modeled physical-fixture plans, 2 independent mismatch rejections, "
+          "reset/recovery byte/timing/failure/effect checks, 3 reconnect cases and "
+          "5 complete modeled reset/fault/console plans and actual output-loss rejection passed; "
           "physical hardware NOT RUN")
     return 0
 

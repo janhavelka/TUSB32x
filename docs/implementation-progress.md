@@ -2229,3 +2229,70 @@ claim follows from native model success. Prompt31 remains unstarted. The lead
 commits and syncs this complete checked audit on the same execution branch, then
 verifies fetched upstream equality, zero ahead/behind and no task changes before
 handoff; record that commit in the next progress update.
+
+## Prompt 31: reset, fault and console suites (2026-10-28)
+
+Started clean on `promptset/tusb32x-implementation-20261023` at synchronized
+audit commit `b8eb52fa52e800fe3b53d33f4e53384d37f37544`; fetch confirmed equal
+upstream. Read full31, current parent/local rules, COMMON, promptset index,
+CLI/runner contracts, reset/recovery/effects/time/trust baseline and engineering
+rules, maintainability and delegation instructions. Fresh peer HEADs/dirty state,
+exact declarations/CLI/tests/runners/workflows and adopted/rejected choices are in
+[execution31](audit/execution-31-peers.md). No sibling changes/builds, serial port,
+flash, supply operation, physical fixture or remote CI.
+
+Delegation: gpt-6.1-sol/high audited peers, then owned only the new recovery
+test module; another owned the persistent native fixture/transcript cases.
+gpt-6-astra/high independently checked exact archived TI reset/recovery/electrical
+requirements and reviewed effects, timing, epochs and cleanup. The lead owns
+production/shared contracts, integration/actual-diff review, remaining docs,
+verification and all Git. File ownership stayed disjoint.
+
+Implemented three explicit finite plans using existing Session, ordinary typed
+CLI operations, checkpoints and exact owned-result take. Setup independently
+authorizes physical actions; no board-power control or generic mutating selection.
+Expected negative outcomes are exact and fixed before admission, with original
+status/detail/effect retained and unexpected failure sticky. Readiness and the
+pre-recovery actual baseline precede original-part recovery. Reset/termination
+checks distinguish both controls, current trust and historical sequence evidence.
+Fault and console never replay an old profile after power/reboot; original source
+startup after a new VDD epoch stays blocked for explicit owner recovery. Console
+closes old local state, then establishes new nonce/identity/target sessions.
+
+Independent integration/review found and fixed help-text reboot false positives,
+missing pre-recovery baseline, malformed reconnect return masking the original
+failure, stale original-part startup evidence after power loss, and historical
+reset-acceptance uncertainty incorrectly predicting current reconcile failure.
+The all-nine-family coverage table records each real plan, prerequisite, finite
+end and failure path. Core C++, silicon gates and firmware grammar are unchanged.
+
+PASS: full strict Debug63/63 and Release63/63 CTests; final affected runner/
+transcript/core/console checks pass4/4 in both configurations and include306 Python cases
+(69 recovery cases) under
+the existing90s hil_runner limit. Final review requires fresh detached-port proof
+before original recovery writes as well as its saved actual configuration baseline.
+The single30s transcript retains prior coverage, adds five complete production
+plans (reset LAI/320/320I, fault and console), actual zero-write backpressure/loss,
+literal reset/recovery bytes/waits, uncertain effects, failed/late callbacks,
+output-full take and fresh reconnect domains. An all-nine mixed fake invocation
+also passes with one absolute deadline and bounded artifacts. No assertions,
+contract or required registration was weakened to obtain these outcomes.
+
+PASS: ordinary tests-OFF host build/run;76 source-equal packed files, matching
+IDF selection and renamed extracted host/shared-CLI/public-owner consumers under
+unrelated Git without maintainer tools on child PATH (owner5487 checks/0failures).
+Help and three-suite portless dry-run save actual exit2/hardware NOT RUN. Version
+sync/check/no-op stability, strict Doxygen/XML,14 Python modules' full docstrings/
+style, local links/vendor hashes and UTF-8/LF/whitespace pass. Fresh ASan/UBSan
+link probes fail for absent MinGW runtimes; alternative compilers/clang-format
+remain unavailable. Commands and exact evidence are in
+[validation](validation.md#prompt-31-reset-fault-and-console-suites-2026-10-28).
+
+Physical serial/I2C/CC/INT/supply/VBUS/VCONN and actual reset/recovery timing
+remain NOT RUN. Native literal traces, artificial faults and restarted host
+processes are labeled modeled evidence. Original-part new-power source startup
+and unresolved322 mutation gates remain explicit. No unchanged firmware rebuild
+or remote CI was needed for host runner/test/docs changes. The lead commits and
+syncs this complete checked prompt on the same branch, verifies fetched upstream
+equality/zero ahead-behind and no task changes, and reports the commit in the
+handoff; record its hash in the next progress update. Prompt32 is unstarted.

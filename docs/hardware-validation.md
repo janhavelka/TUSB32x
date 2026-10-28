@@ -244,8 +244,48 @@ even when the overall run has time remaining. Native status-byte fixtures are
 independent of plan expectations; deliberately wrong orientation/current
 expectations fail without claiming physical evidence.
 
-All deterministic fixtures and the four persistent C++ plans exercise software
+All deterministic fixtures and the persistent C++ plans exercise software
 evidence only. Their modeled assertion/attachment and fabricated **test** identity
 are labeled physical hardware NOT RUN. Actual serial/adapter timing, connector,
 INT, CC/current, VBUS/VCONN and supply/strap qualification remains NOT RUN until
 an authorized exact-part/board/firmware/fixture run saves physical observations.
+
+## Reset, fault and console qualification
+
+The runner now has nine explicit families; the three recovery plans and their
+strict action declarations are described in [runner setup](hil-runner.md#reset-fault-and-console-setup).
+Reset-termination uses the real typed reset/recovery operations. Record both
+0A.disableTerm and45.disableRdRp where applicable, aggregate termination,
+configuration trust and original result effects independently. Missing evidence
+for either control cannot mean globally enabled. Capture actual pre-mutation
+configuration, target, firmware, supply/startup assumptions and all outcome/cleanup
+evidence. Cancellation and timeout cannot undo a write or a USB event.
+
+Original320/I recovery needs a separately selected source-capable startup after
+verified stable VDD and identity: qualified45=04, at least30ms,45=00 and readback
+(SLLSEN9F7.4.3p14). Software uses the separate1ms margin; modeled31/96ms waits
+do not qualify an electrical clock. A clear final45 alone proves no historical
+sequence. A new power epoch invalidates earlier recovery readiness. Original-part
+recovery experiments require a fresh coherent detached port before the first write.
+Supply attestation alone does not establish current attachment. Base fault
+power-cycle plans stop with blocked cleanup when source startup needs new recovery;
+there is no automatic second recovery. Original-part console tests require
+continuous target VDD across the separately authorized MCU reboot.
+
+Authorize NACK/disconnect/power-cycle and serial backpressure/reconnect/reboot
+individually in the actual setup. The operator owns fixture transitions, supply,
+VBUS and partner safety; the runner sends no power-control command. Avoid
+back-powering unpowered parts through SDA/SCL/CC/enable networks (SLLSEN9F p14,
+SLAAE24 p7). Retain resistor-coupled VBUS_DET sensing, including322 DFP sensing.
+Its4.5..5.5V supply and225/300/375mA VCONN min/typ/max are not a guaranteed300mA
+current budget. EN_N high-to-low or software reset establishes322 DRP operation
+(SLLSEO5D6.3.2p9), not a complete POR register image. Its mutation-suite gates
+remain closed; the native role-reset test is software evidence only.
+
+Reopening a serial port can itself reset firmware. Close old local state, create
+fresh framing and verify reported firmware and target before later work; old
+tokens/success records cannot certify the new session. Native zero-output writes,
+process restarts and modeled faults prove bounded handling only. Actual serial
+delivery, reboot, loss visibility, adapter fault phase/aggregate bound, supply,
+CC and physical reset/recovery timing all remain NOT RUN until separately measured.
+Keep failed primary work, cleanup and residual uncertainty in the saved artifacts.

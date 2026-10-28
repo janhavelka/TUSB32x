@@ -17,6 +17,9 @@ Entries below distinguish those artifacts from planned device-driver functionali
   or claim a successful IRQ preservation experiment. Unknown schema extensions
   remain recorded without becoming required profile/result evidence.
 
+- Boot detection matches banner prefixes, so ordinary help text containing
+  "resets staging" cannot be mistaken for a reboot.
+
 - Python sessions require final-marker and original JOB evidence, preserve owned
   work on expired public deadlines, and accept exact bus-silent parser rejections.
   Profile edits and restoration require complete applicable staging evidence;
@@ -34,6 +37,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
   Corrected the coarse-tick combined callback budget example to 600ms.
 
 ### Added
+
+- Reset-termination, fault and console runner suites with separately authorized
+  actions, original-part recovery prerequisites, exact predeclared negative
+  outcomes and fresh framing/identity after reconnect. Native tests prove literal
+  reset/recovery writes, wait margins and retained uncertain effects; physical
+  serial, supply and Type-C qualification remains separate.
 
 - Explicit orientation, accessory, role-current and interrupt fixture plans with
   strict setup/identity/supply prerequisites, finite operator transitions, exact

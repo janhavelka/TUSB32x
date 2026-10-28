@@ -3398,3 +3398,86 @@ and blocked cleanup/residual uncertainty, not a generic process failure. Hardwar
 and unchanged firmware links remain separate evidence layers. The lead commits,
 pushes and fetches to verify upstream equality, zero ahead/behind and a clean task
 worktree before handoff. Prompt31 remains unstarted.
+
+## Prompt 31 reset, fault and console suites (2026-10-28)
+
+Started clean at synchronized `b8eb52fa52e800fe3b53d33f4e53384d37f37544` on
+`promptset/tusb32x-implementation-20261023`. Fresh peer revisions/dirty state,
+exact source/test/CLI/runner/workflow paths and adopted/rejected choices are in
+[execution31](audit/execution-31-peers.md). Lead and independent reviewers checked
+the actual returned code/diff and archived TI requirements. No sibling edit,
+physical serial, flashing, supply/fixture action or remote CI occurred.
+
+Tools: Python3.12.10, CMake/CTest4.0.1, Ninja1.12.1, GNU15.1.0 MinGW-W64
+x86_64-ucrt-mcf-seh, Doxygen1.13.2, Git2.52.0.windows.1, managed PlatformIO
+Core6.1.19/native1.2.1. The optional pyserial3.5 pin and library0.1.0-dev.1 are
+unchanged; fake-serial/native tests do not require pyserial.
+
+Re-read archived SLLSEN9F7.4.3p14 (qualified base recovery) and7.3.1.2p11
+(explicit current refresh reset), SLLSEQ8D Tables10/11 pp19-20 (separate controls),
+SLLSEO5D6.3.2p9 (reset establishes DRP without all-POR proof),5.3p4/5.5p6/
+6.3.6p13 (supply, VCONN min/typ/max and sensing), and SLAAE24p7 (back-powering).
+Archived source hashes remain matched by the vendor provenance checks.
+
+| Layer | Result | Actual evidence and bounds |
+| --- | --- | --- |
+| Complete runner/session/artifacts | PASS | 306 Python cases via the single existing hil_runner;69 recovery cases, fake serial/clock, no physical I/O or wall sleeps; final306-case Debug56.91s/Release56.98s under90s |
+| New plans and all-nine audit | PASS | Complete reset LAI/320/320I, fault and console fake plans, all exact prerequisites/action/transition failures; all nine mixed suites through real main preserve one deadline, each check and bounded report metadata |
+| Outcome/effect guards | PASS | Expectation fixed before original admission/completion; default/nonmatching failures stay sticky, signed detail/uncertain effect stay raw; host expiry, late success, cap loss, exception/Ctrl-C and missing/failed cleanup cannot be excused |
+| Startup/trust/cleanup | PASS | Durable actual pre-recovery baseline, separate termination controls/aggregate proof, unrelated-read fence, historical reset acceptance independent of reconcile, original source power epoch blocks stale readiness and blind recovery/profile replay |
+| Console ownership | PASS | Main closes/reopens only explicit fake port with identical DTR/RTS/baud/timeouts; new Session identity/target/nonces, no old token/baseline; stale/malformed/changed identity, reopen error/late return and colored/whitespace boot banners reject |
+| Persistent real C++ CLI/core | PASS | Prior248 requests, sessions/readonly/four fixture plans retained; five new complete reset/fault/console plans, literal reset/recovery sequences and31/96ms modeled waits; actual two zero-write returns preserve help,64 force streamed LOSS/FAIL/unrestored evidence; original/322 reset role facts stay separate |
+| Native strict regression | PASS | Debug63/63 (88.09s) and Release63/63 (87.06s), then affected runner/transcript/operations/console4/4 in Debug67.91s/Release68.01s after the final fresh-port guard; strict warnings, active Release assertions and existing30s/90s timeouts with explicit built fixture path |
+| Entry/help/dry-run | PASS | --help lists all nine; three new suites for LAI/0x47 under build/p31-recovery-plan save concrete actions and actual subprocess exit2, primary/hardware NOT RUN, no port opening |
+| Ordinary/package consumers | PASS | Fresh tests-OFF Release host;76 source-equal export files and explicit IDF source selection; renamed extracted host/shared-CLI/public-owner builds/runs beneath unrelated Git without Git/Python/Doxygen/PlatformIO on child PATH; owner5487 checks/0failures |
+| Documentation/metadata | PASS | Generator check and repeat no-op sync bytes/mtime, strict Doxygen/public XML,14 Python modules' full docstrings/100-column style, local links/eight vendor hashes, UTF-8/LF and diff whitespace |
+| Sanitizers/other compilers | BLOCKED | Fresh address/undefined probe links fail for missing -lasan/-lubsan; cl/clang++/clang-format absent; assertions/checks were preserved |
+| Physical serial/USB/I2C/CC/INT/supply/VBUS/VCONN/timing | NOT RUN | No exact authorized target/port/fixture or electrical traces; operator declarations, native faults/process restarts and software clocks are explicitly modeled evidence |
+
+Commands executed from the repository root:
+
+```text
+python tools/test_tusb32x_recovery.py
+python tools/test_tusb32x_hil_runner.py
+python tools/test_tusb32x_fixture_setup.py
+python tools/test_cli_transcript.py --host build/native/test/Debug/tusb32x_cli_host.exe
+python tools/tusb32x_hil_runner.py --help
+python tools/tusb32x_hil_runner.py --dry-run --variant tusb320lai --address 0x47 --suite reset-termination --suite fault --suite console --run-timeout 1800 --out build/p31-recovery-plan
+cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/native --config Debug
+ctest --test-dir build/native -C Debug --output-on-failure
+cmake --build build/native --config Release
+ctest --test-dir build/native -C Release --output-on-failure
+ctest --test-dir build/native -C Debug -R "^(hil_runner|cli_transcript|tusb32x_operations|tusb32x_console)$" --output-on-failure
+ctest --test-dir build/native -C Release -R "^(hil_runner|cli_transcript|tusb32x_operations|tusb32x_console)$" --output-on-failure
+cmake -S examples/host/basic -B build/p31-host-basic -G Ninja -DCMAKE_BUILD_TYPE=Release -DTUSB32X_BUILD_TESTS=OFF
+cmake --build build/p31-host-basic
+build/p31-host-basic/tusb32x_host_basic.exe
+python scripts/generate_version.py check
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p30-final-check.py
+python build/p10-docs.py
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p31.tar.gz
+python build/p31-package.py
+git diff --check
+```
+
+Session-only build/ helpers are not distributed future validators. Package
+isolation is saved under build/p31-clean-parent-ty2zdx64. The existing13-module
+style/docstring helper plus a separate identical AST/width/UTF-8 check cover the
+new recovery module; no production guard stage was added early. ASan/UBSan probes
+use g++ -fsanitize=address/undefined on a minimal main and fail before executable
+creation. Registered suites are nonempty and no hardware is opened implicitly.
+
+Initial red regressions reproduced missing pre-recovery baseline, invalid reconnect
+return masking failure, benign help triggering reboot and ANSI-wrapped boot being
+missed. All corrected guards pass runtime negatives. Original source-power epochs
+and historical reset uncertainty received independent safety review and targeted
+tests. A long native output stall initially caused genuine queue loss; the final
+test retains that failed case and separately proves bounded no-loss backpressure.
+No loss counter or assertion was weakened. Core/public C++ and production CLI
+grammar remain unchanged. Hardware and unchanged firmware images remain separate
+evidence layers; earlier links are not final-commit qualification. The lead
+commits/pushes/fetches this completed unit and verifies upstream equality, zero
+ahead/behind and no task changes before handoff. Prompt32 remains unstarted.
