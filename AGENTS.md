@@ -19,8 +19,9 @@ bounded observe/ACK/recheck service, one-callback safe raw diagnostics, complete
 diagnostics views and pure passive health projection. The example-only Arduino
 Wire adapter has host contracts and S2/S3 SDK link fixtures. Complete Arduino
 CLI and two-device owner examples share that adapter and have explicit S2/S3
-builds; native-IDF integration remains planned. The example-only common CLI
-implements bounded local help/identity,
+builds. The native-IDF adapter also has host contracts and independent S2/S3
+component link fixtures; the native CLI application remains planned. The
+example-only common CLI implements bounded local help/identity,
 cache/target/lifecycle queries and edits, and independent validated profile staging.
 Managed operation/control/result routes also use the core engine with one poll
 per turn and explicit retained-result take. The full 55-row shared CLI also provides
@@ -373,3 +374,13 @@ no flash or board qualification is implied. Read docs/arduino-transport.md befor
 using the adapter: same initialization core, globally disabled HAL locks,
 shared gate, prewarmed handles, qualified CPU overhead and controller-wide
 retirement after a failed receive are required. Framework types stay outside core.
+
+## Native IDF adapter checks
+
+Prompt 25 adds `tusb32x_idf_transport_1000` and `tusb32x_idf_transport_100` to the
+registered host matrix (22 Windows suites). Run independent actual SDK links with
+`scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3`. The adapter supports the
+audited native IDF5.5.5 configuration only; read `docs/idf-transport.md` for copied
+handle metadata, synchronous mode, same-core task pinning, shared serialization,
+qualified overhead and controller retirement. Do not introduce Arduino into the
+native fixture or infer board timing qualification from a linked image.

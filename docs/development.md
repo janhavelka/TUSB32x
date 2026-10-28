@@ -2,8 +2,9 @@
 
 `library.json` is version truth. The current `0.1.0-dev.1` marks an incomplete
 library: portable values, validators, decoding, cooperative operations, the shared
-CLI and Arduino S2/S3 examples are implemented. Native-IDF integration and
-physical qualification remain separate work. Version text
+CLI and Arduino S2/S3 examples are implemented. The native IDF adapter has
+independent S2/S3 component link fixtures; the native CLI application and physical
+qualification remain separate work. Version text
 identifies the package, never the firmware flashed on a board.
 
 ## Version workflow
@@ -58,7 +59,9 @@ the ordinary host target TUSB32x. The manifest's `idf >=5.3.0` is a dependency
 admission floor adopted from current TMP1x2/24Cxx and checked against the
 [official IDF 5.3.2 C++ guide](https://github.com/espressif/esp-idf/blob/v5.3.2/docs/en/api-guides/cplusplus.rst)
 and [component registration](https://github.com/espressif/esp-idf/blob/v5.3.2/tools/cmake/component.cmake).
-It is not evidence of linked native IDF firmware. No Arduino, driver peripheral,
+The [native adapter fixtures](idf-transport.md) now link against the narrower
+audited IDF 5.5.5 configuration on S2/S3; the admission floor does not qualify other
+SDK versions. No Arduino, driver peripheral,
 RTOS or consumer-product dependency is required by this component.
 
 On Windows, use the existing VS Code-managed Core through `scripts/pio.cmd`:
@@ -91,8 +94,8 @@ prompt 33 work; a warning-free generation alone does not prove visibility.
 
 The PlatformIO export list contains public headers, five real C++ sources and their
 private protocol/codec/time headers, common CLI/owner/mailbox code, the Arduino
-adapter and two applications, CMake, manifests, license, selected guides and the
-real host consumer. The root PlatformIO configuration and its two required
+adapter and two applications, the native IDF adapter, CMake, manifests, license,
+selected guides and the real host consumer. The root PlatformIO configuration and its two required
 example build scripts are shipped. Reference/vendor artifacts, prompts, audits,
 progress/validation machinery, tests, other maintainer scripts and generated
 build output are excluded from ordinary archives. Maintainer commands

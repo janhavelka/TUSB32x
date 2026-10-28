@@ -11,6 +11,12 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ### Added
 
+- Native ESP-IDF 5.5.5 adapter for ESP32-S2/S3 with borrowed bus/device handles,
+  explicit pointer STOP/read STOP framing, shared serialization and aggregate
+  timeout accounting. Host contracts cover errors, coarse ticks and controller
+  retirement after failed receives. Independent real SDK fixtures link the core
+  and adapter without Arduino or a CLI application. Physical qualification is separate.
+
 - Complete Arduino CLI and two-device owner examples for ESP32-S2/S3, with
   explicit source filters and build identity, read-only startup result ownership,
   shared controller serialization, deferred IRQ service and orderly shutdown.

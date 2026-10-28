@@ -434,3 +434,19 @@ remain separate work.
 
 See [Arduino integration](arduino-examples.md) for exact supply/strap/current,
 VBUS_DET and VCONN requirements. Host/SDK checks do not qualify physical behavior.
+
+## Native IDF adapter (prompt 25)
+
+| Requirement / capability | Implementation / source | Named executable evidence |
+| --- | --- | --- |
+| Borrowed exact target; reject async/invalid configuration before SDK | tusb32x_idf::validateContext; IDF5.5.5 queue-depth selection | localRejections, borrowedLifecycleAndSharing in tusb32x_idf_transport_1000/100 |
+| Explicit pointer STOP/read STOP, seven-bit addresses | write/writeRead; TI programming sections cited in native guide | exactTransfers; real idf_s2/idf_s3 links |
+| Aggregate finite budget, coarse ticks, unchanged error output | phaseTimeout/transfer; audited SDK wait-site bound | aggregateTime, publicationAtDeadline at 1000/100Hz |
+| Full native error detail, no guessed NACK or partial bytes | sdkStatus, BackendStats | failuresAndRetirement, clockAndSaturation |
+| Shared controller retirement and non-owning shutdown | BusContext; same-core synchronous SDK lifetime | failuresAndRetirement, borrowedLifecycleAndSharing; application cleanup rules documented |
+| Framework-free core and actual native component linkage | Existing root component; test/idf_sdk main and real adapter | 22 registered host suites; S2/S3 firmware.elf/bin without Arduino/CLI sources |
+
+The [native integration guide](idf-transport.md) states the source revision,
+exact configuration gates and required application qualification. Fake timing
+tests exercise the finite envelope, not physical ISR/waveform behavior. Native
+CLI, flashing, HIL and board timing/electrical qualification remain separate.

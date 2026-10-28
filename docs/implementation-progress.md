@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: implement prompt 24, the Arduino CLI and owner examples.
+Current authorization: implement prompt 25, the native ESP-IDF transport adapter.
 
 ## Prompt status
 
@@ -34,7 +34,7 @@ Current authorization: implement prompt 24, the Arduino CLI and owner examples.
 | [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | COMPLETE |
 | [23: arduino-transport](prompts/23-arduino-transport.md) | COMPLETE (qualified SDK subset; hardware not tested) |
 | [24: arduino-examples](prompts/24-arduino-examples.md) | COMPLETE (four SDK images; physical qualification not run) |
-| [25: idf-transport](prompts/25-idf-transport.md) | NOT STARTED |
+| [25: idf-transport](prompts/25-idf-transport.md) | COMPLETE (two native SDK links; physical qualification not run) |
 | [26: idf-cli-example](prompts/26-idf-cli-example.md) | NOT STARTED |
 | [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | NOT STARTED |
 | [28: python-session](prompts/28-python-session.md) | NOT STARTED |
@@ -1736,3 +1736,50 @@ HIL, electrical/USB-level measurements and timing qualification are NOT RUN.
 No identified board was authorized. Native-IDF work remains prompt 25.
 Commit/sync and final upstream equality are reported in the handoff without a
 self-referencing commit-hash update. Remote CI remains prompt 34 only.
+
+
+## Prompt 25: native ESP-IDF adapter (2026-10-28)
+
+Started from synchronized `0d7be0c95c653eaeba7b17398e9f7867522e3af4` on the same
+execution branch, with clean status and zero ahead/behind after fetch. Prompt 24
+is complete. The [fresh peer audit](audit/execution-25-peers.md) records current
+LDC1614, MB85RC and TMP1x2 revisions, dirty states, sources/tests/examples/runners/
+workflows, and accepted/rejected ownership/build/timeout patterns.
+
+Implemented native synchronous callbacks, local setup validation and native owner
+time under examples/esp_idf. The application retains bus/device ownership and
+provides exact copied configuration, one shared controller gate, same-core task
+pinning, cleanup acceptance and qualified whole-callback overhead. The adapter
+rejects asynchronous configuration and mismatched addresses before traffic,
+divides the aggregate budget over SDK waits/cleanup and preserves native error
+detail. Failed receives retire the entire shared controller because the pinned
+SDK can retain read state. Output is published only after complete success.
+No core/framework dependency, CLI application, custom driver or recovery path
+was introduced. Exact source locations and bound are in [integration](idf-transport.md).
+
+Delegation used gpt-6.1-sol/high for disjoint peer/native-consumer files and
+recording-backend tests, and gpt-6-astra/high for independent SDK timing/lifetime
+review. The lead owned adapter/API/registration/docs and checked actual source,
+diffs, artifacts and symbol tables. Review clarified inactive SDK buffer-pointer
+retention, task pinning and valid test register ranges. Consumer binding now
+requires successful adapter validation. Full SDK warning overrides were not
+introduced: PlatformIO propagates main flags into third-party SDK code. The
+actual adapter is compiled with strict warnings in both host contract suites;
+native core keeps its strict flags and adapter uses SDK build warnings.
+
+PASS: Debug and Release each execute 22 registered suites. Native adapter suites
+execute 1602 checks at 1000Hz and 1572 at 100Hz. Both actual native S2/S3 fixtures
+configure/compile/link all advertised adapter functions and the root core with
+no Arduino or CLI frontend sources. Exact configuration/target/source boundaries
+and linked symbols were inspected. Strict Doxygen, public visibility, links,
+UTF-8/whitespace, version and reference hash checks pass. The 63-file package
+matches source and IDF inclusion; isolated extracted core/CLI consumers build/run
+without maintainer tools. Commands/artifacts are in
+[validation](validation.md#prompt-25-native-idf-transport-2026-10-28).
+
+The selected native SDK is IDF5.5.5/package3.50505.0 via pioarduino55.03.311.
+The lead independently matched the local I2C source to official b774170ff46 bytes.
+Other SDK revisions and physical CPU/ISR/waveform/electrical qualification remain
+unverified. Flash, serial and HIL are NOT RUN. Native CLI remains prompt 26.
+Commit/sync and verified upstream equality are reported in the handoff; the lead
+alone changes Git. Remote CI remains prompt 34 only.

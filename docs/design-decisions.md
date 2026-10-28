@@ -1,5 +1,29 @@
 # Engineering decisions
 
+## Prompt 25: native IDF adapter (2026-10-28)
+
+Use IDF5.5.5 from pinned pioarduino55.03.311, verified against the exact official
+driver bytes. Root component registration remains portable. The example adapter
+lives directly under examples/esp_idf with the same small file naming pattern as
+the Arduino adapter; a speculative common subdirectory is unnecessary until the
+native application exists. Native SDK fixture main stays under test/idf_sdk.
+
+The [peer audit](audit/execution-25-peers.md) supports borrowed ownership,
+relocatable component discovery and coarse-error handling. Reject peer-created
+bus ownership/recovery and direct whole-timeout forwarding. Use a shared bus
+context and per-target borrowed context instead of a registry. Exact copied
+creation configuration is application evidence; the opaque SDK API cannot prove
+the handle/address/bus association for us.
+
+The [source-derived bound](idf-transport.md#aggregate-timeout-and-buffer-proof)
+reserves every possible synchronous wait/cleanup and qualified CPU overhead.
+STOP-separated pointer/read preserves TI framing. Queue depth must be zero,
+event callbacks absent, ACK checking enabled, logs/PM disabled, and the owner
+pinned to the bus-creating core. Failed receive retires every controller user
+because SDK stale read state can survive the error. No adapter recovery or
+framework behavior enters core. These gates and SDK error mapping are checked
+by actual-adapter host fixtures; S2/S3 images independently prove native linkage.
+
 Prompt 1, 2026-10-23. These decisions confirm the selected
 [engineering baseline](prompts/ENGINEERING_BASELINE.md) for this execution.
 They describe required future behavior, not implemented features. Current source

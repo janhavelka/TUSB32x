@@ -77,7 +77,30 @@ foreach(rate IN ITEMS 1000 100)
   set_tests_properties(${wire_suite} PROPERTIES TIMEOUT 30)
 endforeach()
 
-# Each header is the only include in its generated translation unit.
+# Record native SDK calls through the actual adapter at normal and coarse ticks.
+foreach(rate IN ITEMS 1000 100)
+  set(idf_suite tusb32x_idf_transport_${rate})
+  add_executable(${idf_suite} idf_transport/test_idf.cpp ../examples/esp_idf/Tusb32xIdf.cpp)
+  target_link_libraries(${idf_suite} PRIVATE TUSB32x)
+  target_include_directories(${idf_suite} PRIVATE idf_transport/fakes ../examples/esp_idf)
+  target_compile_definitions(${idf_suite} PRIVATE CONFIG_LOG_MAXIMUM_LEVEL=0
+    CONFIG_PM_ENABLE=0 CONFIG_I2C_ENABLE_DEBUG_LOG=0 configTICK_RATE_HZ=${rate})
+  if(rate EQUAL 1000)
+    target_compile_definitions(${idf_suite} PRIVATE CONFIG_IDF_TARGET_ESP32S2=1 CONFIG_IDF_TARGET_ESP32S3=0)
+  else()
+    target_compile_definitions(${idf_suite} PRIVATE CONFIG_IDF_TARGET_ESP32S2=0 CONFIG_IDF_TARGET_ESP32S3=1)
+  endif()
+  tusb32x_strict_warnings(${idf_suite})
+  if(MSVC)
+    target_compile_options(${idf_suite} PRIVATE /UNDEBUG)
+  else()
+    target_compile_options(${idf_suite} PRIVATE -UNDEBUG)
+  endif()
+  add_test(NAME ${idf_suite} COMMAND ${idf_suite})
+  set_tests_properties(${idf_suite} PROPERTIES TIMEOUT 30)
+endforeach()
+
+# Each public core header is independently includable.
 set(header_contract_sources)
 foreach(header IN ITEMS Status Config TUSB32x CommandTable Version)
   set(source "${CMAKE_CURRENT_BINARY_DIR}/include_${header}.cpp")

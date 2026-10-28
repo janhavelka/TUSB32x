@@ -105,3 +105,13 @@ The example-only [Wire adapter](arduino-transport.md) implements terminal callba
 for the pinned S2/S3 SDK. Its shared gate, configuration prerequisites, divided
 aggregate budget and failed-receive controller retirement are adapter constraints.
 Portable core code does not include Wire.
+
+## Native IDF integration
+
+The [native adapter](idf-transport.md) borrows application-created synchronous
+bus/device handles. A copied creation configuration records each target's exact
+seven-bit address; mismatched callback addresses reject before SDK traffic.
+Explicit pointer STOP/read STOP shares one nonblocking gate and aggregate
+deadline. Native SDK types stay under examples/esp_idf. Read the guide's SDK
+version, same-core lifetime, CPU bound and failed-receive retirement requirements
+before binding; opaque handle metadata cannot be independently inspected.

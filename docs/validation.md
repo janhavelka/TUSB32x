@@ -2702,3 +2702,66 @@ narrowing and outcome/admission reporting.
 Native software and linked SDK evidence do not establish physical qualification.
 The prior unavailable host sanitizer runtimes remain a separate recorded limit;
 this prompt does not claim a sanitizer run. No remote CI was required or queried.
+
+
+## Prompt 25: native IDF transport, 2026-10-28
+
+Toolchain: CMake4.0.1, Ninja1.12.1, host GCC15.1.0, Python3.12.10, Doxygen1.13.2;
+managed PlatformIO Core6.1.19, pinned pioarduino55.03.311, native framework-espidf
+3.50505.0 (IDF5.5.5), Xtensa GCC14.2.0+20260121. Native SDK builds use their
+installed CMake4.0.3 and Ninja1.13.1 packages. The adapter version guard admits
+only the audited SDK, S2/S3, disabled logging/PM/debug and 100..1000Hz ticks.
+
+| Check | Result | Evidence / limit |
+| --- | --- | --- |
+| Debug complete host matrix | PASS | 22/22 registered suites, including all prior core/CLI/console/Arduino tests |
+| Release complete host matrix | PASS | 22/22 with assertions active and strict host warnings |
+| Native recording SDK contracts | PASS | Actual adapter; 1602 checks at 1000Hz, 1572 at 100Hz; fakes cannot prove physical ISR/cleanup timing |
+| ESP32-S2 native configure/compile/link | PASS | test/idf_sdk environment idf_s2, isolated sdkconfig and output; core and all adapter functions retained |
+| ESP32-S3 native configure/compile/link | PASS | test/idf_sdk environment idf_s3, isolated sdkconfig and output; core and all adapter functions retained |
+| Native source/component boundary | PASS | Compile databases contain five core sources, real adapter and own app_main; no Arduino or CLI frontend; exact target/logging/tick configuration inspected |
+| SDK source provenance | PASS | Local i2c_master.c equals official b774170ff46 bytes, 69303 bytes, SHA-256 recorded in integration guide |
+| Documentation/source integrity | PASS | Strict Doxygen, public visibility, local links/anchors, UTF-8/LF/whitespace, eight reference hashes, version and diff checks |
+| Distribution / ordinary consumers | PASS | 63 source-equal archive files; IDF include selection matches; renamed extracted tests-OFF core and CLI consumers under unrelated Git, maintainer tools absent from child PATH |
+| Flash / serial / HIL / physical timing | NOT RUN | No identified authorized board; application CPU bound, same-core scheduling, bus cleanup waveform and electrical qualification remain prerequisites |
+
+Actual commands:
+
+```powershell
+cmake -S . -B build/p25 -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p25 --config Debug
+ctest --test-dir build/p25 -C Debug --output-on-failure
+cmake --build build/p25 --config Release
+ctest --test-dir build/p25 -C Release --output-on-failure
+scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+python scripts/generate_version.py check
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p25.tar.gz
+python build/p25-package.py
+git diff --check
+```
+
+Each SDK target produces `test/idf_sdk/.pio/build/<environment>/firmware.elf`,
+`firmware.bin` and `firmware.factory.bin`. The final S2 image reports 9488 RAM /
+154678 flash bytes; S3 reports 13408 RAM / 184633 flash bytes. Those are linker
+usage figures, not complete file sizes. `nm -C` on each ELF shows validateContext,
+write, writeRead, ownerNowMs and core bind; generated project/configuration files
+show the intended distinct target and native framework. No upload was requested.
+
+Initial configure while the adapter file was not yet present was rerun after
+integration. A stricter main-component warning experiment exposed PlatformIO
+propagation of those flags into unrelated SDK NVS sources and SDK libc's
+include_next extension. The fixture retains normal native SDK warning settings;
+strict actual-adapter warnings remain in both host builds and core warnings
+remain strict in SDK builds. No SDK source patch, warning suppression or custom
+build middleware was introduced. Final restored native builds are the evidence
+above. Native idf.py commands are documented alternatives, NOT RUN here.
+
+The source-derived envelope is conditional on truthful handle configuration,
+shared serialization, nonmigrating same-core execution, uninterrupted RTOS tick
+progress, disabled logging/PM and a separately qualified CPU/preemption bound.
+A late-return check cannot replace those prerequisites. Host sanitizer runtime
+availability remains as recorded in prompt 19; no new sanitizer result is claimed.
+No remote workflow was dispatched or queried.

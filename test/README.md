@@ -464,3 +464,22 @@ The four real SDK builds are in [Arduino examples](../docs/arduino-examples.md).
 Default images are diagnostic-only until board qualification is supplied.
 Separate build-only enabled configurations exercise setup/IRQ/shutdown linkage;
 their synthetic compile settings are never physical timing qualification.
+
+## Native IDF adapter checks
+
+`tusb32x_idf_transport_1000` and `tusb32x_idf_transport_100` compile the real
+native adapter against recording SDK calls at 1ms and 10ms ticks. These test
+setup/address/async denial, exact STOP-separated calls, gate lifetime, error
+detail, divided deadlines, failed-receive retirement, output preservation,
+64-bit time and counters. See [fake limits](idf_transport/README.md).
+
+```text
+ctest --test-dir build/native -C Debug -R tusb32x_idf_transport --output-on-failure
+scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3
+```
+
+The full Windows host matrix has 22 registered suites. The independent
+[native component consumer](idf_sdk/README.md) uses actual IDF5.5.5 headers,
+libraries and target linkers, with separate target configuration/build outputs.
+It links all adapter functions and the core without Arduino or CLI sources.
+Neither fake tests nor linked images prove physical timing or a qualified board.

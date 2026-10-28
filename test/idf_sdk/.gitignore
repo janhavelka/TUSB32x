@@ -1,0 +1,10 @@
+# Generated SDK configuration is isolated by PlatformIO environment.
+/sdkconfig.*
+!/sdkconfig.defaults
+!/sdkconfig.defaults.esp32s2
+!/sdkconfig.defaults.esp32s3
+/dependencies.lock
+/managed_components/
+/build/
+/build-s2/
+/build-s3/

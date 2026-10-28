@@ -247,3 +247,15 @@ startup; the secondary is a separate fixed owner. Both borrow one bus Context.
 block in TinyUSB but never holds owner state or calls the core/transport. One
 ConsoleBuffer orders CLI and `APP` diagnostics, so partial writes cannot mix
 records from separate queues. No task, framework or scheduler enters the core.
+
+## Native IDF callback boundary
+
+`examples/esp_idf/Tusb32xIdf.h/.cpp` supplies native callbacks and owner time.
+One `BusContext` borrows the application bus and carries its shared gate,
+configuration evidence, retirement and SDK counters; each target `Context`
+borrows its device handle and copied creation settings. No registry, owning
+transport class or second protocol implementation is added. The SDK adapter
+has no core transitive dependency and the root component has no peripheral API
+dependency. An independent component consumer under `test/idf_sdk` links the
+real adapter/core with a small application main, separate from future CLI code.
+See [native transport](idf-transport.md) for the audited SDK subset and lifetime.

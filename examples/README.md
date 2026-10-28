@@ -23,6 +23,9 @@ and [two-device owner service](02_owner_service/README.md) share the same proces
 read-only startup owner and static USB output mailbox. Both have explicit S2/S3
 environments; see [wiring and build instructions](../docs/arduino-examples.md).
 Default firmware is diagnostic-only until board readiness, cleanup acceptance
-and the adapter's timing bound are supplied. Native ESP-IDF transport remains
-later work. Builds do not qualify electrical
-behavior or application timing. See [development metadata](../docs/development.md).
+and the adapter's timing bound are supplied. The [native IDF adapter](../docs/idf-transport.md)
+uses borrowed synchronous bus/device handles, a shared controller gate and
+source-derived timeout bounds. Its independent S2/S3 component fixtures link
+without Arduino or the CLI; the native CLI application remains later work.
+Builds do not qualify electrical behavior or application timing.
+See [development metadata](../docs/development.md).
