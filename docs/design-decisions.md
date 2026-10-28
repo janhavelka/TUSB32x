@@ -669,3 +669,18 @@ maintainer-only dependency. Hardware and framework claims require separate evide
   result/effect evidence, end both bindings and only then release exclusive Wire.
 
 Evidence and current peer revisions: [execution audit](audit/execution-24-arduino-examples.md).
+
+## Independent adapter/application audit, 2026-10-28
+
+- Restrict both pinned SDK adapters to 100–400kHz and native IDF to the default
+  clock source. This is a deliberately small audited SDK subset, not a new TI
+  minimum. Reject configurations whose SDK timing arithmetic is unqualified;
+  do not duplicate HAL timing calculations in the adapter.
+- Wire application ownership requires an uninitialized controller before
+  `begin`; its success result alone does not establish ownership. Check `end`
+  and retain retired context/resources on failure without an automatic retry.
+- Reserve active USB GPIOs from I2C/IRQ configuration so rejected setup retains
+  its diagnostic console. Exercise actual application code with thin recording
+  SDK boundaries; keep physical scheduling and linkage evidence separate.
+
+See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transport.md).

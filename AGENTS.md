@@ -367,7 +367,8 @@ Do not create empty files or successful hardware stubs to fill the tree.
 ## Arduino adapter checks
 
 Prompt 23 adds two registered recording-backend suites for the actual example
-adapter at 1000Hz and 100Hz ticks. The full Windows host matrix now has 16 tests.
+adapter at 1000Hz and 100Hz ticks. The current Windows host matrix has 32 tests,
+including actual application regressions.
 Run the real SDK fixtures with scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2
 -e arduino_s3. These link Arduino 3.3.11/IDF5.5.5 on pinned pioarduino 55.03.311;
 no flash or board qualification is implied. Read docs/arduino-transport.md before
@@ -378,7 +379,7 @@ retirement after a failed receive are required. Framework types stay outside cor
 ## Native IDF adapter checks
 
 Prompt 25 adds `tusb32x_idf_transport_1000` and `tusb32x_idf_transport_100` to the
-registered host matrix (22 Windows suites). Run independent actual SDK links with
+registered host matrix (32 Windows suites). Run independent actual SDK links with
 `scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3`. The adapter supports the
 audited native IDF5.5.5 configuration only; read `docs/idf-transport.md` for copied
 handle metadata, synchronous mode, same-core task pinning, shared serialization,

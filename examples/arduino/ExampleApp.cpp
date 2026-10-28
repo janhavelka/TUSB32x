@@ -12,7 +12,9 @@
 #include <Wire.h>
 #include <esp_arduino_version.h>
 #include <esp_rom_sys.h>
+#include <esp32-hal-i2c.h>
 #include <driver/gpio.h>
+#include <soc/usb_pins.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <atomic>
@@ -39,6 +41,7 @@ StaticTask_t usbTaskStorage;
 StackType_t usbStack[2048];
 bool twoDevices = false;
 bool ownsWire = false;
+bool wireReleaseAttempted = false;
 bool primaryStarted = false;
 bool secondaryStarted = false;
 bool primaryTurn = true;
@@ -148,13 +151,33 @@ bool takeInterrupt() {
 }
 /// @brief Validate pin choices before any GPIO or bus setup; optional enable stays externally owned.
 bool validPins() {
+  // These pins already belong to this application's native USB console. The SDK
+  // peripheral manager would detach USB if Wire or pinMode acquired either pin.
+  const auto consolePin = [](int pin) {
+    return pin == USBPHY_DM_NUM || pin == USBPHY_DP_NUM;
+  };
   if (!GPIO_IS_VALID_OUTPUT_GPIO(BoardConfig::sda) || !GPIO_IS_VALID_OUTPUT_GPIO(BoardConfig::scl) ||
-      BoardConfig::sda == BoardConfig::scl) return false;
+      BoardConfig::sda == BoardConfig::scl || consolePin(BoardConfig::sda) ||
+      consolePin(BoardConfig::scl)) return false;
   const int pins[] = {BoardConfig::irq, twoDevices ? BoardConfig::secondIrq : -1, BoardConfig::enable};
   for (int pin : pins) {
     if (pin >= 0 && (!GPIO_IS_VALID_GPIO(pin) || pin == BoardConfig::sda || pin == BoardConfig::scl)) return false;
   }
+  if (consolePin(BoardConfig::irq) || (twoDevices && consolePin(BoardConfig::secondIrq))) return false;
   return BoardConfig::irq < 0 || !twoDevices || BoardConfig::irq != BoardConfig::secondIrq;
+}
+/// @brief Attempt owned controller release once; failed teardown keeps ownership and blocks reuse.
+bool releaseWire() {
+  if (!ownsWire) return true;
+  if (wireReleaseAttempted) return false;
+  wireReleaseAttempted = true;
+  context.retired = true;
+  if (!Wire.end()) {
+    appRecord("APP bus=release_failed ownership=retained controller=retired\n");
+    return false;
+  }
+  ownsWire = false;
+  return true;
 }
 /// @brief Prepare the SDK handle with checked read-only identity traffic, outside bounded callbacks.
 /// @details Exclusive setup runs before either binding. No identity match or board qualification is inferred.
@@ -220,8 +243,10 @@ void shutdown() {
         static_cast<unsigned long long>(result.token.value), t::errorName(result.status.code),
         static_cast<long>(result.status.detail), static_cast<unsigned>(result.hardwareEffect));
   }
-  if (ownsWire) { Wire.end(); ownsWire = false; }
-  appRecord("APP shutdown=complete results=retained_or_reported bus=released usb=alive\n");
+  const bool hadWire = ownsWire || wireReleaseAttempted;
+  const bool released = releaseWire();
+  appRecord("APP shutdown=complete results=retained_or_reported bus=%s usb=alive\n",
+      !hadWire ? "not_owned" : released ? "released" : "release_failed");
 }
 } // namespace
 
@@ -263,7 +288,14 @@ void setupExample(bool useTwoDevices) {
   context.wire = &Wire;
   context.ownerCore = xPortGetCoreID();
   context.maxOverheadUs = BoardConfig::maxOverheadUs;
+  context.busHz = BoardConfig::busHz;
   context.acceptSdkCleanup = BoardConfig::acceptSdkCleanup;
+  // Wire.begin reports success for an existing controller without checking its
+  // pins, speed or initialization core. This example must create its own bus.
+  if (i2cIsInit(0)) {
+    appRecord("APP setup=diagnostic_only reason=Wire_controller_already_owned\n");
+    return;
+  }
   ownsWire = Wire.begin(BoardConfig::sda, BoardConfig::scl, BoardConfig::busHz);
   if (!ownsWire) { appRecord("APP setup=diagnostic_only reason=Wire_begin_failed\n"); return; }
   auto prepared = prepare(BoardConfig::address);
@@ -272,7 +304,7 @@ void setupExample(bool useTwoDevices) {
   if (!prepared.ok()) {
     appRecord("APP setup=diagnostic_only code=%s detail=%ld reason=preparation_failed\n",
         t::errorName(prepared.code), static_cast<long>(prepared.detail));
-    Wire.end(); ownsWire = false; return;
+    (void)releaseWire(); return;
   }
   if (BoardConfig::irq >= 0) { pinMode(BoardConfig::irq, INPUT); primaryInputConfigured = true; }
   if (twoDevices && BoardConfig::secondIrq >= 0) {

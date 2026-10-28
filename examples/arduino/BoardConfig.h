@@ -40,7 +40,7 @@
 #define TUSB32X_ENABLE -1
 #endif
 #ifndef TUSB32X_BUS_HZ
-/// @brief Requested SCL frequency in Hz; default 100000, maximum 400000.
+/// @brief Requested SCL frequency in Hz; default 100000, supported range 100000..400000.
 #define TUSB32X_BUS_HZ 100000
 #endif
 #ifndef TUSB32X_CALLBACK_MS
@@ -71,7 +71,7 @@
 namespace tusb32x_arduino {
 static_assert(TUSB32X_ADDRESS >= 0 && TUSB32X_ADDRESS <= 0x7F, "Primary address must be seven-bit before narrowing");
 static_assert(TUSB32X_SECOND_ADDRESS >= 0 && TUSB32X_SECOND_ADDRESS <= 0x7F, "Second address must be seven-bit before narrowing");
-static_assert(TUSB32X_BUS_HZ > 0 && TUSB32X_BUS_HZ <= 400000, "TI SCL limit is 400 kHz before narrowing");
+static_assert(TUSB32X_BUS_HZ >= 100000 && TUSB32X_BUS_HZ <= 400000, "Audited SDK SCL range is 100..400 kHz before narrowing");
 static_assert(TUSB32X_CALLBACK_MS > 0 && TUSB32X_CALLBACK_MS <= UINT32_MAX, "Callback interval must fit uint32 milliseconds");
 static_assert(TUSB32X_OPERATION_MS > 0 && TUSB32X_OPERATION_MS <= UINT32_MAX, "Operation interval must fit uint32 milliseconds");
 static_assert(TUSB32X_MAX_OVERHEAD_US >= 0 && TUSB32X_MAX_OVERHEAD_US <= UINT32_MAX, "Overhead must fit uint32 microseconds");
@@ -94,7 +94,7 @@ struct BoardConfig {
   static constexpr int irq = TUSB32X_IRQ; ///< Optional primary input, -1 means absent.
   static constexpr int secondIrq = TUSB32X_SECOND_IRQ; ///< Optional secondary input/ISR signal.
   static constexpr int enable = TUSB32X_ENABLE; ///< Report-only externally controlled enable pin; never driven here.
-  static constexpr uint32_t busHz = TUSB32X_BUS_HZ; ///< SCL hertz, at most 400000.
+  static constexpr uint32_t busHz = TUSB32X_BUS_HZ; ///< Audited SDK SCL hertz, 100000..400000.
   static constexpr uint32_t callbackMs = TUSB32X_CALLBACK_MS; ///< Whole adapter callback budget.
   static constexpr uint32_t operationMs = TUSB32X_OPERATION_MS; ///< Immutable owner job interval.
   static constexpr uint32_t maxOverheadUs = TUSB32X_MAX_OVERHEAD_US; ///< Qualified whole-callback CPU bound; zero disables I2C.
@@ -102,7 +102,7 @@ struct BoardConfig {
   static constexpr bool acceptSdkCleanup = TUSB32X_ACCEPT_SDK_CLEANUP != 0; ///< Accept SDK reset/bus-clear effects on all bus users.
   static constexpr uint64_t runMs = TUSB32X_RUN_MS; ///< Zero runs until requestStop; positive triggers orderly local shutdown.
 };
-static_assert(BoardConfig::busHz > 0 && BoardConfig::busHz <= 400000, "TI SCL limit is 400 kHz");
+static_assert(BoardConfig::busHz >= 100000 && BoardConfig::busHz <= 400000, "Audited SDK SCL range is 100..400 kHz");
 static_assert(BoardConfig::callbackMs > 0 && BoardConfig::operationMs > 0, "Finite positive timeouts required");
 static_assert(BoardConfig::variant >= TUSB32x::Variant::TUSB320 && BoardConfig::variant <= TUSB32x::Variant::TUSB322I,
               "Select an explicit supported primary variant");

@@ -25,7 +25,7 @@ struct BackendStats {
 /// ends and the application deletes its devices and bus. No reentry or ISR use.
 struct BusContext {
   i2c_master_bus_handle_t handle = nullptr; ///< Borrowed bus; never deleted by callbacks.
-  i2c_master_bus_config_t config{}; ///< Exact immutable settings used to create handle; queue depth must be zero.
+  i2c_master_bus_config_t config{}; ///< Exact immutable creation settings; default clock and zero queue depth required.
   std::atomic_flag gate = ATOMIC_FLAG_INIT; ///< Nonblocking bus gate, released before callback return.
   int ownerCore = -1; ///< Core that created the bus/interrupt; all transfers must run here.
   uint32_t maxOverheadUs = 0; ///< Qualified whole-callback CPU/preemption overhead in microseconds; zero rejects.
@@ -41,7 +41,7 @@ struct BusContext {
 struct Context {
   BusContext* bus = nullptr; ///< Borrowed common bus context; must outlive this target and its callbacks.
   i2c_master_dev_handle_t device = nullptr; ///< Borrowed synchronous SDK device; never created/deleted here.
-  i2c_device_config_t config{}; ///< Exact creation settings, seven-bit address and SCL frequency <=400kHz.
+  i2c_device_config_t config{}; ///< Exact creation settings, seven-bit address and SCL in 100000..400000Hz.
   uint16_t sdkTimeoutMs = 10; ///< Positive cap per SDK wait, not the aggregate callback timeout.
 };
 

@@ -22,11 +22,18 @@ Required configuration:
 - Native master with `trans_queue_depth=0` and no event callbacks. Nonzero queue
   depth alone enables asynchronous transfers in this SDK. No transaction may be
   pending when the adapter gains the bus.
-- Seven-bit addressing, ACK checking enabled and SCL in 1..400000 Hz. Legal
+- Default I2C clock source (`I2C_CLK_SRC_DEFAULT`), seven-bit addressing, ACK
+  checking enabled and SCL in 100000..400000 Hz. Legal
   target addresses are 0x47/0x67 or 0x60/0x61; the core separately validates the
   exact selected variant. Callback address must match the device's recorded
   `device_address`. Register 0x45 and wire bytes such as 0x8E are not target
   addresses.
+- This clock/rate subset is an adapter qualification restriction, not a TI
+  minimum frequency. The pinned S2 HAL's REF_TICK/400kHz timing arithmetic
+  underflows, and very low rates exceed hardware timing fields on S2/S3. See
+  [S2 timing calculation](https://github.com/espressif/esp-idf/blob/v5.5.5/components/hal/esp32s2/include/hal/i2c_ll.h)
+  and [S3 timing calculation](https://github.com/espressif/esp-idf/blob/v5.5.5/components/hal/esp32s3/include/hal/i2c_ll.h).
+  Validation rejects other clocks/rates before SDK work.
 - Create, use and delete the bus/interrupt on the same core. Set `ownerCore`
   to that core and pin the owner task there so it cannot migrate after the
   callback's check. No ISR calls or reentry. Both tested targets allocate the
@@ -104,7 +111,9 @@ blocking. An actual backend error keeps its original code/detail even when late.
 The default core callback cap of 20ms cannot contain this conservative bound.
 Configure a larger cap and an owner deadline that can contain all required
 callbacks. For arithmetic illustration, C=2000us and a 10ms SDK wait cap fit a
-400ms combined callback at either tested tick rate. This is not a measured 2ms
+600ms combined callback at either tested tick rate: the conservative bounds are
+360002us at 1000Hz and 522002us at 100Hz. A 400ms budget fits only the former.
+This is not a measured 2ms
 application guarantee. Clipped nearly expired owner deadlines may legitimately
 reject a transfer before traffic.
 

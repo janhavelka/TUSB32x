@@ -83,6 +83,7 @@ void prepare(Context& context, TwoWire& wire) {
   context.wire = &wire;
   context.ownerCore = 0;
   context.preparedAddresses = 0x0F;
+  context.busHz = 400000;
   context.wireTimeoutMs = 100;
   context.maxOverheadUs = 1000;
   context.acceptSdkCleanup = true;
@@ -147,7 +148,7 @@ void exactTransfers() {
 
 /// @brief Invalid setup, callback arguments and gates never enter Wire or alter outputs.
 void localRejections() {
-  for (unsigned scenario = 0; scenario < 24; ++scenario) {
+  for (unsigned scenario = 0; scenario < 25; ++scenario) {
     Context context;
     TwoWire wire;
     prepare(context, wire);
@@ -182,9 +183,11 @@ void localRejections() {
     else if (scenario == 20) status = adapter::writeRead(0x47, data, 1, output, 9, 1000, &context);
     else if (scenario == 21) status = adapter::writeRead(0x47, data, 2, output, 1, 1000, &context);
     else if (scenario == 22) status = adapter::writeRead(0x47, data, 1, nullptr, 1, 1000, &context);
-    else status = adapter::write(0x47, data, 3, 1000, &context);
+    else if (scenario == 23) status = adapter::write(0x47, data, 3, 1000, &context);
+    else status = adapter::writeRead(0x47, data, 1, output, 1, 0, &context);
     const auto expected = scenario == 8 ? Err::I2C_BUS :
-                          scenario == 10 ? Err::I2C_BUSY : Err::I2C_ERROR;
+                          scenario == 10 ? Err::I2C_BUSY :
+                          scenario == 15 || scenario == 24 ? Err::I2C_TIMEOUT : Err::I2C_ERROR;
     CHECK(status.is(expected));
     CHECK(sdk.getters == 0 && sdk.timeoutAssignments == 0 && sdk.begins == 0);
     CHECK(sdk.transmits == 0 && sdk.receives == 0 && sdk.flushes == 0);
@@ -195,6 +198,37 @@ void localRejections() {
       context.gate.clear();
     }
     checkReleased(context);
+  }
+}
+
+/// @brief Only audited SCL rates enter Wire; callbacks preserve the application setting.
+void supportedBusRates() {
+  for (const uint32_t busHz : {uint32_t{0}, uint32_t{1}, uint32_t{99999},
+                              uint32_t{100000}, uint32_t{400000}, uint32_t{400001}}) {
+    for (const bool receiving : {false, true}) {
+      Context context;
+      TwoWire wire;
+      prepare(context, wire);
+      context.busHz = busHz;
+      const bool supported = busHz == 100000 || busHz == 400000;
+      const auto validated = adapter::validateContext(context);
+      CHECK(supported ? validated.ok() : validated.is(Err::I2C_ERROR));
+      CHECK(sdk.getters == 0 && sdk.begins == 0);
+      const uint8_t data[]{0x09, 0x15};
+      uint8_t output = 0xA5;
+      const auto status = receiving ?
+          adapter::writeRead(0x47, data, 1, &output, 1, 1000, &context) :
+          adapter::write(0x47, data, 2, 1000, &context);
+      CHECK(supported ? status.ok() : status.is(Err::I2C_ERROR));
+      CHECK(context.busHz == busHz);
+      CHECK(sdk.transmits == (supported ? 1U : 0U));
+      CHECK(sdk.receives == (supported && receiving ? 1U : 0U));
+      if (!supported) {
+        CHECK(sdk.getters == 0 && sdk.timeoutAssignments == 0 && sdk.begins == 0);
+        CHECK(sdk.flushes == 0 && output == 0xA5);
+      }
+      checkReleased(context);
+    }
   }
 }
 
@@ -472,6 +506,7 @@ bool xPortInIsrContext() { return sdk.isr; }
 int main() {
   exactTransfers();
   localRejections();
+  supportedBusRates();
   failuresAndRetirement();
   aggregateTime();
   publicationAtDeadline();

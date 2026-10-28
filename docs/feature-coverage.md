@@ -423,6 +423,14 @@ remain separate work.
 
 ## Arduino applications (prompt 24)
 
+The independent prompts 23–25 audit additionally registers eight
+`tusb32x_arduino_app_<scenario>` owner/lifecycle cases and two USB-pin builds.
+They execute actual ExampleApp setup/loop, the adapter and shared CLI. Existing
+Wire ownership, failed creation/preparation/deletion, USB stalls, exact startup
+and CLI result retention, and USB GPIO rejection now have direct application
+regressions. Adapter tests also reject unsupported clock/rate configurations
+and distinguish zero budget from invalid arguments.
+
 | Requirement / capability | Implementation | Executable evidence |
 | --- | --- | --- |
 | Read-only startup, exact result ownership, failure without retry | ExampleOwner; primary hands off to shared Cli | tusb32x_example_owner, tusb32x_example_integration |
@@ -444,7 +452,7 @@ VBUS_DET and VCONN requirements. Host/SDK checks do not qualify physical behavio
 | Aggregate finite budget, coarse ticks, unchanged error output | phaseTimeout/transfer; audited SDK wait-site bound | aggregateTime, publicationAtDeadline at 1000/100Hz |
 | Full native error detail, no guessed NACK or partial bytes | sdkStatus, BackendStats | failuresAndRetirement, clockAndSaturation |
 | Shared controller retirement and non-owning shutdown | BusContext; same-core synchronous SDK lifetime | failuresAndRetirement, borrowedLifecycleAndSharing; application cleanup rules documented |
-| Framework-free core and actual native component linkage | Existing root component; test/idf_sdk main and real adapter | 22 registered host suites; S2/S3 firmware.elf/bin without Arduino/CLI sources |
+| Framework-free core and actual native component linkage | Existing root component; test/idf_sdk main and real adapter | 32 registered host suites; S2/S3 firmware.elf/bin without Arduino/CLI sources |
 
 The [native integration guide](idf-transport.md) states the source revision,
 exact configuration gates and required application qualification. Fake timing

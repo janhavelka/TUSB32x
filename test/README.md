@@ -427,9 +427,15 @@ the same registered checker. See `docs/validation.md` for current results.
 
 ## Arduino adapter checks
 
+The fresh prompts 23–25 audit adds ten actual application scenarios under
+[arduino_app](arduino_app/README.md). Run them with
+`ctest --test-dir build/p25 -C Debug -R tusb32x_arduino_app --output-on-failure`.
+They compile the real application and adapter with recording SDK boundaries;
+the separate four firmware builds remain the SDK linkage evidence.
+
 The registered tusb32x_arduino_wire_1000 and tusb32x_arduino_wire_100 suites compile
 the actual example adapter against recording SDK headers at two tick rates.
-See [fixture details](arduino_wire/README.md). The Windows host total is now 20
+See [fixture details](arduino_wire/README.md). The Windows host total is now 32
 registered suites; Release checks remain active. Real framework links are separate:
 
     scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2 -e arduino_s3
@@ -478,7 +484,7 @@ ctest --test-dir build/native -C Debug -R tusb32x_idf_transport --output-on-fail
 scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3
 ```
 
-The full Windows host matrix has 22 registered suites. The independent
+The full Windows host matrix has 32 registered suites. The independent
 [native component consumer](idf_sdk/README.md) uses actual IDF5.5.5 headers,
 libraries and target linkers, with separate target configuration/build outputs.
 It links all adapter functions and the core without Arduino or CLI sources.

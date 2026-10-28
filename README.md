@@ -199,5 +199,6 @@ each completed unit. Remote CI is confined to prompt 34 in this first execution.
 Project code is MIT, owned by Thymos Solution s.r.o with Jan Havelka as maintainer.
 Archived vendor references retain their original terms and are excluded from
 normal library packages. Native tests prove software values and linkage;
-Arduino firmware linkage is checked separately; native-IDF integration, full
-distribution qualification and physical hardware evidence remain separate work.
+Arduino and native-IDF adapter firmware linkage are checked separately. Native
+CLI integration, full distribution qualification and physical hardware evidence
+remain separate work.

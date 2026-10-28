@@ -23,6 +23,10 @@ power, preparation, teardown and the context's lifetime.
    core in `ownerCore`. Callbacks reject a different core and ISR context;
    the application must also prevent migration after the check. Initialize and
    tear down on the same core. Use synchronous Wire master mode only.
+   Configure 100000..400000Hz and record the exact rate in `Context::busHz`.
+   Wire uses the default native clock source. This audited SDK range is an
+   adapter restriction, not a TI minimum; very low rates can overflow the
+   SDK hardware timing fields. Context metadata must match actual setup.
 3. Successfully initialize buffers (SDK default 128, minimum 32) and create each
    target's HAL device handle during application setup, before bounded owner work.
    A deliberate pointer-write/read of a documented read-only identity address
@@ -110,6 +114,8 @@ A short buffered write only calls `flush()`. With HAL locks disabled this clears
 local buffers without retaining a lock or emitting partial writes/empty probes.
 Every exit restores a changed Wire timeout before releasing the gate. An actual
 backend error remains primary even if a later time observation would be late.
+Zero or insufficient aggregate budgets return I2C_TIMEOUT before any Wire call;
+invalid arguments/context return I2C_ERROR. Neither returns owner TIMEOUT.
 
 The SDK can retain `contains_read` after failed receive. Every incomplete
 `requestFrom` or invalid `read` therefore retires the **shared controller**.

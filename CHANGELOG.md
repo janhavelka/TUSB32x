@@ -9,6 +9,16 @@ Entries below distinguish those artifacts from planned device-driver functionali
 
 ## Unreleased
 
+### Fixed
+
+- Arduino examples reject an existing Wire controller and active USB pin
+  conflicts. Failed teardown retains ownership, blocks reuse and reports failure
+  without retrying. Actual application regressions cover startup, USB stalls,
+  result ownership and cleanup failures.
+- Wire zero-budget callbacks return I2C_TIMEOUT. Both adapters now require the
+  audited 100–400kHz SDK range; native IDF also requires its default clock source.
+  Corrected the coarse-tick combined callback budget example to 600ms.
+
 ### Added
 
 - Native ESP-IDF 5.5.5 adapter for ESP32-S2/S3 with borrowed bus/device handles,

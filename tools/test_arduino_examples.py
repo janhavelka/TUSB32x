@@ -151,6 +151,7 @@ class ArduinoExamplesTest(unittest.TestCase):
         cases = [[], ["TUSB32X_VARIANT=TUSB320", "TUSB32X_ADDRESS=0x60",
                       "TUSB32X_SECOND_VARIANT=TUSB320I", "TUSB32X_SECOND_ADDRESS=0x61"],
                  ["TUSB32X_VARIANT=TUSB322I", "TUSB32X_ADDRESS=0x67"],
+                 ["TUSB32X_BUS_HZ=100000"],
                  ["TUSB32X_BUS_HZ=400000", "TUSB32X_IRQ=6", "TUSB32X_SECOND_IRQ=7"],
                  ["TUSB32X_BOARD_READY=1", "TUSB32X_MAX_OVERHEAD_US=2000",
                   "TUSB32X_ACCEPT_SDK_CLEANUP=1", "TUSB32X_RUN_MS=1000"]]
@@ -165,7 +166,8 @@ class ArduinoExamplesTest(unittest.TestCase):
                    "TUSB32X_OPERATION_MS=-1", "TUSB32X_MAX_OVERHEAD_US=-1",
                    "TUSB32X_RUN_MS=9223372036854775808ULL", "TUSB32X_RUN_MS=-1",
                    "TUSB32X_IRQ=-2", "TUSB32X_SECOND_IRQ=-2", "TUSB32X_ENABLE=-2",
-                   "TUSB32X_BUS_HZ=0", "TUSB32X_BUS_HZ=400001",
+                   "TUSB32X_BUS_HZ=0", "TUSB32X_BUS_HZ=1", "TUSB32X_BUS_HZ=99999",
+                   "TUSB32X_BUS_HZ=400001",
                    "TUSB32X_BUS_HZ=4295067296ULL", "TUSB32X_VARIANT=UNSPECIFIED",
                    "TUSB32X_SECOND_VARIANT=UNSPECIFIED", "TUSB32X_ADDRESS=0x60",
                    "TUSB32X_SDA=4294967295ULL", "TUSB32X_SCL=4294967295ULL",

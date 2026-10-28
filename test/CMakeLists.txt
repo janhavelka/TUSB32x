@@ -100,6 +100,41 @@ foreach(rate IN ITEMS 1000 100)
   set_tests_properties(${idf_suite} PROPERTIES TIMEOUT 30)
 endforeach()
 
+# Exercise the actual Arduino application with recording SDK boundaries.
+foreach(app IN ITEMS owner usb_sda usb_irq)
+  set(app_suite tusb32x_arduino_app_${app})
+  add_executable(${app_suite} arduino_app/test_app.cpp
+    ../examples/arduino/Tusb32xWire.cpp ../examples/common/ExampleOwner.cpp)
+  target_link_libraries(${app_suite} PRIVATE tusb32x_cli_support)
+  target_include_directories(${app_suite} PRIVATE arduino_app/fakes
+    arduino_wire/fakes ../examples/arduino)
+  target_compile_definitions(${app_suite} PRIVATE TUSB32X_BOARD_READY=1
+    TUSB32X_MAX_OVERHEAD_US=100 TUSB32X_ACCEPT_SDK_CLEANUP=1
+    ARDUINO_RUNNING_CORE=0 ARDUINO_USB_MODE=1 CONFIG_DISABLE_HAL_LOCKS=1
+    CORE_DEBUG_LEVEL=0 CONFIG_IDF_TARGET_ESP32S2=0 CONFIG_IDF_TARGET_ESP32S3=1)
+  tusb32x_strict_warnings(${app_suite})
+  if(MSVC)
+    target_compile_options(${app_suite} PRIVATE /UNDEBUG)
+  else()
+    target_compile_options(${app_suite} PRIVATE -UNDEBUG)
+  endif()
+  if(app STREQUAL "owner")
+    foreach(scenario IN ITEMS startup startup-failure begin-failure preparation-failure
+        cleanup-failure end-failure existing-bus shutdown)
+      add_test(NAME tusb32x_arduino_app_${scenario} COMMAND ${app_suite} ${scenario})
+      set_tests_properties(tusb32x_arduino_app_${scenario} PROPERTIES TIMEOUT 30)
+    endforeach()
+  else()
+    if(app STREQUAL "usb_sda")
+      target_compile_definitions(${app_suite} PRIVATE TUSB32X_SDA=19)
+    else()
+      target_compile_definitions(${app_suite} PRIVATE TUSB32X_IRQ=20)
+    endif()
+    add_test(NAME ${app_suite} COMMAND ${app_suite} usb-pins)
+    set_tests_properties(${app_suite} PROPERTIES TIMEOUT 30)
+  endif()
+endforeach()
+
 # Each public core header is independently includable.
 set(header_contract_sources)
 foreach(header IN ITEMS Status Config TUSB32x CommandTable Version)

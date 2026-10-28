@@ -302,6 +302,52 @@ void localRejections() {
   }
 }
 
+/// @brief Reject unaudited SCL/clock settings without SDK work or changed caller data.
+void supportedBusConfiguration() {
+  for (const uint32_t busHz : {uint32_t{0}, uint32_t{1}, uint32_t{99999},
+                              uint32_t{100000}, uint32_t{400000}, uint32_t{400001}}) {
+    for (const bool receiving : {false, true}) {
+      BusContext bus;
+      Context context;
+      prepare(bus, context);
+      context.config.scl_speed_hz = busHz;
+      const bool supported = busHz == 100000 || busHz == 400000;
+      const auto validated = adapter::validateContext(context);
+      CHECK(supported ? validated.ok() : validated.is(Err::I2C_ERROR));
+      CHECK(sdk.transmits == 0 && sdk.receives == 0);
+      const uint8_t data[]{0x09, 0x15};
+      uint8_t output = 0xA5;
+      const auto status = receiving ?
+          adapter::writeRead(0x47, data, 1, &output, 1, 1000, &context) :
+          adapter::write(0x47, data, 2, 1000, &context);
+      CHECK(supported ? status.ok() : status.is(Err::I2C_ERROR));
+      CHECK(context.config.scl_speed_hz == busHz);
+      CHECK(bus.config.clk_source == I2C_CLK_SRC_DEFAULT);
+      CHECK(sdk.transmits == (supported ? 1U : 0U));
+      CHECK(sdk.receives == (supported && receiving ? 1U : 0U));
+      if (!supported) CHECK(sdk.guardUs == 0 && output == 0xA5);
+      checkReleased(bus, context);
+    }
+  }
+  for (const bool receiving : {false, true}) {
+    BusContext bus;
+    Context context;
+    prepare(bus, context);
+    const auto unsupportedClock = static_cast<i2c_clock_source_t>(I2C_CLK_SRC_DEFAULT + 1);
+    bus.config.clk_source = unsupportedClock;
+    CHECK(adapter::validateContext(context).is(Err::I2C_ERROR));
+    const uint8_t data[]{0x09, 0x15};
+    uint8_t output = 0xA5;
+    const auto status = receiving ?
+        adapter::writeRead(0x47, data, 1, &output, 1, 1000, &context) :
+        adapter::write(0x47, data, 2, 1000, &context);
+    CHECK(status.is(Err::I2C_ERROR));
+    CHECK(sdk.transmits == 0 && sdk.receives == 0 && sdk.guardUs == 0);
+    CHECK(output == 0xA5 && bus.config.clk_source == unsupportedClock);
+    checkReleased(bus, context);
+  }
+}
+
 /// @brief Preserve full terminal backend detail; only the SDK's timeout code denotes timeout.
 void failuresAndRetirement() {
   constexpr esp_err_t codes[]{ESP_FAIL, ESP_ERR_NO_MEM, ESP_ERR_INVALID_ARG,
@@ -355,6 +401,30 @@ void failuresAndRetirement() {
 void aggregateTime() {
   const uint8_t pointer = 8;
   const uint8_t data[]{9, 0x15};
+  // A 400ms example budget fits 1ms ticks but cannot reserve two 10ms-tick
+  // envelopes. A 600ms budget fits both without relaxing the SDK wait cap.
+  for (const uint32_t budgetMs : {uint32_t{400}, uint32_t{600}}) {
+    BusContext bus;
+    Context context;
+    prepare(bus, context);
+    bus.maxOverheadUs = 2000;
+    context.sdkTimeoutMs = 10;
+    sdk.worstWaits = true;
+    const auto started = sdk.physicalUs;
+    uint8_t output = 0xA5;
+    const auto status = adapter::writeRead(0x47, &pointer, 1, &output, 1, budgetMs, &context);
+    const bool fits = configTICK_RATE_HZ == 1000 || budgetMs == 600;
+    CHECK(fits ? status.ok() : status.is(Err::I2C_TIMEOUT));
+    CHECK(sdk.physicalUs - started + bus.maxOverheadUs <= static_cast<uint64_t>(budgetMs) * 1000);
+    if (fits) {
+      CHECK(sdk.transmits == 1 && sdk.receives == 1 && output == 0x30);
+      CHECK(sdk.txTimeoutMs == 10 && sdk.rxTimeoutMs == 10);
+      CHECK(sdk.physicalUs - started >= 2 * physicalWaitEnvelope(10) + 2);
+    } else {
+      CHECK(sdk.transmits == 0 && sdk.receives == 0 && sdk.guardUs == 0 && output == 0xA5);
+    }
+    checkReleased(bus, context);
+  }
   for (const bool receiving : {false, true}) {
     for (const uint32_t budgetMs : {uint32_t{0}, uint32_t{1}, uint32_t{100}, uint32_t{150},
                                    uint32_t{200}, uint32_t{300}, uint32_t{500}, uint32_t{1000},
@@ -537,6 +607,7 @@ int main() {
   exactTransfers();
   borrowedLifecycleAndSharing();
   localRejections();
+  supportedBusConfiguration();
   failuresAndRetirement();
   aggregateTime();
   publicationAtDeadline();

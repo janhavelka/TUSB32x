@@ -106,7 +106,7 @@ Status send(Context& context, uint8_t address, const uint8_t* data, size_t lengt
 Status transfer(uint8_t address, const uint8_t* tx, size_t txLength, uint8_t* rx,
                 size_t rxLength, uint32_t timeoutMs, void* user) {
   const uint64_t started = nowUs();
-  if (!user || !tx || timeoutMs == 0 ||
+  if (!user || !tx ||
       (rxLength == 0 ? txLength != 2 : (!rx || txLength != 1 || rxLength > 8)))
     return Status::Error(Err::I2C_ERROR, "Invalid Wire callback arguments");
   auto& context = *static_cast<Context*>(user);
@@ -166,6 +166,7 @@ Status transfer(uint8_t address, const uint8_t* tx, size_t txLength, uint8_t* rx
 
 TUSB32x::Status validateContext(const Context& context) {
   if (!context.wire || !context.wireTimeoutMs || !context.maxOverheadUs ||
+      context.busHz < 100000 || context.busHz > 400000 ||
       !context.acceptSdkCleanup || !context.preparedAddresses ||
       (context.preparedAddresses & 0xF0) || context.ownerCore != xPortGetCoreID() ||
       xPortInIsrContext())

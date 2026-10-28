@@ -70,7 +70,7 @@ names such as `TUSB320I` or `TUSB322I`, without a namespace prefix.
 | TUSB32X_SDA, TUSB32X_SCL | GPIO4, GPIO5 on both example boards; verify your board routing |
 | TUSB32X_IRQ, TUSB32X_SECOND_IRQ | -1 absent; explicit externally pulled-up inputs |
 | TUSB32X_ENABLE | -1; optional report-only board-controlled signal, never driven here; must not share an IRQ input |
-| TUSB32X_BUS_HZ | 100000; positive and at most 400000 |
+| TUSB32X_BUS_HZ | 100000; audited SDK range 100000..400000 |
 | TUSB32X_CALLBACK_MS, TUSB32X_OPERATION_MS | 400, 5000; finite aggregate callback / owner operation budgets |
 | TUSB32X_BOARD_READY | 0; set 1 only after exact-part supply/strap/enable/wiring qualification |
 | TUSB32X_MAX_OVERHEAD_US | 0; replace only with the qualified whole-callback CPU/scheduling bound |
@@ -101,6 +101,18 @@ initialization and owner-established stable supply, explicitly issue
 reject that procedure. Setup never duplicates its register writes.
 
 ## Ownership, console and shutdown
+
+Setup rejects an already initialized Wire0 controller before calling `begin`:
+the SDK otherwise returns success without validating its pins, speed or creating
+core. The example never acquires ownership of another application's bus.
+SDA/SCL and configured IRQ pins cannot use native USB GPIO19/20; assigning them
+would detach the diagnostic console through the SDK peripheral manager.
+The optional enable pin remains report-only and externally controlled.
+
+Teardown checks `Wire.end()`. Failure retains ownership, retires the adapter,
+reports `bus=release_failed`, and leaves the diagnostic console alive. It does
+not retry deletion or claim resources were released. Setup cleanup follows the
+same rule. Unowned buses are reported as `bus=not_owned` and left untouched.
 
 Application startup owns read-only initialization followed by port refresh. It
 polls through the existing engine, takes each exact terminal result, and queues

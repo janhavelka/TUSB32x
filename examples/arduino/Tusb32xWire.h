@@ -29,9 +29,10 @@ struct Context {
   int ownerCore = -1; ///< Core that called Wire.begin; callbacks reject another core or ISR.
   uint8_t preparedAddresses = 0; ///< Prewarmed handles: bits 0/1/2/3 mean 47/67/60/61 hex.
   uint16_t wireTimeoutMs = 10; ///< Positive upper cap for each SDK wait; not the callback budget.
+  uint32_t busHz = 0; ///< Exact application-configured SCL rate, supported range 100000..400000Hz.
   uint32_t maxOverheadUs = 0; ///< Qualified whole-callback CPU/preemption overhead; zero rejects setup.
   bool acceptSdkCleanup = false; ///< Explicit acceptance of SDK reset/bus-clear on failure.
-  bool retired = false; ///< Failed receive retires ALL users until application teardown/reinitialization.
+  bool retired = false; ///< Failed receive/teardown retires ALL users until successful application recreation.
   WireStats stats{}; ///< Passive counts, read only under the application serialization boundary.
 };
 
@@ -48,6 +49,7 @@ TUSB32x::Status validateContext(const Context& context);
 /// @param[in] timeoutMs Whole callback milliseconds, including gate/SDK cleanup/CPU overhead.
 /// @param[in,out] user Borrowed Context; no reentry. Gate contention fails immediately.
 /// @return OK or I2C_*; Wire code preserved as detail, without inferred NACK phase.
+/// Zero/insufficient budget returns I2C_TIMEOUT; invalid arguments/setup return I2C_ERROR.
 /// @note No retry, recovery or bus ownership. A failed transmission may already have applied.
 TUSB32x::Status write(uint8_t address, const uint8_t* data, size_t length,
                      uint32_t timeoutMs, void* user);
@@ -61,6 +63,7 @@ TUSB32x::Status write(uint8_t address, const uint8_t* data, size_t length,
 /// @param[in] timeoutMs One aggregate millisecond budget; second phase uses remaining time.
 /// @param[in,out] user Borrowed Context shared by the entire physical controller.
 /// @return OK or I2C_*; receive failure reports observed length, not an unavailable ESP error.
+/// Zero/insufficient budget returns I2C_TIMEOUT; invalid arguments/setup return I2C_ERROR.
 /// @note Failed receive retires the controller. Temporary Wire timeout is always restored.
 TUSB32x::Status writeRead(uint8_t address, const uint8_t* txData, size_t txLength,
                          uint8_t* rxData, size_t rxLength, uint32_t timeoutMs, void* user);

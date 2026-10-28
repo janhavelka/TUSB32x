@@ -1783,3 +1783,33 @@ Other SDK revisions and physical CPU/ISR/waveform/electrical qualification remai
 unverified. Flash, serial and HIL are NOT RUN. Native CLI remains prompt 26.
 Commit/sync and verified upstream equality are reported in the handoff; the lead
 alone changes Git. Remote CI remains prompt 34 only.
+
+## Independent prompts 23–25 audit (2026-10-28)
+
+Reviewed from clean, synchronized `7f23b901b97325fa3c49f3a1e4f26bd05d4231f0`
+on the same `promptset/tusb32x-implementation-20261023` branch. All three original
+prompts were reread in full. Parallel coverage/application and SDK lifetime/time
+reviews inspected actual code, tests and the completed implementation diffs.
+The lead verified findings, integrated fixes and owned all Git actions.
+
+Fixed Wire zero-budget status, unsupported SDK clock/rate admission, Arduino
+ownership of an already initialized controller, ignored teardown failures and
+active USB GPIO reassignment. Corrected the coarse-tick budget example. Added
+ten registered actual application scenarios and extended the existing adapter
+and BoardConfig tests without a new production abstraction or core dependency.
+[Audit findings](audit/review-23-25.md) map each correction to source evidence.
+Peer revisions were rechecked clean and unchanged; sibling research stayed read-only.
+
+PASS: all 32 host suites in both Debug and Release; strict warnings and active
+checks retained. Wire contracts execute 1298/1275 checks and native contracts
+1806/1766 at 1000/100Hz. Actual S2/S3 links pass for both adapter fixtures and all
+four complete Arduino applications. Strict Doxygen, API visibility, local links,
+source encoding, vendor hashes, version consistency and extracted tool-independent
+core/CLI consumers pass. See [validation](validation.md#independent-prompts-2325-audit-2026-10-28)
+for commands and evidence limits. The final independent source review found no
+further confirmed defect under the documented SDK/application prerequisites.
+
+Host fakes do not establish real scheduling or electrical timing. Board CPU
+overhead qualification, flash, serial and HIL remain NOT RUN. Native CLI remains
+prompt26; remote CI remains prompt34. Commit and verified sync are reported in
+the handoff rather than creating a self-referential commit-ID update.

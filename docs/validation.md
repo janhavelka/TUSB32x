@@ -2765,3 +2765,60 @@ progress, disabled logging/PM and a separately qualified CPU/preemption bound.
 A late-return check cannot replace those prerequisites. Host sanitizer runtime
 availability remains as recorded in prompt 19; no new sanitizer result is claimed.
 No remote workflow was dispatched or queried.
+
+## Independent prompts 23–25 audit, 2026-10-28
+
+The [fresh audit](audit/review-23-25.md) records corrected ownership, teardown,
+USB pin, callback error and SDK timing restrictions. Tool versions remain:
+host GCC15.1.0, CMake4.0.1, Ninja1.12.1, Python3.12.10, Doxygen1.13.2;
+managed Core6.1.19, pioarduino55.03.311, Arduino3.3.11/IDF5.5.5,
+Xtensa GCC14.2.0+20260121. Native SDK uses CMake4.0.3/Ninja1.13.1.
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Full strict Debug host matrix | PASS | 32/32 registered tests |
+| Full strict Release host matrix | PASS | 32/32; checks remain active |
+| Real application with recording SDK | PASS | Ten separately registered scenarios execute actual ExampleApp, adapter and CLI; no FreeRTOS or hardware timing claim |
+| Wire adapter contracts | PASS | 1298 checks at1000Hz; 1275 at100Hz; zero-budget and rate rejection included |
+| Native adapter contracts | PASS | 1806/1766 checks at1000/100Hz; default clock/rate gates and independent coarse-tick budget cases |
+| Arduino adapter SDK links | PASS | arduino_s2 and arduino_s3 |
+| Complete Arduino application SDK links | PASS | esp32s2dev, esp32s3dev, esp32s2_owner_service, esp32s3_owner_service |
+| Enabled owner application SDK links | PASS | Additional S2/S3 builds with synthetic qualified setup/IRQ/run-time overrides; compile/link only, not measured board qualification |
+| Native SDK component links | PASS | idf_s2 and idf_s3; separate targets/build directories, no Arduino/CLI source |
+| Documentation/source integrity | PASS | Doxygen, 17 structs/26 public owner methods visible, local links/anchors, UTF-8/LF, vendor hashes, no-op version sync and diff whitespace |
+| Extracted consumption | PASS | 63 source-equal archive files; manifest/component selection agrees; isolated renamed core/CLI consumers run without maintainer tools |
+| Flash, serial, HIL, board timing | NOT RUN | No authorized physical fixture; overhead/ISR/USB/waveform/electrical evidence remains separate |
+| Sanitizers | NOT RUN | Previously recorded unavailable host runtimes; no new sanitizer claim |
+
+Actual commands (full host matrix ran after focused corrections):
+
+```powershell
+cmake -S . -B build/p25 -G "Ninja Multi-Config" -DTUSB32X_BUILD_TESTS=ON
+cmake --build build/p25 --config Debug
+ctest --test-dir build/p25 -C Debug --output-on-failure
+cmake --build build/p25 --config Release
+ctest --test-dir build/p25 -C Release --output-on-failure
+scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2 -e arduino_s3
+scripts/pio.cmd run -e esp32s2dev -e esp32s3dev -e esp32s2_owner_service -e esp32s3_owner_service
+scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3
+doxygen Doxyfile
+python build/p17-doxygen.py
+python build/p10-docs.py
+scripts/pio.cmd pkg pack . --output build/TUSB32x-p25.tar.gz
+python build/p25-package.py
+git diff --check
+```
+
+Local logs use `build/audit2325-*`; session-only documentation/package checkers
+are ignored verification helpers, not downstream dependencies. Actual firmware
+artifacts are each environment's `.pio/build/<environment>/firmware.elf` and
+`firmware.bin` beneath the root or corresponding SDK fixture. Application build
+records identify entry commit7f23b90 and a dirty worktree during this review;
+they do not pretend to identify a future commit or physical fixture. All corrected
+runtime source was included. No remote workflow was dispatched or queried.
+
+The additional enabled owner builds used
+`scripts/pio.cmd run -c build/p24-enabled.ini -e esp32s2_owner_service -e esp32s3_owner_service`.
+That ignored configuration applies BOARD_READY=1, MAX_OVERHEAD_US=2000,
+ACCEPT_SDK_CLEANUP=1, IRQ=6/SECOND_IRQ=7 and RUN_MS=10000 solely to compile/link
+the enabled paths. Those synthetic values do not qualify a connected board.

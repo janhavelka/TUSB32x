@@ -132,11 +132,12 @@ TUSB32x::Status validateContext(const Context& context) {
     return Status::Error(Err::I2C_ERROR, "Missing native I2C handles");
   const auto& bus = *context.bus;
   const auto address = context.config.device_address;
-  if (!bus.handle || bus.config.trans_queue_depth != 0 || bus.eventCallbacksRegistered ||
+  if (!bus.handle || bus.config.clk_source != I2C_CLK_SRC_DEFAULT ||
+      bus.config.trans_queue_depth != 0 || bus.eventCallbacksRegistered ||
       !bus.maxOverheadUs || !bus.acceptSdkCleanup || !context.sdkTimeoutMs ||
       bus.ownerCore != xPortGetCoreID() || xPortInIsrContext() ||
       context.config.dev_addr_length != I2C_ADDR_BIT_LEN_7 ||
-      context.config.flags.disable_ack_check || !context.config.scl_speed_hz ||
+      context.config.flags.disable_ack_check || context.config.scl_speed_hz < 100000 ||
       context.config.scl_speed_hz > 400000 ||
       (address != 0x47 && address != 0x67 && address != 0x60 && address != 0x61))
     return Status::Error(Err::I2C_ERROR, "Unqualified native I2C context");
