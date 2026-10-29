@@ -1,6 +1,7 @@
 # Current library comparison
 
-Prompt 1 execution audit, 2026-10-23. The parent Projects directory was inspected
+Prompt 1 execution audit, 2026-10-23; inventory refreshed by prompt 37 on
+2026-10-29. The parent Projects directory was inspected
 read-only. The 17 independent I2C libraries and FieldCore-node were compared by
 actual declarations, implementations, tests, build definitions and guidance.
 No sibling fetch, modification, build, firmware run or remote CI check was made.
@@ -16,10 +17,15 @@ No sibling fetch, modification, build, firmware run or remote CI check was made.
 | [Engineering decisions](design-decisions.md) | Concern, peer symbol/revision, selected rule, reason and required check |
 
 The original [preparation inventory](audit/repository-snapshot.json) and reports
-remain dated evidence. The current 17 device-library revisions are unchanged and
-clean. FieldCore-node is now `4e6a05e769383b95046df3936eee81984f4d9aa7`, also clean
-at inspection; its original captured revision was `7185a6e`. Never interpret
-these local snapshots as confirmation that sibling remotes are synchronized.
+remain dated evidence. Prompt 37 still finds 17 independent I2C libraries among
+47 immediate project directories, all clean on main. Six library HEADs changed
+since prompt 1, although their inspected production/test/build scopes did not.
+FieldCore-node is clean on rodtester at
+`5ad9292dc8481cf08be9a61f662495a6474d1da0`. The
+[final core review](final-audit.md) records current revisions, changed exclusions
+and freshly inspected behavior. Never interpret local snapshots as confirmation
+that sibling remotes are synchronized. TUSB32x is excluded as the repository
+being reviewed, not as a still-empty planning project.
 
 ## Selected baseline
 
@@ -47,10 +53,11 @@ API. For example, ADS1115 native/IDF uses C++11 while TUSB32x selects C++17;
 most peer root CMake files are component-only rather than standalone consumers.
 TMP1x2's public-API visibility checks are useful, but its EXTRACT_ALL setting is
 not proof of complete comments. LDC1614/INA228 supply stricter documentation
-settings. TUSB32x must add missing-comment negative fixtures in prompt 33; this
-audit did not find those fixtures in either peer. No library is copied whole.
+settings. TUSB32x now has real-parser missing-comment negative fixtures from
+prompt 33; the initial audit did not find those fixtures in either peer.
+No library is copied whole.
 
-## Tool availability
+## Prompt 1 tool availability (historical)
 
 Checked in the active Windows PowerShell environment with executable resolution
 and version commands. These observations do not prove a compiler/SDK can build
@@ -72,7 +79,7 @@ The PlatformIO package directory contains Arduino-ESP32 and toolchains but no
 framework-espidf directory. Package presence is not a native-IDF build result.
 No new tools were installed, and no SDK version was selected as a support promise.
 
-## Evidence limits and next stage
+## Prompt 1 evidence limits (historical)
 
 Local links, inventory paths/exclusions, source claims and baseline consistency
 are this prompt's acceptance checks; see [validation](validation.md). There is no

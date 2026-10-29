@@ -4470,3 +4470,54 @@ guide-byte check reports consumer **NOT RUN**; the independently executed
 registered consumer above supplies compile/link/runtime proof. No new extracted
 firmware link is implied. Version sync/check and the full scoped diff review
 pass; final commit/synchronization evidence belongs in the handoff.
+
+## Prompt 37: independent core review
+
+Reviewed clean revision `bdfcc144f292d4e1cdaecea58796aa208a0bec66` on
+2026-10-29. The [core audit](final-audit.md) records scope, independent reviewers,
+TI/pinned-code evidence, refreshed peer inventory and corrected documentation.
+No new executable core defect was reproduced; no runtime or test implementation
+changed. Existing fault, timing, encoding and ownership cases were reused.
+
+Actual maintained validation command:
+
+```text
+python tools/validate.py --checks native,contracts,doxygen --out build/p37-validation
+```
+
+Final report: `build/p37-validation/run-ck1kncpq/report.json`, status PASS with
+no pending checks. Both Debug and Release were freshly configured/built using
+GNU 15.1.0, CMake 4.0.1, Ninja 1.12.1 and Python 3.12.10. Doxygen 1.13.2 runs through
+the maintained guard. Generated Release Ninja flags retain strict warnings and
+`-UNDEBUG` for executable checks. CTest inventory still contains 72 finite owned
+tests on Windows; this focused selection executes each selected owner once.
+
+| Configuration / check | Result | Evidence |
+| --- | --- | --- |
+| Debug native | PASS, 53 tests | debug-native.log/xml; core, protocol, operations, port, diagnostics, adapters/apps, CLI/console, host example and live transcript |
+| Debug contracts | PASS, 6 tests | debug-contracts.log/xml; compile contracts, isolated public consumer, executable CLI/core contract checks and negatives |
+| Debug documentation | PASS, 2 tests | debug-doxygen.log/xml; real-parser visibility/omission/negative checks |
+| Release native/contracts/documentation | PASS, 61 tests | release-native/contracts/doxygen.log/xml; assertions/checks active |
+| Independent owner reviewer fresh Release | PASS, 7 tests | build/p37-owner-review; protocol/operations/port/diagnostics/compile-contracts/host-basic plus isolated consumer; consumer 369 checks, C/C++ allocation and explicit-failure sentinels |
+| Archived TI evidence | PASS | Eight PDF sizes/SHA-256 match provenance; visual B p19, A p19 and V p20 table review, additional reviewer procedure/source checks |
+| Physical/firmware/remote checks | NOT RUN in this prompt | No new firmware link, hardware access, flash or HIL claim; remote PASS remains solely run40782369910 at c50f8ddda8809425ede2161586466c95fa650ae6 |
+
+The independent protocol reviewer also ran existing Release protocol/operations
+binaries and inspected pinned helper arithmetic; the lead's fresh validation
+above supplies final source/build correspondence. Windows sanitizer runtimes
+remain unavailable as previously recorded; no new sanitizer run is claimed.
+The existing prompt34 Linux sanitizer result is not extended to later commits.
+
+Documentation-only corrections are checked with the maintained Markdown link
+parser and Doxygen guard after editing. Prompt38 retains independent integration/
+distribution review and final handoff. Missing physical fixtures and unresolved
+silicon wording remain qualification limits rather than invented code defects.
+
+Post-edit `python tools/check_doxygen.py` PASS: 36 C++ files, real HTML/XML public
+visibility, links and helper comments; evidence at
+`build/doxygen-check/run-vt5vgq7m`. Reused `tools.check_package.markdown_links`
+over tracked/new Markdown under the parent Projects root: 861 local targets and
+fragments PASS, including parent AGENTS. Changed files pass UTF-8/LF/trailing-
+whitespace and `git diff --check`. The lead independently matched the four
+Linux/regmap/Betrusted cached source hashes and inspected reset-mask and Try.SRC
+helper excerpts. No new package or firmware claim is inferred from these checks.

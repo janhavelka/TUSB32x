@@ -1,5 +1,10 @@
 # Core protocol conformance
 
+Prompt 37 independently rechecked this matrix against the current implementation
+on 2026-10-29. See [final core review](final-audit.md) for reviewed revision,
+fresh Debug/Release execution and preserved qualification limits. The commands
+and counts below retain the earlier audit's dated evidence.
+
 Prompts 16-18, independently re-audited 2026-10-27 from starting commit
 `91e8eb4a1b070c04ca5a62453916978a72da578d`. This matrix maps TI/software
 requirements to implemented APIs and named runtime cases. Tests use independent
@@ -68,7 +73,7 @@ and silicon gates are unchanged.
 | B has no documented A0; L revision 01, A/V 02; unknown policy retains raw revision without accepting unsupported identity | Explicit revision capability | `startInitialize`, `readRegisterSync`, `diagnostics` | P::accessAndRanges, identityAndRevision; O::identityAndUnsafeControls; D::rawReadMapAndSlot | PROTOCOL, OPERATIONS, DIAGNOSTICS |
 | Explicit pointer, legal contiguous ranges, no hole/wrap; exact address/kind/bytes/length/timeout and no extra callbacks. B §7.5; L/A §7.4; V §6.5 | All seven | Managed `poll`, `readRegisterSync` | P::accessAndRanges, framingTimeoutsAndScratch, scriptedFixtureRejectsMismatches; O::initializationAndBudgets | PROTOCOL, OPERATIONS |
 | Exact receive success is the callback contract; failed/partial receive never publishes scratch; preserve full backend detail and unchanged caller output | All seven; Status-only callback cannot independently measure received length | `readRegisterSync`, `poll`, `takeResult` | P::framingTimeoutsAndScratch, transportedIdentityAndRevision, normalizedStatusesAndAcceptance, scriptedFixtureRejectsSuccessfulShortReceive (rejects a contradictory fixture before copying); D::callbackNormalizationAndRawIsolation; S::everyReadFailureAndInterruption | PROTOCOL, DIAGNOSTICS, PORT |
-| Reject invalid enums/parameters/timeouts without callbacks; static-lifetime Status messages | All seven, capability-specific controls | `validateBinding`, `validateProfile`, `decodeRegister`, starts/raw methods | Vd::malformedProfileEnums, retainedStatusText; C::decodeBytesAndErrors, encodeDomains, composeRejections; D::rawStatusPrecedence | VALIDATORS, PROTOCOL, DIAGNOSTICS |
+| Reject invalid enums/parameters/timeouts without callbacks; static-lifetime Status messages | All seven, capability-specific controls | `validateDriverConfig`, `validateProfile`, `decodeRegister`, starts/raw methods | Vd::malformedProfileEnums, retainedStatusText; C::decodeBytesAndErrors, encodeDomains, composeRejections; D::rawStatusPrecedence | VALIDATORS, PROTOCOL, DIAGNOSTICS |
 | Advertisement C0 and detection 30 are independent; preserve reserved codes and raw bytes. B/L/A 08, V Table 6-8 | All seven; V advertisement write gated | `decodeRegister`, `startReadProfile`, `startRefreshPort` | C::decodeBytesAndErrors, encodeDomains, compareSettings; S::independentStatusEncodings, everyFinalStatusByte; D::preservedRawRepresentations | PROTOCOL, PORT, DIAGNOSTICS |
 | Every role/accessory/current/duty/preference/debounce code; Try.SRC code 3 and reserved code 2; base versus extended debug/debounce | B Table 7-7; L/A Tables 8-10; V Tables 6-8 to 6-10 | `decodeRegister`, `validateProfile`, apply/read/refresh | C::decodeBytesAndErrors, encodeDomains; Vd::profileCapabilityCombinations; S::independentStatusEncodings, everyFinalStatusByte | PROTOCOL, VALIDATORS, PORT |
 | Local/peer role and applicability require paired observation; detached is valid NOT_APPLICABLE without usable current/orientation | All seven; conservative accessory/debug applicability | `startRefreshPort`, `portSnapshot` | S::independentStatusEncodings, changedBookends, ccAndVbusEvidence | PORT |

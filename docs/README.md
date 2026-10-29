@@ -41,6 +41,7 @@ an unresolved silicon gate or missing physical qualification stays explicit.
 
 The source checkout also maintains [test commands and registration](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md),
 [protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md),
+[final core review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md),
 [validation history](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)
 and [contribution/release instructions](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/CONTRIBUTING.md).
 These files are repository-only, so packaged guides link to their source paths.

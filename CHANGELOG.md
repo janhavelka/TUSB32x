@@ -8,6 +8,11 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Completed independent core review with fresh protocol/owner/portability checks;
+  corrected stale peer inventory and validator naming in the conformance matrix.
+  No executable core change was needed. Integration/distribution review and
+  physical qualification remain separate.
+
 ### Added
 
 - Framework-neutral C++17 core with fixed-storage values, constexpr Status

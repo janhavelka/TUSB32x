@@ -7,6 +7,13 @@ operations; **outside API** identifies board responsibility or excluded devices.
 Physical qualification is **NOT RUN**. Configured variant, matching identity,
 passing host tests and linked firmware are separate evidence.
 
+Prompt 37 independently rechecked the core mapping on 2026-10-29: no new
+executable defect was reproduced, and 61 selected tests passed in each fresh
+Debug/Release configuration. See the repository-only
+[final core review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md)
+for exact revision, reviewers, corrected documentation and retained gates.
+Prompt 38 integration/distribution review remains outstanding.
+
 The [variant matrix](variant-matrix.md) owns exact electrical limits and named
 conflicts. Source IDs mean B = SLLSEN9F March 2022 (TUSB320/I), L = SLLSEP2D
 May 2017 (LI/HI), A = SLLSEQ8D May 2017 (LAI/HAI), V = SLLSEO5D March 2021

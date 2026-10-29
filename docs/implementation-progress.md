@@ -2972,3 +2972,42 @@ No firmware matrix or remote CI was queried/repeated; the earlier result belongs
 only to `c50f8ddda8809425ede2161586466c95fa650ae6` / run 40782369910.
 Hardware qualification remains NOT RUN. Commit/sync evidence belongs in the
 handoff and next progress update, without a self-referencing hash update.
+
+## Prompt 37 — independent core review (2026-10-29)
+
+Started clean at `bdfcc144f292d4e1cdaecea58796aa208a0bec66`, the completed
+prompts35–36 audit, on `promptset/tusb32x-implementation-20261023`. Fetch verified
+equal upstream and zero ahead/behind. Read current root/parent guidance, COMMON,
+prompt37, baseline, verified register/procedure outputs and actual source/tests.
+Prerequisites1–36 were complete; prompt38 was not started.
+
+Separate read-only gpt-6-astra/high agents audited protocol/silicon and owner/
+time/portability, with gpt-6.1-sol/high refreshing inventory and peer evidence.
+The lead independently reviewed transport/raw diagnostics, status/accounting,
+source/test correspondence and integrated reports. No new executable core defect
+was reproduced; no speculative abstraction, duplicate test or production change
+was added. Confirmed documentation findings corrected the stale current inventory
+and nonexistent validateBinding name. Source Doxygen/API remained accurate and
+unchanged. Findings use the required severity/evidence/fix/regression/limit table
+in [final-audit](final-audit.md), including separate physical gaps.
+
+Re-enumerated 47 Projects roots and the same 17 independent I2C libraries. Six
+peer HEADs advanced but inspected source/test/build scopes remain unchanged;
+all 17 were clean on main. FieldCore is clean on rodtester at 5ad9292. Exact changed
+revisions, exclusions and reopened owner/transport/health comparisons are in the
+final audit. Siblings remained read-only; no remote synchronization inferred.
+Current TI revision labels remain B/F and L/A/V/D. Eight PDF hashes/sizes and
+pinned public-code helper evidence were checked. Reset08/Try.SRC06/ACK masks,
+322 reset-to-DRP, unresolved access/fault gates and base explicit current-reset
+policy remain supported by source rather than emulator assumptions.
+
+Maintained validator PASS: native 53 + contracts 6 + doxygen 2 = 61 disjoint CTests
+in each fresh Debug/Release build. Strict warnings and Release assertions remain
+active; isolated consumer checks allocation/failure sentinels and no maintainer
+tool dependency. Independent owner review also built seven focused Release cases.
+[Validation](validation.md#prompt-37-independent-core-review) records exact commands,
+logs, limits and documentation checks. This review changes only docs; prompt38
+retains integration/distribution/final handoff. Hardware, flash/serial/HIL and
+new remote CI are NOT RUN. Prior remote PASS remains attached only to c50f8dd /
+run40782369910. The lead commits/syncs the checked review on the same branch and
+reports final equality in the handoff, without a self-referencing hash loop.
