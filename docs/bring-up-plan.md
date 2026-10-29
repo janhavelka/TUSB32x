@@ -115,7 +115,9 @@ See [software validation setup](software-validation-setup.md) for the optional
 WSL 2 installation, Linux test commands and separate IDF environment setup.
 
 No account link is required. Existing host tools already cover the portable
-suite. The remaining IDF6.1 check needs an isolated audited SDK6.1.0 installation,
+suite. IDF6.1 and Linux sanitizer checks now have remote PASS evidence at
+`ff26de9592d9cfbd5565f62e25e126cf44d06d90`; see the setup guide. Local reproduction
+of the IDF6.1 check needs an isolated audited SDK6.1.0 installation,
 its matching Python environment and S2/S3 toolchains; the validation tool accepts
 `--idf-path` and `--idf-python`. Do not replace the working IDF5.5.5 environment
 or install a second PlatformIO Core.

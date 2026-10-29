@@ -3114,3 +3114,22 @@ Official Microsoft, LLVM and Espressif setup sources are linked in the guide.
 No tool installation, CI dispatch, firmware build, flash or hardware action was
 part of this maintenance. Source-only archive/setup files remain outside the
 unchanged 77-file distribution. Final commit/sync equality is in the handoff.
+
+
+## Authorized remote validation ? 2026-10-29
+
+The user accepted remote checks to preserve the working local Arduino/SDK setup.
+Started at synchronized ff26de9592d9cfbd5565f62e25e126cf44d06d90, the completed
+documentation/archive commit. Found existing push run 40864851161 already PASS;
+no duplicate dispatch, local tool installation or environment change was needed.
+Verified all 14 jobs and 15 artifact digests, sanitizer test reports, eight firmware
+image rows and 32 output hashes. The shared 77-file package matched the checkout.
+This closes the missing IDF 6.1 S2/S3 and Linux sanitizer evidence at that SHA.
+
+Updated current README/index/setup/bring-up/final-audit guidance and validation
+without rewriting dated failure or NOT RUN records. Local SDK availability is
+unchanged; local installation is now only an optional reproduction path. Hardware,
+TI ambiguities and publication remain separate. Evidence is retained under
+build/current-ci-review, with the full run link and counts in validation.md.
+The reporting commit is synchronized by the lead; its ID is given in the handoff
+rather than creating a self-referencing update loop.

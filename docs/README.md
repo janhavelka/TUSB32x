@@ -57,8 +57,11 @@ These worksheets record undecided hardware choices and do not qualify a circuit.
 
 The [recorded CI checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910)
 passed 14 jobs at `c50f8ddda8809425ede2161586466c95fa650ae6`. It applies only to
-that commit and establishes no physical qualification. Local IDF 6.1 rebuilds
-remain blocked by the unavailable SDK; earlier CI evidence retains its original SHA.
+that commit and establishes no physical qualification. The newer
+[remote check](https://github.com/janhavelka/TUSB32x/actions/runs/40864851161)
+passed all 14 jobs at `ff26de9592d9cfbd5565f62e25e126cf44d06d90`, including
+Linux sanitizers and IDF 6.1 S2/S3 builds. Local tool installation is optional;
+the recorded remote checks close those software evidence gaps.
 
 Current contributors use [AGENTS.md](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/AGENTS.md)
 and the [engineering contracts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts).

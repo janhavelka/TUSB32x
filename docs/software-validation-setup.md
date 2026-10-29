@@ -1,6 +1,6 @@
 # Software validation environment setup
 
-Two separate environments address the remaining software checks: an ESP-IDF 6.1
+Two separate environments provide these software checks: an ESP-IDF 6.1
 environment builds the native ESP32-S2/S3 firmware, while a Linux host environment
 runs the C++ tests with AddressSanitizer and UndefinedBehaviorSanitizer. Neither
 requires a connected board. Installing one does not supply the other.
@@ -8,8 +8,15 @@ requires a connected board. Installing one does not supply the other.
 This is an optional setup recipe, reviewed on 2026-10-29. Its installation and
 test commands have **NOT RUN** as part of this documentation change. Existing
 PASS results and their exact source revisions remain in [validation](validation.md).
-In particular, the earlier Linux sanitizer and IDF 6.1 CI results at
-`c50f8ddda8809425ede2161586466c95fa650ae6` do not verify later application changes.
+
+There is no need to install these tools on a working Windows setup just to close
+the current evidence gaps. The existing
+[GitHub Actions run](https://github.com/janhavelka/TUSB32x/actions/runs/40864851161)
+passed Linux ASan/UBSan and IDF 6.1 S2/S3 checks at
+`ff26de9592d9cfbd5565f62e25e126cf44d06d90`. It used remote machines and did not
+change local Arduino, PlatformIO, SDK, Python or PATH settings. The instructions
+below are optional for users who want to reproduce the checks locally. Check for
+a completed run on the intended commit before starting another remote build.
 
 ## SDK files, tools and Python environments
 

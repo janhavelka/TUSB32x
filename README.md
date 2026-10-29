@@ -137,9 +137,12 @@ No physical board is qualified by that run.
 
 The [final review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md)
 and [validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)
-record completed software reviews and checks. Local IDF 6.1 rebuilds remain
-blocked by the unavailable SDK; earlier CI images retain their original SHA.
-Physical board and timing qualification remain NOT RUN.
+record completed software reviews and checks. A newer
+[CI run](https://github.com/janhavelka/TUSB32x/actions/runs/40864851161) passed all
+14 jobs at `ff26de9592d9cfbd5565f62e25e126cf44d06d90`, including Linux sanitizers
+and IDF 6.1 for S2/S3. These checks needed no changes to the local Windows tools.
+Physical board and timing qualification remain NOT RUN. Later reporting edits
+do not change the tested commit recorded with either run.
 
 Start with the [documentation index](docs/README.md) and
 [examples index](examples/README.md). The repository retains the

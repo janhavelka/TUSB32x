@@ -4653,3 +4653,46 @@ core, adapters, tooling, manifests and workflow behavior are unchanged.
 The guide distinguishes the audited local recipe from exact CI reproduction:
 Ubuntu system Python can satisfy local3.10+ without matching CI's3.12.16 pin.
 No earlier CI result is relabeled as verification of this documentation commit.
+
+
+## Remote software validation without local installation ? 2026-10-29
+
+The user explicitly authorized non-intrusive remote validation after discussion
+of preserving the working Windows Arduino/PlatformIO setup. Entry was clean at
+ff26de9592d9cfbd5565f62e25e126cf44d06d90 on the existing branch, equal to its
+fetched upstream. The latest push had already completed the existing workflow:
+[run 40864851161](https://github.com/janhavelka/TUSB32x/actions/runs/40864851161),
+created 2026-10-29T11:22:10Z. No duplicate dispatch or rerun was needed.
+
+`gh run list --repo janhavelka/TUSB32x --commit ff26de9592d9cfbd5565f62e25e126cf44d06d90 --limit 5 --json databaseId,headSha,status,conclusion,event,name,url,createdAt`
+identified the push run. The connector's run-list helper only covers PR-triggered
+runs, so the installed CLI supplied this missing query. Connector jobs/artifact
+APIs then confirmed 14 terminal successful jobs and 15 unexpired artifacts, all
+at the same SHA. Artifacts were downloaded to build/current-ci-review and their
+ZIP hashes checked against GitHub's SHA-256 digests before inspection.
+
+| Evidence | Verified outcome |
+| --- | --- |
+| Five Linux host rows | GCC 14 and Clang 18 Debug/Release, plus Clang 18 Debug ASan/UBSan: each 55 native and 6 contract suites PASS |
+| Sanitizer configuration | Report includes `-fsanitize=address,undefined -fno-omit-frame-pointer`; CTest XML has no failures/errors; all 61 selected suites executed |
+| Separate Python/docs/package owners | 7 Python, 2 documentation and 3 package suites PASS; combined disjoint groups cover all 73 Linux registrations |
+| Extracted Arduino | Basic CLI and owner-service on S2/S3: four images PASS, 11 source units each, 12 ELF/BIN/map byte sizes and SHA-256 values rechecked |
+| Extracted native IDF | 5.5.5 and 6.1 on S2/S3: four images PASS, 11 source units each, 20 ELF/BIN/map/SDKCONFIG/lock sizes and SHA-256 values rechecked; dependency evidence present |
+| Shared distribution | 77 archived files byte-equal to the reviewed checkout before reporting edits; safe member names/types checked in memory, no archive code executed; package SHA-256 `1ff6c0bc5a1b77d5ad6b2d9e78e5181304c3be76f1ee0e2c524e3c9fd0f7002b` |
+| Workflow/metadata | Dedicated check job PASS; all job conclusions/steps terminal successful |
+| Local system changes | None to SDK, Python, Arduino, PlatformIO, PATH, WSL or system packages. Only repository reports/docs and downloaded evidence changed |
+| Hardware | NOT RUN: no port, flash, wiring, timing or electrical qualification |
+
+Local retained records: build/current-ci-review/remote.json, verification.json
+and 15 artifact ZIPs. Remote artifacts expire after seven days. Downloaded
+firmware from the clean package records Git/tree as unknown by design; source
+provenance comes from the run SHA, package equality and artifact hashes, not an
+assertion about a flashed board. No release or hardware image deployment occurred.
+
+This review closes the missing current-source IDF 6.1 and Linux sanitizer evidence
+without installing either locally. Prompt 34's earlier run remains attached to
+c50f8ddda8809425ede2161586466c95fa650ae6. This new run is attached to ff26de9;
+the following documentation commit does not acquire that exact-commit CI status.
+Only reporting Markdown changed after verification, so no identical build was
+requested. Current docs link checks, static contracts, version check and
+`git diff --check` passed; no substantive code change required further tests.

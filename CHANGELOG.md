@@ -8,6 +8,10 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Verified the current remote CI evidence, including Linux sanitizers and both
+  IDF 6.1 targets, without changing local tools. Updated validation and optional
+  setup guidance; hardware qualification remains separate.
+
 - Archived the completed implementation prompts and made active guidance about
   maintaining the library. Simplified the overview and contribution guides, and
   added software-validation setup instructions for work without a board.

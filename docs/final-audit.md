@@ -1,5 +1,18 @@
 # Final audit
 
+## Current software evidence — 2026-10-29
+
+After the user authorized non-intrusive remote validation, the already completed
+[run 40864851161](https://github.com/janhavelka/TUSB32x/actions/runs/40864851161)
+was checked at `ff26de9592d9cfbd5565f62e25e126cf44d06d90`: all 14 jobs passed,
+including Linux ASan/UBSan and all eight extracted Arduino/native-IDF images.
+This closes the previously missing current-source sanitizer and IDF 6.1 evidence.
+No duplicate workflow was dispatched and no local SDK/Python/PATH was changed.
+The local SDK remains absent; physical qualification and silicon restrictions
+remain unchanged. Details are in the
+[remote validation record](validation.md#remote-software-validation-without-local-installation--2026-10-29).
+The dated reviews below retain their original evidence and limitations.
+
 ## Core review — prompt 37, 2026-10-29
 
 Reviewed `bdfcc144f292d4e1cdaecea58796aa208a0bec66` on
