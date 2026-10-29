@@ -8,6 +8,10 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Added repeatable fuzz tests with transfer, output, serial-session and archive
+  faults. Registered them in native/Python checks and the existing Linux sanitizer
+  job. Tests use existing tools and require no hardware or SDK installation.
+
 - Verified the current remote CI evidence, including Linux sanitizers and both
   IDF 6.1 targets, without changing local tools. Updated validation and optional
   setup guidance; hardware qualification remains separate.

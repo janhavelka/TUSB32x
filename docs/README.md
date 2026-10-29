@@ -43,6 +43,7 @@ qualification remain NOT RUN, and TUSB322I support remains partial.
 For software checks without a board, start with the source-checkout
 [validation setup](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/software-validation-setup.md).
 The source checkout also maintains [test commands and registration](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md),
+[seeded fuzz and fault-injection checks](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/fuzz-testing.md),
 [protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md),
 [final core and integration review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md),
 [validation history](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)

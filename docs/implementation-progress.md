@@ -3,9 +3,10 @@
 Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
-The initial implementation and final reviews are complete. Keep this branch for
-the currently authorized documentation maintenance and synchronization.
-Current work: archive completed prompts and simplify maintained documentation.
+The initial implementation and final reviews are complete. The user has now
+authorized seeded fuzz tests with fault injection, followed by commit, sync and
+merge into main. Keep the execution branch until the checked unit is ready;
+record the resulting merge and exact CI evidence in the handoff.
 
 ## Prompt status
 
@@ -3133,3 +3134,33 @@ TI ambiguities and publication remain separate. Evidence is retained under
 build/current-ci-review, with the full run link and counts in validation.md.
 The reporting commit is synchronized by the lead; its ID is given in the handoff
 rather than creating a self-referencing update loop.
+
+
+## Seeded fuzz tests and main integration - 2026-10-29
+
+The user requested fuzz tests with fault injection, then commit, sync and merge
+into main. Entry was clean at 8ecd9cbc3a7089869b7b858fad6cda53cccf80b0 on the
+execution branch, equal to its fetched upstream. Main was an ancestor at
+ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35. This explicit request authorizes the
+main merge after validation; it does not authorize release publication or flash.
+
+Two coding agents owned the C++ and Python campaign files separately. A third
+reviewed their oracles, seed replay, work bounds, portability and registration
+read-only. The lead reviewed the sources and integrated the tests, docs and exact
+CTest inventory. No core, adapter or CLI behavior change was needed. Existing
+fixed fakes, session peers and archive extraction checks were reused; no test
+framework or tool dependency was added.
+
+The native/Python validation groups now include tusb32x_fault_fuzz and
+tusb32x_boundary_fuzz. There are 76 Windows registrations and 75 elsewhere.
+The existing Linux sanitizer row covers the new C++ executable; Python assertions
+check the separate session/archive campaign. See [fuzz testing](fuzz-testing.md)
+for replay commands and limits, and [validation](validation.md) for actual checks.
+The working Windows SDK, Python, PlatformIO and PATH were not changed.
+The complete local host matrix passed 76/76 registrations in each of Debug and
+Release, including Doxygen and clean package consumers. Larger seeded campaigns
+and independent replay checks also passed.
+
+The checked unit is committed on the execution branch first. The final handoff
+records its CI run and commit, the main merge, push and verified upstream equality
+without adding a self-referencing hash update. Hardware remains NOT RUN.

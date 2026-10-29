@@ -39,7 +39,7 @@ REQUIRED_TESTS = {
     "native": {"tusb32x_validators", "tusb32x_protocol", "tusb32x_operations",
                "tusb32x_port", "tusb32x_diagnostics", "tusb32x_cli", "tusb32x_console",
                "tusb32x_example_owner", "tusb32x_example_integration", "tusb32x_output_mailbox",
-               "tusb32x_host_basic", "tusb32x_arduino_wire_1000", "tusb32x_arduino_wire_100",
+               "tusb32x_host_basic", "tusb32x_fault_fuzz", "tusb32x_arduino_wire_1000", "tusb32x_arduino_wire_100",
                "tusb32x_idf_transport_1000", "tusb32x_idf_transport_100",
                "tusb32x_arduino_app_startup", "tusb32x_arduino_app_shutdown",
                "tusb32x_arduino_app_usb_sda", "tusb32x_arduino_app_usb_irq",
@@ -52,7 +52,8 @@ REQUIRED_TESTS = {
                   "core_contracts_negative"},
     "doxygen": {"doxygen", "doxygen_negative"},
     "python": {"hil_runner", "cli_transcript", "tusb32x_version_sync", "validate_runner",
-               "firmware_guard", "tusb32x_idf_example_config", "tusb32x_arduino_examples_config"},
+               "firmware_guard", "tusb32x_idf_example_config", "tusb32x_arduino_examples_config",
+               "tusb32x_boundary_fuzz"},
     "package": {"tusb32x_package_safety", "tusb32x_package_consumer",
                 "tusb32x_package_origins"},
 }

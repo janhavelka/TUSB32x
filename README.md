@@ -122,6 +122,9 @@ ctest --test-dir build/native -C Debug --output-on-failure
 ```
 
 Tests ON require Python 3.10+. Runtime assertions remain active in Release.
+Registered [fuzz tests with fault injection](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/fuzz-testing.md)
+exercise CLI input, uncertain transfers, output stalls, serial records and archive
+rejection with repeatable seeds. They require no hardware or extra local tools.
 For prerequisites and a complete software-only check, use the source-checkout
 [validation setup](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/software-validation-setup.md).
 `python tools/validate.py --checks all` runs the declared local checks without

@@ -34,6 +34,8 @@ target_include_directories(tusb32x_cli_support PUBLIC "${CMAKE_CURRENT_SOURCE_DI
 tusb32x_strict_warnings(tusb32x_cli_support)
 add_executable(tusb32x_cli cli/test_cli.cpp cli/test_cli_operations.cpp cli/test_cli_diagnostics.cpp)
 target_link_libraries(tusb32x_cli PRIVATE tusb32x_cli_support)
+add_executable(tusb32x_fault_fuzz fuzz/test_cli_fault_fuzz.cpp)
+target_link_libraries(tusb32x_fault_fuzz PRIVATE tusb32x_cli_support)
 add_executable(tusb32x_console console/test_console.cpp)
 add_executable(tusb32x_example_owner test_example_owner.cpp
   ../examples/common/ExampleOwner.cpp)
@@ -53,7 +55,8 @@ tusb32x_strict_warnings(tusb32x_cli_host)
 
 foreach(suite IN ITEMS tusb32x_compile_contracts tusb32x_validators tusb32x_protocol
     tusb32x_operations tusb32x_port tusb32x_diagnostics tusb32x_cli tusb32x_console
-    tusb32x_example_owner tusb32x_example_integration tusb32x_output_mailbox tusb32x_host_basic)
+    tusb32x_example_owner tusb32x_example_integration tusb32x_output_mailbox tusb32x_host_basic
+    tusb32x_fault_fuzz)
   if(NOT suite STREQUAL "tusb32x_console")
     target_link_libraries(${suite} PRIVATE TUSB32x)
   endif()
@@ -215,6 +218,9 @@ tusb32x_strict_warnings(tusb32x_header_contracts)
 
 # Python is a maintainer test dependency only; tests-OFF consumers never find it.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+add_test(NAME tusb32x_boundary_fuzz
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_boundary_fuzz.py")
+set_tests_properties(tusb32x_boundary_fuzz PROPERTIES TIMEOUT 30)
 add_test(NAME tusb32x_package_safety
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/test_check_package.py" -v)
 set_tests_properties(tusb32x_package_safety PROPERTIES TIMEOUT 60)
@@ -327,11 +333,11 @@ set(validation_contracts tusb32x_compile_contracts tusb32x_portable_consumer
   cli_contract cli_contract_negative core_contracts core_contracts_negative)
 set(validation_python cli_transcript hil_runner tusb32x_idf_example_config
   tusb32x_arduino_examples_config tusb32x_version_sync tusb32x_pio_launcher
-  validate_runner firmware_guard)
+  validate_runner firmware_guard tusb32x_boundary_fuzz)
 set(validation_package tusb32x_package_safety tusb32x_package_consumer tusb32x_package_origins)
 set(validation_native tusb32x_validators tusb32x_protocol tusb32x_operations tusb32x_port
   tusb32x_diagnostics tusb32x_cli tusb32x_console tusb32x_example_owner
-  tusb32x_example_integration tusb32x_output_mailbox tusb32x_host_basic)
+  tusb32x_example_integration tusb32x_output_mailbox tusb32x_host_basic tusb32x_fault_fuzz)
 get_property(validation_tests DIRECTORY PROPERTY TESTS)
 foreach(check IN LISTS validation_tests)
   if(check IN_LIST validation_contracts)

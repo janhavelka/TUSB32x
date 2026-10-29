@@ -4696,3 +4696,52 @@ the following documentation commit does not acquire that exact-commit CI status.
 Only reporting Markdown changed after verification, so no identical build was
 requested. Current docs link checks, static contracts, version check and
 `git diff --check` passed; no substantive code change required further tests.
+
+
+## Seeded fuzz and fault injection - 2026-10-29
+
+Reviewed starting revision: 8ecd9cbc3a7089869b7b858fad6cda53cccf80b0, clean and
+synchronized on the execution branch. The user authorized the fuzz tests and
+subsequent merge into main. Two coding agents implemented disjoint C++/Python
+campaigns; an independent reviewer checked their oracles and ran other seeds.
+The lead reviewed the full change and actual registered tests. No production
+defect was reproduced, so no core, CLI, adapter or runner behavior was changed.
+
+Tool versions used locally: GNU C++ 15.1.0 (existing MinGW), CMake/CTest 4.0.1,
+Python 3.12.10 and Doxygen 1.13.2. No tool installation or system configuration
+change occurred. See [campaign scope and replay](fuzz-testing.md).
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Configure and focused C++ build | PASS | `cmake -S . -B build/native -DTUSB32X_BUILD_TESTS=ON`; `cmake --build build/native --config Debug --target tusb32x_fault_fuzz` |
+| Both registered campaigns | PASS | `ctest --test-dir build/native -C Debug -R "tusb32x_.*fuzz" --output-on-failure`: 2/2 |
+| Default native campaign | PASS | Seed 3279889, 256 cases, 119736 checks; malformed input, failed callbacks, ambiguous writes and output reservation |
+| Larger native campaign | PASS | `build/native/test/Debug/tusb32x_fault_fuzz.exe --seed 12345 --cases 10000`: 4662133 checks |
+| Release-style direct compiler check | PASS | Author built with strict warnings, `-O2 -DNDEBUG`; seed 0 / 10000 cases: 4660280 checks; seed 4294967295 / 256 cases: 119762 checks |
+| Independent C++ replay | PASS | Seeds 0 and 4294967280 / 4096 cases each; includes uint32 seed rollover |
+| Default Python campaign | PASS | Seed 0x320322, 48 parser, 48 damaged-session and 48 archive cases; 6 valid sessions and 6 valid extractions |
+| Larger Python campaign | PASS | `python tools/test_boundary_fuzz.py --seed 0xdeadbeef --cases 256`; independent seeds 0 and 18446744073709551615 / 128 cases also passed |
+| Invalid campaign bounds | PASS | Both executables reject `--cases 0` with exit 2, verified with subprocess return codes |
+| Workflow and real CTest inventory | PASS | `python tools/check_ci.py --ctest-json build/fuzz-validation/registration.json`: 56 native, 6 contracts, 9 Python, 2 documentation, 3 package registrations |
+| Full local host matrix | PASS | 76/76 in Debug and 76/76 in Release; native, contracts, Python, Doxygen and clean package checks all passed |
+| Changed Markdown | PASS | Local link targets and fence checks; `git diff --check` |
+| Hardware / physical fault timing | NOT RUN | No board, port, flash or physical bus fault injection |
+
+The complete local host command is
+`python tools/validate.py --checks native,contracts,python,doxygen,package --out build/fuzz-validation`.
+Logs, inventories, JUnit and the final report are under
+build/fuzz-validation/run-ln0mr2_4. The native suite uses strict warnings and
+always-active checks in both configurations. Test registration gives the C++ and
+Python campaigns separate validation owners and finite 30-second CTest limits.
+
+The malformed tar checksum campaign initially changed bytes after a checksum
+field terminator; those bytes can be ignored by a valid reader. Before completion
+its test generator was corrected to change a mode digit while retaining the old
+checksum. This was an oracle correction, not a product defect or relaxed check.
+
+The existing Linux Clang ASan/UBSan job runs the C++ campaign after the feature
+commit is pushed. Python uses explicit behavioral assertions, not interpreter
+sanitizers. Exact-commit CI and main synchronization are reported in the handoff;
+earlier green runs do not establish that these added tests ran. The campaigns
+are bounded seeded mutations, not exhaustive or coverage-guided fuzzing. SDK
+links and host results do not qualify a physical board.

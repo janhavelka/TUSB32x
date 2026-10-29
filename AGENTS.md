@@ -104,8 +104,8 @@ to each numbered implementation prompt and to completed maintenance work here.
   in `tusb32x_operations`; neither imports FieldCore or a framework.
   Other registered checks cover core/protocol/port/diagnostics, CLI/console,
   adapter/application fixtures, live transcripts/parity, isolated allocation
-  sentinels, Python/version/package suites and guard negatives. There are 74
-  CTests on Windows and 73 elsewhere, all with finite timeouts and one validation
+  sentinels, Python/version/package suites and guard negatives. There are 76
+  CTests on Windows and 75 elsewhere, all with finite timeouts and one validation
   owner. Compile-only signature/header
   contracts are never behavioral tests.
 - Session changes run `python tools/test_tusb32x_hil_runner.py` (including artifact
@@ -377,7 +377,7 @@ Do not create empty files or successful hardware stubs to fill the tree.
 ## Arduino adapter checks
 
 Prompt 23 adds two registered recording-backend suites for the actual example
-adapter at 1000Hz and 100Hz ticks. The current Windows host matrix has 74 tests,
+adapter at 1000Hz and 100Hz ticks. The current Windows host matrix has 76 tests,
 including actual application regressions.
 Run the real SDK fixtures with scripts/pio.cmd run -d test/arduino_sdk -e arduino_s2
 -e arduino_s3. These link Arduino 3.3.11/IDF5.5.5 on pinned pioarduino 55.03.311;
@@ -389,7 +389,7 @@ retirement after a failed receive are required. Framework types stay outside cor
 ## Native IDF adapter checks
 
 Prompt 25 adds `tusb32x_idf_transport_1000` and `tusb32x_idf_transport_100` to the
-registered host matrix (74 Windows suites). Run independent actual SDK links with
+registered host matrix (76 Windows suites). Run independent actual SDK links with
 `scripts/pio.cmd run -d test/idf_sdk -e idf_s2 -e idf_s3`. The adapter supports the
 audited native IDF5.5.5/6.1.0 configurations only; read `docs/idf-transport.md` for copied
 handle metadata, synchronous mode, same-core task pinning, shared serialization,

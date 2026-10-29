@@ -345,7 +345,7 @@ class CiChecks(unittest.TestCase):
         """Actual JSON registration counts close omissions while validate owns label semantics."""
         data = inventory()
         groups = ci.audit_registration(data)
-        self.assertEqual(sum(groups.values()), 74 if sys.platform == "win32" else 73)
+        self.assertEqual(sum(groups.values()), 76 if sys.platform == "win32" else 75)
         for mutation in ("missing", "extra", "unowned", "disabled", "zero"):
             current = copy.deepcopy(data)
             if mutation == "missing":

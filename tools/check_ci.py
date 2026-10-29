@@ -141,8 +141,8 @@ def audit_validation(jobs):
 def audit_registration(data):
     """Reuse the validator's ownership checks and require the complete declared count."""
     groups = validate.registration(data)
-    expected = {"native": 55, "contracts": 6, "doxygen": 2,
-                "python": 8 if sys.platform == "win32" else 7, "package": 3}
+    expected = {"native": 56, "contracts": 6, "doxygen": 2,
+                "python": 9 if sys.platform == "win32" else 8, "package": 3}
     actual = {name: len(names) for name, names in groups.items()}
     require(actual == expected, f"unexpected CTest registration counts: {actual}; expected {expected}")
     return actual
