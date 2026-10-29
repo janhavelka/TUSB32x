@@ -46,6 +46,12 @@ The source checkout also maintains [test commands and registration](https://gith
 and [contribution/release instructions](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/CONTRIBUTING.md).
 These files are repository-only, so packaged guides link to their source paths.
 
+Before designing a board, use the source-checkout
+[board design checklist](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/board-design-checklist.md),
+[staged bring-up plan](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/bring-up-plan.md)
+and [prepared TI clarification questions](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/ti-clarification.md).
+These worksheets record undecided hardware choices and do not qualify a circuit.
+
 Implementation, host verification, linked firmware and physical qualification
 are separate evidence levels. The recorded CI checkpoint identifies its exact
 tested commit; later guide edits do not extend that result. No physical serial,

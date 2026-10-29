@@ -8,6 +8,10 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Added source-checkout board design and first-board bring-up worksheets, plus
+  researched, unsent TI clarification requests. Corrected the TUSB322I attached
+  current wording without changing any silicon capability gate.
+
 - Closed final integration gaps: Arduino/native-IDF examples now expose primary
   callback-kind evidence for readonly/soak plans, and Arduino rejects further
   commands after suspected USB receive loss while existing owner work continues.

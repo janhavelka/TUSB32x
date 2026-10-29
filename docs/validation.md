@@ -4605,3 +4605,28 @@ current image builds above; only reporting prose differs between these archives.
 Reused the maintained Markdown parser for repository targets/fragments and
 checked changed-file UTF-8/LF/whitespace plus `git diff --check`. No package,
 firmware or physical claim is inferred solely from those text checks.
+
+
+## Pre-board design and bring-up documentation ? 2026-10-29
+
+Reviewed software baseline732026b, with only documentation edits. The user has
+no schematic/board yet. New source-only worksheets do not establish a reference
+circuit or physical qualification. Exact CLI grammar and result ownership were
+checked against docs/CLI.md, runner dry-run output and the existing adapter/
+BoardConfig contracts. TI sources were re-opened and independently reviewed;
+questions are drafts and were not posted.
+
+| Check | Result/evidence |
+| --- | --- |
+| Maintained `check_package.markdown_links` over docs with Projects root | PASS: 782 local links/fragments before these log-only additions |
+| Python subprocess of documented readonly dry-run | PASS: actual process exit2, plan PASS, hardware NOT RUN, TX/RX zero; build/preboard-readonly-plan-verified/report.json |
+| `python tools/check_contracts.py` | PASS static source/metadata; not behavioral proof |
+| `python scripts/generate_version.py check` | PASS, no version change |
+| `python tools/check_package.py --test-archive --extract-only --out build/preboard-package` | PASS 77 files/210 packaged links and source equality; consumer NOT RUN in this extraction-only check |
+| `git diff --check` | PASS |
+| Compiler, firmware, remote CI and physical checks | NOT RUN for this documentation-only unit; previous exact-source evidence retained, missing IDF6.1 and final Linux sanitizer checks unchanged |
+
+The first PowerShell runner invocation surfaced exit1 through the shell wrapper;
+the generated report recorded2. The explicit Python subprocess check above
+independently verified the actual runner exit2 and no-I/O result. No hardware
+PASS or failed software behavior was inferred from shell status translation.

@@ -3055,3 +3055,33 @@ The development version remains 0.1.0-dev.1; silicon gates and exact-board
 qualification remain visible. Promptset implementation/reviews are finished
 with these explicit validation limits. Final commit/sync equality is reported
 in the handoff, without a self-referencing hash update.
+
+
+## Pre-board design preparation ? 2026-10-29
+
+User requested a board-design checklist, first-board bring-up plan and research
+into unresolved TI questions; no board design exists yet. Started clean at
+732026b3e93046c3f241f8581592d8486a2232f6 on the existing execution branch,
+with fetched upstream equal (0/0). This is documentation maintenance after
+prompt38, not another implementation stage. No tool installation was requested.
+
+Added source-only board-design-checklist, bring-up-plan and ti-clarification
+worksheets, indexed without expanding the 77-file distribution. Reused the
+maintained electrical, adapter and runner contracts; no peer implementation
+convention or software behavior changed. An independent read-only TI reviewer
+(inherited runtime model) checked current official PDF/E2E evidence and the new
+guides. No message was sent to TI. Questions explicitly identify a pre-hardware
+project and preserve all current silicon gates.
+
+Corrected the current variant guide: 322I's "once in" Attached.SNK wording is
+ambiguous, not proof of LAI's one-report interpretation. No current-tracking
+claim was enabled. Current official documents remain SLLSEQ8D/SLLSEO5D/SLAAE24;
+archived provenance is unchanged. Exact sources and bounded search limitations
+are in ti-clarification.md. Prior final commit732026b remains the software/build
+baseline; final sync for this documentation unit is reported in the handoff.
+
+Checks: all documentation links, actual runner dry-run exit2/zeroI/O, static
+contracts, generated version and archive extraction/link checks passed. See the
+new validation entry. Firmware/host behavioral suites were not repeated for
+unchanged code. IDF6.1/Linux sanitizer tools and physical evidence remain missing;
+no CI dispatch, port opening, flashing or tool installation occurred.

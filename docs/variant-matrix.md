@@ -72,8 +72,8 @@ lossless edge history or automatic follow-up. Plain refresh never ACKs. Core
 polling works without an IRQ pin; wiring/levels need separate board evidence.
 
 A successful refresh does not qualify attached-current tracking. B §7.3.1.2 p11
-recommends explicit reset to update detection; refresh never resets. L/A/V
-once-per-attach wording and the comparison guide's active-tracking claim remain
+recommends explicit reset to update detection; refresh never resets. L/A's
+single-report wording, V's ambiguous "once in" wording and the comparison guide's active-tracking claim remain
 unresolved. A new register timestamp cannot settle that conflict. CC alone does
 not establish Attached.SNK without the device's VBUS conditions. CC1/CC2 denote
 chip inputs; physical connector mapping, current tracking and electrical behavior
@@ -263,7 +263,7 @@ No unspecified capability becomes enabled because another family member has it.
 | L_CC_RATING | L p4 lists CC1/CC2 under both VDD+0.3 and 6 V; p2 revision history says A→B changed them to 6 V | Preserve both and the intended correction. No unqualified pad-tolerance claim beyond the conservative table constraints without clarified TI rating |
 | ID_OFF_RATING | A/V p4 lists ID under VDD+0.3; A/V p5 specifies leakage at VDD=0, ID=5 V; N/G identify ID fail-safe | Do not claim unrestricted independent ID pull-up supply; require clarification for a design relying on supply-off tolerance. Ordinary VDD-tracking pull-ups remain usable |
 | BASE_VALID_TIME | B §6.6 p7 prints 0.9 ns, L/A/V print 0.9 µs | Do not silently amend source or claim validated 0.9 ns timing. Exact-part TI correction/qualified physical timing needed for that claim |
-| ATTACHED_CURRENT | B §7.3.1.2 p11 recommends explicit periodic reset; L/A §7.2.1.2 p10 and V pp10–11 describe one report while attached; G Figure 2-1 p8 advertises active detection from L generation | Fresh register reads are not proof of fresh physical current detection. No hidden reset in read/init/IRQ. Clarification or controlled exact-part attached-current traces needed |
+| ATTACHED_CURRENT | B §7.3.1.2 p11 recommends explicit periodic reset; L/A §7.2.1.2 p10 describes one report while attached; V §§6.3.2.2–3 pp10–11 says "once in" Attached.SNK, which can mean after entry rather than a one-report limit; G Figure 2-1 p8 advertises active detection from L generation | Fresh register reads are not proof of fresh physical current detection. No hidden reset in read/init/IRQ. Clarification or controlled exact-part attached-current traces needed |
 | REVISION_06 | Betrusted code names 06 in a commented-out revision assertion; L/A/V exact tables establish only 01/02 | Reject unexpected revision for initialization/writes under the policy above. Need TI revision identification and capabilities before accepting it |
 | V_ADVERTISEMENT | V Figure 6-3 p17 says RW while Table 6-8 says R for advertisement | Raw observation remains available; changing 322 source-current advertisement is unavailable. Require resolved TI access evidence; unchanged proved field must not block unrelated supported changes |
 | V_FAULT_CLEAR | V Table 6-9 pp18–19 places RCU fault bit3, W1C IRQ bit4, RW duty bits2:1 and RW UFP-accessory bit0 in the same byte; only IRQ has an explicit clear transaction | Retain raw fault; no claim that read, IRQ ACK or a guessed write clears it. Read-only means no software write, not proved non-destructive fault observation. Gate every 09 write, including ACK/service, duty, UFP-accessory and raw writes, until exact fault handling and safe byte composition are established. Unchanged proved 09 controls must not block independently supported changes in other registers |
