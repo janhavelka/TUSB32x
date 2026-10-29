@@ -1,8 +1,9 @@
 # Documentation
 
-Start with the [project overview and compiling example](../README.md), then use
-the owner guide for application flow. These guides describe the implemented API;
-an unresolved silicon gate or missing physical qualification stays explicit.
+Start with the [project overview and compiling example](../README.md), then read
+the owner guide for application flow. These guides describe implemented behavior
+and its limits. The initial implementation is complete; physical board and timing
+qualification remain NOT RUN, and TUSB322I support remains partial.
 
 ## API and ownership
 
@@ -39,6 +40,8 @@ an unresolved silicon gate or missing physical qualification stays explicit.
 | [HIL runner](hil-runner.md) | Readonly/soak and seven explicit fixture plans, identities, deadlines, artifacts, verdicts and conditional cleanup |
 | [Development and packages](development.md) | Stable version truth, sync/check/bump/set, supported tools and clean archive consumption |
 
+For software checks without a board, start with the source-checkout
+[validation setup](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/software-validation-setup.md).
 The source checkout also maintains [test commands and registration](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/test/README.md),
 [protocol conformance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/protocol-conformance.md),
 [final core and integration review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md),
@@ -52,12 +55,13 @@ Before designing a board, use the source-checkout
 and [prepared TI clarification questions](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/ti-clarification.md).
 These worksheets record undecided hardware choices and do not qualify a circuit.
 
-Implementation, host verification, linked firmware and physical qualification
-are separate evidence levels. The recorded CI checkpoint identifies its exact
-tested commit; later guide edits do not extend that result. No physical serial,
-I2C/CC/current, INT or supply timing is qualified by host models or image links.
-See the [recorded checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910).
+The [recorded CI checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910)
+passed 14 jobs at `c50f8ddda8809425ede2161586466c95fa650ae6`. It applies only to
+that commit and establishes no physical qualification. Local IDF 6.1 rebuilds
+remain blocked by the unavailable SDK; earlier CI evidence retains its original SHA.
 
-The [38 implementation prompts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts)
+Current contributors use [AGENTS.md](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/AGENTS.md)
+and the [engineering contracts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts).
+The [completed implementation prompts](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/archive/prompts)
 and [dated audit sources](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/audit)
 are source-only history, not alternate user instructions or hardware evidence.

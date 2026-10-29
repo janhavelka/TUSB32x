@@ -1,7 +1,12 @@
 # Instructions shared by every numbered prompt
 
+The numbered stages are complete and [archived](../archive/prompts/README.md).
+This file preserves their execution workflow. For new maintenance work, follow
+[AGENTS.md](../../AGENTS.md) and the [current contract index](README.md); do not
+treat the historical stage order as pending implementation.
+
 Each numbered prompt is one complete work unit. Execute them in numerical order
-from 1 through 38 using [the index](README.md). Run only the requested prompt
+from 1 through 38 using [the index](../archive/prompts/README.md). Run only the requested prompt
 unless the user authorized a sequence or the whole set. Do not implement later
 units merely because their design is described in a shared contract.
 

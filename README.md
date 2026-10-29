@@ -6,7 +6,7 @@ provides cooperative operations, cached observations, explicit profile changes,
 reset/recovery, interrupt service, bounded raw diagnostics and passive health.
 It neither measures load current nor negotiates USB Power Delivery.
 
-## Device and evidence boundary
+## Supported devices
 
 | Configured part | Seven-bit addresses | Implemented scope |
 | --- | --- | --- |
@@ -22,11 +22,9 @@ prove enable polarity, board wiring or electrical qualification. TUSB322I has no
 power-on value. See the [variant matrix](docs/variant-matrix.md) and
 [hardware prerequisites](docs/hardware-validation.md).
 
-CC advertisement and detected-current categories are separate from measured
-VBUS delivery, a PD contract or permission to draw/supply power. The guides retain
-exact-part supply, VBUS_DET and VCONN limits. A fresh register read alone does not
-prove attached-current tracking; original TUSB320/I require the documented
-explicit reset for that refresh. Reset is never hidden in an observation plan.
+Original TUSB320/I need an explicit reset to refresh attached-current tracking.
+A register read alone cannot establish that refresh. See the guides for exact-part
+supply, VBUS_DET and VCONN limits.
 
 ## Build and use
 
@@ -38,10 +36,9 @@ target_link_libraries(app PRIVATE TUSB32x)
 ```
 
 Target `TUSB32x` supplies the public include directory and C++17 requirement.
-Core consumption needs no Git, Python, Doxygen, PlatformIO, framework headers or
-sibling project. The [package guide](docs/development.md#archive-and-clean-consumers)
-describes renamed archive consumption through `add_subdirectory()`; no
-install/export/`find_package()` interface is claimed.
+Building the core needs no Python, Git, Doxygen, PlatformIO or framework headers.
+The [package guide](docs/development.md#archive-and-clean-consumers) covers archive
+consumption. There is no install/export/`find_package()` interface.
 
 This complete function uses application callbacks and a monotonic millisecond
 clock. `binding` must select the exact target and provide terminal callbacks whose
@@ -90,20 +87,17 @@ while `result.status` reports failure; inspect outcome and effect independently.
 The README function is compiled and executed from this exact code block by the
 registered contract suite, using explicitly simulated transport and time.
 
-The runnable [plain C++ example](examples/host/basic/README.md) demonstrates full
-result/status/effect inspection and invalidation/reconciliation. The
-[owner guide](docs/owner-operations.md) explains immutable deadlines, fresh samples
-after callbacks, one active operation plus one retained result, cancellation and
-shutdown. Call all APIs from one serialized owner; an ISR signals that owner only.
-The [integration guide](docs/integration.md) covers shared-bus fairness, one
-configuration owner per physical target and borrowed lifetimes without a
-FieldCore dependency.
+The runnable [plain C++ example](examples/host/basic/README.md) uses simulated
+transport and shows result handling. Read the [owner guide](docs/owner-operations.md)
+for timing, cancellation and shutdown, and the [integration guide](docs/integration.md)
+for shared-bus ownership. Call all APIs from one serialized owner; an ISR only
+signals that owner.
 
 ## Examples, console and runners
 
 - [Arduino](docs/arduino-examples.md): shared CLI and two-device owner applications
   for the pinned S2/S3 configuration, with explicit board/timing readiness.
-- [Native ESP-IDF](examples/esp_idf/basic/README.md): genuine S2/S3 application,
+- [Native ESP-IDF](examples/esp_idf/basic/README.md): S2/S3 application,
   audited SDK 5.5.5/6.1.0, bounded UART console and application-owned resources.
 - [CLI reference](docs/CLI.md): the authoritative 55-row grammar, aliases, staging,
   operation/result ownership, diagnostics and machine records.
@@ -113,13 +107,9 @@ FieldCore dependency.
 - [Hardware validation](docs/hardware-validation.md): exact wiring, fixture,
   supply/attachment prerequisites, conditional cleanup and qualification limits.
 
-CLI staging is separate from retained desired, observed and verified settings.
-Only accepted explicit apply changes core desired state. ACK preserves actual
-controls. Raw access cannot bypass required mode/reset/termination/recovery
-sequences. An unrelated successful read cannot repair uncertain trust or make
-historical port fields fresh. Host checks and linked images establish software
-behavior and linkage; physical serial, I2C, CC, INT and supply timing remain
-unqualified.
+CLI staging, desired settings, observed registers and verified settings are
+separate. Raw access cannot bypass required device procedures. Host tests and
+firmware builds do not qualify physical serial, I2C, CC, INT or supply timing.
 
 ## Development and recorded checks
 
@@ -132,35 +122,31 @@ ctest --test-dir build/native -C Debug --output-on-failure
 ```
 
 Tests ON require Python 3.10+. Runtime assertions remain active in Release.
-Use the installed managed Core through `scripts/pio.cmd` on Windows; do not
-install another Core. The [development guide](docs/development.md) covers stable
-`library.json` version truth, generator exits, package rules and supported tools.
-
-Source-checkout `python tools/validate.py --checks all` selects the declared local
-non-HIL release checks. Focused selections report only their requested scope.
-Missing required tools are INCOMPLETE/nonzero. Logs retain a maximum 16 MiB prefix;
-overflow fails. No selection runs HIL, flashing, publication or remote CI.
-See the repository-only
-[validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)
-for commands, environments, revisions and PASS/FAIL/NOT RUN limits.
+For prerequisites and a complete software-only check, use the source-checkout
+[validation setup](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/software-validation-setup.md).
+`python tools/validate.py --checks all` runs the declared local checks without
+hardware I/O or flashing. Missing required tools produce INCOMPLETE and a nonzero
+exit. On Windows, use the installed managed Core through `scripts/pio.cmd`.
+The [development guide](docs/development.md) owns tool versions and package rules.
 
 The recorded [CI checkpoint](https://github.com/janhavelka/TUSB32x/actions/runs/40782369910)
 passed 14 jobs at `c50f8ddda8809425ede2161586466c95fa650ae6`: five strict
 Linux host configurations, Python/docs/package checks, four extracted Arduino
-images and four native-IDF images. Later guide changes do not inherit that CI
-result or require another remote run. No physical board is qualified by that run.
+images and four native-IDF images. This result applies only to that commit.
+No physical board is qualified by that run.
 
 The [final review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md)
-records completed core/integration review and corrections, local host/package and
-linked S2/S3 evidence, and remaining limits. A new native IDF 6.1 link is blocked
-by the unavailable local SDK; its prior CI images retain their original SHA.
-No hardware, flash or serial qualification is claimed.
+and [validation record](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/validation.md)
+record completed software reviews and checks. Local IDF 6.1 rebuilds remain
+blocked by the unavailable SDK; earlier CI images retain their original SHA.
+Physical board and timing qualification remain NOT RUN.
 
 Start with the [documentation index](docs/README.md) and
 [examples index](examples/README.md). The repository retains the
-[38-prompt implementation plan](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts)
+[completed implementation plan](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/archive/prompts)
 and [dated 2026-10-23 audit](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/library-comparison.md)
-as source-only history. They are review inputs, not hardware evidence.
+as source-only history. Current work follows
+[contribution guidance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/CONTRIBUTING.md).
 
 Development version `0.1.0-dev.1` is not a release claim. Project code is MIT,
 owned by Thymos Solution s.r.o with Jan Havelka as maintainer. Archived vendor

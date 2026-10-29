@@ -16,12 +16,13 @@ current subset, exact silicon gates and evidence limits, and
 qualification remains separate. Do not describe planned interfaces, commands
 or builds as implemented or tested.
 
-Execute the numbered prompts when asked to implement the library. A request to
-edit guidance or review the audit does not itself start driver implementation.
+The initial implementation is complete. Numbered prompts are retained in the
+[archive](docs/archive/prompts/README.md) as historical requirements. Do not
+restart them during ordinary maintenance unless the user explicitly requests it.
 
-- Read [the parent rules](../AGENTS.md), [the promptset index](docs/prompts/README.md)
-  and [COMMON](docs/prompts/COMMON.md) before implementation. COMMON includes the
-  concrete engineering, CLI, maintainability and agent workflow contracts.
+- Read [the parent rules](../AGENTS.md), the [engineering contract index](docs/prompts/README.md)
+  and the affected current guide before changes. Shared contracts remain active;
+  archived stage instructions explain the initial implementation process.
 - Before **every prompt**, re-audit relevant current sibling public declarations,
   code, examples, CLI, tests, Python runners, workflows and AGENTS.md. Record
   revisions, dirty state, exact sources and conventions adopted or rejected.

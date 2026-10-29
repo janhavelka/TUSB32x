@@ -4630,3 +4630,26 @@ The first PowerShell runner invocation surfaced exit1 through the shell wrapper;
 the generated report recorded2. The explicit Python subprocess check above
 independently verified the actual runner exit2 and no-I/O result. No hardware
 PASS or failed software behavior was inferred from shell status translation.
+
+
+## Documentation archive and software setup ? 2026-10-29
+
+Reviewed baseline d763b1665627e7157b020dd4c41fd231a273acae. Only Markdown changed;
+core, adapters, tooling, manifests and workflow behavior are unchanged.
+
+| Check | Result |
+| --- | --- |
+| Archived requirements comparison | PASS: all38 numbered bodies equal their original Git versions after normalizing Markdown link destinations; no requirements deleted |
+| Maintained Markdown link checker over checkout docs | PASS:909 local links/fragments, including new archive and setup guide |
+| README C++ text comparison | PASS: exact code block unchanged |
+| `cmake --build build/native --config Debug --target tusb32x_compile_contracts` then `ctest --test-dir build/native -C Debug -R '^tusb32x_compile_contracts$' --output-on-failure` | PASS:1/1 registered suite, literal README success/failure example cases included |
+| `python tools/check_doxygen.py` | PASS:36 C++ files, HTML/XML/public visibility/helper/link checks; build/doxygen-check/run-ziym_311 |
+| `python tools/check_package.py --test-archive --out build/docs-archive-package` | PASS:77 source-equal files,210 packaged links, clean external Release consumer compiled/linked/ran with testsOFF; report under build/docs-archive-package |
+| `python tools/check_contracts.py` and `python scripts/generate_version.py check` | PASS static contracts and unchanged generated version |
+| `git diff --check` | PASS |
+| WSL/SDK installation and new Linux sanitizer run | NOT RUN; documented user-run recipes, no environment changes |
+| Full runtime/firmware/physical/remote checks | NOT RUN for this documentation-only maintenance; existing evidence retains its original source/tool scope |
+
+The guide distinguishes the audited local recipe from exact CI reproduction:
+Ubuntu system Python can satisfy local3.10+ without matching CI's3.12.16 pin.
+No earlier CI result is relabeled as verification of this documentation commit.

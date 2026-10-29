@@ -37,8 +37,9 @@ context. Progress records allow a prompt to resume without marking it complete.
 
 ## Coverage of every original prompt
 
-Original labels below identify retired files at the baseline commit. Execute the
-current [ordered index](../prompts/README.md), not these historical identifiers.
+Original labels below identify retired files at the baseline commit. The
+[ordered index](../archive/prompts/README.md) is now archived too; its stages
+were completed after this preparation review.
 
 | Original prompt | Words | Main complexity | New owners |
 | --- | ---: | --- | --- |

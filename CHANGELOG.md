@@ -8,6 +8,10 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Archived the completed implementation prompts and made active guidance about
+  maintaining the library. Simplified the overview and contribution guides, and
+  added software-validation setup instructions for work without a board.
+
 - Added source-checkout board design and first-board bring-up worksheets, plus
   researched, unsent TI clarification requests. Corrected the TUSB322I attached
   current wording without changing any silicon capability gate.
@@ -17,29 +21,24 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
   commands after suspected USB receive loss while existing owner work continues.
   Added application regressions and reconciled final review/package records.
 
-- Completed independent core review with fresh protocol/owner/portability checks;
-  corrected stale peer inventory and validator naming in the conformance matrix.
-  No executable core change was needed. Integration/distribution review and
-  physical qualification remain separate.
+- Completed independent core review and protocol, owner and portability checks.
+  Corrected the peer inventory and validator names in the conformance matrix.
+  No executable core change was needed; physical qualification remains separate.
 
 ### Added
 
-- Framework-neutral C++17 core with fixed-storage values, constexpr Status
-  helpers, pure binding/profile validators and public register decoding.
-  Six explicit TUSB320 variants and partial TUSB322I support use separate
-  address, register and capability rules; GPIO-only devices remain outside the API.
-- Cooperative owner operations for read-only initialization/profile observation,
-  explicit apply/verification, read-only reconciliation, reset, original-part
-  dead-battery recovery, port refresh and bounded IRQ acknowledgement/service.
-  One active operation and one retained result use instance-local tokens,
-  immutable deadlines and at most one callback per poll.
-- Safe one-callback raw diagnostics, saturating all-source counters, separate
-  managed transport evidence and pure passive health. Statistics clearing does
-  not repair trust, discard effects or consume a result.
-- One shared 55-row CLI with strict whole-command parsing, independent staging,
-  core-owned operation/results, cached/live diagnostics and typed machine records.
-  Bounded console input/output, complete-record loss reporting and result-take
-  reservation preserve evidence under backpressure.
+- C++17 core with fixed storage, Status helpers, validation and register decoding.
+  Supports six explicit TUSB320 variants and part of TUSB322I, with separate
+  address and register rules. GPIO-only devices remain outside the API.
+- Cooperative operations for initialization, profile observation and apply,
+  reconciliation, reset, original-part dead-battery recovery, port refresh and
+  IRQ service. One active operation and one retained result use instance-local
+  tokens, fixed deadlines and a default limit of one callback per poll.
+- Raw diagnostics limited to one callback, transport counters and passive health.
+  Clearing statistics does not restore configuration trust or discard results.
+- One shared 55-row CLI with strict parsing, separate staging, cached/live
+  diagnostics and machine records. Bounded console buffers report record loss
+  and preserve results when output cannot be reserved.
 - Application-owned Arduino Wire and native ESP-IDF adapters with documented
   synchronous configuration, aggregate timeout accounting and controller retirement.
   Arduino CLI/two-device and native CLI examples link for S2/S3 in the audited
@@ -47,14 +46,13 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
   are in the [development guide](docs/development.md).
 - Runnable ordinary C++ host consumer and generic two-device owner fixtures,
   using explicitly simulated transport and public APIs without product dependencies.
-- Strict Python sessions, streamed bounded evidence and nine finite runner
-  families: readonly, soak, orientation, accessory, role-current, interrupt,
-  reset-termination, fault and console. Fixture mutations require explicit setup
-  and identity; primary outcome, cleanup and residual uncertainty stay separate.
-- Deterministic manifest-based sync/check/bump/set version tools, stable generated
-  package version and separate example firmware identity. Literal package rules,
-  safe archive checks and clean renamed consumers preserve required shared files
-  without adding maintainer dependencies to core consumption.
+- Python sessions and nine bounded runner suites: readonly, soak, orientation,
+  accessory, role-current, interrupt, reset-termination, fault and console.
+  Hardware changes require explicit setup and identity. Artifacts retain the
+  operation outcome, cleanup result and remaining uncertainty separately.
+- Version sync/check/bump/set tools use `library.json`; example firmware identity
+  is generated separately. Package checks validate archive contents and build
+  an external consumer without adding maintainer tools to core requirements.
 - One local validation entry point over registered native, contract, Python,
   Doxygen and package checks, plus declared extracted firmware links. Negative
   fixtures prove malformed boundary/version/documentation/CLI/archive inputs fail.
@@ -63,18 +61,17 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ### Fixed
 
-- Failed writes retain possible acceptance and original backend detail, including
-  NACK/BUSY outcomes. Cancellation, timeout and end do not undo effects. Fresh
-  post-callback owner samples anchor completion and silicon waits without renewing
-  deadlines or shortening required intervals.
+- Failed writes retain possible hardware effects and original backend detail,
+  including NACK/BUSY outcomes. Cancellation, timeout and end preserve those
+  effects. Fresh clock samples after callbacks start silicon waits without
+  extending deadlines or shortening required intervals.
 - Profile writes preserve actual controls rather than staged desired settings.
   Unchanged gated TUSB322I fields permit independent supported changes; semantic
   DRP equivalence does not authorize replaying an obsolete literal write image.
   Reset, mode and recovery obligations remain independent of ordinary settings trust.
-- Port decoding distinguishes detached/not-applicable, unknown and reserved data.
-  Fixed read bookends withhold incoherent fields; historical bytes and timestamps
-  cannot masquerade as fresh observations. IRQ ACK preserves actual controls,
-  and service retains its complete pre-ACK sample after later failure.
+- Port decoding separates detached, not-applicable, unknown and reserved data.
+  Coherence reads invalidate fields that changed during observation. IRQ ACK
+  preserves actual controls; later failure retains the sample taken before ACK.
 - CLI malformed input cannot be edited into a valid command, lost records cannot
   become truncated success, and failed output reservation leaves the core result
   queryable. Automatic work still advances under cached/rejected command turns.
@@ -82,9 +79,9 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
   distinguish result delivery from payload outcome and reject late success,
   framing loss, reboot and identity changes. Cleanup cannot erase a primary
   failure or replay uncertain hardware changes.
-- Base recovery readiness is revoked by a target power-cycle intent and survives
-  suite/session boundaries until newly qualified typed recovery. Clear registers,
-  fresh identity and unrelated reads cannot prove the historical sequence.
+- Planning a target power cycle revokes base-part recovery readiness across
+  suites and sessions until a newly qualified typed recovery completes.
+  Clear registers, identity checks and unrelated reads do not restore readiness.
 - Archive validation rejects portable-path aliases, links, collisions and bounded
   size/count violations before extraction. Clean-consumer provenance checks actual
   compiler headers as well as source files, including multi-configuration builds.

@@ -3,51 +3,52 @@
 Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
-Keep this branch for this entire execution, including resumed sessions.
-Current authorization: complete prompt 38 integration/distribution review and final handoff.
+The initial implementation and final reviews are complete. Keep this branch for
+the currently authorized documentation maintenance and synchronization.
+Current work: archive completed prompts and simplify maintained documentation.
 
 ## Prompt status
 
 | Prompt | Status |
 | --- | --- |
-| [1: ecosystem-audit](prompts/1-ecosystem-audit.md) | COMPLETE |
-| [2: family-capabilities](prompts/2-family-capabilities.md) | COMPLETE |
-| [3: register-contracts](prompts/3-register-contracts.md) | COMPLETE |
-| [4: silicon-procedures](prompts/4-silicon-procedures.md) | COMPLETE |
-| [5: value-api-contracts](prompts/5-value-api-contracts.md) | COMPLETE |
-| [6: owner-state-contracts](prompts/6-owner-state-contracts.md) | COMPLETE |
-| [7: host-build](prompts/7-host-build.md) | COMPLETE |
-| [8: metadata-versioning](prompts/8-metadata-versioning.md) | COMPLETE |
-| [9: transport-identity](prompts/9-transport-identity.md) | COMPLETE |
-| [10: register-codecs](prompts/10-register-codecs.md) | COMPLETE |
-| [11: owner-engine](prompts/11-owner-engine.md) | COMPLETE |
-| [12: profile-observation](prompts/12-profile-observation.md) | COMPLETE |
-| [13: profile-application](prompts/13-profile-application.md) | COMPLETE |
-| [14: reset-recovery](prompts/14-reset-recovery.md) | COMPLETE |
-| [15: port-snapshots](prompts/15-port-snapshots.md) | COMPLETE |
-| [16: interrupt-service](prompts/16-interrupt-service.md) | COMPLETE |
-| [17: diagnostics-health](prompts/17-diagnostics-health.md) | COMPLETE |
-| [18: protocol-conformance](prompts/18-protocol-conformance.md) | COMPLETE |
-| [19: owner-portability](prompts/19-owner-portability.md) | COMPLETE |
-| [20: cli-foundation](prompts/20-cli-foundation.md) | COMPLETE |
-| [21: cli-operation-control](prompts/21-cli-operation-control.md) | COMPLETE |
-| [22: cli-command-coverage](prompts/22-cli-command-coverage.md) | COMPLETE |
-| [23: arduino-transport](prompts/23-arduino-transport.md) | COMPLETE (qualified SDK subset; hardware not tested) |
-| [24: arduino-examples](prompts/24-arduino-examples.md) | COMPLETE (four SDK images; physical qualification not run) |
-| [25: idf-transport](prompts/25-idf-transport.md) | COMPLETE (two native SDK links; physical qualification not run) |
-| [26: idf-cli-example](prompts/26-idf-cli-example.md) | COMPLETE |
-| [27: generic-owner-consumers](prompts/27-generic-owner-consumers.md) | COMPLETE |
-| [28: python-session](prompts/28-python-session.md) | COMPLETE |
-| [29: observation-runners](prompts/29-observation-runners.md) | COMPLETE |
-| [30: port-fixture-suites](prompts/30-port-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
-| [31: recovery-fixture-suites](prompts/31-recovery-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
-| [32: package-consumers](prompts/32-package-consumers.md) | COMPLETE (software evidence; hardware separate) |
-| [33: validation-guards](prompts/33-validation-guards.md) | COMPLETE (software evidence; hardware separate) |
-| [34: ci-matrix](prompts/34-ci-matrix.md) | COMPLETE (14 CI jobs; eight extracted images; hardware NOT RUN) |
-| [35: user-documentation](prompts/35-user-documentation.md) | COMPLETE (local guides/snippets/package checks; physical qualification separate) |
-| [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | COMPLETE (source/API visibility and maintainer checks; hardware separate) |
-| [37: final-core-review](prompts/37-final-core-review.md) | COMPLETE (e12ecb7; independent review and local checks; hardware separate) |
-| [38: final-integration-review](prompts/38-final-integration-review.md) | COMPLETE (review/fixes and available local matrix; new IDF 6.1 links BLOCKED by missing SDK; hardware NOT RUN) |
+| [1: ecosystem-audit](archive/prompts/1-ecosystem-audit.md) | COMPLETE |
+| [2: family-capabilities](archive/prompts/2-family-capabilities.md) | COMPLETE |
+| [3: register-contracts](archive/prompts/3-register-contracts.md) | COMPLETE |
+| [4: silicon-procedures](archive/prompts/4-silicon-procedures.md) | COMPLETE |
+| [5: value-api-contracts](archive/prompts/5-value-api-contracts.md) | COMPLETE |
+| [6: owner-state-contracts](archive/prompts/6-owner-state-contracts.md) | COMPLETE |
+| [7: host-build](archive/prompts/7-host-build.md) | COMPLETE |
+| [8: metadata-versioning](archive/prompts/8-metadata-versioning.md) | COMPLETE |
+| [9: transport-identity](archive/prompts/9-transport-identity.md) | COMPLETE |
+| [10: register-codecs](archive/prompts/10-register-codecs.md) | COMPLETE |
+| [11: owner-engine](archive/prompts/11-owner-engine.md) | COMPLETE |
+| [12: profile-observation](archive/prompts/12-profile-observation.md) | COMPLETE |
+| [13: profile-application](archive/prompts/13-profile-application.md) | COMPLETE |
+| [14: reset-recovery](archive/prompts/14-reset-recovery.md) | COMPLETE |
+| [15: port-snapshots](archive/prompts/15-port-snapshots.md) | COMPLETE |
+| [16: interrupt-service](archive/prompts/16-interrupt-service.md) | COMPLETE |
+| [17: diagnostics-health](archive/prompts/17-diagnostics-health.md) | COMPLETE |
+| [18: protocol-conformance](archive/prompts/18-protocol-conformance.md) | COMPLETE |
+| [19: owner-portability](archive/prompts/19-owner-portability.md) | COMPLETE |
+| [20: cli-foundation](archive/prompts/20-cli-foundation.md) | COMPLETE |
+| [21: cli-operation-control](archive/prompts/21-cli-operation-control.md) | COMPLETE |
+| [22: cli-command-coverage](archive/prompts/22-cli-command-coverage.md) | COMPLETE |
+| [23: arduino-transport](archive/prompts/23-arduino-transport.md) | COMPLETE (qualified SDK subset; hardware not tested) |
+| [24: arduino-examples](archive/prompts/24-arduino-examples.md) | COMPLETE (four SDK images; physical qualification not run) |
+| [25: idf-transport](archive/prompts/25-idf-transport.md) | COMPLETE (two native SDK links; physical qualification not run) |
+| [26: idf-cli-example](archive/prompts/26-idf-cli-example.md) | COMPLETE |
+| [27: generic-owner-consumers](archive/prompts/27-generic-owner-consumers.md) | COMPLETE |
+| [28: python-session](archive/prompts/28-python-session.md) | COMPLETE |
+| [29: observation-runners](archive/prompts/29-observation-runners.md) | COMPLETE |
+| [30: port-fixture-suites](archive/prompts/30-port-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
+| [31: recovery-fixture-suites](archive/prompts/31-recovery-fixture-suites.md) | COMPLETE (software evidence; hardware separate) |
+| [32: package-consumers](archive/prompts/32-package-consumers.md) | COMPLETE (software evidence; hardware separate) |
+| [33: validation-guards](archive/prompts/33-validation-guards.md) | COMPLETE (software evidence; hardware separate) |
+| [34: ci-matrix](archive/prompts/34-ci-matrix.md) | COMPLETE (14 CI jobs; eight extracted images; hardware NOT RUN) |
+| [35: user-documentation](archive/prompts/35-user-documentation.md) | COMPLETE (local guides/snippets/package checks; physical qualification separate) |
+| [36: source-maintainer-docs](archive/prompts/36-source-maintainer-docs.md) | COMPLETE (source/API visibility and maintainer checks; hardware separate) |
+| [37: final-core-review](archive/prompts/37-final-core-review.md) | COMPLETE (e12ecb7; independent review and local checks; hardware separate) |
+| [38: final-integration-review](archive/prompts/38-final-integration-review.md) | COMPLETE (review/fixes and available local matrix; new IDF 6.1 links BLOCKED by missing SDK; hardware NOT RUN) |
 
 ## Prompt 1 execution record
 
@@ -3085,3 +3086,31 @@ contracts, generated version and archive extraction/link checks passed. See the
 new validation entry. Firmware/host behavioral suites were not repeated for
 unchanged code. IDF6.1/Linux sanitizer tools and physical evidence remain missing;
 no CI dispatch, port opening, flashing or tool installation occurred.
+
+
+## Documentation maintenance and prompt archive ? 2026-10-29
+
+Started clean at d763b1665627e7157b020dd4c41fd231a273acae on the same branch;
+fetch confirmed upstream equality. That commit completed the pre-board worksheets.
+The user requested plain engineering documentation, archival of finished prompts,
+and an explanation of SDK/Python and Linux sanitizer setup.
+
+Moved all 38 numbered prompts and the original index to docs/archive/prompts.
+Their requirement text is preserved; relative links now resolve from the archive.
+Shared engineering/API/CLI/source contracts stay at docs/prompts with a new active
+index. AGENTS, contribution guidance and the progress header now describe normal
+maintenance. Historical Git blob paths and dated test results remain unchanged.
+README, changelog and navigation use simpler current wording without changing the
+README code example or device restrictions. New software-validation-setup.md
+explains SDK components and separate Python environments, ASan/UBSan, optional
+WSL 2 Ubuntu24.04 setup and the existing validator recipe. It records commands
+as NOT RUN and preserves the working managed SDK/Core environment.
+
+Two delegated agents (inherited runtime model) owned disjoint scopes: active
+README/changelog/contribution/index wording, and the source-only setup guide.
+The first also independently reviewed all archive links and requirement retention.
+The lead moved files, reviewed the diff and ran documentation/package checks.
+Official Microsoft, LLVM and Espressif setup sources are linked in the guide.
+No tool installation, CI dispatch, firmware build, flash or hardware action was
+part of this maintenance. Source-only archive/setup files remain outside the
+unchanged 77-file distribution. Final commit/sync equality is in the handoff.

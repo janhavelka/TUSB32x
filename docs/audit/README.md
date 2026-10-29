@@ -33,7 +33,7 @@ TUSB32x was initially an empty folder without Git metadata.
 | [Additional TI evidence](additional-ti-evidence.md) | Exact electrical/timing conditions, reset/current behavior and source conflicts |
 | [Reference archive](../reference/README.md) | Seven official PDFs with retrieval metadata and SHA-256 checksums |
 | [Public source manifest](../reference/public-implementations.json) | Thirteen pinned files from six repositories with source-byte checksums and attribution |
-| [Promptset](../prompts/README.md) | Master execution instruction, shared chip evidence and 38 complete numbered prompts |
+| [Archived promptset](../archive/prompts/README.md) | Original execution index and 38 completed implementation prompts |
 | [Preparation validation](promptset-validation.md) | Checks of the promptset and reference artifacts, distinct from library validation |
 | [Correctness and completeness review](promptset-completeness-review.md) | Later silicon corrections, missing state/transport/CLI contracts and acceptance cases |
 
@@ -166,7 +166,8 @@ the earlier TUSB322I mode-sequence description and fills state, timeout, CLI,
 runner and package gaps. Its findings supersede conflicting earlier audit text;
 the current numbered prompts include the fixes.
 
-Open the [master prompt](../prompts/README.md) and execute the ordered stages.
+The [original master prompt](../archive/prompts/README.md) is now archived after
+completion. The following paragraph records the preparation-stage handoff.
 The common contract carries the selected defaults, while each stage names the
 current siblings and vendor evidence to re-read. Future implementation reports
 must describe actual executed checks; this preparation audit supplies no green

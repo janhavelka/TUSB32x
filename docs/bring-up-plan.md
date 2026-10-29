@@ -111,6 +111,9 @@ or cancellation does not switch off VBUS or undo a write.
 
 ## Software checks that need no board
 
+See [software validation setup](software-validation-setup.md) for the optional
+WSL 2 installation, Linux test commands and separate IDF environment setup.
+
 No account link is required. Existing host tools already cover the portable
 suite. The remaining IDF6.1 check needs an isolated audited SDK6.1.0 installation,
 its matching Python environment and S2/S3 toolchains; the validation tool accepts
