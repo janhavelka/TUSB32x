@@ -1,7 +1,7 @@
 # Development metadata and version tools
 
-`library.json` is version truth. The current `0.1.0-dev.1` marks an incomplete
-library: portable values, validators, decoding, cooperative operations, the shared
+`library.json` is version truth. The current `0.1.0-dev.1` is a development version,
+not a published release. Portable values, validators, decoding, cooperative operations, the shared
 CLI and Arduino S2/S3 examples are implemented. The native IDF adapter has
 independent S2/S3 component and complete native CLI application links. Physical
 qualification remains separate work. Version text

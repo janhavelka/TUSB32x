@@ -136,9 +136,9 @@ python tools/tusb32x_hil_runner.py --port "$fixturePort" --variant tusb320lai --
 
 See the [runner guide](hil-runner.md) for optional pyserial installation, finite
 limits, console-specific DTR/RTS settings and exit meanings. Its full readonly/soak
-plans require adapter callback-kind counters: the Arduino and native-IDF front
-ends currently report those as unknown, so these plans are BLOCKED on both even
-though individual CLI observation commands are available. Expected values remain
+plans require adapter callback-kind counters, supplied by both front ends for
+the primary CLI target. Saturated counts cannot prove exact deltas; setup and
+secondary-target traffic are excluded from this evidence. Expected values remain
 operator expectations until fresh firmware records match them. Host checkout
 identity and labels are separate facts. The plans initialize read-only, own and
 take each admitted result, inspect

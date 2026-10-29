@@ -150,6 +150,12 @@ Linux host configurations, Python/docs/package checks, four extracted Arduino
 images and four native-IDF images. Later guide changes do not inherit that CI
 result or require another remote run. No physical board is qualified by that run.
 
+The [final review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md)
+records completed core/integration review and corrections, local host/package and
+linked S2/S3 evidence, and remaining limits. A new native IDF 6.1 link is blocked
+by the unavailable local SDK; its prior CI images retain their original SHA.
+No hardware, flash or serial qualification is claimed.
+
 Start with the [documentation index](docs/README.md) and
 [examples index](examples/README.md). The repository retains the
 [38-prompt implementation plan](https://github.com/janhavelka/TUSB32x/tree/promptset/tusb32x-implementation-20261023/docs/prompts)

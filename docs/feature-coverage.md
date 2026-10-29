@@ -12,7 +12,10 @@ executable defect was reproduced, and 61 selected tests passed in each fresh
 Debug/Release configuration. See the repository-only
 [final core review](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/docs/final-audit.md)
 for exact revision, reviewers, corrected documentation and retained gates.
-Prompt 38 integration/distribution review remains outstanding.
+Prompt 38 closed missing frontend callback evidence and Arduino USB receive-loss
+handling. Registered application regressions and extracted S2/S3 links cover the
+corrections. The final review distinguishes local validation from the earlier CI
+SHA; a new native IDF 6.1 image build remains blocked by the unavailable local SDK.
 
 The [variant matrix](variant-matrix.md) owns exact electrical limits and named
 conflicts. Source IDs mean B = SLLSEN9F March 2022 (TUSB320/I), L = SLLSEP2D

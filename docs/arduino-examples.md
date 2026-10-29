@@ -35,10 +35,20 @@ worker therefore uses the transmit API rather than that boolean gate on S2.
 S3 suppresses writes while disconnected. No example waits in `while (!Serial)`.
 SDK acceptance cannot prove receipt by a host, particularly across disconnects.
 
-The front end reports optional adapter callback-kind counters as unknown.
-The Python runner's complete `readonly` and `soak` plans require those counters
-to prove no data-write callbacks, so they report BLOCKED on these examples.
-Individual CLI observation and owned-result commands remain available; see the
+The pinned SDK creates a 256-byte USB receive queue. The application is its sole
+reader and must not resize it. Queue saturation can drop bytes before the shared
+parser sees them; the application therefore disables further command input on
+suspected loss, reports `APP console=input_failed`, and continues existing owner
+work and output. This conservative fence can also reject a full queue that has
+not yet lost bytes. A new application session is required to resume input; do not
+continue a partial command across reconnect. This does not qualify physical USB
+delivery or establish a reliable disconnect-event channel.
+
+The front end reports saturating write and write-read callback counts for the
+primary CLI target. Setup prewarming and secondary-device traffic are excluded;
+pointer selection within a read is not counted as a data-write callback.
+The Python runner uses these counts to prove no data-write callbacks during
+`readonly` and `soak`, with qualified board/session prerequisites; see the
 [runner guide](hil-runner.md#readonly-soak-and-register-observation).
 
 ## Board qualification before bus work

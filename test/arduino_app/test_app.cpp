@@ -186,7 +186,69 @@ int main(int argc, char** argv) {
     command("diag");
     CHECK(Serial.output.find("TUSB DIAG") != std::string::npos);
     CHECK(backend.writes == 0); // Startup never applies, resets or acknowledges IRQ.
-    if (!backend.identityFails) {
+    CHECK(tusb32x_arduino::callbackCounters(nullptr).writeReads ==
+          tusb32x_arduino::primary.transportStats().totalAttempts); // Include failed callback attempts.
+    if (scenario == "startup") {
+      const auto counters = tusb32x_arduino::platform().counters(nullptr);
+      CHECK(counters.available && counters.writes == 0 && counters.writeReads > 0);
+      CHECK(counters.writeReads == tusb32x_arduino::primary.transportStats().totalAttempts);
+      CHECK(tusb32x_arduino::secondary.transportStats().totalAttempts > 0);
+      CHECK(counters.writeReads < backend.transmitCalls); // Exclude prewarming and the secondary owner.
+      command("bus");
+      CHECK(Serial.output.find("adapter_available=1 adapter_writes=0 adapter_write_reads=" +
+            std::to_string(counters.writeReads)) != std::string::npos);
+      command("reg 8");
+      CHECK(tusb32x_arduino::callbackCounters(nullptr).writes == 0);
+      CHECK(tusb32x_arduino::callbackCounters(nullptr).writeReads == counters.writeReads + 1);
+      command("end");
+      command("bind");
+      CHECK(tusb32x_arduino::callbackCounters(nullptr).writeReads == counters.writeReads + 1);
+      const uint8_t bytes[] = {8, 0};
+      CHECK(tusb32x_arduino::primaryWrite(tusb32x_arduino::BoardConfig::address, bytes,
+            sizeof(bytes), tusb32x_arduino::BoardConfig::callbackMs, &tusb32x_arduino::context).ok());
+      CHECK(tusb32x_arduino::callbackCounters(nullptr).writes == 1 && backend.writes == 1);
+    }
+    if (scenario == "rx-overflow" || scenario == "rx-overflow-after-read") {
+      // The hardware queue can lose the invalid suffix of a valid command.
+      // The read-side race fills it after available(), immediately before dequeue.
+      const bool duringRead = scenario == "rx-overflow-after-read";
+      if (duringRead) {
+        Serial.receive("read\n");
+        turn();
+        CHECK(tusb32x_arduino::primary.progress().state == TUSB32x::OperationState::ACTIVE);
+        Serial.receive("\n");
+        Serial.arrivalBeforeRead = std::string(250, '\n') + "reset bogus";
+      } else {
+        Serial.receive("version\nr");
+        turn();
+        CHECK(tusb32x_arduino::heldInput == 'r'); // CLI retained this byte after its completed line.
+        Serial.receive(std::string(251, '\n') + "reset bogus");
+      }
+      CHECK(Serial.input.size() == (duringRead ? 1U : RecordingSerial::RX_CAPACITY));
+      for (unsigned i = 0; i < 320; ++i) turn();
+      CHECK(Serial.droppedInput == 6);
+      CHECK(Serial.output.find("APP console=input_failed reason=usb_rx_capacity commands=disabled") != std::string::npos);
+      CHECK(Serial.input.size() == RecordingSerial::RX_CAPACITY - (duringRead ? 1U : 0U));
+      CHECK(tusb32x_arduino::heldInput == -1);
+      if (duringRead) {
+        const auto progress = tusb32x_arduino::primary.progress();
+        CHECK(progress.resultPending);
+        TUSB32x::OperationResult result;
+        CHECK(tusb32x_arduino::primary.resultSnapshot(progress.token, result).ok());
+        CHECK(result.status.ok()); // Input failure must not stop admitted work.
+      }
+      // Even if a fixture clears the SDK queue and later delivers a terminator,
+      // the truncated reset prefix may never become an admitted command.
+      Serial.input.clear();
+      Serial.receive("\n");
+      for (unsigned i = 0; i < 160; ++i) turn();
+      CHECK(backend.writes == 0);
+      CHECK(Serial.input == "\n");
+      CHECK(Serial.output.find(" command=reset ") == std::string::npos);
+      Serial.receive("reset\n");
+      for (unsigned i = 0; i < 32; ++i) turn();
+      CHECK(Serial.input == "\nreset\n" && backend.writes == 0);
+    } else if (!backend.identityFails) {
       if (scenario == "shutdown") {
         Serial.input = "read\n";
         turn();
@@ -226,6 +288,21 @@ int main(int argc, char** argv) {
     CHECK(Serial.output.find("bus=released") == std::string::npos);
   }
   CHECK(backend.timeout == 50);
+  if (scenario == "startup") {
+    const auto calls = backend.transmitCalls;
+    const uint8_t bytes[] = {8, 0};
+    uint8_t received = 0xA5;
+    tusb32x_arduino::primaryCounters.writes = UINT32_MAX - 1;
+    tusb32x_arduino::primaryCounters.writeReads = UINT32_MAX - 1;
+    for (unsigned i = 0; i < 2; ++i) {
+      CHECK(tusb32x_arduino::primaryWrite(0x47, bytes, 2, 10, nullptr).is(TUSB32x::Err::I2C_ERROR));
+      CHECK(tusb32x_arduino::primaryWriteRead(0x47, bytes, 1, &received, 1, 10, nullptr)
+            .is(TUSB32x::Err::I2C_ERROR));
+    }
+    CHECK(tusb32x_arduino::callbackCounters(nullptr).writes == UINT32_MAX);
+    CHECK(tusb32x_arduino::callbackCounters(nullptr).writeReads == UINT32_MAX);
+    CHECK(received == 0xA5 && backend.transmitCalls == calls);
+  }
   std::printf("Arduino app %s: %u checks, %u failures\n", scenario.c_str(), checks, failures);
   return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

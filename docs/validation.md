@@ -4521,3 +4521,87 @@ fragments PASS, including parent AGENTS. Changed files pass UTF-8/LF/trailing-
 whitespace and `git diff --check`. The lead independently matched the four
 Linux/regmap/Betrusted cached source hashes and inspected reset-mask and Try.SRC
 helper excerpts. No new package or firmware claim is inferred from these checks.
+
+## Prompt 38: final integration and distribution review
+
+Reviewed clean `e12ecb74c2a6870665709233cbfaaa5549a804e5` on 2026-10-29.
+[Final audit](final-audit.md) records independent scopes, exact findings, source
+checks and dispositions. Application fixes add primary callback-kind evidence
+and reject potentially truncated Arduino USB input. Core, adapter timeout/framing
+and SDK pins remain unchanged. No remote CI was dispatched or queried.
+
+Actual commands (all from this checkout):
+
+```text
+python tools/validate.py --checks python,package,arduino,idf-s2,idf-s3 --accept-missing-idf-constraints --out build/p38-validation
+python tools/validate.py --checks native,contracts,doxygen,arduino --out build/p38-final
+ctest --test-dir build/p38-final/run-xjsuuhsj/Debug -C Debug -R '^validate_runner$' --output-on-failure
+ctest --test-dir build/p38-final/run-xjsuuhsj/Release -C Release -R '^validate_runner$' --output-on-failure
+python scripts/generate_version.py check
+```
+
+Both validator commands exited 0 with requested scope PASS and no pending checks.
+The first run's unchanged Python/package evidence is reused. Its native image
+sources include the final callback-counter fix; the later Arduino RX correction
+required four new Arduino links. No unchanged native build was duplicated.
+
+| Check | Actual result and retained evidence |
+| --- | --- |
+| Python/session/transcript and package | PASS 8 + 3 CTests in each Debug/Release, `build/p38-validation/run-rjz5y8or/report.json` and per-group logs/JUnit; hostile session/fixture tests, exact live CLI, Windows aliases and clean consumers |
+| Final core/CLI/adapters/apps, contracts and documentation | PASS 55 + 6 + 2 CTests in each Debug/Release, `build/p38-final/run-xjsuuhsj/report.json`; fresh builds, strict warnings and active Release assertions |
+| Changed registration guards | Initial focused validator failed because check_ci still expected 53 native tests; corrected to 55 including the two new RX cases. Final validate_runner PASS in both directories above (44 underlying cases). No assertion was weakened. A probe of unused build/release discovered no tests and supplies no evidence; actual Release results are from the explicit final directory |
+| Counter regression | Actual application startup/failure/raw-error cases verify available BUS evidence, combined pointer reads, writes, failed/rejected attempts, saturation and retained counts; Arduino excludes preparation and secondary traffic |
+| USB loss regression | Pre-fix rx-overflow failed five assertions and rx-overflow-after-read four, including unintended write/reset. Final 12 Arduino application cases PASS in Debug/Release, including active-read completion despite closed input; registered under the existing native owner |
+| Final current Arduino links | PASS all four extracted basic/owner S2/S3 images, `build/p38-final/run-xjsuuhsj/firmware/firmware-result.json`; 11 current sources and five public headers per image, 12 ELF/BIN/map hashes independently rechecked in `build/p38-arduino-verification.json` |
+| Final current native IDF 5.5.5 links | PASS S2/S3, `build/p38-validation/run-rjz5y8or/firmware/firmware-result.json`; 11 current sources/five headers per image, 10 ELF/BIN/map/SDKCONFIG/lock hashes independently checked in `build/p38-native-verification.json`; native symbols and no Arduino; isolated absolute target configuration paths |
+| New native IDF 6.1 links | BLOCKED: no installed local SDK/tool environment, Docker or WSL. Prior CI images remain historical evidence on their tested SHA, not this changed application |
+| Physical/flash/serial/HIL | NOT RUN: no identified authorized fixture; host models and linked images do not qualify electrical/USB behavior |
+
+Together the current selections cover all **74 registered Windows tests** in
+Debug and Release (73 elsewhere), with the changed registration guard repeated
+after its count correction. Scope-specific reports remain separate; an earlier
+failed run or probe is not rewritten into PASS. `build/p38-validation-console.log`
+and `build/p38-final-console.log` retain command summaries. Ordinary tests never
+open a serial port, and fixture absence remains NOT RUN.
+
+Tool inputs: GNU 15.1.0, CMake/CTest 4.0.1, Ninja 1.12.1, Python 3.12.10,
+Doxygen 1.13.2, managed PlatformIO 6.1.19, pioarduino 55.03.311 / Arduino 3.3.11 /
+bundled IDF 5.5.5; native SDK 5.5.5 uses CMake 4.0.3, Ninja 1.13.1 and Xtensa
+GCC 14.2.0. The existing missing standalone IDF constraint-cache waiver is explicit
+in the command/report; installed Python requirements still pass their preflight.
+No second PlatformIO Core was installed. Windows sanitizer runtimes remain
+unavailable; the old Linux sanitizer result is not assigned to this commit.
+
+The first archive (77 files/210 packaged links) has SHA-256
+`ca91abd50ff5fba9aa745798d35c22a99bdd64db723850914300c64826be76ae`;
+the post-fix Arduino archive has
+`b09fc58b3f09094cf332702613b6d52133462d4cdbc7b8014ac073a568a35d28`.
+Both clean tests-OFF consumers compile/link/run outside the checkout with used
+header provenance checked and maintainer tools absent from their child PATHs.
+Firmware identity honestly remains unknown in archives. These exact archives
+precede final reporting prose; final package/link checks below cover that prose.
+
+The historical remote checkpoint remains run40782369910 / 14 jobs PASS at
+`c50f8ddda8809425ede2161586466c95fa650ae6`. Its eight images, Linux host/sanitizer
+and original archive results prove that revision only. No new remote checkpoint
+was requested, and missing local 6.1 tools were not masked by that earlier PASS.
+
+Final reporting checks:
+
+```text
+python tools/check_doxygen.py
+scripts/pio.cmd pkg pack . --output build/p38-handoff/TUSB32x.tar.gz
+python tools/check_package.py --archive build/p38-handoff/TUSB32x.tar.gz --out build/p38-handoff/check
+```
+
+All PASS. Doxygen checked 36 C++ inputs, real HTML/XML public visibility and
+helper comments (`build/doxygen-check/run-fato0fx5`). The final archive has
+77 source-equal members and 210 valid package links; the renamed tests-OFF
+consumer compiled, linked and ran. Its SHA-256 is
+`931c71d7a5cd819d0afa4084854d5a927f342235772cb87c966dc7644d81f2e5`.
+`build/p38-handoff/check/package-report.json` and `verification.json` retain
+source equality and consumer evidence. All compilation inputs match the selected
+current image builds above; only reporting prose differs between these archives.
+Reused the maintained Markdown parser for repository targets/fragments and
+checked changed-file UTF-8/LF/whitespace plus `git diff --check`. No package,
+firmware or physical claim is inferred solely from those text checks.

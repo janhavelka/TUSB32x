@@ -49,6 +49,22 @@ char input[64];
 size_t inputSize = 0;
 size_t inputOffset = 0;
 std::atomic<bool> stopRequested{false};
+tusb32x_cli::AdapterCounters primaryCounters{true, 0, 0};
+
+/// @brief Count each primary write callback, including rejection, preserving borrowed context and status.
+t::Status primaryWrite(uint8_t address, const uint8_t* data, size_t length,
+                       uint32_t timeoutMs, void* user) {
+  if (primaryCounters.writes != UINT32_MAX) ++primaryCounters.writes;
+  return write(address, data, length, timeoutMs, user);
+}
+/// @brief Count a combined callback once; its pointer transmit is not a data-write callback.
+t::Status primaryWriteRead(uint8_t address, const uint8_t* txData, size_t txLength,
+                           uint8_t* rxData, size_t rxLength, uint32_t timeoutMs, void* user) {
+  if (primaryCounters.writeReads != UINT32_MAX) ++primaryCounters.writeReads;
+  return writeRead(address, txData, txLength, rxData, rxLength, timeoutMs, user);
+}
+/// @brief Copy owner-serialized primary callback attempts, independent of SDK call and byte totals.
+tusb32x_cli::AdapterCounters callbackCounters(void*) { return primaryCounters; }
 
 /// @brief The only UART transmitter; SDK mutex is uncontended under this application's ownership.
 size_t consoleWrite(const char* data, size_t length, void*) {
@@ -79,8 +95,8 @@ t::DriverConfig configuration() {
   t::DriverConfig config;
   config.variant = BoardConfig::variant;
   config.address = static_cast<t::DeviceAddress>(BoardConfig::address);
-  config.i2cWrite = write;
-  config.i2cWriteRead = writeRead;
+  config.i2cWrite = primaryWrite;
+  config.i2cWriteRead = primaryWriteRead;
   config.i2cUser = &context;
   config.i2cTimeoutMs = BoardConfig::callbackMs;
   return config;
@@ -90,6 +106,7 @@ tusb32x_cli::Platform platform() {
   tusb32x_cli::Platform result;
   result.nowMs = nowMs;
   result.write = consoleWrite;
+  result.counters = callbackCounters;
   if (BoardConfig::irq >= 0) result.readInput = readInput;
   result.validateTarget = validateTarget;
   result.identity.git = TUSB32X_BUILD_GIT;
@@ -104,8 +121,6 @@ tusb32x_cli::Platform platform() {
   result.sdaPin = BoardConfig::sda;
   result.sclPin = BoardConfig::scl;
   result.irqPin = BoardConfig::irq;
-  // Native transmit/receive call totals are different units from callback kinds;
-  // do not mislabel them as the optional CLI adapter callback counters.
   return result;
 }
 tusb32x_cli::Cli processor(primary, configuration(), platform());

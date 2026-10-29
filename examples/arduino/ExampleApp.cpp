@@ -49,11 +49,16 @@ bool stopping = false;
 bool cliReady = false;
 bool irqAttached = false;
 bool primaryInputConfigured = false;
+bool inputFailed = false;
 int heldInput = -1;
+// Both pinned CDC classes create this queue before the first application read.
+// S2 starts CDC before setup(); never resize its live queue or add another reader.
+constexpr int USB_RX_CAPACITY = 256;
 uint64_t startedAt = 0;
 uint64_t primaryReport = 0;
 uint64_t secondaryReport = 0;
 std::atomic<bool> stopRequested{false};
+tusb32x_cli::AdapterCounters primaryCounters{true, 0, 0};
 portMUX_TYPE irqMux = portMUX_INITIALIZER_UNLOCKED;
 volatile bool irqSignalled = false;
 
@@ -67,6 +72,20 @@ bool inputLevel(bool& value, void*) {
   value = digitalRead(BoardConfig::irq) != LOW;
   return true;
 }
+/// @brief Count each primary write callback, including rejection, without changing its borrowed context.
+t::Status primaryWrite(uint8_t address, const uint8_t* data, size_t length,
+                       uint32_t timeoutMs, void* user) {
+  if (primaryCounters.writes != UINT32_MAX) ++primaryCounters.writes;
+  return write(address, data, length, timeoutMs, user);
+}
+/// @brief Count one combined primary callback; its pointer phase is not a data-write callback.
+t::Status primaryWriteRead(uint8_t address, const uint8_t* txData, size_t txLength,
+                           uint8_t* rxData, size_t rxLength, uint32_t timeoutMs, void* user) {
+  if (primaryCounters.writeReads != UINT32_MAX) ++primaryCounters.writeReads;
+  return writeRead(address, txData, txLength, rxData, rxLength, timeoutMs, user);
+}
+/// @brief Copy owner-serialized primary callback counts; exclude setup and secondary-device traffic.
+tusb32x_cli::AdapterCounters callbackCounters(void*) { return primaryCounters; }
 /// @brief Reject unprepared targets and the secondary owner's physical device without I2C.
 t::Status validateTarget(const t::DriverConfig& config, void*) {
   if (!ownsWire || config.variant != BoardConfig::variant ||
@@ -75,12 +94,12 @@ t::Status validateTarget(const t::DriverConfig& config, void*) {
   return validateContext(context);
 }
 /// @brief Build one borrowed terminal callback configuration for the selected physical target.
-t::DriverConfig driverConfig(t::Variant variant, uint8_t address) {
+t::DriverConfig driverConfig(t::Variant variant, uint8_t address, bool primaryTarget) {
   t::DriverConfig config;
   config.variant = variant;
   config.address = static_cast<t::DeviceAddress>(address);
-  config.i2cWrite = write;
-  config.i2cWriteRead = writeRead;
+  config.i2cWrite = primaryTarget ? primaryWrite : write;
+  config.i2cWriteRead = primaryTarget ? primaryWriteRead : writeRead;
   config.i2cUser = &context;
   config.i2cTimeoutMs = BoardConfig::callbackMs;
   return config;
@@ -91,6 +110,7 @@ tusb32x_cli::Platform platform() {
   value.nowMs = ownerTime;
   value.write = queueOutput;
   value.readInput = inputLevel;
+  value.counters = callbackCounters;
   value.validateTarget = validateTarget;
   value.identity.git = TUSB32X_BUILD_GIT;
   value.identity.tree = TUSB32X_BUILD_TREE;
@@ -106,7 +126,7 @@ tusb32x_cli::Platform platform() {
   value.irqPin = BoardConfig::irq;
   return value;
 }
-tusb32x_cli::Cli processor(primary, driverConfig(BoardConfig::variant, BoardConfig::address), platform());
+tusb32x_cli::Cli processor(primary, driverConfig(BoardConfig::variant, BoardConfig::address, true), platform());
 
 /// @brief Append a complete bounded application record to the same ordered CLI output queue.
 void appRecord(const char* format, ...) {
@@ -117,6 +137,25 @@ void appRecord(const char* format, ...) {
   va_end(arguments);
   if (length > 0 && static_cast<size_t>(length) < sizeof(record))
     processor.enqueueApplicationRecord(record, static_cast<size_t>(length));
+}
+/// @brief Stop input permanently when USB queue loss cannot be excluded; existing work keeps running.
+void failInput(const char* reason) {
+  if (!inputFailed) appRecord("APP console=input_failed reason=%s commands=disabled\n", reason);
+  inputFailed = true;
+  heldInput = -1;
+}
+/// @brief Check the fixed SDK RX queue around each single-byte removal without flushing it.
+/// @details Wire work can let USB fill the queue. HWCDC.cpp:233 drops a packet suffix
+/// without an overflow event; USBCDC.cpp:305 reports loss asynchronously. A full
+/// queue is therefore unsafe even without a reported drop. If the ISR fills it
+/// between the precheck and read, our sole consumer removes exactly one byte:
+/// the postcheck must reject capacity minus one before feeding that byte.
+int inputAvailable(bool afterRead = false) {
+  if (inputFailed) return -1;
+  const int count = Serial.available();
+  if (count < 0) failInput("usb_rx_unavailable");
+  else if (count >= USB_RX_CAPACITY - (afterRead ? 1 : 0)) failInput("usb_rx_capacity");
+  return inputFailed ? -1 : count;
 }
 /// @brief Only the worker enters USB transmit code; an SDK lock cannot block owner progress.
 size_t usbWrite(const char* data, size_t length, void*) {
@@ -278,8 +317,8 @@ void setupExample(bool useTwoDevices) {
     appRecord("APP setup=diagnostic_only reason=unqualified_board_or_timing_or_pins\n");
     return;
   }
-  const auto first = driverConfig(BoardConfig::variant, BoardConfig::address);
-  const auto second = driverConfig(BoardConfig::secondVariant, BoardConfig::secondAddress);
+  const auto first = driverConfig(BoardConfig::variant, BoardConfig::address, true);
+  const auto second = driverConfig(BoardConfig::secondVariant, BoardConfig::secondAddress, false);
   if (!t::validateDriverConfig(first).ok() || (twoDevices &&
       (!t::validateDriverConfig(second).ok() || BoardConfig::address == BoardConfig::secondAddress))) {
     appRecord("APP setup=diagnostic_only reason=invalid_or_duplicate_target\n");
@@ -354,10 +393,13 @@ void loopExample() {
       // No CLI command was admitted: tick only drains here, never polls the startup token.
     } else {
       for (size_t count = 0; count < tusb32x_cli::ConsoleBuffer::INPUT_BUDGET; ++count) {
+        const int available = inputAvailable();
+        if (available < 0) break; // Also checks a byte retained by CLI backpressure.
         if (heldInput < 0) {
-          if (Serial.available() <= 0) break;
+          if (available == 0) break;
           heldInput = Serial.read();
-          if (heldInput < 0) break;
+          if (inputAvailable(true) < 0) break;
+          if (heldInput < 0) { failInput("usb_rx_unavailable"); break; }
         }
         const char byte = static_cast<char>(heldInput);
         if (processor.feed(&byte, 1) == 0) break;

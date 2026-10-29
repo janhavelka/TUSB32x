@@ -123,3 +123,90 @@ changed. No new adapter/CLI defect was found. Prompt38 retains the full integrat
 distribution, SDK and final handoff review. No remote CI was dispatched or queried;
 the earlier 14-job PASS belongs only to c50f8ddda8809425ede2161586466c95fa650ae6 /
 run40782369910. Physical fixture, flash, serial and HIL checks are NOT RUN.
+
+## Integration and distribution review — prompt 38, 2026-10-29
+
+Started clean at `e12ecb74c2a6870665709233cbfaaa5549a804e5` on the same
+execution branch, with fetched upstream equality. The prompt 37 core review and
+its corrections remain intact. Two fresh-context gpt-6.1-sol/high reviewers
+examined CLI/session/runner integration and distribution/documentation; a separate
+gpt-6-astra/high reviewer examined SDK deadlines, application lifetimes and board
+evidence. All scopes started read-only. The lead verified findings against source
+and assigned disjoint fixes; Arduino file ownership transferred sequentially
+between the counter and receive-loss corrections. Siblings remained read-only.
+
+### Findings and disposition
+
+| Severity | File/symbol | Reproduction/evidence | Fix | Regression | Remaining limit |
+| --- | --- | --- | --- | --- | --- |
+| Medium, integration | Both ExampleApp.cpp platform/configuration callbacks; tusb32x_hil_plans.py bus | Both frontends omitted Platform.counters; run_plan unconditionally blocked readonly/soak before init when adapter_available was zero. A documented optional CLI field did not satisfy prompt 29's usable observation plans | Count primary write/write-read invocations in private application wrappers and supply cached counters; preserve arguments, context, timeout and status | Actual Arduino/native application startup fixtures check BUS availability, pointer-read versus data-write, failed attempts, end/bind persistence and saturation; Arduino additionally excludes secondary/prewarm traffic | Counts prove callback kinds for the selected primary target, not physical transactions or an entirely read-only shared bus; board/session gates still apply |
+| High, command integrity | Arduino ExampleApp.cpp input loop | Pinned HWCDC drops packet suffixes when its RX queue fills; USBCDC also drops on queue exhaustion. Unbounded fake input missed a valid command prefix surviving dropped junk and later receiving a newline | Fence new input permanently on suspected queue loss, while existing operations and output continue; check capacity before and immediately after each dequeue | Actual application rx-overflow and rx-overflow-after-read cases model bounded SDK input, dropped suffixes and concurrent fill; no reconstructed reset/write and admitted work remains owned | Conservative full-queue rejection; sole reader and audited fixed SDK capacity required. No physical USB/reconnect qualification |
+| Low, documentation | Progress status/authorization, development introduction, design-decisions and test README | Prompt 37 still said NOT STARTED in the top ledger; live package/test counts and incomplete-library wording lagged implemented evidence | Reconcile the current ledger, development status, 77-file package and current test inventory; retain dated historical counts | Version/manifest, link, documentation and actual registration checks | Development version is unchanged; no release/tag publication |
+
+The counter wrappers are direct calls, not another transport path or scheduler.
+The core, register composer, adapter framing and SDK timeout algorithms did not
+change. The runner still blocks unavailable/saturated counters and retains its
+foreign-result, identity, loss and cleanup checks.
+
+The USB finding was checked against the installed pinned SDK and official
+[HWCDC.cpp 3.3.11](https://github.com/espressif/arduino-esp32/blob/3.3.11/cores/esp32/HWCDC.cpp)
+receive ISR and
+[USBCDC.cpp 3.3.11](https://github.com/espressif/arduino-esp32/blob/3.3.11/cores/esp32/USBCDC.cpp)
+`_onRX`. Both establish a default 256-byte queue. S2 CDC-on-boot can begin before
+application setup, so resizing a live queue was rejected. A capacity-minus-one
+post-read check catches a producer filling the queue between the precheck and
+the sole consumer's dequeue. This is software evidence, not a measured USB trace.
+
+### Requirement and source review
+
+| Prompts / concern | Reviewed outputs and executable evidence |
+| --- | --- |
+| 20–22 grammar, effects, bounded records | Shared Cli/ConsoleBuffer, command table and real cli_host; hostile grammar, full queues, result response reservation before take, manual-step replacement, cached/staged/live semantics and aliases remain covered |
+| 23–26 framework integration | Actual Wire/native adapters and application fixtures; borrowed handles, address/configuration denial, same-core ownership, synchronous terminal buffers, shared nonblocking gate, coarse/expired budgets, retirement and no automatic recovery; changed application counters and Arduino RX fence tested separately |
+| 27–29 ordinary owner and sessions | Renamed public consumer and allocation sentinels; persistent CLI transcript and fake serial test older completion after newer query, stale/duplicate/reboot/loss records, full-width detail, finite deadlines, primary outcome and exact owned take |
+| 30–31 explicit fixtures and cleanup | Existing runner guards preserve unknown/incomplete verdicts, durable base recovery prerequisite across sessions, output artifacts, no foreign result consumption and conditional restoration; no hidden reset/current-refresh policy |
+| 32 package | Matching literal PlatformIO/IDF allowlists; bounded safe extraction rejects Windows aliases, traversal, duplicate/case collisions and links; real renamed tests-OFF consumers and compiler dependency provenance; no checkout/sibling/maintainer-tool dependency |
+| 33–34 checks and CI | Actual finite, disjoint CTest inventory; Release assertions and negative guards; current workflow source inspected only. Prior remote result remains attached to its original tested SHA |
+| 35–36 documentation and visibility | Public XML/HTML visibility and missing-comment negative fixtures, generated version boundaries, packaged links and source API/CLI/feature mapping; live drift corrected without rewriting historical results |
+
+Fresh clean peer references: TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9`,
+24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e`,
+LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24`,
+INA228 `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b`,
+INA3221 `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` and
+OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200`.
+Reopened common CLI/output, adapters, finite runners, package/version tools,
+component CMake, tests and workflow sources. Retain strict grammar, bounded
+records, terminal evidence and renamed consumers. Reject bulk firmware schedulers,
+blind restoration, fixed component-directory assumptions, enclosing Git identity
+and source-only dependency provenance. Exact example/runner paths remain in the
+CLI contract and dated peer audit records; the prompt 37 inventory remains current.
+
+Board guidance was compared again with CHIP_EVIDENCE and exact TI B/L/A/V tables:
+seven-bit 0x60/0x61 versus 0x47/0x67, explicit pointer/STOP framing and 400 kHz
+maximum; exact supply/straps/enable readiness; LAI/HAI 2.7–5.0 V and local 3 A
+advertisement at least 3.5 V; 322I 4.5–5.5 V, separate VBUS_DET requirement and
+5 V VDD prerequisite for autonomous VCONN. The 225/300/375 mA VCONN limit and
+CC microamp signaling remain distinct from VBUS load. No physical interpretation,
+startup wording conflict, current-refresh requirement or closed silicon gate was
+relaxed to obtain passing software evidence.
+
+Final commands, image provenance, local tool limitations and the supported
+software/hardware evidence matrix are recorded in the prompt 38 validation entry.
+
+### Final support and qualification handoff
+
+| Delivered scope | Evidence and limit |
+| --- | --- |
+| Six named TUSB320 variants, primary LAI | Portable C++17 core and explicit variant gates; external transport/time/ownership, retained results/effects, profile/reset/recovery/port/IRQ/raw/health behavior. Host software evidence, not exact-part physical qualification |
+| Partial TUSB322I | Separate identity, read observations, qualified DFP/UFP and reset; advertisement/all 09 writes and direct apply-to-DRP remain unavailable. No invented fault-clear transaction or VCONN application policy |
+| CLI, examples and Python plans | One shared 55-row CLI, ordinary simulated C++ owner, Arduino basic/two-device owner, native-IDF application, bounded observation/fixture runners. Primary callback proof now available; RX loss cannot authorize reconstructed commands |
+| Host/package/local firmware | All 74 Windows registrations covered in Debug/Release by current scoped runs; Doxygen, clean archive consumers, four current Arduino images and two current IDF 5.5.5 images PASS. Exact commands, inputs and artifacts in [final validation](validation.md#prompt-38-final-integration-and-distribution-review) |
+| IDF 6.1 and other unavailable local tools | New S2/S3 image checks BLOCKED by the missing local SDK. Prior 6.1/Linux sanitizer CI evidence retains the earlier tested SHA; it is not final-commit proof |
+| Hardware and release | Flash, serial/HIL, electrical and board scheduling qualification NOT RUN. No release/tag/registry publication. Source gates and application board prerequisites remain mandatory |
+
+No locally reproduced implementation defect remains open. Promptset software
+implementation and reviews are finished; the missing local SDK and physical
+qualification prevent a claim that every final framework image or board has been
+validated. Final commit/sync equality is reported in the handoff. Historical remote
+PASS remains run40782369910 at c50f8ddda8809425ede2161586466c95fa650ae6 only.

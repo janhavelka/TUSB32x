@@ -4,7 +4,7 @@
 local release checks. It owns the Debug/Release CTest runs and extracted firmware
 links; focused `--checks native,contracts,python` selects only those groups.
 The [validation guide](../docs/validation.md#local-validation-entry-point) lists
-tools, exits and evidence paths. All 72 Windows registrations (71 elsewhere)
+tools, exits and evidence paths. All 74 Windows registrations (73 elsewhere)
 have finite timeouts and exactly one validation owner. Compile-only header
 fixtures remain build evidence. HIL is never selected by this command.
 
@@ -500,7 +500,7 @@ Neither fake tests nor linked images prove physical timing or a qualified board.
 
 ## Native IDF application checks
 
-The complete matrix now registers 63 tests on Windows (62 elsewhere). Twenty-eight
+The complete matrix registers 74 tests on Windows (73 elsewhere). Twenty-eight
 application scenarios compile and execute the actual native lifecycle, core,
 adapter, shared CLI and startup owner through recording SDK boundaries. They
 cover default/qualified setup, absent/configured/failed IRQ, owned versus borrowed

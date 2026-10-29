@@ -4,7 +4,7 @@ Execution started: 2026-10-23 (Europe/Prague).
 Branch: `promptset/tusb32x-implementation-20261023`.
 Base: `ca0cfe9fa9471a2bf327a6957c60ebd5b2c86b35` (main and origin/main equal after fetch).
 Keep this branch for this entire execution, including resumed sessions.
-Current authorization: independently re-audit completed prompts 35 and 36.
+Current authorization: complete prompt 38 integration/distribution review and final handoff.
 
 ## Prompt status
 
@@ -46,8 +46,8 @@ Current authorization: independently re-audit completed prompts 35 and 36.
 | [34: ci-matrix](prompts/34-ci-matrix.md) | COMPLETE (14 CI jobs; eight extracted images; hardware NOT RUN) |
 | [35: user-documentation](prompts/35-user-documentation.md) | COMPLETE (local guides/snippets/package checks; physical qualification separate) |
 | [36: source-maintainer-docs](prompts/36-source-maintainer-docs.md) | COMPLETE (source/API visibility and maintainer checks; hardware separate) |
-| [37: final-core-review](prompts/37-final-core-review.md) | NOT STARTED |
-| [38: final-integration-review](prompts/38-final-integration-review.md) | NOT STARTED |
+| [37: final-core-review](prompts/37-final-core-review.md) | COMPLETE (e12ecb7; independent review and local checks; hardware separate) |
+| [38: final-integration-review](prompts/38-final-integration-review.md) | COMPLETE (review/fixes and available local matrix; new IDF 6.1 links BLOCKED by missing SDK; hardware NOT RUN) |
 
 ## Prompt 1 execution record
 
@@ -3011,3 +3011,47 @@ retains integration/distribution/final handoff. Hardware, flash/serial/HIL and
 new remote CI are NOT RUN. Prior remote PASS remains attached only to c50f8dd /
 run40782369910. The lead commits/syncs the checked review on the same branch and
 reports final equality in the handoff, without a self-referencing hash loop.
+
+## Prompt 38 ? final integration/distribution review (2026-10-29)
+
+Resumed clean at prompt 37 commit `e12ecb74c2a6870665709233cbfaaa5549a804e5`;
+fetch verified the same execution branch and upstream equality. Prerequisites
+1?37 were complete. Separate gpt-6.1-sol/high CLI/session and distribution/docs
+reviewers plus gpt-6-astra/high adapter/lifetime review began read-only. Refreshed
+peer paths/revisions and findings are in [final audit](final-audit.md).
+
+Closed two independently reproduced integration gaps. Both frontends now expose
+primary-target callback-kind counters required by readonly/soak plans, without
+substituting SDK calls or physical transaction totals. Arduino now fences input
+when its audited USB RX queue may have dropped bytes; an invalid suffix can no
+longer disappear and turn a retained prefix into a reset command. Existing work,
+results and output continue. The lead checked actual SDK loss paths and source
+changes. Disjoint source ownership transferred sequentially between agents;
+no sibling changes, new scheduler, transport/composer, retry or protocol API.
+
+Real application cases cover counter scope, failures, saturation, end/bind,
+prewarming/secondary exclusion and the RX dequeue race. RX cases failed before
+the correction (five and four assertions, including unintended reset/write), then
+passed. Registered two finite scenarios; validator/CI count checks now enforce
+74 Windows tests / 73 elsewhere. Corrected live docs and the top progress ledger;
+dated evidence stays intact. The independent final diff reviewer found no further
+executable defect after the fixes.
+
+[Final validation](validation.md#prompt-38-final-integration-and-distribution-review)
+combines 63 fresh native/contract/documentation tests per Debug/Release with the
+11 Python/package tests per configuration and the affected validator rerun. Four
+current extracted Arduino images and two native IDF 5.5.5 images pass; each has
+11 source files and checked compiler dependency/artifact provenance. Native
+sources were byte-equal to their earlier extraction after the independent Arduino
+fix, so those images were reused without an identical rebuild. Final packaged
+prose is checked separately against the same compilation inputs.
+
+All locally reproduced implementation defects are closed. A new IDF 6.1 S2/S3
+link remains BLOCKED: this Windows environment has SDK 5.5.5 only, no Docker and
+no installed WSL. No new 6.1 binary qualification is claimed. The existing 14-job
+CI PASS belongs only to `c50f8ddda8809425ede2161586466c95fa650ae6`, run40782369910.
+No remote job/status request, release/tag, hardware access or flash occurred.
+The development version remains 0.1.0-dev.1; silicon gates and exact-board
+qualification remain visible. Promptset implementation/reviews are finished
+with these explicit validation limits. Final commit/sync equality is reported
+in the handoff, without a self-referencing hash update.

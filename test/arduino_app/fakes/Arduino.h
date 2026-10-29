@@ -10,8 +10,11 @@
 #define FALLING 2
 /// @brief Host serial queues; all operations return immediately.
 struct RecordingSerial {
+  static constexpr std::size_t RX_CAPACITY = 256;
   std::string input;
   std::string output;
+  std::string arrivalBeforeRead;
+  std::size_t droppedInput = 0;
   bool connected = true;
   bool stalled = false;
   unsigned beginCalls = 0;
@@ -20,7 +23,18 @@ struct RecordingSerial {
   void enableReboot(bool) {}
   explicit operator bool() const { return connected; }
   int available() const { return static_cast<int>(input.size()); }
+  /// @brief Model the pinned SDK queue retaining its prefix and dropping the packet suffix.
+  void receive(const std::string& bytes) {
+    const std::size_t room = RX_CAPACITY - input.size();
+    const std::size_t accepted = bytes.size() < room ? bytes.size() : room;
+    input.append(bytes.data(), accepted);
+    droppedInput += bytes.size() - accepted;
+  }
   int read() {
+    if (!arrivalBeforeRead.empty()) {
+      receive(arrivalBeforeRead);
+      arrivalBeforeRead.clear();
+    }
     if (input.empty()) return -1;
     const unsigned char byte = static_cast<unsigned char>(input.front());
     input.erase(0, 1);

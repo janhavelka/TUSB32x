@@ -133,7 +133,7 @@ foreach(app IN ITEMS owner usb_sda usb_irq)
   endif()
   if(app STREQUAL "owner")
     foreach(scenario IN ITEMS startup startup-failure begin-failure preparation-failure
-        cleanup-failure end-failure existing-bus shutdown)
+        cleanup-failure end-failure existing-bus shutdown rx-overflow rx-overflow-after-read)
       add_test(NAME tusb32x_arduino_app_${scenario} COMMAND ${app_suite} ${scenario})
       set_tests_properties(tusb32x_arduino_app_${scenario} PROPERTIES TIMEOUT 30)
     endforeach()

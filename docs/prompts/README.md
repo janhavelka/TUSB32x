@@ -30,6 +30,13 @@ including extracted Arduino/native-IDF image links. Prompt33 adds the explicit
 local validation entry point, disjoint registrations and real checker failure
 fixtures. These software checks do not imply physical fixture qualification.
 
+Prompts 34–38 completed the CI checkpoint, maintained documentation and independent
+core/integration reviews. The [final audit](../final-audit.md) records fixes,
+current local verification and remaining qualification limits. The development
+version is unchanged; the final local IDF 6.1 image rebuild is BLOCKED by the
+missing SDK and physical testing remains NOT RUN. Prior CI evidence stays tied
+to its recorded tested commit, rather than the final reporting commit.
+
 The [scope audit](../audit/promptset-scope-review.md) explains the split from the
 original fifteen stages and maps their requirements to the new units. The split
 follows dependencies and independently testable outcomes, not equal text lengths.

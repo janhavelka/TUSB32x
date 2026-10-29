@@ -23,9 +23,10 @@ After startup, `version`, `bus`, `sample`, `cfg` and `diag` inspect evidence.
 explicitly `result take <token>` before starting another job. Commands that write
 the device remain explicit; read the [CLI reference](../../docs/CLI.md).
 
-The Python runner's complete `readonly` and `soak` plans report BLOCKED because
-this front end does not supply optional adapter callback-kind counters. Individual
-CLI observations remain available; see the
+The Python runner's `readonly` and `soak` plans use this front end's saturating
+primary-target callback-kind counters to check for data writes. Setup prewarming
+is excluded; no physical transaction counts are inferred. Qualified hardware
+and matching firmware/session evidence are still required; see the
 [runner guide](../../docs/hil-runner.md#readonly-soak-and-register-observation).
 
 The shared [application implementation](../arduino/ExampleApp.cpp) owns setup,

@@ -8,6 +8,11 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Closed final integration gaps: Arduino/native-IDF examples now expose primary
+  callback-kind evidence for readonly/soak plans, and Arduino rejects further
+  commands after suspected USB receive loss while existing owner work continues.
+  Added application regressions and reconciled final review/package records.
+
 - Completed independent core review with fresh protocol/owner/portability checks;
   corrected stale peer inventory and validator naming in the conformance matrix.
   No executable core change was needed. Integration/distribution review and
@@ -99,7 +104,7 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 - Aligned maintainer commands, delegation and release guidance with existing
   validation, documentation and version tools. Expanded Python input/deadline/
   artifact/exit contracts without changing executable behavior or package version.
-- Kept unresolved TUSB322I access and board evidence limits explicit. Complete
-  Arduino/native-IDF readonly/soak proof remains blocked by unavailable optional
-  callback-kind counters. Physical serial, I2C/CC/INT, supply and timing
+- Kept unresolved TUSB322I access and board evidence limits explicit. Primary
+  callback-kind evidence supports Arduino/native-IDF readonly/soak checks without
+  claiming physical transactions. Physical serial, I2C/CC/INT, supply and timing
   qualification is not established by models, linked images or CI.

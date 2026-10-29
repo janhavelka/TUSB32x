@@ -43,8 +43,8 @@ ctest --test-dir build/native -C Debug --output-on-failure
 
 Repeat affected checks in a separate Release directory, selecting Release at
 configure/build/test time. Strict warnings are private to library/test targets;
-runtime checks and assertions stay active in Release. All 72 Windows CTests
-(71 elsewhere) have finite timeouts and one validation owner. Independent
+runtime checks and assertions stay active in Release. All 74 Windows CTests
+(73 elsewhere) have finite timeouts and one validation owner. Independent
 header/signature compilation is build evidence, not a passing behavioral test.
 Tests ON require Python 3.10+; the mailbox fixture also uses host threads.
 

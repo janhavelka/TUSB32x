@@ -146,12 +146,12 @@ the owner establishes stable VDD and source-startup need. Later parts reject it.
 as Arduino. An example-only CMake target regenerates Git/dirty/UTC/target identity
 on every build, including an incremental rebuild after source edits. Archives
 outside their own Git root report unknown; an unrelated parent repository is
-never borrowed. Native transmit/receive SDK totals are not mislabeled as adapter
-callback-kind counters: optional adapter counts remain unknown, while core
-all-callback and managed statistics are available through existing commands.
-The Python runner's complete readonly/soak plans require those optional counts
-to prove no data-write callbacks, so they report BLOCKED on this front end.
-Individual CLI observation and owned-result commands remain available under
+never borrowed. Saturating primary-target callback-kind counters count write
+and write-read invocations, including rejected and failed callbacks. A pointer
+phase within write-read is not a data-write callback; SDK transmit/receive totals
+remain separate. The Python readonly/soak plans use these counts to prove no
+data-write callbacks, subject to board and session prerequisites. Core all-callback
+and managed statistics remain available through existing commands under
 the [single CLI reference](../../../docs/CLI.md).
 
 Application `requestStop()` or TUSB32X_RUN_MS stops command admission, cancels and

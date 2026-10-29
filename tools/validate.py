@@ -60,7 +60,8 @@ if os.name == "nt":
     REQUIRED_TESTS["python"].add("tusb32x_pio_launcher")
 REQUIRED_TESTS["native"].update("tusb32x_arduino_app_" + scenario for scenario in (
     "startup", "startup-failure", "begin-failure", "preparation-failure", "cleanup-failure",
-    "end-failure", "existing-bus", "shutdown", "usb_sda", "usb_irq"))
+    "end-failure", "existing-bus", "shutdown", "usb_sda", "usb_irq",
+    "rx-overflow", "rx-overflow-after-read"))
 REQUIRED_TESTS["native"].update("tusb32x_idf_app_" + scenario for scenario in (
     "startup", "startup-failure", "shutdown-active", "shutdown-startup", "backpressure",
     "bus-failure", "device-failure", "uart-config-failure", "uart-pin-failure",

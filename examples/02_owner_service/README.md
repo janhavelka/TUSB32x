@@ -32,9 +32,10 @@ The static USB worker remains alive, so a stalled host cannot delay bus teardown
 See the shared [implementation](../arduino/ExampleApp.cpp) and
 [portable owner helper](../common/ExampleOwner.h).
 
-The Python runner's complete `readonly` and `soak` plans report BLOCKED because
-this front end does not supply optional adapter callback-kind counters. Individual
-primary CLI observations remain available; see the
+The Python runner's `readonly` and `soak` plans check the primary target using
+saturating callback-kind counters. Secondary service and setup prewarming are
+excluded, so these counts do not certify the entire bus as read-only. Qualified
+hardware and matching firmware/session evidence are still required; see the
 [runner guide](../../docs/hil-runner.md#readonly-soak-and-register-observation).
 
 Build, flash, serial and physical IRQ/CC/VBUS evidence are separate. These

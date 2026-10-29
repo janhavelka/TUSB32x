@@ -366,6 +366,8 @@ int main(int argc, char** argv) {
         }
       }
       CHECK(sdk.writes == 0); // Startup never applies, resets, recovers or acknowledges IRQ.
+      CHECK(tusb32x_idf::callbackCounters(nullptr).writeReads ==
+            tusb32x_idf::primary.transportStats().totalAttempts); // Include failed callback attempts.
       sdk.stalled = false;
       drain();
       CHECK(command("version").find("TUSB VERSION") != std::string::npos);
@@ -377,6 +379,23 @@ int main(int argc, char** argv) {
         CHECK(!tusb32x_idf::primary.diagnostics().bound && sdk.transmits == 0);
       }
       if (scenario == "startup") {
+        const auto counters = tusb32x_idf::platform().counters(nullptr);
+        CHECK(counters.available && counters.writes == 0 && counters.writeReads > 0);
+        CHECK(counters.writeReads == tusb32x_idf::primary.transportStats().totalAttempts);
+        CHECK(command("bus").find("adapter_available=1 adapter_writes=0 adapter_write_reads=" +
+              std::to_string(counters.writeReads)) != std::string::npos);
+        const auto transmits = sdk.transmits;
+        CHECK(command("reg 8").find("code=OK") != std::string::npos);
+        CHECK(sdk.transmits == transmits + 1);
+        CHECK(tusb32x_idf::callbackCounters(nullptr).writes == 0);
+        CHECK(tusb32x_idf::callbackCounters(nullptr).writeReads == counters.writeReads + 1);
+        (void)command("end");
+        (void)command("bind");
+        CHECK(tusb32x_idf::callbackCounters(nullptr).writeReads == counters.writeReads + 1);
+        const uint8_t bytes[] = {8, 0};
+        CHECK(tusb32x_idf::primaryWrite(tusb32x_idf::BoardConfig::address, bytes,
+              sizeof(bytes), tusb32x_idf::BoardConfig::callbackMs, &tusb32x_idf::context).ok());
+        CHECK(tusb32x_idf::callbackCounters(nullptr).writes == 1 && sdk.writes == 1);
         const auto offset = sdk.output.size();
         sdk.txCapacity = 7; // Partial FIFO acceptance must preserve exact output suffixes.
         sdk.input = "version\nbus\nversion\n";
@@ -413,10 +432,13 @@ int main(int argc, char** argv) {
           CHECK(tusb32x_idf::primary.progress().state == TUSB32x::OperationState::ACTIVE);
         } else if (scenario == "raw-error") {
           sdk.txError = ESP_ERR_TIMEOUT;
+          const auto counts = tusb32x_idf::callbackCounters(nullptr);
           const auto output = command("reg 8");
           CHECK(output.find("code=I2C_TIMEOUT") != std::string::npos);
           CHECK(output.find("detail=263") != std::string::npos);
           CHECK(sdk.transmits == before + 1);
+          CHECK(tusb32x_idf::callbackCounters(nullptr).writeReads == counts.writeReads + 1);
+          CHECK(tusb32x_idf::callbackCounters(nullptr).writes == counts.writes);
         } else {
           (void)command("read");
           const auto progress = tusb32x_idf::primary.progress();
@@ -469,6 +491,21 @@ int main(int argc, char** argv) {
       CHECK(sdk.cleanup.size() >= 3 && sdk.cleanup[0] == 'd' && sdk.cleanup[1] == 'b');
     }
     CHECK(!sdk.cleanup.empty() && sdk.cleanup.back() == 'u');
+  }
+  if (scenario == "startup") {
+    const auto transmits = sdk.transmits;
+    const uint8_t bytes[] = {8, 0};
+    uint8_t received = 0xA5;
+    tusb32x_idf::primaryCounters.writes = UINT32_MAX - 1;
+    tusb32x_idf::primaryCounters.writeReads = UINT32_MAX - 1;
+    for (unsigned i = 0; i < 2; ++i) {
+      CHECK(tusb32x_idf::primaryWrite(0x47, bytes, 2, 10, nullptr).is(TUSB32x::Err::I2C_ERROR));
+      CHECK(tusb32x_idf::primaryWriteRead(0x47, bytes, 1, &received, 1, 10, nullptr)
+            .is(TUSB32x::Err::I2C_ERROR));
+    }
+    CHECK(tusb32x_idf::callbackCounters(nullptr).writes == UINT32_MAX);
+    CHECK(tusb32x_idf::callbackCounters(nullptr).writeReads == UINT32_MAX);
+    CHECK(received == 0xA5 && sdk.transmits == transmits);
   }
   std::printf("Native app %s: %u checks, %u failures\n", scenario.c_str(), checks, failures);
   return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

@@ -425,6 +425,13 @@ belong to that operation, not a prior ACK. JOB phase is coarse public progress,
 and ready_at_ms is meaningful only with ready_at_valid. No physical transaction
 or byte count is inferred from callback counts.
 
+Shipped Arduino/native-IDF BUS adapter counts cover only primary-target callback
+invocations, including failed/rejected ones. They saturate at UINT32_MAX and
+persist across end/bind; xfer_reset clears core totals only. Setup prewarming and
+Arduino secondary-owner traffic are excluded. Pointer selection within a combined
+read increments adapter_write_reads, not adapter_writes. These fields let the
+runner check for data-write callbacks without equating SDK calls with transactions.
+
 HELP is executable metadata for the advertised subset: canonical ID/aliases,
 topic, execution/effect, prerequisites/capability, record types, callback/TX/RX
 bounds and host fixture/test. Rows use CACHE_ONLY, PURE, CORE_JOB, RAW_I2C or
@@ -541,8 +548,8 @@ accepts a bounded prefix; the existing queue/loss accounting still owns records.
 
 Machine version/firmware/framework/protocol records use the same schemas as
 Arduino. Example-only Git/dirty/UTC/target identity regenerates on clean and
-incremental builds; unrelated enclosing Git identity stays unknown. Optional
-adapter counters remain unknown because native transmit/receive SDK totals are
-different units; core all-source/managed accounting remains available unchanged.
+incremental builds; unrelated enclosing Git identity stays unknown. Primary
+write/write-read callback counters are available separately from native SDK
+transmit/receive totals; core all-source/managed accounting remains unchanged.
 Shutdown preserves/reports CLI results and effects before releasing owned handles.
 No native command aliases, protocol implementation or hardware policy are added.

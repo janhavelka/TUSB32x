@@ -836,7 +836,7 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
 
 ## Safe distribution and renamed consumers
 
-- The trusted source manifests enumerate76literal files, independently checked
+- The trusted source manifests enumerate 77 literal files, independently checked
   against required shared/example inputs and forbidden build/evidence content.
   Archive manifest text cannot grant itself additional members. Core consumption
   uses add_subdirectory and targetTUSB32x with tests OFF; no install/export API.
@@ -885,3 +885,17 @@ See [audit findings](audit/review-23-25.md) and [adapter integration](idf-transp
   second source-checkout matrix. Installed SDK requirements are checked; the
   existing managed-IDF standalone constraint-cache waiver is explicit and saved.
   Linked images, host models and physical connector/serial evidence stay distinct.
+
+## Final integration review corrections
+
+- Primary example callback wrappers count saturating write/write-read attempts
+  without changing the callback contract, result or borrowed context. These
+  counters supply the runner's mandatory no-data-write evidence. Setup prewarming
+  and secondary-device service remain outside the selected primary target's
+  scope; SDK call and physical transaction counts remain separate.
+- The audited Arduino USB receive queues have fixed capacity 256. Under one
+  application reader, check saturation before dequeue and the capacity-minus-one
+  boundary after dequeue to catch an interrupt filling the queue between checks.
+  Suspected loss permanently closes command input, without cancelling existing
+  work or blocking output. Do not resize the live S2 CDC queue or infer a reliable
+  overflow notification from the S3 SDK, which can silently drop a packet suffix.
