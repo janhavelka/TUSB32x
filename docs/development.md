@@ -240,7 +240,7 @@ requires `python -m pip install PyYAML==6.0.3`, then
 are integrated into the registered `validate_runner` suite; suite ownership stays
 with the existing validator rather than a second discovery path.
 
-Thymos Solution s.r.o and maintainer Jan Havelka follow current sibling manifests
+THYMOS Solution s.r.o. and maintainer Jan Havelka follow current sibling manifests
 and MIT terms. CODEOWNERS uses the evidenced @janhavelka account from the current
 repository origin and peer ownership file. Vendor artifacts retain their
 separate original terms and are neither relicensed nor compiled/packaged as core.

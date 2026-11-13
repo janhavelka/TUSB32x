@@ -50,7 +50,7 @@ Short revisions below identify the full hashes in the execution inventory.
 | Documentation | LDC1614 Doxyfile; INA228 Doxyfile; TMP1x2 tools/check_doxygen.py | c0ab4c1 / b28c5ea / bafc340 | Missing public comments must fail and public API must remain visible | TMP EXTRACT_ALL=YES alone cannot establish comment coverage | Missing-comment and hidden-API negative fixtures in 33/36 |
 | Style/simplicity | INA228 formatting and LDC1614 source; TMP1x2 common code | b28c5ea / c0ab4c1 / bafc340 | Small direct helpers, fixed values, one transport path/composer/engine; useful Doxygen with behavior | Avoid inherited frameworks, compatibility aliases and private-helper boilerplate | Review each changed behavior; docs with code, not postponed |
 | CI/registration | TMP1x2 and 24Cxx CMakeLists.txt and .github/workflows/ci.yml | bafc340 / 936aa85 | Register real suites, preserve Release assertions; focused local checks, remote checkpoint only prompt 34 | Source review is not a green build; user CI-frequency override remains | Nonzero tests and declared matrix in 7/33/34 |
-| Maintenance/license | TMP1x2 and 24Cxx library.json/LICENSE; peer AGENTS | bafc340 / 936aa85 | Thymos Solution s.r.o / Jan Havelka metadata, MIT project code; preserve third-party notices | Use evidenced identity and existing TUSB32x remote; no copied vendor implementation | Metadata and license audit in 8/32/36 |
+| Maintenance/license | TMP1x2 and 24Cxx library.json/LICENSE; peer AGENTS | bafc340 / 936aa85 | THYMOS Solution s.r.o. / Jan Havelka metadata, MIT project code; preserve third-party notices | Use evidenced identity and existing TUSB32x remote; no copied vendor implementation | Metadata and license audit in 8/32/36 |
 | Release/Git | TMP1x2 and LDC1614 AGENTS and generators | bafc340 / c0ab4c1 | One execution branch; commit/sync each complete prompt; no release bump per prompt | Coherent reviewable units; release publication remains separate | Progress and upstream equality at each handoff |
 
 ## Platformization boundary
@@ -252,7 +252,7 @@ actual generators, guards, manifests, ownership, workflows and source revisions.
   introduced. Launcher tests compare real CRT argument bytes/status against
   direct invocation; missing installation fails explicitly. Formatting keeps
   current include order and adds no framework-first preference.
-- Preserve evidenced Thymos Solution s.r.o / Jan Havelka / MIT metadata and the
+- Preserve evidenced THYMOS Solution s.r.o. / Jan Havelka / MIT metadata and the
   current @janhavelka owner. Vendor terms and archived bytes remain untouched.
   Doxyfile has public inputs, fatal missing-documentation warnings and visible
   generated values; the complete omission checker remains prompt 33.

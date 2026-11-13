@@ -29,7 +29,7 @@ tests and docs must agree; raw backend detail does not replace a typed Status.
   Preserve useful transport detail and differentiate invalid input, unsupported
   feature, not bound, not initialized/trusted, busy, progress, cancelled, timeout,
   identity mismatch and terminal bus errors. Do not copy irrelevant sensor errors.
-- The dominant audited metadata uses Thymos Solution s.r.o, `info@thymos.cz`,
+- The dominant audited metadata uses THYMOS Solution s.r.o., `info@thymos.cz`,
   `https://www.thymos.cz`, and Jan Havelka as maintainer, with MIT for project
   code. Preserve that evidenced ownership. Do not invent a GitHub team, repository
   URL or contributor. Review actual CODEOWNERS validity for the chosen host;

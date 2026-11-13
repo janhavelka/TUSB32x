@@ -8,6 +8,8 @@ and [validation](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-im
 
 ## Unreleased
 
+- Unified author, copyright and contact metadata: THYMOS Solution s.r.o.,
+  Jan Havelka, info@thymos.cz.
 - Added repeatable fuzz tests with transfer, output, serial-session and archive
   faults. Registered them in native/Python checks and the existing Linux sanitizer
   job. Tests use existing tools and require no hardware or SDK installation.

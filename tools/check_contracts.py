@@ -163,9 +163,10 @@ def metadata_errors(root: Path) -> list[str]:
     if manifest.get("name") != "TUSB32x" or manifest.get("license") != "MIT":
         errors.append("library metadata name/license must be TUSB32x/MIT")
     expected_authors = [
-        {"name": "Thymos Solution s.r.o", "email": "info@thymos.cz",
+        {"name": "THYMOS Solution s.r.o.", "email": "info@thymos.cz",
          "url": "https://www.thymos.cz"},
-        {"name": "Jan Havelka", "maintainer": True},
+        {"name": "Jan Havelka", "email": "info@thymos.cz",
+         "url": "https://www.thymos.cz", "maintainer": True},
     ]
     if manifest.get("authors") != expected_authors:
         errors.append("library metadata authors/maintainer differ from maintained ownership")

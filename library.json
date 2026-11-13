@@ -4,8 +4,8 @@
   "description": "Portable C++17 TUSB32x owner lifecycle, profile application/verification, read-only reconciliation, explicit reset, original-device recovery, complete port observations and bounded interrupt service. Bounded raw diagnostics and passive health; example Arduino and native ESP-IDF adapters and applications for the audited S2/S3 configurations.",
   "keywords": ["tusb320", "tusb320lai", "tusb322i", "usb-type-c", "i2c"],
   "authors": [
-    {"name": "Thymos Solution s.r.o", "email": "info@thymos.cz", "url": "https://www.thymos.cz"},
-    {"name": "Jan Havelka", "maintainer": true}
+    {"name": "THYMOS Solution s.r.o.", "email": "info@thymos.cz", "url": "https://www.thymos.cz"},
+    {"name": "Jan Havelka", "email": "info@thymos.cz", "url": "https://www.thymos.cz", "maintainer": true}
   ],
   "license": "MIT",
   "repository": {"type": "git", "url": "https://github.com/janhavelka/TUSB32x.git"},

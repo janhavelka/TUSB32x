@@ -155,5 +155,5 @@ as source-only history. Current work follows
 [contribution guidance](https://github.com/janhavelka/TUSB32x/blob/promptset/tusb32x-implementation-20261023/CONTRIBUTING.md).
 
 Development version `0.1.0-dev.1` is not a release claim. Project code is MIT,
-owned by Thymos Solution s.r.o with Jan Havelka as maintainer. Archived vendor
+owned by THYMOS Solution s.r.o. with Jan Havelka as maintainer. Archived vendor
 references retain their own terms and are excluded from normal packages.
