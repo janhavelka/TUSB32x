@@ -162,6 +162,10 @@ def metadata_errors(root: Path) -> list[str]:
         return ["library.json must contain an object"]
     if manifest.get("name") != "TUSB32x" or manifest.get("license") != "MIT":
         errors.append("library metadata name/license must be TUSB32x/MIT")
+    if manifest.get("homepage") != "https://github.com/janhavelka/TUSB32x":
+        errors.append("library metadata homepage must be the TUSB32x GitHub repository page")
+    if manifest.get("repository") != {"type": "git", "url": "https://github.com/janhavelka/TUSB32x.git"}:
+        errors.append("library metadata repository must be the TUSB32x GitHub git URL")
     expected_authors = [
         {"name": "THYMOS Solution s.r.o.", "email": "info@thymos.cz",
          "url": "https://www.thymos.cz"},

@@ -9,6 +9,7 @@
   ],
   "license": "MIT",
   "repository": {"type": "git", "url": "https://github.com/janhavelka/TUSB32x.git"},
+  "homepage": "https://github.com/janhavelka/TUSB32x",
   "headers": [
     "TUSB32x/TUSB32x.h", "TUSB32x/Config.h", "TUSB32x/Status.h",
     "TUSB32x/CommandTable.h", "TUSB32x/Version.h"

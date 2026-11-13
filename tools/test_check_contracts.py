@@ -233,6 +233,12 @@ struct Owner { Owner(const Owner&) = delete; };
         self.reject("metadata name/license")
         self.reject("metadata authors/maintainer")
 
+    def test_metadata_homepage_and_repository_rejected(self):
+        """Require the GitHub page and git URL next to the company author URL."""
+        self.manifest(lambda data: data.update(homepage="https://www.thymos.cz", repository="x"))
+        self.reject("metadata homepage")
+        self.reject("metadata repository")
+
     def test_missing_public_header_metadata_rejected(self):
         """Require package header metadata to cover every real public header."""
         self.manifest(lambda data: data["headers"].pop())
