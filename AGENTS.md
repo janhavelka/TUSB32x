@@ -469,3 +469,9 @@ firmware images, with no physical qualification. See [validation](docs/validatio
 for artifacts and prior attempts. Retain that actual tested SHA during later
 prompts; reporting commits and later local checks do not extend its remote proof
 or create a new remote gate.
+
+## Commit and pull request attribution
+
+Credit human contributors for their work. Omit AI co-author trailers, AI-generated
+signatures or sign-offs, generated-by footers, session links, and other AI
+attribution from commit messages and pull request titles and descriptions.
