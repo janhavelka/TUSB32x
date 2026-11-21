@@ -16,7 +16,7 @@ HEAD. These are local repository observations; sibling remotes were not fetched.
 | --- | --- | --- |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | Explicit package/model, address and physical-pin capabilities |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | Reference provenance, exact geometry and archive/package boundaries |
-| LDC1614 | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` | Shared identity, configured capabilities and behavioral fake limits |
+| LDC161x | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` | Shared identity, configured capabilities and behavioral fake limits |
 
 Each sibling's AGENTS.md was re-read. All require framework-neutral core code,
 application-owned callbacks, preserved source licenses/hashes, honest hardware
@@ -76,7 +76,7 @@ rules are not imported: this execution's explicit prompt-34 policy governs.
   consumer, plus strict host, Arduino S2/S3 and native IDF matrix checks. Adopt
   the package guard and extracted-consumer evidence; no package was built here.
 
-### LDC1614
+### LDC161x
 
 - `include/LDC1614/Config.h`: `DeviceVariant` is explicit because silicon identity
   registers are shared; `validChannelMask` maps LDC1612 to `03`, LDC1614 to `0F`,

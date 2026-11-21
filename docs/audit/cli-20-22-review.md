@@ -23,7 +23,7 @@ sources and relevant AGENTS/build registrations were rechecked read-only.
 | TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `examples/common/ConsoleBuffer.h`, `test/cli/test_cli.cpp` malformed/control input, public CLI and CMake registration: retain bounded single output drain and whole-record loss; no watch/temperature/startup behavior. |
 | 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | `examples/common/ConsoleOutput.h`, `test/test_console/test_console.cpp`, `test/test_cli/test_cli.cpp`, `tools/test_cli_transcript.py`, CMake: retain executable persistent-process evidence; reject multiple backend calls per drain and EEPROM policy. |
 | SHT3x-main `f65f15573e3c9b1ef04cce72ad08f307d021e563` | `tools/sht3x_cli_contract.py` and shared dispatch: fixed aliases are useful; sensor commands and compatibility facades are outside this CLI. |
-| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `tools/ldc1614_cli_contract.py`, shared CLI command rows: retain execution/effect classification; reject profile-commit/init replay and blanket confirmation grammar. |
+| LDC161x `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `tools/ldc1614_cli_contract.py`, shared CLI command rows: retain execution/effect classification; reject profile-commit/init replay and blanket confirmation grammar. |
 | INA228 `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | `tools/run_i2c_hil.py` transfer budget/assertion cases: require exact observed callback deltas and source identity; no inference of physical transactions or sensor behavior. |
 
 The existing workflow definitions and registrations inspected in execution20-22

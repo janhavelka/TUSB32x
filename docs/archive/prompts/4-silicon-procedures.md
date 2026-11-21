@@ -8,7 +8,7 @@ the operation engine or qualify physical hardware.
 
 ## Focused re-audit
 
-Recheck current PCA9555 mixed-register handling, LDC1614 fake transport and
+Recheck current PCA9555 mixed-register handling, LDC161x fake transport and
 ADS1115 owner examples/tests; compare LSM6DS3TR timing/effect contracts. Inspect
 their relevant AGENTS, callbacks, tests and registration. Record current revisions,
 dirty state and exact accepted/rejected rules. Peers supply engineering patterns;

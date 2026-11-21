@@ -75,7 +75,7 @@ from API parameter names:
 - [Windows file naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file)
   establish reserved names, case behavior, streams and trailing-character hazards.
 
-Current read-only peer checks included LDC1614 (`c0ab4c1`), LSM6DS3TR (`513c564`),
+Current read-only peer checks included LDC161x (`c0ab4c1`), LSM6DS3TR (`513c564`),
 PCA9555, TMP1x2 and FieldCore-node (`154a4dc`). Their concrete implementation
 conventions informed the fixes; none was changed or treated as silicon authority.
 In particular, FieldCore's richer completion-time transport does not mean a

@@ -7,7 +7,7 @@ application. This adapter does not wrap Arduino.
 
 ## Audit and delegation
 
-Re-audit LDC1614/MB85RC component and native transport layouts, TMP1x2 native
+Re-audit LDC161x/MB85RC component and native transport layouts, TMP1x2 native
 examples and their AGENTS. Check official documentation for the selected pinned
 IDF API. Read ENGINEERING_RULES transport ownership and the baseline callbacks/
 clock contract. Record version, source paths and reasons for departures.

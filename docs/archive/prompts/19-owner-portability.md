@@ -12,7 +12,7 @@ Re-audit ADS1115 callback-time/owner fixtures, LSM6DS3TR changing-budget/wait
 tests, INA3221 owner tests and PCA9555 public consumers/CI. Inspect current
 examples, runners, registration and AGENTS; record revisions/dirty state and
 adopted/rejected choices. ADS1115 tests using `Wire.h` or private-member macros
-do not prove portable public consumption. Do not copy LDC1614 build requirements
+do not prove portable public consumption. Do not copy LDC161x build requirements
 for Python/IDF into a downstream ordinary C++ build.
 
 A coding subagent may own disjoint consumer/link fixtures; a strong reasoning

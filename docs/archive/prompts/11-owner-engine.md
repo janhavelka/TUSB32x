@@ -9,7 +9,7 @@ compile, link, work and have tests. Do not declare unimplemented methods.
 
 ## Focused audit and delegation
 
-Re-audit LDC1614 and LSM6DS3TR admission/poll/cancel/take code and fixed fake tests;
+Re-audit LDC161x and LSM6DS3TR admission/poll/cancel/take code and fixed fake tests;
 TMP1x2 operation output preservation; INA3221 effect/lifetime rules; FieldCore
 owner-buffer contracts as read-only consumer evidence. Inspect current matching
 examples, CLI/runner assumptions, registration, CI and AGENTS. Record revisions,

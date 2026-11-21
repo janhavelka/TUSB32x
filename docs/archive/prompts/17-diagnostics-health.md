@@ -8,7 +8,7 @@ view and pure health projection. Reuse accounting installed in prompt 9.
 
 ## Focused audit and delegation
 
-Re-audit LDC1614 TransportStats wrappers, LSM6DS3TR raw/managed diagnostics,
+Re-audit LDC161x TransportStats wrappers, LSM6DS3TR raw/managed diagnostics,
 TMP1x2 DriverState/HealthSnapshot and ADS1115/INA3221 passive health/effects.
 Inspect current declarations, code, examples, CLI/runner accounting, tests, CI
 and AGENTS. Record revisions/dirty state and explicit all-source versus managed

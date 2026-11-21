@@ -18,13 +18,13 @@ remote-CI-only-at-prompt-34 rules control this execution.
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | 1.0.0 | MIT |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | 1.0.0 | MIT |
 | SHT3x-main | `f65f15573e3c9b1ef04cce72ad08f307d021e563` | 1.9.0 | MIT |
-| LDC1614 | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` | 3.2.0 | MIT |
+| LDC161x | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` | 3.2.0 | MIT |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | 3.0.4 | MIT |
 
 All five `library.json` files name Thymos Solution s.r.o and maintainer Jan
 Havelka; none lists a runtime library dependency. Preserve this evidenced
 metadata rather than inventing an author. Vendor reference terms remain separate.
-TMP1x2/24Cxx/SHT3x omit platform/framework restrictions, LDC1614 uses `*`, and
+TMP1x2/24Cxx/SHT3x omit platform/framework restrictions, LDC161x uses `*`, and
 INA228 restricts to Arduino/ESP-IDF on espressif32. Choose unrestricted metadata
 for the standard C++ core; list tested framework combinations separately.
 
@@ -43,25 +43,25 @@ Checks are future acceptance checks unless explicitly identified as source revie
 | Arduino boundary | TMP1x2 `examples/01_basic_bringup_cli/main.cpp` (`writeI2c`, `readI2c`, `mapWire`) and 24Cxx `examples/common/WireTransportHelpers.h` | TMP1x2, 24Cxx | Application owns Wire, pins, clocks and lock; callback counts are attempts; no guessed NACK phase on short read | TMP maps precise endTransmission codes and leaves short-read cause generic | Audit pinned Wire locks and aggregate timing before adopting adapter; mocked phases alone do not prove SDK bound |
 | Native IDF boundary | TMP1x2 `examples/esp_idf/basic/main/main.cpp` (`deviceHandle`, `readI2c`) and INA228 `examples/esp_idf/basic/main/Ina228IdfI2cTransport.cpp` (`validateContext`, `ina228IdfSelectDeviceAddress`, `ina228IdfI2cWriteRead`) | TMP1x2, INA228 | Borrow a synchronous device handle and verify configured address; owner changes handle while ended/idle; no Arduino facade | IDF device handle owns address. Selection/creation belongs to application, not driver core | Reject mismatch/async configuration before SDK; all bus users serialized; audit lock/wait/cleanup total, not only timeout argument |
 | Pins | TMP1x2 `examples/common/BoardConfig.h` and 24Cxx `examples/common/BoardConfig.h` | TMP1x2, 24Cxx | Example-only overridable pins; IRQ input opt-in; validate variant/address and pin conflicts | TMP defaults SDA8/SCL9, 400 kHz, timeout50 ms, IRQ disabled; these are board examples, not chip facts | TUSB-specific strap/address/capability checks; board wiring documented; no pin defaults in core |
-| Host runner contract | LDC1614 `tools/ldc1614_cli_contract.py` (`CommandSpec`, `COMMAND_SPECS`) and INA228 `tools/run_i2c_hil.py` (`version_contract_errors`, `strip_hilrun_frame`) | LDC1614, INA228 | One host grammar/schema, fresh nonce/request/token correlation, firmware provenance and explicit NOT RUN | LDC distinguishes execution/fixture classes; INA verifies flashed commit/version and searches end marker after begin | Reject stale frames, duplicate keys, resets, missing required identity and mismatched origin; host checkout never proves flashed image |
-| Runner limits | LDC1614 `tools/ldc1614_hil_runner.py` (`MAX_RESPONSE_BYTES`, `MAX_TRANSCRIPT_BYTES`) and INA228 `tools/run_i2c_hil.py` (`read_until_hilrun_end`, `run_step`) | LDC1614, INA228 | Finite capture/whole-run deadlines; retain failure evidence; callbacks not bus bytes; restore only owned local settings | Both expose bounds/framing but their human transcript protocols are not TUSB's schema | Fake-serial failure tests and Python-to-real-C++ transcript test; no foreign cancellation/take |
-| Portable build | TMP1x2 `CMakeLists.txt` and 24Cxx `CMakeLists.txt` | TMP1x2, 24Cxx | Dual ordinary CMake/IDF registration, C++17, tests OFF, Python found only for enabled development checks | Both have real plain-CMake library paths; reject LDC1614 top-level unconditional Python REQUIRED and INA228 IDF-only root CMake as general consumer templates | Extracted renamed consumer compiles/links without Git/Python/Doxygen/framework headers or siblings |
+| Host runner contract | LDC161x `tools/ldc1614_cli_contract.py` (`CommandSpec`, `COMMAND_SPECS`) and INA228 `tools/run_i2c_hil.py` (`version_contract_errors`, `strip_hilrun_frame`) | LDC161x, INA228 | One host grammar/schema, fresh nonce/request/token correlation, firmware provenance and explicit NOT RUN | LDC distinguishes execution/fixture classes; INA verifies flashed commit/version and searches end marker after begin | Reject stale frames, duplicate keys, resets, missing required identity and mismatched origin; host checkout never proves flashed image |
+| Runner limits | LDC161x `tools/ldc1614_hil_runner.py` (`MAX_RESPONSE_BYTES`, `MAX_TRANSCRIPT_BYTES`) and INA228 `tools/run_i2c_hil.py` (`read_until_hilrun_end`, `run_step`) | LDC161x, INA228 | Finite capture/whole-run deadlines; retain failure evidence; callbacks not bus bytes; restore only owned local settings | Both expose bounds/framing but their human transcript protocols are not TUSB's schema | Fake-serial failure tests and Python-to-real-C++ transcript test; no foreign cancellation/take |
+| Portable build | TMP1x2 `CMakeLists.txt` and 24Cxx `CMakeLists.txt` | TMP1x2, 24Cxx | Dual ordinary CMake/IDF registration, C++17, tests OFF, Python found only for enabled development checks | Both have real plain-CMake library paths; reject LDC161x top-level unconditional Python REQUIRED and INA228 IDF-only root CMake as general consumer templates | Extracted renamed consumer compiles/links without Git/Python/Doxygen/framework headers or siblings |
 | Actual test registration | TMP1x2 `CMakeLists.txt:18` and 24Cxx `CMakeLists.txt:10` | TMP1x2, 24Cxx | Register host core/CLI/console/runner/consumer suites; assertions active in Release | TMP registers core/CLI/console/jobs/variants/helpers/bus/core_no_arduino and Python guards; 24 registers CLI transcript against real executable | CTest discovery must contain expected nonzero suites; deliberate failures detected; do not treat source grep as execution |
-| Version truth | TMP1x2 and LDC1614 `scripts/generate_version.py` (`_expected_outputs`, `main`) plus their AGENTS version sections | TMP1x2, LDC1614 | `library.json` source; sync/check/bump/set; generated header committed; development check outside downstream configure | Generators propagate header/component/Doxygen version; runtime build identity separate from release version | Missing/stale generated output fails development check; clean consumer needs no generator; no per-prompt release bump |
+| Version truth | TMP1x2 and LDC161x `scripts/generate_version.py` (`_expected_outputs`, `main`) plus their AGENTS version sections | TMP1x2, LDC161x | `library.json` source; sync/check/bump/set; generated header committed; development check outside downstream configure | Generators propagate header/component/Doxygen version; runtime build identity separate from release version | Missing/stale generated output fails development check; clean consumer needs no generator; no per-prompt release bump |
 | Packages | TMP1x2 `tools/check_package.py` (`main`, `forbidden`) and 24Cxx `tools/check_package_contents.py` (`main`, `REQUIRED`) | TMP1x2, 24Cxx | Validate actual archive, expected production files, documented excluded references, then isolated renamed consumer | TMP rejects absolute/drive/colon/backslash/traversal/nonregular/duplicate entries and builds extracted consumer; 24 checks packaged Markdown links | Add case-insensitive collisions, reserved Windows names and trailing-dot/space aliases; no vendor/test/build payload leakage |
-| Documentation | LDC1614/INA228 `Doxyfile`; TMP1x2 `tools/check_doxygen.py` (`check_html`, `check_api`) and `tools/test_check_doxygen.py` | LDC1614, INA228, TMP1x2 | EXTRACT_ALL=NO, undocumented/parameter/doc warnings fail; public visibility and HTML links additionally checked | TMP currently has EXTRACT_ALL=YES: useful visibility checker, unsuitable missing-comment policy. LDC/INA use NO | Remove public comment/type/link in negative fixtures and prove failure; do not expose private implementation merely to satisfy docs |
-| Style | LDC1614 and INA228 `.clang-format`, AGENTS naming sections | LDC1614, INA228 | Two-space Google-derived format, attached braces, 100 columns, no short if/loops; PascalCase types/camelCase functions/private underscore/CAPS constants | Consistent readable source without transplanting framework-first include rules into the core | Format future source with chosen supported clang-format; clear Doxygen ownership/units/bounds |
+| Documentation | LDC161x/INA228 `Doxyfile`; TMP1x2 `tools/check_doxygen.py` (`check_html`, `check_api`) and `tools/test_check_doxygen.py` | LDC161x, INA228, TMP1x2 | EXTRACT_ALL=NO, undocumented/parameter/doc warnings fail; public visibility and HTML links additionally checked | TMP currently has EXTRACT_ALL=YES: useful visibility checker, unsuitable missing-comment policy. LDC/INA use NO | Remove public comment/type/link in negative fixtures and prove failure; do not expose private implementation merely to satisfy docs |
+| Style | LDC161x and INA228 `.clang-format`, AGENTS naming sections | LDC161x, INA228 | Two-space Google-derived format, attached braces, 100 columns, no short if/loops; PascalCase types/camelCase functions/private underscore/CAPS constants | Consistent readable source without transplanting framework-first include rules into the core | Format future source with chosen supported clang-format; clear Doxygen ownership/units/bounds |
 
 ## Checked-in workflow definitions
 
-Read `.github/workflows/ci.yml` in TMP1x2, 24Cxx, LDC1614 and INA228.
+Read `.github/workflows/ci.yml` in TMP1x2, 24Cxx, LDC161x and INA228.
 These are source definitions, not observed successful jobs.
 
 - TMP1x2 and 24Cxx use Ubuntu 24.04, SHA-pinned checkout
   `9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0`, PlatformIO 6.1.19,
   CMake/CTest with warnings and address/undefined sanitizers, S2/S3 Arduino,
   and native IDF v5.3.2/v5.5.1/v6.0.1 on esp32s2/esp32s3.
-- LDC1614 uses PlatformIO requirements, native PlatformIO tests, timing/CLI/IDF/
+- LDC161x uses PlatformIO requirements, native PlatformIO tests, timing/CLI/IDF/
   readiness/hygiene/version/clean-consumer guards, Doxygen, and IDF v6.0.2.
   INA228 uses PlatformIO 6.1.19, native tests, parser regression/dry-run checks,
   Doxygen, package contents plus source compilation, and IDF v6.0.1.
@@ -72,10 +72,10 @@ These are source definitions, not observed successful jobs.
   The peer `set-target` command in a fresh CI checkout is not proof of isolation
   for reused local directories.
 - Keep remote CI inspection/execution at prompt 34. Do not dispatch or poll now.
-  LDC1614 `CONTRIBUTING.md` points to `docs/RELEASING.md` for the exact
+  LDC161x `CONTRIBUTING.md` points to `docs/RELEASING.md` for the exact
   checked-commit/annotated-tag sequence. TMP1x2 has no `CONTRIBUTING.md`; do
   not invent that source or copy a missing release checklist. Use the evidenced
-  LDC1614 release ordering, but publishing
+  LDC161x release ordering, but publishing
   releases/tags is outside prompt 1 and ordinary prompt commits are not releases.
 
 ## Limits and handoff

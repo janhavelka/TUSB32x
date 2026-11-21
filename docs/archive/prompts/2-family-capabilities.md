@@ -10,7 +10,7 @@ do not implement a driver here.
 
 Recheck current TMP1x2 variant handling and 24Cxx reference provenance, including
 their AGENTS, declarations, tests and relevant build/package rules. Inspect
-LDC1614 capability checks and nearby fake-device expectations. Record current
+LDC161x capability checks and nearby fake-device expectations. Record current
 HEAD, dirty state, exact paths and adopted/rejected conventions in progress.
 Sibling conventions cannot establish TI silicon facts.
 

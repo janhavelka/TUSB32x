@@ -35,7 +35,7 @@ package consumer. These definitions inform test separation, but no peer workflow
 was dispatched or polled. All four root CMake files are native-IDF registration,
 not standalone host CMake entry points. TUSB32x retains its existing tests-OFF
 ordinary C++17 build without Python, Git, Doxygen, IDF or sibling paths. Do not
-import LDC1614's unrelated build dependencies into that contract.
+import LDC161x's unrelated build dependencies into that contract.
 
 ## Timing source recheck
 

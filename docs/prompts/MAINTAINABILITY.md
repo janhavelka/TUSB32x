@@ -164,7 +164,7 @@ contributors, release dates, badges or tested configurations.
 
 ## Documentation checks must detect omissions
 
-Inspect LDC1614's Doxyfile: `EXTRACT_ALL=NO`, undocumented/parameter/error warnings
+Inspect LDC161x's Doxyfile: `EXTRACT_ALL=NO`, undocumented/parameter/error warnings
 enabled, warning failure enabled. TMP1x2's checker adds useful generated HTML/XML
 visibility and link checks, but its `EXTRACT_ALL=YES` alone does not prove comments
 exist. Adopt the useful parts of both and test the combined checker.

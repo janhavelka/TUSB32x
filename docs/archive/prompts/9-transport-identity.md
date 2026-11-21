@@ -9,7 +9,7 @@ raw diagnostics arrive later; do not add unavailable public methods or stubs.
 ## Focused audit and delegation
 
 Re-audit PCA9555 `src/PCA9555.cpp` (`_mapTransportResult`, write effects),
-ADS1115 transport/error tests and LDC1614 `test/support/FakeLdc1614Device.h`.
+ADS1115 transport/error tests and LDC161x `test/support/FakeLdc161xDevice.h`.
 Check their current headers, relevant examples, runner assumptions, test
 registration, CI and AGENTS. Record revisions, dirty state and adopted/rejected
 choices in the progress entry. Borrow exact buffers and preserved backend detail,

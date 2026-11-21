@@ -15,7 +15,7 @@ again for this prompt:
 | Read-only peer | Branch | Revision | Worktree |
 | --- | --- | --- | --- |
 | FieldCore-node | `rodtester` | `5ad9292dc8481cf08be9a61f662495a6474d1da0` | Clean |
-| LDC1614 | `main` | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Clean |
+| LDC161x | `main` | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Clean |
 | TMP1x2 | `main` | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | Clean |
 
 Read the parent and local `AGENTS.md`, each selected peer's `AGENTS.md`,
@@ -70,7 +70,7 @@ FieldCore's `nowUsThunk` multiplies the millisecond value by 1000; it is not an
 independent source of microsecond resolution. Do not copy its richer completion
 claims into the ordinary TUSB32x callback contract.
 
-### LDC1614
+### LDC161x
 
 Inspected `include/LDC1614/Config.h`, `include/LDC1614/LDC1614.h`, and lifecycle,
 poll, cancellation, retained take and invalidation implementation in
@@ -111,7 +111,7 @@ read-only reconciliation and separately selected desired-profile application.
 
 Read FieldCore-node `.github/workflows/verify.yml`, which delegates checks to
 `python scripts/verify.py` and pins Python 3.12, Node 22.22.0 and PlatformIO 6.1.19;
-LDC1614 `.github/workflows/ci.yml`, which registers native tests, timing/CLI/clean
+LDC161x `.github/workflows/ci.yml`, which registers native tests, timing/CLI/clean
 consumer guards and separate firmware/documentation jobs; and TMP1x2
 `.github/workflows/ci.yml`, which registers strict/sanitized CMake/CTest, contract,
 documentation, package and framework jobs. None of these workflow definitions

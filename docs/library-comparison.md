@@ -52,7 +52,7 @@ This is a synthesis of peers, not an assertion that they implement one uniform
 API. For example, ADS1115 native/IDF uses C++11 while TUSB32x selects C++17;
 most peer root CMake files are component-only rather than standalone consumers.
 TMP1x2's public-API visibility checks are useful, but its EXTRACT_ALL setting is
-not proof of complete comments. LDC1614/INA228 supply stricter documentation
+not proof of complete comments. LDC161x/INA228 supply stricter documentation
 settings. TUSB32x now has real-parser missing-comment negative fixtures from
 prompt 33; the initial audit did not find those fixtures in either peer.
 No library is copied whole.

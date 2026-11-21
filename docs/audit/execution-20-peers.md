@@ -26,9 +26,9 @@ SHT3x's actual directory is `SHT3x-main`, not an inferred `SHT3x` path.
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `examples/common/Tmp1x2Cli.h`, `Tmp1x2Cli.cpp`, `Tmp1x2CliOutput.cpp`, `ConsoleBuffer.h`; `test/cli/test_cli.cpp`; `test/console/test_console.cpp`; `tools/hil_tmp1x2_runner.py` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | `examples/common/Eeprom24CxxCli.h`, `Eeprom24CxxCli.cpp`, `ConsoleOutput.h`; `test/test_cli/test_cli.cpp`; `test/test_console/test_console.cpp`; `tools/test_cli_transcript.py`; `tools/hil_runner.py` |
 | SHT3x-main | `f65f15573e3c9b1ef04cce72ad08f307d021e563` | `examples/common/Sht3xCli.h`, `Sht3xCli.cpp`; `tools/sht3x_cli_contract.py`; `tools/test_cli_health_rate.py`; `tools/run_sht3x_hil.py` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `examples/common/Ldc1614Cli.h`, `Ldc1614Cli.cpp`; `test/test_cli.cpp`; `tools/ldc1614_cli_contract.py`; `tools/ldc1614_hil_runner.py` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `examples/common/Ldc1614Cli.h`, `Ldc1614Cli.cpp`; `test/test_cli.cpp`; `tools/ldc1614_cli_contract.py`; `tools/ldc1614_hil_runner.py` |
 
-LDC1614 has advanced from the older `c0ab4c1` recorded in CLI_CONTRACT's source
+LDC161x has advanced from the older `c0ab4c1` recorded in CLI_CONTRACT's source
 table. Decisions here use the freshly inspected `1db38b6` source. The table in
 CLI_CONTRACT remains historical specification provenance.
 
@@ -52,7 +52,7 @@ CLI_CONTRACT remains historical specification provenance.
   bus-wide reset, confirmation protocol or measurement operations. Its dispatch
   can clear a reset-arm flag before arity rejection; TUSB32x rejects a malformed
   command before command-owned state changes.
-- LDC1614 has explicit C++/Python command metadata and tests proving staged
+- LDC161x has explicit C++/Python command metadata and tests proving staged
   setters have zero transfers. Adopt direct rows, grouped presentation and
   transactional candidate edits. Reject its separate profile commit and init
   replay semantics, `confirm` vocabulary, and deliberately cross-field-invalid
@@ -61,7 +61,7 @@ CLI_CONTRACT remains historical specification provenance.
 - Peer workflows register actual native tests and strict warning/sanitizer
   commands. TMP1x2 and 24Cxx keep tests optional and register real CLI sources;
   24Cxx passes `$<TARGET_FILE:eeprom24cxx_cli_host>` into Python. Adopt this
-  registration pattern with a finite TUSB32x timeout. SHT3x and LDC1614 native
+  registration pattern with a finite TUSB32x timeout. SHT3x and LDC161x native
   tests use PlatformIO; their component CMake and maintainer dependencies must
   not replace TUSB32x's tool-independent tests-OFF C++17 consumer path.
 
@@ -80,7 +80,7 @@ writes and zero acceptance, verifies format loss and capacity loss, and tests
 deadline progress while output readiness denies transactions. The last policy
 is evidence to reject, not a TUSB32x requirement.
 
-LDC1614 `test_cli_complete_staged_profile_surface_is_silent_and_transactional`
+LDC161x `test_cli_complete_staged_profile_surface_is_silent_and_transactional`
 checks the real staging surface and rejected mode syntax; its explicit invalid
 sensor-bounds staging illustrates why TUSB32x needs stronger precommit validation.
 

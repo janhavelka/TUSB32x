@@ -16,7 +16,7 @@ index was also clean when this audit began; its upstream was
 | TUSB32x | `d7fbd59a3604d1af70dc9c751b44fa55742fb878` | `promptset/tusb32x-implementation-20261023` | Clean |
 | PCA9555 | `498178e4d9e4acb6fab7d8b816ad5021efe8806a` | `main` | Clean |
 | ADS1115 | `235af3e8c722661a89a44766a4ccd903a654f6fe` | `main` | Clean |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` | Clean |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` | Clean |
 
 Reopened parent/local `AGENTS.md`, each listed peer's `AGENTS.md`, prompt index,
 `COMMON.md`, `9-transport-identity.md`, `AGENT_WORKFLOW.md`, current progress and
@@ -36,10 +36,10 @@ or verified TI framing. This agent owns only this audit; no Git mutations.
 | `PCA9555/test/test_basic.cpp:2461` `test_transport_short_counts_are_rejected_and_never_fake_success`, `:2477` timeout/deadline distinction, `:1284` non-OK committed write | Tests preserve caller output on partial read, distinguish I2C_TIMEOUT from owner TIMEOUT, and retain write uncertainty after accepted data plus failure. | Adopt these negative-case principles. Adapt short-read injection to an adapter returning failure; TUSB32x callback success has no completed-count channel. Do not replace original transport status with an owner outcome or effect label. |
 | `ADS1115/include/ADS1115/Config.h`; `Status.h`; `ADS1115.h`; `src/ADS1115.cpp:2507` raw and tracked wrappers, `:2639` `_readRegister16Raw` | Synchronous Status callbacks borrow buffers; register output is assigned only after successful local two-byte receive. Callback timeout and lock ownership are documented. Tracked wrappers skip INVALID_CONFIG/INVALID_PARAM based on returned code. | Adopt scratch receive storage and preserved native detail. Reject code-based accounting exclusion: a callback returning an illegal validation status still consumed one actual invocation. Separate local preflight from callback normalization at the invocation boundary. |
 | `ADS1115/test/test_basic.cpp:1475`, `:1508`, `:4203`, `:6310` | Tests cover five distinct I2C error codes with exact details/call counts, invalid buffers, and failed writes applied to hardware before returning the same error. The unclassified-write matrix intentionally preserves most owner/unknown Err values; IN_PROGRESS alone becomes INDETERMINATE (`src/ADS1115.cpp:169`). | Adopt distinct transport errors, exact backend detail and both applied/non-applied failure fixtures. Reject inherited error permissiveness: TUSB32x must accept only OK/I2C_* callback codes and normalize every other/invalid value to I2C_ERROR. Its allowed I2C_BUSY also needs coverage. |
-| `LDC1614/include/LDC1614/Config.h`; `LDC1614.h`; `test/support/FakeLdc1614Device.h:20`, `:166`, `:189`, `:344` | Fixed-memory fake records kind/address/register/value/timeout, checks exact three-byte write and one-byte-pointer/two-byte-read lengths, injects failure on a numbered callback, and can commit before failure. It models destructive STATUS/DATA reads and conversion arrival between transfers. Logs stop growing at 192 entries while call count continues. | Adopt deterministic failure placement, original Status and commit-before-error injection. Reject sensor word framing, destructive-read semantics and silent log exhaustion. Prompt 9 needs fixed scripted expectations that fail on unexpected bytes, timeout, address, kind, length or extra call. Expected identity/access vectors must come from TI rather than shared production constants. |
+| `LDC161x/include/LDC1614/Config.h`; `LDC1614.h`; `test/support/FakeLdc1614Device.h:20`, `:166`, `:189`, `:344` | Fixed-memory fake records kind/address/register/value/timeout, checks exact three-byte write and one-byte-pointer/two-byte-read lengths, injects failure on a numbered callback, and can commit before failure. It models destructive STATUS/DATA reads and conversion arrival between transfers. Logs stop growing at 192 entries while call count continues. | Adopt deterministic failure placement, original Status and commit-before-error injection. Reject sensor word framing, destructive-read semantics and silent log exhaustion. Prompt 9 needs fixed scripted expectations that fail on unexpected bytes, timeout, address, kind, length or extra call. Expected identity/access vectors must come from TI rather than shared production constants. |
 
 Neither peer ACK-based probe proves TUSB32x variant or polarity. PCA9555 and
-ADS1115 explicitly lack device identity registers. LDC1614's explicit variant
+ADS1115 explicitly lack device identity registers. LDC161x's explicit variant
 fact is a useful precedent: identity does not authorize capability expansion.
 TUSB32x's exact ascending eight-byte signature, revision policy and gated TUSB322I
 capabilities remain governed by its own archived TI evidence.
@@ -67,7 +67,7 @@ target, distinct from host checkout metadata; TUSB runner implementation is late
 The common adapter's `initWire` bus-clear logic remains application setup and is
 not a reusable core callback behavior.
 
-Inspected `LDC1614/examples/esp32/I2cMasterTransport.{h,cpp}` and
+Inspected `LDC161x/examples/esp32/I2cMasterTransport.{h,cpp}` and
 `examples/common/Ldc1614Cli.cpp`, plus `tools/ldc1614_hil_runner.py` identity,
 provenance, incomplete-output and no-hardware handling. The example adapter maps
 ambiguous IDF transaction INVALID_STATE to generic I2C_ERROR and preserves native
@@ -81,7 +81,7 @@ leave framework adapters and serial runners to their assigned stages.
 
 All three peer `platformio.ini` files register Unity native tests with core
 source compilation. `PCA9555/test/test_basic.cpp`,
-`ADS1115/test/test_basic.cpp` and `LDC1614/test/test_basic.cpp` register the reviewed
+`ADS1115/test/test_basic.cpp` and `LDC161x/test/test_basic.cpp` register the reviewed
 behavioral cases using RUN_TEST. LDC also compiles shared CLI source in its native
 environment. These are executable tests, not compile-only API assertions.
 
@@ -141,7 +141,7 @@ native registration and workflow source. All three peers remain clean on main:
 | --- | --- |
 | PCA9555 | 498178e4d9e4acb6fab7d8b816ad5021efe8806a |
 | ADS1115 | 235af3e8c722661a89a44766a4ccd903a654f6fe |
-| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
+| LDC161x | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
 
 Existing choices remain sound: adopt exact fixed buffers/framing, backend detail,
 conservative effects and independent fault injection. Reject PCA's richer

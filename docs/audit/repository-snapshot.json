@@ -157,6 +157,7 @@
     },
     {
       "directory": "LDC1614",
+      "current_repository": "LDC161x",
       "kind": "i2c-library",
       "manifest_name": "LDC1614",
       "version": "3.2.0",

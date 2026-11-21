@@ -8,7 +8,7 @@ Metadata/version tools are the next prompt's separate task.
 
 ## Focused re-audit
 
-Recheck TMP1x2/24Cxx layout and optional test builds, LDC1614 component CMake,
+Recheck TMP1x2/24Cxx layout and optional test builds, LDC161x component CMake,
 ADS1115 variant/profile validators and INA3221/OPT4001 consumer checks. Inspect
 current AGENTS, source lists, compiler flags, test registration and workflows.
 Record HEAD, dirty state, file paths and choices. Do not inherit unnecessary

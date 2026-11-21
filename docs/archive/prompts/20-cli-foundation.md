@@ -15,7 +15,7 @@ Prompts 1–19 must have delivered the core and conformance evidence. Inspect it
 actual declarations and registered tests before writing example code.
 
 Re-audit current TMP1x2 and 24Cxx console/parser/CLI tests, SHT3x dispatch and
-LDC1614 command rows/staging. Record HEAD, dirty state, exact files and decisions.
+LDC161x command rows/staging. Record HEAD, dirty state, exact files and decisions.
 Read at least one malformed-input test and one output-backpressure test. Do not
 copy framework APIs from sibling common directories or their startup mutations.
 

@@ -7,7 +7,7 @@ not permission to defer documentation until now.
 
 ## Audit and delegation
 
-Re-audit LDC1614 Doxygen warnings/extraction, TMP1x2 API visibility checks and
+Re-audit LDC161x Doxygen warnings/extraction, TMP1x2 API visibility checks and
 two useful peer CONTRIBUTING/AGENTS/version workflows. Inspect actual settings
 and tests rather than copying quiet but incomplete documentation builds.
 Read MAINTAINABILITY, selected baseline contracts and current build commands.

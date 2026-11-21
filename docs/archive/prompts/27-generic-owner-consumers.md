@@ -8,7 +8,7 @@ introduce a FieldCore wrapper.
 ## Audit and delegation
 
 Re-audit FieldCore-node I2cTask/transport/binding/time contracts and two useful
-generic consumers in LDC1614, MB85RC or TMP1x2. Inspect actual declarations,
+generic consumers in LDC161x, MB85RC or TMP1x2. Inspect actual declarations,
 tests and AGENTS; do not modify sibling projects. Read baseline operation/result/
 time contracts and ENGINEERING_RULES ownership sections.
 

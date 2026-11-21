@@ -31,7 +31,7 @@ second CLI or prompt26 application was added.
 
 Read-only peer revisions and clean state were rechecked; all match the cited
 implementation audits: INA228 b28c5ea, ADS1115 235af3e, TCA9548A ce425e1,
-TMP1x2 bafc340, LSM6DS3TR 362b140, LDC1614 1db38b6 and MB85RC 1bf7c29.
+TMP1x2 bafc340, LSM6DS3TR 362b140, LDC161x 1db38b6 and MB85RC 1bf7c29.
 Exact paths/full revisions and adopted/rejected patterns are in the
 [23 audit](execution-23-arduino.md), [24 audit](execution-24-arduino-examples.md)
 and [25 audit](execution-25-peers.md). Timeout parameter names, peer short-write

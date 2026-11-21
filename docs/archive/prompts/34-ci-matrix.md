@@ -16,7 +16,7 @@ validator. Inspect their actual tested pins and remaining gaps before selecting
 CI rows.
 
 Re-audit current TMP1x2 host/docs/Arduino/IDF CI, OPT4001 action-pin checks and
-LDC1614/INA3221 genuine native-IDF links/test registration. Record HEAD, dirty
+LDC161x/INA3221 genuine native-IDF links/test registration. Record HEAD, dirty
 state, exact sources and choices. Historic TMP1x2 revision
 bafc34067530eb340e55c42dae3fad4eb795b6e9 used PlatformIO 6.1.19 and IDF
 v5.3.2/v5.5.1/v6.0.1 for S2/S3; these are comparison inputs, not validated TUSB

@@ -5,7 +5,7 @@ for each repository at the revisions below. No remote CI status was requested.
 
 | Peer | Revision | Relevant current sources |
 | --- | --- | --- |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `AGENTS.md`, root `CMakeLists.txt` and `idf_component.yml`, `examples/esp32/I2cMasterTransport.{h,cpp}`, `examples/esp_idf/basic/{CMakeLists.txt,README.md,main/CMakeLists.txt,main/main.cpp}`, `test/test_basic.cpp`, `tools/{check_idf_example_contract.py,ldc1614_hil_runner.py}`, `.github/workflows/ci.yml` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `AGENTS.md`, root `CMakeLists.txt` and `idf_component.yml`, `examples/esp32/I2cMasterTransport.{h,cpp}`, `examples/esp_idf/basic/{CMakeLists.txt,README.md,main/CMakeLists.txt,main/main.cpp}`, `test/test_basic.cpp`, `tools/{check_idf_example_contract.py,ldc1614_hil_runner.py}`, `.github/workflows/ci.yml` |
 | MB85RC | `1bf7c293549b1038b2d8f3b7a8d655fa74201e6e` | `AGENTS.md`, root `CMakeLists.txt` and `idf_component.yml`, `examples/common/IdfI2cTransport.h`, `examples/espidf_basic/{CMakeLists.txt,main/CMakeLists.txt,main/main.cpp}`, `test/test_public_contracts.cpp`, `tools/{check_idf_example_contract.py,hil_runner.py}`, `.github/workflows/ci.yml` |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `AGENTS.md`, root `CMakeLists.txt` and `idf_component.yml`, `examples/esp_idf/basic/{CMakeLists.txt,platformio.ini,sdkconfig.defaults,sdkconfig.defaults.esp32s2,sdkconfig.defaults.esp32s3,main/CMakeLists.txt,main/main.cpp}`, `tools/{test_idf_component_contract.py,hil_tmp1x2_runner.py}`, `.github/workflows/ci.yml` |
 
@@ -17,11 +17,11 @@ it does not compile a CLI frontend. Target environments have distinct build and
 generated SDK configuration paths. Common defaults select 1000 Hz scheduling;
 target defaults explicitly select UART console without depending on USB wiring.
 
-Rejected LDC1614's transport-owned bus/device creation, recovery and speed edits:
+Rejected LDC161x's transport-owned bus/device creation, recovery and speed edits:
 TUSB32x's adapter borrows application handles. Rejected copying full timeout
-arguments directly into native transactions: LDC1614 `write`/`writeRead`, MB85RC
+arguments directly into native transactions: LDC161x `write`/`writeRead`, MB85RC
 `timeoutArg`/native dispatch and TMP1x2 `writeI2c`/`writeReadI2c` do not establish
-one aggregate bound through SDK internal lock and command waits. LDC1614's coarse
+one aggregate bound through SDK internal lock and command waits. LDC161x's coarse
 transaction-error treatment is a useful precedent: an SDK error without byte/phase
 evidence cannot establish which NACK occurred or that a write had no effect.
 
@@ -31,7 +31,7 @@ is a useful consumer precedent. Peer HIL runners preserve explicit missing-hardw
 outcomes and firmware identity; this adapter-only fixture has no HIL runner or
 flashing behavior. No peer scheduler or retained-result policy was copied.
 
-Workflow source review found S2/S3 native builds on LDC1614 IDF 6.0.2, MB85RC
+Workflow source review found S2/S3 native builds on LDC161x IDF 6.0.2, MB85RC
 6.0.1/6.0.2, and TMP1x2 5.3.2/5.5.1/6.0.1. Those are peer coverage claims only.
 This prompt selects installed IDF 5.5.5 (`framework-espidf` package `3.50505`,
 `tools/cmake/version.cmake` major/minor/patch), with PlatformIO Core 6.1.19 and

@@ -78,7 +78,7 @@ Fresh read-only checks found these peer revisions unchanged and clean:
 | FieldCore-node, prompt 27 ownership review | `5ad9292dc8481cf08be9a61f662495a6474d1da0` |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
 
 Read each peer's AGENTS.md and checked-in workflow definitions. Exact tooling
 paths inspected, relative to each peer root:
@@ -104,7 +104,7 @@ paths inspected, relative to each peer root:
   separate host provenance, authoritative JSON and escaped Markdown. Reject
   EEPROM scratch/guard policy and interpreting post-capture size checks as a
   streaming memory bound.
-- LDC1614: `tools/ldc1614_hil_runner.py`,
+- LDC161x: `tools/ldc1614_hil_runner.py`,
   `tools/test_ldc1614_hil_runner.py` and `.github/workflows/ci.yml`. Revisited
   TranscriptJournal, provenance, overall_status and requested-gate handling.
   Adopt failure-dominant verdicts and refusal to infer success from missing proof.

@@ -14,7 +14,7 @@ Read [COMMON](../../prompts/COMMON.md), [AGENT_WORKFLOW](../../prompts/AGENT_WOR
 bounded console, local commands, operations and retained-result flow.
 
 Re-audit current TMP1x2/24Cxx diagnostic/help tests and contract parity, SHT3x
-aliases, LDC1614 command classifications and INA228 exact counter assertions.
+aliases, LDC161x command classifications and INA228 exact counter assertions.
 Record revisions, dirty state, exact files and choices. Compare the existing
 TUSB command rows with public APIs and variant capabilities before adding routes.
 Do not redesign the parser or operation engine to close simple dispatch gaps.

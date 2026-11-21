@@ -12,7 +12,7 @@ register-access sections of [ENGINEERING_BASELINE](../../prompts/ENGINEERING_BAS
 Prompt 28 supplies implemented session/identity/artifact functions; prompts 20–27
 supply CLI routes, firmware identity and framework/consumer examples.
 
-Re-audit TMP1x2 finite runner plans, 24Cxx persistent CLI transcripts, LDC1614
+Re-audit TMP1x2 finite runner plans, 24Cxx persistent CLI transcripts, LDC161x
 verdicts and INA228 callback-budget/owner-exclusion suites. Compare MB85RC/RV3032
 strict parsing if relevant. Record current revisions/dirty state, exact sources
 and choices. Inspect actual TUSB CLI behavior rather than assuming the docs match.

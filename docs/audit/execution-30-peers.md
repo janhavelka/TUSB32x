@@ -15,7 +15,7 @@ checkout under `C:/Users/Honza/Documents/Projects/`.
 | TUSB32x | `1f0fb7604ad1696aea9f3067c320d3b3c2fca89e` |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` |
 
 The execution branch remains `promptset/tusb32x-implementation-20261023`.
@@ -91,7 +91,7 @@ Inspected `include/EEPROM24Cxx/EEPROM24Cxx.h`,
 The peer workflow runs strict native CTest and reference/package guards plus
 separate firmware targets. It does not provide physical fixture qualification.
 
-## LDC1614: requested gates must affect the verdict
+## LDC161x: requested gates must affect the verdict
 
 Inspected `include/LDC1614/LDC1614.h`, `tools/ldc1614_hil_runner.py`,
 `tools/test_ldc1614_hil_runner.py` and `.github/workflows/ci.yml`.

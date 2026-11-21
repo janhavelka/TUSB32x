@@ -14,7 +14,7 @@ real shared CLI and persistent host fixture. Inspect their actual schemas and
 tests; prompts 23–27 supply example identity and consumer evidence.
 
 Re-audit TMP1x2 runner deadlines/markers/restoration, 24Cxx hil_identity.py,
-hil_artifacts.py, hil_guards.py and transcript registration, and LDC1614 provenance
+hil_artifacts.py, hil_guards.py and transcript registration, and LDC161x provenance
 and verdict logic. Record current HEAD, dirty state, exact files and decisions.
 Do not copy an EEPROM scratch policy or growing in-memory transcript journal.
 

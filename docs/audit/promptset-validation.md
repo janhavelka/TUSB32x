@@ -111,7 +111,7 @@ this documentation expansion. Those remain implementation-stage work.
 
 ## AGENTS and Git workflow follow-up — 2026-10-23
 
-Compared current AGENTS.md guidance in TMP1x2, 24Cxx, LDC1614, LSM6DS3TR,
+Compared current AGENTS.md guidance in TMP1x2, 24Cxx, LDC161x, LSM6DS3TR,
 INA3221 and ADS1115. All six remain clean at the revisions recorded in the
 repository snapshot. Selected rules and deliberate exclusions are recorded in
 the audit index. Siblings were read only.

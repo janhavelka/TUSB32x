@@ -8,7 +8,7 @@ declarations without implementation or fake hardware-success stubs.
 
 ## Focused re-audit
 
-Recheck LDC1614/LSM6DS3TR tokens, poll timing, effects and diagnostics;
+Recheck LDC161x/LSM6DS3TR tokens, poll timing, effects and diagnostics;
 ADS1115/INA3221 desired/observed/verified separation; TMP1x2 exact-token take;
 FieldCore-node I2cOwnerTransport/I2cDeviceBinding/I2cLifetime. Read matching
 tests, examples, runner meanings, AGENTS and registration. Record revisions,

@@ -22,7 +22,7 @@ again. Research is read-only in sibling projects; do not fetch or modify them.
 
 Enumerate the parent Projects directory and identify independent I2C libraries
 from manifests and code. Start with TMP1x2, 24Cxx, INA228, INA3221, ADS1115,
-OPT4001, LDC1614, BME280, SHT3x-main, LSM6DS3TR, MB85RC, MCP45HVX1, PCA9555,
+OPT4001, LDC161x, BME280, SHT3x-main, LSM6DS3TR, MB85RC, MCP45HVX1, PCA9555,
 RV3032-C7, SCD41, SSD1315 and TCA9548A. Distinguish empty EEPROM_24Cxx from active
 24Cxx. Exclude archives, dependencies, worktrees and non-I2C projects.
 
@@ -34,13 +34,13 @@ useful peers for each material choice; record changed or missing paths.
 
 | Concern | Concrete starting files beneath Projects | Decision to confirm |
 | --- | --- | --- |
-| Status and errors | LDC1614, LSM6DS3TR and TMP1x2 `include/<name>/Status.h` | Structured Status, static messages, distinct owner/transport timeouts |
+| Status and errors | LDC161x, LSM6DS3TR and TMP1x2 `include/<name>/Status.h` | Structured Status, static messages, distinct owner/transport timeouts |
 | Owner API | LSM6DS3TR and ADS1115 main headers, matching implementation/tests | bind/start/poll/cancel, tokens, retained result, bus-silent teardown |
-| Health and trust | TMP1x2 main header/source; LDC1614 and LSM6DS3TR diagnostics; INA3221 owner tests | UNINIT/READY/DEGRADED/OFFLINE as passive projection; independent configuration/effect facts |
+| Health and trust | TMP1x2 main header/source; LDC161x and LSM6DS3TR diagnostics; INA3221 owner tests | UNINIT/READY/DEGRADED/OFFLINE as passive projection; independent configuration/effect facts |
 | CLI | TMP1x2 `examples/common/Tmp1x2CliOutput.cpp`; SHT3x-main shared CLI | Portable dispatch, grouped help, strict input, cached/live distinctions |
-| Runners | LDC1614 `tools/ldc1614_cli_contract.py`; INA228 `tools/run_i2c_hil.py` | Fresh correlation, identity, bounded output and honest traffic units |
+| Runners | LDC161x `tools/ldc161x_cli_contract.py`; INA228 `tools/run_i2c_hil.py` | Fresh correlation, identity, bounded output and honest traffic units |
 | Version/package | TMP1x2 version generator/package guard; 24Cxx package guard | Manifest truth, extracted consumer, no downstream tool dependency |
-| Documentation/style | LDC1614 Doxyfile; TMP1x2 documentation checker; INA228 formatting | Missing comments detected, visible public API, simple source style |
+| Documentation/style | LDC161x Doxyfile; TMP1x2 documentation checker; INA228 formatting | Missing comments detected, visible public API, simple source style |
 | Consumer | FieldCore-node I2cTask, I2cOwnerTransport, I2cDeviceBinding, I2cLifetime and I2C guidelines | External ownership without a FieldCore dependency |
 
 ## Finish the engineering choices

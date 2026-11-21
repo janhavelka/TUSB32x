@@ -16,7 +16,7 @@ Their HEADs and clean worktrees were unchanged at the final recheck.
 
 | Peer | Full HEAD |
 | --- | --- |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
 | LSM6DS3TR | `e262bf22f3d0cf035fbbca10f45b3e0752bf2bac` |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
 | ADS1115 | `235af3e8c722661a89a44766a4ccd903a654f6fe` |
@@ -37,7 +37,7 @@ TUSB32x callback-count contract or prompt-34-only remote CI exception.
 
 ## Status and passive public values
 
-Re-read `LDC1614/include/LDC1614/Status.h` and
+Re-read `LDC161x/include/LDC1614/Status.h` and
 `LSM6DS3TR/include/LSM6DS3TR/Status.h`: both expose typed `Err : uint8_t`, public
 `Status { code, int32_t detail, const char* msg }`, constexpr construction,
 `ok/is/inProgress` and `Ok/Error`. Messages are explicitly static-lifetime.
@@ -70,7 +70,7 @@ not belong in a Type-C controller API.
 
 ## Configuration separation and validity
 
-Read `LDC1614/include/LDC1614/Config.h`, `LDC1614.h` and the matching
+Read `LDC161x/include/LDC1614/Config.h`, `LDC1614.h` and the matching
 `src/LDC1614.cpp` validation/binding helpers. Its single `Config` combines
 callbacks/address, electrical facts, channels and replayable silicon settings;
 default selection sentinels are deliberately invalid. The registered

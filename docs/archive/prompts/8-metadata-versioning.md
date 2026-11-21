@@ -8,7 +8,7 @@ Doxygen omission checker is prompt 33; source documentation remains required now
 
 ## Focused re-audit
 
-Recheck TMP1x2/24Cxx version generators and package guards, LDC1614 component
+Recheck TMP1x2/24Cxx version generators and package guards, LDC161x component
 CMake, INA3221/OPT4001 packaging and current author/license conventions. Inspect
 AGENTS, manifests, generated files, workflows and actual scripts/tests. Record
 revisions, dirty state, sources and choices. Verify proposed dependency/tool

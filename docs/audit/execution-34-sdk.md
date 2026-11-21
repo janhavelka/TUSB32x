@@ -145,7 +145,7 @@ Both sibling worktrees were clean when inspected; neither was changed.
 
 | Peer HEAD | Exact inspected sources and conclusion |
 | --- | --- |
-| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `AGENTS.md`, `.github/workflows/ci.yml`, `platformio.ini`, `examples/esp_idf/basic/main/{CMakeLists.txt,main.cpp}`, `tools/check_idf_example_contract.py`, `test/{test_basic.cpp,test_cli.cpp}`. Native job selects 6.0.2 and both S2/S3, actual app_main and esp_driver_i2c link inputs. Unity suites are executable through `pio test -e native`. |
+| LDC161x `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `AGENTS.md`, `.github/workflows/ci.yml`, `platformio.ini`, `examples/esp_idf/basic/main/{CMakeLists.txt,main.cpp}`, `tools/check_idf_example_contract.py`, `test/{test_basic.cpp,test_cli.cpp}`. Native job selects 6.0.2 and both S2/S3, actual app_main and esp_driver_i2c link inputs. Unity suites are executable through `pio test -e native`. |
 | INA3221 `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` | `AGENTS.md`, `.github/workflows/ci.yml`, `platformio.ini`, `examples/esp_idf/basic/main/{CMakeLists.txt,main.cpp,Ina3221IdfI2cTransport.cpp}`, `tools/check_idf_example_contract.py`, `test/{test_basic.cpp,test_owner_operations.cpp}`. Native Docker commands select 6.0.1 for S2/S3, actual app_main/native API and component requirements. Unity host test registration is explicit. |
 
 Adopt real native image links and explicit runtime registration. Reject copying

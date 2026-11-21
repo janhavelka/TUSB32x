@@ -946,6 +946,7 @@
     },
     {
       "directory": "LDC1614",
+      "current_repository": "LDC161x",
       "manifest_name": "LDC1614",
       "version": "3.2.0",
       "commit": "c0ab4c1712c4135b925354d70c4e6bed5cca62d8",

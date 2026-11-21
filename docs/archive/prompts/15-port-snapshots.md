@@ -8,7 +8,7 @@ engine and codecs. IRQ acknowledgement is a separate following prompt.
 
 ## Focused audit and delegation
 
-Re-audit BME280 configuration trust versus communication success, LDC1614
+Re-audit BME280 configuration trust versus communication success, LDC161x
 publication/staleness tests and INA228 status/interrupt observation boundaries.
 Inspect relevant current headers, sources, examples, CLI/runner output, tests,
 CI and AGENTS; record revisions/dirty state and selected differences. Sensor

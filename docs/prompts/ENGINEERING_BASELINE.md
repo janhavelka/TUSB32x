@@ -13,15 +13,15 @@ evidence, not permission to skip that check. Paths are relative to `Projects/`.
 
 | Peer and revision | Actual declarations and implementation inspected | Selected TUSB32x use |
 | --- | --- | --- |
-| LDC1614 `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` | `include/LDC1614/Status.h`; `Config.h`; `LDC1614.h` (`TransportStats`, `TerminalOutcome`, `EffectFlag`, `poll(uint64_t,uint8_t)`); `src/LDC1614.cpp` (`bind`, `poll`, `cancelJob`, `takeResult`) | Status layout, 64-bit owner time, bounded callbacks, neutral saturating counters. Do not copy its multi-result ring or caller-assigned operation IDs. |
+| LDC161x `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` | `include/LDC1614/Status.h`; `Config.h`; `LDC1614.h` (`TransportStats`, `TerminalOutcome`, `EffectFlag`, `poll(uint64_t,uint8_t)`); `src/LDC1614.cpp` (`bind`, `poll`, `cancelJob`, `takeResult`) | Status layout, 64-bit owner time, bounded callbacks, neutral saturating counters. Do not copy its multi-result ring or caller-assigned operation IDs. |
 | LSM6DS3TR `513c5641d9b7dda63fddc27267ea62aa8d03ff93` | `include/LSM6DS3TR/Status.h`, `Config.h`, `LSM6DS3TR.h` (`OperationTiming`, 64-bit `OperationToken`, `ConfigurationState`, `DriverDiagnostics`); `src/LSM6DS3TR.cpp` (`bind`, transport wrappers, `cancelActiveJob`, `takeResult`) | One tokened terminal slot, copied configuration evidence, small passive diagnostics. Omit sensor settling, FIFO, calibration and compatibility facades. |
 | TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `include/TMP1x2/Status.h`, `TMP1x2.h` (`DriverState`, `HealthSnapshot`, token/result names); `src/TMP1x2.cpp` (`bind`, `track`, `end`); `src/TMP1x2Operations.cpp` (`cancel`, `takeResult`) | Explicit bool Status, familiar health names, token-checked take with unchanged output on failure. Its bind clears the binding before validation; deliberately use atomic validation instead. Do not copy measurement errors or managed-only source counters. |
 | ADS1115 `381236ebfed813cd7a9aca34520ce031d8a0ff6b` | `include/ADS1115/ADS1115.h` (`DriverConfig`, `DeviceProfile`, `AppliedProfileSnapshot`, `OperationResult`); `src/ADS1115.cpp` (`bind`, profile admission, `takeResult`, configuration invalidation) | Split transport from silicon settings, retain desired/applied evidence and result backpressure. No ADC conversion, mux or legacy API. |
 | INA3221 `e45622dbaa5bb0b3151d980f30a1b6ea1cdb1a1b` | `include/INA3221/INA3221.h` (`AppliedConfigState`, `HardwareEffect`, `PollContext`, `JobResult`); `src/INA3221.cpp` (`bind`, `_finishJob`, cancellation and effect classification) | Distinguish partial/uncertain writes from terminal outcome. Its `startReconcile` reapplies a profile; TUSB32x reconciliation is read-only because a role/reset write must not be replayed after uncertainty. |
 
-Behavioral and tooling references also inspected: LDC1614 `test/test_basic.cpp`,
-`test/support/FakeLdc1614Device.h`, `examples/common/Ldc1614Cli.*`,
-`tools/ldc1614_cli_contract.py`, `tools/ldc1614_hil_runner.py`; LSM6DS3TR
+Behavioral and tooling references also inspected: LDC161x `test/test_basic.cpp`,
+`test/support/FakeLdc161xDevice.h`, `examples/common/Ldc161xCli.*`,
+`tools/ldc161x_cli_contract.py`, `tools/ldc161x_hil_runner.py`; LSM6DS3TR
 `test/test_basic.cpp`, `test/test_compile_contracts.cpp`,
 `examples/02_owner_soak/main.cpp`, `tools/run_owner_soak.py`; TMP1x2
 `test/jobs/test_jobs.cpp`; ADS1115 `examples/02_owner_safe_poll/main.cpp` and
@@ -750,7 +750,7 @@ instance diagnostic history separately from usable target evidence.
 
 ## Neutral transport diagnostics and optional health projection
 
-`TransportStats` uses the observed LDC1614 field names `totalAttempts`,
+`TransportStats` uses the observed LDC161x field names `totalAttempts`,
 `totalSuccess`, `totalFailures`, `lastStatus`; counters are saturating uint32_t.
 Count every invoked callback once, including raw diagnostics and initialization.
 Increment attempt immediately before callback; increment exactly one success or

@@ -13,7 +13,7 @@ trust and silicon sections of [ENGINEERING_BASELINE](../../prompts/ENGINEERING_B
 [ENGINEERING_RULES](../../prompts/ENGINEERING_RULES.md). Prompt 20 must pass its console, parser
 and live-fixture tests; prompts 1–19 supply implemented core operations.
 
-Re-audit TMP1x2/24Cxx retained-result dispatch and failed-cleanup tests, LDC1614
+Re-audit TMP1x2/24Cxx retained-result dispatch and failed-cleanup tests, LDC161x
 staging and INA228 transfer-budget assertions. Record current revisions, dirty
 state, exact sources and adopted/rejected choices. Read actual TUSB operation
 declarations and tests. Sibling init/profile semantics are not this core's rules.

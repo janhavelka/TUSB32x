@@ -9,7 +9,7 @@ Procedures and timing belong to prompt 4; production register code comes later.
 ## Focused re-audit
 
 Check current PCA9555 `CommandTable.h`, write composition and protocol/public
-tests; LDC1614 `CommandTable.h` and fake-device tests; ADS1115 field validation and
+tests; LDC161x `CommandTable.h` and fake-device tests; ADS1115 field validation and
 tests. Inspect relevant AGENTS, examples and registration. Record revisions,
 dirty states, exact symbols and choices. Borrow named constants, access/effect
 descriptions and independent expected bytes. Reject PCA9555 pointer parking or

@@ -17,7 +17,7 @@ does not establish the current server state because siblings were not fetched.
 | Peer | Full HEAD |
 | --- | --- |
 | PCA9555 | `498178e4d9e4acb6fab7d8b816ad5021efe8806a` |
-| LDC1614 | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` |
+| LDC161x | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` |
 | ADS1115 | `381236ebfed813cd7a9aca34520ce031d8a0ff6b` |
 | LSM6DS3TR | `513c5641d9b7dda63fddc27267ea62aa8d03ff93` |
 
@@ -26,7 +26,7 @@ At this audit's first edit TUSB32x was clean, including the staged diff, on
 `ff0d6a21b65579b7bc3b9b454b16a14b21b74257`, tracking the same-name origin branch.
 The lead owns synchronization and shared-contract edits.
 
-At the lead's final recheck, LDC1614 and ADS1115 had concurrent documentation
+At the lead's final recheck, LDC161x and ADS1115 had concurrent documentation
 changes: modified `docs/README.md` and untracked `docs/RETAINED_BRANCH_AUDIT.md`.
 Their HEADs and all inspected source/test/build files were unchanged; PCA9555
 and LSM6DS3TR remained clean. These sibling changes were left untouched and
@@ -69,9 +69,9 @@ allowances do not establish actual callback completion time or SDK lock bounds.
 PCA's cancellation may finish required pointer cleanup: do not import that into
 TUSB32x's bus-silent cancellation.
 
-## LDC1614: behavioral transport and independent failure boundaries
+## LDC161x: behavioral transport and independent failure boundaries
 
-Read `LDC1614/include/LDC1614/Config.h` callback contracts and
+Read `LDC161x/include/LDC1614/Config.h` callback contracts and
 `src/LDC1614.cpp::buildConfigRegister/buildMuxConfigRegister/
 configurationComparisonMask/_readRegister/_writeRegister`. Builders start from
 required reserved images. Transport uses one pointer byte and two payload bytes,

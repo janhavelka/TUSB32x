@@ -12,7 +12,7 @@ silicon authority or a peer behavioral test result.
 | --- | --- | --- | --- |
 | TUSB32x | `dd82a796e51dcfefa77db36a921d69aec0b12346` | `promptset/tusb32x-implementation-20261023` | Clean |
 | PCA9555 | `498178e4d9e4acb6fab7d8b816ad5021efe8806a` | `main` | Clean |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` | Clean |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` | Clean |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `main` | Clean |
 
 Read status, staged-diff statistics, branch and HEAD locally; TUSB32x tracks
@@ -35,8 +35,8 @@ codecs/composition; role, reset, recovery and IRQ execution remain later stages.
 | --- | --- |
 | `PCA9555/include/PCA9555/CommandTable.h`; `src/PCA9555.cpp:1077` and `:1320` | Named `constexpr` register constants explain access and pair boundaries. Masked preload preserves unselected proved latch bits. Raw writes reject input registers and direction writes that bypass preload; partial writes invalidate the pair shadow. Adopt named masks, explicit access and required actual-state evidence. Reject copying pair wrap, shadow-based byte RMW, reset absence or pointer-park rules. PCA9555 has no TUSB-style mixed RO/RW/W1C/reset register. |
 | `PCA9555/test/test_basic.cpp:369`, `:1340`, `:2331`, `:2428`, `:2439`; `test/test_public_contracts.cpp` | Registered cases reject invalid masks without changing evidence, keep mismatched pairs fenced, preserve other port bytes during RMW, reject read-only targets, and assert no traffic for invalid registers/enums/lengths. The mixed verification test is about matching versus mismatching register pairs, not W1C fields. Adopt literal expected bytes, unchanged evidence and bus-silent rejection tests. It cannot prove TUSB IRQ/reset composition. |
-| `LDC1614/include/LDC1614/Config.h:47`, `:97`; `CommandTable.h`; `LDC1614.h` register/profile contracts; `src/LDC1614.cpp:118`, `:132`, `:1203`, `:1225` | Variant is application-supplied because identity is shared. Small predicates gate absent channel registers before callbacks; writable/profile sets differ from readable registers. Adopt explicit variants, small allowlists and register-specific access. Reject identity-based capability inference, sensor word framing, and allowing a generic raw setter to bypass TUSB procedures. |
-| `LDC1614/src/LDC1614.cpp:1277`; `test/test_basic.cpp:820`, `:955`, `:1002` | Pure expected-profile helper supplies register values/masks; tests enumerate both variants and exclude live read-only INIT_IDRIVE from persistent comparison. Rejection covers nonexistent/variant/nonprofile registers and zero callbacks. Adopt independent literal tables, command/status exclusion and unsupported-domain coverage. Reject its output-zeroing convention: TUSB32x `decodeRegister` must preserve caller output on error. Reject its full replay/init behavior for this stage. |
+| `LDC161x/include/LDC1614/Config.h:47`, `:97`; `CommandTable.h`; `LDC1614.h` register/profile contracts; `src/LDC1614.cpp:118`, `:132`, `:1203`, `:1225` | Variant is application-supplied because identity is shared. Small predicates gate absent channel registers before callbacks; writable/profile sets differ from readable registers. Adopt explicit variants, small allowlists and register-specific access. Reject identity-based capability inference, sensor word framing, and allowing a generic raw setter to bypass TUSB procedures. |
+| `LDC161x/src/LDC1614.cpp:1277`; `test/test_basic.cpp:820`, `:955`, `:1002` | Pure expected-profile helper supplies register values/masks; tests enumerate both variants and exclude live read-only INIT_IDRIVE from persistent comparison. Rejection covers nonexistent/variant/nonprofile registers and zero callbacks. Adopt independent literal tables, command/status exclusion and unsupported-domain coverage. Reject its output-zeroing convention: TUSB32x `decodeRegister` must preserve caller output on error. Reject its full replay/init behavior for this stage. |
 | `TMP1x2/include/TMP1x2/CommandTable.h`; `src/TMP1x2.cpp:140`, `:152`, `:197`, `:219`, `:230`, `:235` | Reads allow 0..3; both tracked and raw writes allow only 1..3 before callbacks. `MASK_WRITABLE_CONFIG=0x1FD0` explicitly excludes OS because it is a command. Read output is published after success. Adopt local access checks, temporary output and separation of persistent fields from commands. Reject importing the mask, temperature format, ALERT read effects, or unrestricted whole-word raw write policy. |
 | `TMP1x2/test/test_core.cpp:103`, `:115`, `:136`; `test/variants/test_variants.cpp` | Pure conversion rejects invalid values without changing output; access validation rejects temperature writes and out-of-map reads without traffic or health failure. Read failure preserves a caller sentinel. Adopt invalid typed input, output sentinel and callback-count assertions. These tests establish no TUSB variant encoding. |
 
@@ -60,7 +60,7 @@ range/length rejection and distinguishes register reads/writes. Adopt alignment
 between advertised access and real core rejection; do not copy confirmation
 grammar, paired-register dumps or expand TUSB firmware work into this prompt.
 
-Inspected `LDC1614/examples/common/Ldc1614Cli.{h,cpp}` register descriptors,
+Inspected `LDC161x/examples/common/Ldc1614Cli.{h,cpp}` register descriptors,
 `printRegisterValue`, decoder commands and variant staging; and
 `tools/ldc1614_hil_runner.py` register-record patterns, reserved-bit validation,
 identity expectations and invalid requests, with its host fixture module
@@ -82,7 +82,7 @@ TUSB shared CLI and Python runners remain unimplemented stages 20 onward.
 ## Registration and workflow source review
 
 Read all three peer root `CMakeLists.txt` and `.github/workflows/ci.yml`, plus
-PCA9555/LDC1614 `platformio.ini`. PCA/LDC register Unity native tests through
+PCA9555/LDC161x `platformio.ini`. PCA/LDC register Unity native tests through
 PlatformIO, with reviewed cases called by `RUN_TEST`; LDC compiles its shared CLI
 there. TMP1x2 CMake registers core, CLI, console, jobs, variants, helpers, bus,
 no-Arduino, version, component, Doxygen and HIL-runner tests with finite timeouts.
@@ -121,7 +121,7 @@ three full revisions above, each on `main` with a clean worktree/index.
 Reopened current peer AGENTS and CommandTable headers, PCA9555's
 `src/PCA9555.cpp` preload/raw-write checks and `test/test_basic.cpp` mixed-pair
 verification, odd-start preservation, invalid-pin/register and short-transfer
-cases; LDC1614's `Config.h` variant values, `src/LDC1614.cpp` register predicates,
+cases; LDC161x's `Config.h` variant values, `src/LDC1614.cpp` register predicates,
 read/write access and expected-profile helper, and `test/test_basic.cpp`
 capability/profile cases; TMP1x2's `src/TMP1x2.cpp` read/write allowlists and
 success-only output publication plus `test/test_core.cpp` local rejection and

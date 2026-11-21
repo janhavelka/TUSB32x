@@ -16,7 +16,7 @@ Paths below are relative to the named checkout under
 | TUSB32x | `aca463158485d13fe8d4437e1962dda4a4c32516` |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` |
 | MB85RC | `1bf7c293549b1038b2d8f3b7a8d655fa74201e6e` |
 | RV3032-C7 | `aabd8d9204e75072403fefb60cf8d2679a7f56de` |
@@ -89,7 +89,7 @@ Inspected `include/EEPROM24Cxx/EEPROM24Cxx.h`,
   as TUSB32x rules. A 24Cxx ACK is not identity; TUSB32x must check selected family
   identity while keeping exact-variant/board assumptions explicit.
 
-## LDC1614: requested gates and truthful verdicts
+## LDC161x: requested gates and truthful verdicts
 
 Inspected `include/LDC1614/LDC1614.h`, `src/LDC1614.cpp`,
 `examples/common/Ldc1614Cli.cpp`, `tools/ldc1614_hil_runner.py`,

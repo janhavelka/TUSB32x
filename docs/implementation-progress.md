@@ -91,7 +91,7 @@ and A/V/GPIO source reviews, and gpt-6.1-sol at high reasoning for the peer/publ
 source audit. The latter owned only `docs/audit/execution-2-peers.md`; other agents
 were read-only. Reviewers then checked the completed matrices independently.
 
-Focused peers remained clean on main: TMP1x2 `bafc340`, 24Cxx `936aa85`, LDC1614
+Focused peers remained clean on main: TMP1x2 `bafc340`, 24Cxx `936aa85`, LDC161x
 `c0ab4c1`. Full revisions, exact declarations, tests, AGENTS and build/package
 paths are in [the focused report](audit/execution-2-peers.md). Adopt explicit
 variant/address and shared-identity boundaries, independently derived fakes and
@@ -155,7 +155,7 @@ Only the lead changes Git state. All three agents subsequently reviewed the
 actual register guide/vectors read-only; no confirmed defect remained. The lead
 checked the source pages, peer implementations, public helpers and arithmetic.
 
-PCA9555 remained clean on main at `498178e`, LDC1614 at `c0ab4c1` and ADS1115 at
+PCA9555 remained clean on main at `498178e`, LDC161x at `c0ab4c1` and ADS1115 at
 `381236e`;
 full revisions and source/test/build paths are in audit/execution-3-peers.md.
 Adopt named access masks, procedure guards, explicit semantic validation and
@@ -216,7 +216,7 @@ docs/audit/execution-4-peers.md and then reviewed the full guide read-only.
 The lead owns device-behavior.md, shared records, integration and Git. All three
 reviewed the actual procedure draft; confirmed gaps were resolved against sources.
 
-PCA9555, LDC1614, ADS1115 and LSM6DS3TR initially were clean at the revisions in
+PCA9555, LDC161x, ADS1115 and LSM6DS3TR initially were clean at the revisions in
 the focused report. Final recheck found concurrent LDC/ADS documentation edits;
 their inspected source/test/build files and all four HEADs were unchanged.
 Those sibling changes were left untouched. Adopt explicit guarded transfers,
@@ -257,7 +257,7 @@ precise. Moving the ACK formula outside its table also fixes the unescaped
 bitwise-OR table delimiter. These are documentation corrections, not behavior changes.
 
 All repeated checks passed; the independent prompt 4 section of validation.md
-records source pages, counts and current peer revisions. LDC1614, ADS1115 and
+records source pages, counts and current peer revisions. LDC161x, ADS1115 and
 LSM6DS3TR advanced through documentation-only commits since the original audit;
 their inspected code/test/build evidence is unchanged and all four peers are
 clean. Siblings remained read-only. No implementation, hardware qualification
@@ -643,7 +643,7 @@ accounting and current API/register/procedure contracts were reread. Prompt 10
 remains separate; no public device facade or unfinished operation was introduced.
 
 Fresh [execution-9-peers](audit/execution-9-peers.md) records PCA9555/ADS1115/
-LDC1614 full revisions, clean states, exact source/example/runner/test/workflow
+LDC161x full revisions, clean states, exact source/example/runner/test/workflow
 paths and adopted/rejected choices. Lead verified relevant actual implementations,
 current TI source bytes and all eight archived hashes; read address/framing/map/
 revision pages and visually inspected all four identity tables. Pinned Go/Rust/
@@ -737,7 +737,7 @@ is not started. No device facade, raw setter or operation executor was added.
 
 Fresh [execution-10-peers](audit/execution-10-peers.md) records exact clean peer
 revisions and source/header/example/CLI/runner/test/workflow paths for PCA9555,
-LDC1614 and TMP1x2. Adopted named masks, explicit variant/access gates, literal
+LDC161x and TMP1x2. Adopted named masks, explicit variant/access gates, literal
 expected bytes and unchanged-error outputs. Rejected GPIO-pair/sensor RMW,
 zero-on-error outputs, CLI-local duplicate conversions and configure-time tools.
 No sibling was edited or built; TUSB32x still has no workflows at this stage.
@@ -1177,7 +1177,7 @@ upstream commits and a clean worktree. Final commit evidence is in the handoff.
 Started clean and synchronized at `caba75b21bab02e5bdc7bff47c611f797b2ef3dc`
 on the existing execution branch. Completed prompt 15 only; IRQ remains prompt16.
 Re-read full prompt, COMMON, baseline and exact archived TI status/applicability
-pages. Current BME280/LDC1614/INA228 evidence and adopted/rejected behavior are in
+pages. Current BME280/LDC161x/INA228 evidence and adopted/rejected behavior are in
 [execution-15-peers](audit/execution-15-peers.md). No sibling changes or remote CI.
 
 Implemented `startRefreshPort` and complete cached publication in the existing
@@ -1230,7 +1230,7 @@ refresh publishes IRQ only in PortSnapshot; InterruptSnapshot ACK/service histor
 belongs to prompt 16. Dated the inherited official-download claim explicitly.
 No new runtime API, refactor, dependency or silicon policy was needed.
 
-Reopened peer/TI sources confirm the existing BME280/LDC1614/INA228 revisions,
+Reopened peer/TI sources confirm the existing BME280/LDC161x/INA228 revisions,
 clean states and selected conventions in [execution-15-peers](audit/execution-15-peers.md).
 PASS: fresh strict Debug/Release seven CTests each, affected/prior suites, separate
 1,326-check public probe, Doxygen visibility, links/provenance/version checks and
@@ -1245,7 +1245,7 @@ equality/clean state; final commit evidence is in the handoff.
 Started clean and synchronized at `e964fe5d584100e9e98c3a20f09e5cd38b673f1b`
 on the existing execution branch. Completed prompt 16 only. Re-read the full
 prompt, baseline IRQ/effect/port/owner contracts and exact TI W1C/fault pages.
-Current INA228/PCA9555/LDC1614 sources, clean revisions, instructions, examples,
+Current INA228/PCA9555/LDC161x sources, clean revisions, instructions, examples,
 CLI/runners and workflow definitions are recorded in
 [execution-16-peers](audit/execution-16-peers.md). Siblings remained read-only;
 remote CI remains prompt 34 work.
@@ -1293,7 +1293,7 @@ made service bookends always match. The new cases reject them with 240 and 144
 failures respectively. The real unchanged engine passes 71,617 IRQ checks and
 495,667 port checks. Corrected stale delivered-API scope and the test-file inventory.
 
-Reopened exact TI IRQ/fault pages and current INA228/PCA9555/LDC1614 sources
+Reopened exact TI IRQ/fault pages and current INA228/PCA9555/LDC161x sources
 confirm the revisions, clean states and choices in
 [execution-16-peers](audit/execution-16-peers.md). No sibling changes or remote CI.
 PASS: fresh strict Debug/Release seven CTests each, prior operation/protocol/codec
@@ -1359,7 +1359,7 @@ on the recorded execution branch with zero ahead/behind after fetch. Re-read the
 full prompt, shared instructions, implemented contracts/source/tests and current
 TI register/effect evidence. The [fresh peer audit](audit/execution-18-peers.md)
 records exact revisions, clean states, source/test/example/runner/build paths and
-adopted/rejected patterns for LDC1614, LSM6DS3TR, PCA9555 and ADS1115. No sibling
+adopted/rejected patterns for LDC161x, LSM6DS3TR, PCA9555 and ADS1115. No sibling
 changes or remote CI requests.
 
 Delegation: gpt-6-astra/high independently reviewed protocol/effect safety;
@@ -1401,7 +1401,7 @@ checked coverage, oracles, fake behavior and simplicity. Tracked test ownership
 was disjoint; the lead owns production fixes, documentation, checks and Git.
 
 Fresh sibling states are unchanged and clean on main: INA228 b28c5ea, PCA9555
-498178e, LDC1614 1db38b6, LSM6DS3TR 362b140, TMP1x2 bafc340, ADS1115 235af3e and
+498178e, LDC161x 1db38b6, LSM6DS3TR 362b140, TMP1x2 bafc340, ADS1115 235af3e and
 INA3221 41b6184. Relevant declarations, implementations and runtime registrations
 were revisited; the exact paths and accepted/rejected patterns in
 [execution16](audit/execution-16-peers.md),
@@ -1468,7 +1468,7 @@ full prompt 20, workflow/maintainability, CLI grammar/appearance/records/bounds 
 core baseline/ownership rules. Actual public methods/tests verify prerequisites.
 No local workflow exists; remote CI remains prompt 34 only.
 
-Fresh TMP1x2/24Cxx/SHT3x/LDC1614 revisions, clean state, exact source/test/CLI/
+Fresh TMP1x2/24Cxx/SHT3x/LDC161x revisions, clean state, exact source/test/CLI/
 runner/build/instruction/workflow paths, malformed-input/backpressure cases and
 accepted/rejected conventions are in [execution 20](audit/execution-20-peers.md).
 No sibling edits, builds or Git mutations. Core silicon/access behavior is unchanged;
@@ -1515,7 +1515,7 @@ CLI grammar/staging/records/ownership and core cooperative/time/trust/silicon
 contracts. The three prerequisite CLI/console/transcript CTests passed again.
 There is no local workflow; remote CI remains prompt 34 only.
 
-Fresh read-only TMP1x2/24Cxx/LDC1614/INA228 revisions, status, exact declarations,
+Fresh read-only TMP1x2/24Cxx/LDC161x/INA228 revisions, status, exact declarations,
 dispatch, cleanup tests, runner, budget and workflow evidence are recorded in
 [execution 21](audit/execution-21-peers.md). Keep core result ownership rather than
 copying the peers' automatic take/cached-result designs. Basic callbacks still
@@ -1566,7 +1566,7 @@ CLI grammar/records/ownership and core raw/accounting/health/example contracts.
 The prerequisite CLI/console/transcript CTests passed again. No local workflow
 exists; remote CI remains prompt 34 only.
 
-Fresh TMP1x2/24Cxx/SHT3x/LDC1614/INA228 revisions, clean state, exact declarations,
+Fresh TMP1x2/24Cxx/SHT3x/LDC161x/INA228 revisions, clean state, exact declarations,
 diagnostic/help/alias/parity/runner/workflow paths and adopted/rejected conventions
 are in [execution 22](audit/execution-22-peers.md). No sibling edits or builds.
 Comparison with core declarations found eleven missing canonical routes: now 55
@@ -1745,7 +1745,7 @@ self-referencing commit-hash update. Remote CI remains prompt 34 only.
 Started from synchronized `0d7be0c95c653eaeba7b17398e9f7867522e3af4` on the same
 execution branch, with clean status and zero ahead/behind after fetch. Prompt 24
 is complete. The [fresh peer audit](audit/execution-25-peers.md) records current
-LDC1614, MB85RC and TMP1x2 revisions, dirty states, sources/tests/examples/runners/
+LDC161x, MB85RC and TMP1x2 revisions, dirty states, sources/tests/examples/runners/
 workflows, and accepted/rejected ownership/build/timeout patterns.
 
 Implemented native synchronous callbacks, local setup validation and native owner
@@ -1872,7 +1872,7 @@ operation/result/time and ownership contracts, public declarations and registere
 owner/consumer tests. Relevant workflow definitions remain absent locally; remote
 CI remains prompt34 only. No sibling edits/builds or hardware activity.
 
-Fresh FieldCore-node, LDC1614 and TMP1x2 revisions, clean state, exact declaration/
+Fresh FieldCore-node, LDC161x and TMP1x2 revisions, clean state, exact declaration/
 implementation/test/runner/workflow/AGENTS paths and adopted/rejected conventions
 are in [execution27](audit/execution-27-peers.md). The integration guide maps owner
 concepts to public boundaries, explicitly preserving the limits of Status-only
@@ -1979,7 +1979,7 @@ Started clean after fetch at synchronized prompt28 commit
 Reread both original prompts in full, current parent/local rules, COMMON,
 workflow/maintainability, owner timing/lifetime and CLI machine/runner contracts.
 Compared actual implementation commits, public declarations and executed fixtures.
-Fresh read-only FieldCore-node, TMP1x2, LDC1614 and 24Cxx revisions, exact files,
+Fresh read-only FieldCore-node, TMP1x2, LDC161x and 24Cxx revisions, exact files,
 clean state and adopted/rejected conventions are in the consolidated
 [independent review](audit/review-27-28.md). No local workflows exist; remote CI
 remains prompt34 only. No sibling edits/builds or hardware activity occurred.
@@ -2169,7 +2169,7 @@ Fresh read-only peer review found these clean revisions:
 | --- | --- |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` |
 
 Inspected each peer's root AGENTS and `.github/workflows/ci.yml`, public headers
@@ -2178,7 +2178,7 @@ Inspected each peer's root AGENTS and `.github/workflows/ci.yml`, public headers
 `examples/common/Tmp1x2Cli.h`, `examples/common/Eeprom24CxxCli.h` and
 `examples/common/Ldc1614Cli.h`. Re-read TMP1x2
 `tools/hil_tmp1x2_runner.py` and `tools/test_hil_tmp1x2_runner.py`,
-24Cxx `tools/hil_runner.py` and `tools/test_cli_transcript.py`, LDC1614
+24Cxx `tools/hil_runner.py` and `tools/test_cli_transcript.py`, LDC161x
 `tools/ldc1614_hil_runner.py` and `tools/test_ldc1614_hil_runner.py`, and INA228
 `test/test_basic.cpp` transfer-budget/owner-exclusion cases. Revisited current
 TUSB `test/test_interrupt.cpp`, `test/test_profile_application.cpp`, public
@@ -2385,12 +2385,12 @@ CMake; and native transcript cases. Core/public C++ and SDK/tool pins are unchan
 Current TMP1x2 bafc34067530eb340e55c42dae3fad4eb795b6e9,24Cxx
 936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e,INA228
 b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b,OPT4001
-dab818e575fc25a0949d962bc0df600eb2ed5200,LDC1614
+dab818e575fc25a0949d962bc0df600eb2ed5200,LDC161x
 1db38b63cb93a561b6e0bea51017ab94102ebd24 andINA3221
 41b6184b75f3c152611d4236f7ea41a5ce77bc2c are all clean and unchanged. Reviewed
 TMP1x2 runner cleanup tests/check_package/version generation,24Cxx hil_runner
 and tests/check_package_contents,INA228 test_basic/owner example and public API,
-OPT4001 clean package checker,LDC1614/INA3221 native CMake/application sources
+OPT4001 clean package checker,LDC161x/INA3221 native CMake/application sources
 and all their AGENTS/workflow definitions. Keep exact owned results, primary
 failure, safe conditional cleanup and real renamed consumer/image links; reject
 unbounded extraction, automatic replay/restore and consumer version generation.
@@ -2532,7 +2532,7 @@ were re-read. Prior prompt 33 is committed and synchronized at that starting SHA
 
 Fresh read-only peer audits and official pin sources are recorded in
 [audited pins](audit/execution-34-pins.md) and [SDK comparison](audit/execution-34-sdk.md).
-TMP1x2, OPT4001, LDC1614, INA3221 and 24Cxx were inspected at their actual clean
+TMP1x2, OPT4001, LDC161x, INA3221 and 24Cxx were inspected at their actual clean
 revisions; no sibling files or Git state were changed. Adopt separate bounded
 jobs, immutable official actions, explicit CTest ownership and actual extracted
 image links; reject duplicated source/package matrices and inherited SDK claims.
@@ -2694,7 +2694,7 @@ Fresh read-only peer evidence:
 | TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | AGENTS, CMake, workflow, version generator/tests and Doxygen checker/tests. Keep explicit commands, strict generation and visibility; reject copying a permissive extraction setting or assuming its green SDK rows qualify TUSB. |
 | 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | AGENTS, CMake and tools/test_cli_transcript.py. Keep the explicit built fixture path and real C++ exchange; do not substitute recorded text or EEPROM mutation policies. |
 | OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200` | AGENTS, Doxyfile, workflow/action pins and tools/check_clean_consumer_package.py. Keep actual clean consumers and full action pins; reject warning suppression or SHA-shape checks as sufficient proof. |
-| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | AGENTS, Doxyfile and examples/esp_idf/basic/main/CMakeLists.txt. Keep strict warnings and real component linkage; do not copy fixed directory-derived component names or enclosing-Git identity. |
+| LDC161x `1db38b63cb93a561b6e0bea51017ab94102ebd24` | AGENTS, Doxyfile and examples/esp_idf/basic/main/CMakeLists.txt. Keep strict warnings and real component linkage; do not copy fixed directory-derived component names or enclosing-Git identity. |
 | INA3221 `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` | AGENTS, CMake and examples/esp_idf/basic/main/CMakeLists.txt. Retain native app_main/API evidence; SDK-shaped host fixtures remain a separate evidence level. |
 
 Confirmed corrections remain inside the original validation/package scope:
@@ -2798,7 +2798,7 @@ Re-audited peer revisions were clean:
 | Peer | HEAD | Concrete reviewed sources and choices |
 | --- | --- | --- |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | AGENTS, docs/README.md, docs/integration.md, docs/hil-runner.md, examples/README.md, examples/common/BoardConfig.h, examples/esp_idf/basic/main/CMakeLists.txt and CI. Adopt topical navigation and explicit firmware identity/console routing; reject inherited repeated-START, numeric DTR, 32-bit time and profile replay. |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | AGENTS, docs/I2C_INTEGRATION.md, include/LDC1614/LDC1614.h, src/LDC1614.cpp, test/test_basic.cpp and CI. Adopt desired/actual separation, lifetimes and copied evidence; reject its queue/ID semantics, same-timestamp multi-callback assumptions, failed-delivery output resets and NACK no-effect inference. |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | AGENTS, docs/I2C_INTEGRATION.md, include/LDC1614/LDC1614.h, src/LDC1614.cpp, test/test_basic.cpp and CI. Adopt desired/actual separation, lifetimes and copied evidence; reject its queue/ID semantics, same-timestamp multi-callback assumptions, failed-delivery output resets and NACK no-effect inference. |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | AGENTS, docs/README.md, docs/CLI.md, tools/run_i2c_hil.py, tools/test_run_i2c_hil_parser.py, basic example README and CI. Adopt one command reference and framed provenance; reject scans, startup recovery and human-substring verdicts. |
 | FieldCore-node | `5ad9292dc8481cf08be9a61f662495a6474d1da0` | AGENTS, docs/guidelines/ownership.md, include/TunnelMonitor/i2c/{I2cTask,I2cOwnerTransport,I2cDeviceBinding,I2cLifetime}.h, contracts/Time.h, core/TimeService.h and src/i2c/I2cTask.cpp. Adopt serialized service/lifetimes and monotonic half-range time; reject product queues, richer completion/effect metadata and milliseconds presented as measured microseconds. |
 
@@ -2861,7 +2861,7 @@ Fresh read-only peer evidence:
 
 | Peer, clean HEAD | Exact sources and selected/rejected conventions |
 | --- | --- |
-| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Doxyfile, AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py and .github/workflows/ci.yml. Retain strict undocumented/parameter warning failure and coordinated guides; direct rendering plus a landing-page check cannot establish complete API visibility. |
+| LDC161x `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Doxyfile, AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py and .github/workflows/ci.yml. Retain strict undocumented/parameter warning failure and coordinated guides; direct rendering plus a landing-page check cannot establish complete API visibility. |
 | TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | Doxyfile, tools/check_doxygen.py, tools/test_check_doxygen.py, AGENTS.md, scripts/generate_version.py, CMakeLists.txt and CI. Retain HTML/XML visibility, private exclusion, finite child deadline and links; reject EXTRACT_ALL=YES and synthetic XML as proof of real-parser omission detection. No CONTRIBUTING.md exists. |
 | 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | AGENTS.md, scripts/generate_version.py, library.json, platformio.ini, CMakeLists.txt, CI and test/core_no_arduino/compile_main.cpp. Retain manifest truth, stable checked generation and existing managed Core; reject consumer-time package generation/firmware metadata injection. No CONTRIBUTING.md or dedicated version test exists. |
 | OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200` | AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py, tools/check_version_header_contract.py, library.json, platformio.ini, CMakeLists.txt and CI. Retain ownership/check conventions; reject import-time sync, unbounded Git child, incompatible aliases/numeric-only version assumptions, broad test discovery and unrelated branch/release rules. |
@@ -2928,7 +2928,7 @@ Fresh read-only references, all clean when inspected:
 | Peer HEAD | Exact inspected sources and decisions |
 | --- | --- |
 | TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9` | AGENTS.md, docs/README.md, Doxyfile, tools/check_doxygen.py, tools/test_check_doxygen.py, scripts/generate_version.py, CMakeLists.txt and .github/workflows/ci.yml. Retain guide navigation, visibility/negative fixtures and manifest truth; reject EXTRACT_ALL=YES as omission evidence. No CONTRIBUTING.md exists. |
-| LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Doxyfile, AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py and .github/workflows/ci.yml. Retain strict warnings and coordinated owner/API guidance; a quiet renderer is insufficient visibility proof. |
+| LDC161x `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Doxyfile, AGENTS.md, CONTRIBUTING.md, scripts/generate_version.py and .github/workflows/ci.yml. Retain strict warnings and coordinated owner/API guidance; a quiet renderer is insufficient visibility proof. |
 | INA228 `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | AGENTS.md, docs/README.md, docs/CLI.md and docs/validation/hardware-validation-procedure.md. Retain explicit command provenance and physical prerequisites; reject sensor assumptions for Type-C fixtures. |
 | FieldCore-node `5ad9292dc8481cf08be9a61f662495a6474d1da0` | AGENTS.md; include/TunnelMonitor/i2c/I2cOwnerTransport.h, I2cTask.h, I2cDeviceBinding.h and I2cLifetime.h; include/TunnelMonitor/contracts/Time.h; src/i2c/I2cTask.cpp. Retain serialized ownership and fresh time; its richer completion/effect evidence and millisecond-derived microsecond clock do not survive a Status-only bridge. |
 | 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | AGENTS.md, scripts/generate_version.py, library.json, platformio.ini, CMakeLists.txt, CI and test/core_no_arduino/compile_main.cpp. Retain managed Core/stable generation; reject consumer-time metadata injection. No CONTRIBUTING.md exists. |

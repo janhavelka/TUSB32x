@@ -10,7 +10,7 @@ All paths below are relative to the sibling named in the first column.
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | Empty; clean |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | Empty; clean |
 | OPT4001 | `dab818e575fc25a0949d962bc0df600eb2ed5200` | Empty; clean |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Empty; clean |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Empty; clean |
 | INA3221 | `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` | Empty; clean |
 
 ## Sources and decisions
@@ -58,7 +58,7 @@ deadlines; those remain TUSB32x checker responsibilities. Do not copy its broad
 manifest exclusions as a complete package-content policy or use its
 espressif32-only manifest claim for TUSB32x's portable core.
 
-LDC1614: inspected `tools/check_clean_consumer_compile.py`, `CMakeLists.txt`,
+LDC161x: inspected `tools/check_clean_consumer_compile.py`, `CMakeLists.txt`,
 `include/LDC1614/LDC1614.h`, `.github/workflows/ci.yml`,
 `examples/esp_idf/basic/CMakeLists.txt`,
 `examples/esp_idf/basic/main/CMakeLists.txt` and

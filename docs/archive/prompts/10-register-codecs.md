@@ -7,7 +7,7 @@ write composer. This prompt does not execute role, reset, recovery or IRQ jobs.
 
 ## Focused audit and delegation
 
-Re-audit PCA9555 `CommandTable.h` and mixed-register write tests, LDC1614
+Re-audit PCA9555 `CommandTable.h` and mixed-register write tests, LDC161x
 capability handling and TMP1x2 access validation. Inspect the relevant current
 headers, implementation, examples, CLI/runner expectations, tests, workflows and
 AGENTS; record revisions/dirty state and concrete decisions. Re-read the exact

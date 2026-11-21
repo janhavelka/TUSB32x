@@ -14,7 +14,7 @@ CLI, Arduino/native-IDF examples, generic consumer and runner evidence. Inspect
 current manifest/CMake/generated-file behavior and example build commands first.
 
 Re-audit TMP1x2 check_package.py and version generation, 24Cxx package links/clean
-consumers, OPT4001 archive checks and LDC1614/INA3221 native-IDF image builds.
+consumers, OPT4001 archive checks and LDC161x/INA3221 native-IDF image builds.
 Record HEAD, dirty state, exact files and choices. Inspect current official tools
 when changing package/build pins. Sibling clean-build success proves nothing here.
 

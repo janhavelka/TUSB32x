@@ -12,7 +12,7 @@ read-only: no fetch, build, test, remote CI query or hardware action.
 
 | Peer | Full HEAD | Branch / upstream | Worktree; local ahead/behind |
 | --- | --- | --- | --- |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` / `origin/main` | clean; 0/0 |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` / `origin/main` | clean; 0/0 |
 | LSM6DS3TR | `e262bf22f3d0cf035fbbca10f45b3e0752bf2bac` | `main` / `origin/main` | clean; 0/0 |
 | ADS1115 | `235af3e8c722661a89a44766a4ccd903a654f6fe` | `main` / `origin/main` | clean; 0/0 |
 | INA3221 | `40838b56e41c25183478b086e9e214ceffe3290c` | `main` / `origin/main` | clean; 0/0 |

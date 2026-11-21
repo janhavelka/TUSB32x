@@ -22,10 +22,10 @@ the named sibling under `../`; every sibling's own `AGENTS.md` was inspected.
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `examples/common/Tmp1x2CliDiagnostics.cpp`, `examples/common/Tmp1x2Cli.cpp`, `examples/common/Tmp1x2CliOutput.cpp`, `test/cli/test_cli.cpp`, `tools/check_contracts.py`, `tools/hil_tmp1x2_runner.py`, `.github/workflows/ci.yml` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | `examples/common/Eeprom24CxxCli.cpp`, `test/test_cli/test_cli.cpp`, `tools/test_cli_transcript.py`, `tools/check_contracts.py`, `tools/hil_runner.py`, `.github/workflows/ci.yml` |
 | SHT3x-main | `f65f15573e3c9b1ef04cce72ad08f307d021e563` | `examples/common/Sht3xCli.cpp`, `tools/sht3x_cli_contract.py`, `tools/check_cli_contract.py`, `tools/test_cli_health_rate.py`, `tools/run_sht3x_hil.py`, `.github/workflows/ci.yml` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `include/LDC1614/LDC1614.h`, `examples/common/Ldc1614Cli.cpp`, `test/test_cli.cpp`, `tools/ldc1614_cli_contract.py`, `tools/ldc1614_hil_runner.py`, `.github/workflows/ci.yml` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `include/LDC1614/LDC1614.h`, `examples/common/Ldc1614Cli.cpp`, `test/test_cli.cpp`, `tools/ldc1614_cli_contract.py`, `tools/ldc1614_hil_runner.py`, `.github/workflows/ci.yml` |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | `examples/01_basic_bringup_cli/main.cpp`, `examples/esp_idf/basic/main/main.cpp`, `tools/run_i2c_hil.py`, `tools/test_cli_regressions.py`, `docs/CLI.md`, `.github/workflows/ci.yml` |
 
-LDC1614 has advanced from the historical `c0ab4c1...` cited in the initial
+LDC161x has advanced from the historical `c0ab4c1...` cited in the initial
 contract. The current source and executed-test definitions, rather than that
 old report, informed this review. Other four HEADs match the initial evidence.
 
@@ -48,7 +48,7 @@ cannot prove dispatch, callback counts or returned records. TUSB needs the real
 built fixture plus intentionally damaged-contract negatives. Do not import its
 separate compatibility commands, scan or confirmation grammar.
 
-LDC1614's current command rows separately name execution, safety, fixture and
+LDC161x's current command rows separately name execution, safety, fixture and
 output evidence. Tests iterate aliases and reject surplus arguments for the
 canonical inventory. Adopt explicit classifications and behavioral iteration.
 Use TUSB's fixed execution/effect classes, not LDC's `CLI_JOB`, `ONE_TRANSFER`,
@@ -66,7 +66,7 @@ CLI reset is idle-only. Do not infer physical transactions from callback counts.
 
 Workflow review: TMP1x2/24Cxx register CMake/CTest strict warning and sanitizer
 commands plus Python contract guards; SHT3x registers native PlatformIO and
-Python CLI/runner checks; LDC1614 registers CLI/runner/consumer checks with Python
+Python CLI/runner checks; LDC161x registers CLI/runner/consumer checks with Python
 3.11; INA228 pins PlatformIO 6.1.19 for its framework matrix. These are source
 observations, not claims that a remote run passed. TUSB has no checked-in
 `.github/workflows` directory yet; its current `test/CMakeLists.txt` registers

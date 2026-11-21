@@ -29,7 +29,7 @@ Driver compilation/tests, firmware links, source Doxygen generation, remote CI
 and physical hardware checks are not applicable to completing this source-free
 prompt and were not run. Later prompts must establish their own evidence. Native
 IDF availability and board fixtures remain real future prerequisites, not assumed
-passes. Missing TMP1x2 CONTRIBUTING.md is recorded; LDC1614 supplies the inspected
+passes. Missing TMP1x2 CONTRIBUTING.md is recorded; LDC161x supplies the inspected
 release-process reference instead.
 
 The lead commits this complete unit and verifies fetch/push/upstream equality.
@@ -50,7 +50,7 @@ Corrected five evidence or wording issues:
 - TMP1x2 end is bus-silent but remains bound; its separate unbind clears callback
   associations. TUSB32x adopts bus silence, not that retained binding.
 - ADS1115 DriverConfig is declared in Config.h, not ADS1115.h.
-- LDC1614/INA228 supply strict Doxygen settings, not demonstrated missing-comment
+- LDC161x/INA228 supply strict Doxygen settings, not demonstrated missing-comment
   negative fixtures. Those fixtures remain required TUSB32x work in prompt 33.
 - The documentation checks above were session commands, not a repository tool.
 
@@ -73,7 +73,7 @@ source report against exact files and the final matrices. No prompt 3 work ran.
 | Current official sources | PASS | Seven fresh official downloads were byte-identical; separately fetched TUSB321AI SLLSER2A added; current product/revision/errata search recorded in reference README |
 | Original terms | PASS | Final-page Important Notice checked in all eight PDFs; per-file rights/terms summaries and current-source verification UTC added without removing original notices |
 | Public implementations | PASS | All 13 pinned downloads match byte count, SHA-256 and Git blob SHA-1 (39 comparisons); lead independently checked downloaded bytes and relevant regmap/identity helpers |
-| Focused peers | PASS | TMP1x2/24Cxx/LDC1614 remain clean at captured revisions; declarations, tests, AGENTS, CLI/runner and build/package rules re-audited; peer archive guard passed 15 documents/28 artifacts/66 checksums |
+| Focused peers | PASS | TMP1x2/24Cxx/LDC161x remain clean at captured revisions; declarations, tests, AGENTS, CLI/runner and build/package rules re-audited; peer archive guard passed 15 documents/28 artifacts/66 checksums |
 | Capability boundary | PASS | Six explicit 320 variants plus separate 322I gates; exact address/identity/revision restrictions; GPIO-only parts excluded; no claimed hardware support |
 | Source review | PASS | Exact electrical/pin/identity tables visually inspected; source/code/policy/unresolved/hardware labels separate; conflicting summaries and operation gates preserved |
 | Scope and preservation | PASS | Dated TI preparation reports preserved with appended corrections; no production code, SDK install or sibling mutation; compilation/package exclusion remains explicit for future builds |
@@ -144,7 +144,7 @@ Repeated verification:
   Git-blob comparisons; the lead independently repeated these checks on the new
   download cache. The reviewer checked helpers, attribution and three supplemental
   LICENSE hashes against the actual fetched content.
-- TMP1x2, 24Cxx and LDC1614 remain clean on main at the full revisions recorded in
+- TMP1x2, 24Cxx and LDC161x remain clean on main at the full revisions recorded in
   execution-2-peers.md, with matching local upstream refs. Their declarations,
   tests, AGENTS and package/build rules were rechecked without sibling mutations
   or fetches. The read-only 24Cxx archive guard again passed 15 documents,
@@ -177,7 +177,7 @@ the lead checked source evidence, masks, literals and the full scoped diff.
 | Access/encoding contract | PASS | Complete map, default validity masks, separate persistent/protected/live/command/reserved masks, comparison masks and semantic tables reviewed against exact pages; V access/return gates remain explicit |
 | Independent arithmetic | PASS | Eight complete/disjoint byte-mask partitions; all 21 C vectors match independent integer arithmetic, legal output masks and command exclusion; selected field extraction, reset-mask defect and DRP equality/inequality checked |
 | Vector inventory | PASS | D01–D36, C01–C21 and N01–N25 unique and consecutive: 82 literal cases; requirements include future callback/error tests, not 82 executed driver tests |
-| Focused peers | PASS | PCA9555/LDC1614/ADS1115 clean at recorded HEADs/main/local upstream; 18 named test definitions and RUN_TEST registrations verified. No sibling fetch/edit/build |
+| Focused peers | PASS | PCA9555/LDC161x/ADS1115 clean at recorded HEADs/main/local upstream; 18 named test definitions and RUN_TEST registrations verified. No sibling fetch/edit/build |
 | Documentation/scope | PASS | All 74 Markdown files and 408 local links/anchors checked; 38 numbered prompts unchanged. Changed/new text UTF-8/LF/final newline, JSON and whitespace checks pass; no generated images/download cache or production code in the diff |
 
 The independent arithmetic check parsed the literal composition rows and used
@@ -230,7 +230,7 @@ Repeated verification:
   independent arithmetic. D01–D36 and N01–N25 were checked against source and
   baseline contracts; all 82 vector IDs remain unique and consecutive. These are
   specification checks, not executed driver behavior tests.
-- PCA9555, LDC1614 and ADS1115 remain clean at their recorded revisions. Relevant
+- PCA9555, LDC161x and ADS1115 remain clean at their recorded revisions. Relevant
   declarations, implementations, examples, runner meanings and all 18 cited test
   definitions/registrations were checked without sibling fetches or builds.
 - Local Markdown links/anchors, prompt numbering, JSON, UTF-8/LF/final-newline
@@ -344,7 +344,7 @@ Repeated checks:
 | Peer | Current HEAD | Change to inspected implementation/test/build files |
 | --- | --- | --- |
 | PCA9555 | 498178e4d9e4acb6fab7d8b816ad5021efe8806a | None |
-| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | None |
+| LDC161x | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | None |
 | ADS1115 | 235af3e8c722661a89a44766a4ccd903a654f6fe | None |
 | LSM6DS3TR | e262bf22f3d0cf035fbbca10f45b3e0752bf2bac | None |
 
@@ -1766,7 +1766,7 @@ Table7-7 pp17-18; L SLLSEP2D and A SLLSEQ8D Tables8-9 pp17-18 and accessory
 sections7.2.3.1-2 pp11-12; V SLLSEO5D Tables6-8/9 pp18-19, sections6.3.4.2 p12
 and6.3.8 p13. The [matrix](register-map.md#complete-port-interpretation-implemented-prompt-15)
 separates TI field codes from conservative applicability policy. Eight archived
-vendor hash checks passed. Current BME280/LDC1614/INA228 revisions, declarations,
+vendor hash checks passed. Current BME280/LDC161x/INA228 revisions, declarations,
 source/tests/examples/CLI/runners/workflow definitions and instructions are in
 [execution-15-peers](audit/execution-15-peers.md); siblings remained read-only.
 
@@ -1956,7 +1956,7 @@ No production defect was confirmed. The lead inspected and reran the findings.
 | Mutation evidence | PASS | Stale first09 control composition and falsely matching service bookends both pass the old 67,081 IRQ checks. New regressions reject them with 240 and 144 failed assertions; the real engine passes unchanged |
 | Independent lifecycle probe | PASS | 144 stateful public-API cases: six variants, both operations, six transport errors, before/after simulated latch clear; take/end/same-target bind/reinitialize retain IRQ uncertainty without a settings obligation or ACK replay |
 | Previous suites | PASS | 35,454 profile observation, 89,140 apply/verify, 88,779 reset/recovery, 20,490 owner, 161,670 protocol and 8,602,548 codec checks; values/validators/version/launcher |
-| Source evidence | PASS | B pp16/18, L/A p18, V pp18–19 and SLAAE24 section8 p9 reread; eight TI hashes checked. INA228/PCA9555/LDC1614 remain main/clean at execution-16 revisions; relevant source/tests/examples/CLI/runners/instructions/workflow definitions reopened |
+| Source evidence | PASS | B pp16/18, L/A p18, V pp18–19 and SLAAE24 section8 p9 reread; eight TI hashes checked. INA228/PCA9555/LDC161x remain main/clean at execution-16 revisions; relevant source/tests/examples/CLI/runners/instructions/workflow definitions reopened |
 | Documentation/package | PASS | Strict Doxygen with 17 public structs and24 owner methods; future methods absent; links/anchors, UTF-8/LF/whitespace/version checks; source-equal36-file archive and renamed tests-OFF consumer under unrelated Git without maintainer tools |
 | Separate evidence | NOT RUN | Physical IRQ/electrical behavior and framework firmware. Installed MinGW sanitizer runtimes remain unavailable from same-day checks; MSVC/Clang/clang-format absent. Native PlatformIO was not repeated for test/docs-only corrections; package consumption was rechecked |
 
@@ -2943,7 +2943,7 @@ Started clean after fetch at synchronized
 `9e4b08a62303dbb9a6bbbfdbacb6aeb42154533c`, on the existing
 `promptset/tusb32x-implementation-20261023` branch. Read full27, current rules,
 COMMON, operation/result/time and ownership contracts, actual public declarations
-and existing owner/consumer registrations. Fresh FieldCore-node, LDC1614 and
+and existing owner/consumer registrations. Fresh FieldCore-node, LDC161x and
 TMP1x2 revisions, clean state, precise source/test/runner/AGENTS paths and adopted
 or rejected conventions are in [execution27](audit/execution-27-peers.md).
 No sibling edits/builds, remote CI or hardware activity occurred.
@@ -3040,7 +3040,7 @@ Started clean after fetch at synchronized prompt27 commit
 `19fcd2c37837ef823fd852581d4cfe42b6bb8d5c`, on the same execution branch
 `promptset/tusb32x-implementation-20261023`. Read the full prompt, current rules,
 machine-record/runner contracts and actual CLI schema/output/transcript sources.
-Fresh TMP1x2/24Cxx/LDC1614 revisions, clean state, exact code/test/AGENTS/runner
+Fresh TMP1x2/24Cxx/LDC161x revisions, clean state, exact code/test/AGENTS/runner
 paths and adopted/rejected choices are in [execution28](audit/execution-28-peers.md).
 No tracked workflow definitions exist here; remote CI remains prompt34 only.
 No sibling edit/build, physical serial open, hardware action or flashing occurred.

@@ -9,7 +9,7 @@ engine. Preserve observation, acknowledgement and remaining work as distinct fac
 ## Focused audit and delegation
 
 Re-audit INA228 observe/acknowledge paths, PCA9555 mixed-control preservation and
-LDC1614 bounded operation tests. Check current public headers, implementation,
+LDC161x bounded operation tests. Check current public headers, implementation,
 examples, CLI/runner expectations, tests, CI and AGENTS. Record revisions/dirty
 state and selected behavior. Re-read TI IRQ/fault access wording; names or an
 `RCU` abbreviation do not by themselves prove clear-on-read behavior.

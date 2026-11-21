@@ -16,7 +16,7 @@ reference comparisons; no claim is made about newly published remote commits.
 | Peer | Full HEAD |
 | --- | --- |
 | PCA9555 | `498178e4d9e4acb6fab7d8b816ad5021efe8806a` |
-| LDC1614 | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` |
+| LDC161x | `c0ab4c1712c4135b925354d70c4e6bed5cca62d8` |
 | ADS1115 | `381236ebfed813cd7a9aca34520ce031d8a0ff6b` |
 
 Peer AGENTS agree on injected, non-owning transport, framework-neutral core,
@@ -67,7 +67,7 @@ be assumed from TUSB32x's Status-only callbacks. Its successful pointer cleanup
 is intentionally omitted from success counters; TUSB32x instead counts every
 callback in its neutral totals and maintains its own filtered health evidence.
 
-## LDC1614: access masks, independent literals and behavioral fakes
+## LDC161x: access masks, independent literals and behavioral fakes
 
 Sources inspected together:
 
@@ -152,7 +152,7 @@ comparator thresholds and synchronous compatibility service loops.
 | Peer | Current source and relevant boundary |
 | --- | --- |
 | PCA9555 | `examples/01_basic_bringup_cli/main.cpp`, `examples/espidf_basic/main/main.cpp::cmdWriteReg/cmdWriteRegs`, `examples/common/I2cTransport.h`; raw writes accept only 02..05 and bounded byte values, reaching the same guarded public API. `tools/run_i2c_hil.py`, `check_hil_contract.py`, `test_run_i2c_hil_parser.py` retain bounded classifier evidence and explicitly disclaim identity from ACK. Do not import firmware stress schedulers or duplicated framework CLIs. |
-| LDC1614 | `examples/common/Ldc1614Cli.cpp::printRegisterValue` and REG/WREG dispatch, `examples/esp_idf/basic/main/Ldc1614IdfCli.cpp` matching dispatch; reads label register/access/reserved validity, WREG parses bounded address/16-bit value and calls `writeRegister16`. `tools/ldc1614_cli_contract.py`, `ldc1614_hil_runner.py`, `test_ldc1614_hil_runner.py` inspect firmware Git/clean evidence and produce NOT_RUN without serial hardware. TUSB32x uses one portable CLI and host sequencing, not duplicated sessions or on-device repetition. |
+| LDC161x | `examples/common/Ldc1614Cli.cpp::printRegisterValue` and REG/WREG dispatch, `examples/esp_idf/basic/main/Ldc1614IdfCli.cpp` matching dispatch; reads label register/access/reserved validity, WREG parses bounded address/16-bit value and calls `writeRegister16`. `tools/ldc1614_cli_contract.py`, `ldc1614_hil_runner.py`, `test_ldc1614_hil_runner.py` inspect firmware Git/clean evidence and produce NOT_RUN without serial hardware. TUSB32x uses one portable CLI and host sequencing, not duplicated sessions or on-device repetition. |
 | ADS1115 | Arduino `examples/01_basic_bringup_cli/main.cpp`, native `examples/esp_idf/basic/main/main.cpp` config/reg/wreg dispatch, and `examples/02_owner_safe_poll/main.cpp`; bounds are checked before narrowing. `tools/run_i2c_hil.py` validates firmware commit/clean markers and classifies bounded output; its conversion constants are ADC-specific. No register readback or ACK establishes exact chip identity. |
 
 Read each `platformio.ini`, root `CMakeLists.txt` and

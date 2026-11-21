@@ -8,7 +8,7 @@ audits source documentation and maintainer instructions.
 
 ## Audit and delegation
 
-Re-audit TMP1x2 guide/index structure, LDC1614 API/owner docs, INA228 CLI/HIL docs
+Re-audit TMP1x2 guide/index structure, LDC161x API/owner docs, INA228 CLI/HIL docs
 and current FieldCore integration guidance. Read MAINTAINABILITY and the actual
 implemented headers, help, runner commands and validation records.
 

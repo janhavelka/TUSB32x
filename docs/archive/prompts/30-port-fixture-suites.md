@@ -13,7 +13,7 @@ Read [COMMON](../../prompts/COMMON.md), [AGENT_WORKFLOW](../../prompts/AGENT_WOR
 strict sessions, artifacts and observation plans. Use the verified TI matrix and
 current implementation rather than assuming all TUSB32x variants share behavior.
 
-Re-audit relevant TMP1x2/24Cxx fixture prerequisites and cleanup evidence, LDC1614
+Re-audit relevant TMP1x2/24Cxx fixture prerequisites and cleanup evidence, LDC161x
 suite verdicts and INA228 staged/applied and owner-exclusion assertions. Record
 revisions, dirty state, actual files and choices. Read the TUSB IRQ and role-change
 failure tests. Sensor scratch-window or unconditional restore policies do not fit.

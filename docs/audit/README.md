@@ -47,7 +47,7 @@ TUSB32x was initially an empty folder without Git metadata.
 | BME280 | 2.2.0 | Byte registers, staged settings and trust independent of health |
 | INA228 | 3.0.4 | Event evidence, explicit acknowledgement, CLI diagnostics and transfer assertions |
 | INA3221 | 3.2.0 | Result/effect evidence, owner time and failure/cancellation behavior |
-| LDC1614 | 3.2.0 | Current owner-first API, variant capabilities, neutral diagnostics and command contracts |
+| LDC161x | 3.2.0 | Current owner-first API, variant capabilities, neutral diagnostics and command contracts |
 | LSM6DS3TR | 2.1.0 | Passive binding, external scheduling, tokened operations and bounded owner soak |
 | MB85RC | 4.2.0 | Family descriptors, terminal transport/effect evidence and strict HIL reports |
 | MCP45HVX1 | 2.0.0 | Typed mutation controls, executable CLI tests and validation entrypoint |
@@ -123,13 +123,13 @@ scope of this documentation-only revision.
 
 ## Repository guidance adopted from sibling AGENTS
 
-On 2026-10-23 the guidance was compared again against TMP1x2, 24Cxx, LDC1614,
+On 2026-10-23 the guidance was compared again against TMP1x2, 24Cxx, LDC161x,
 LSM6DS3TR, INA3221 and ADS1115. Their current AGENTS.md files consistently require
 one promptset branch, checked commits/pushes for completed chunks, preservation of
 concurrent changes, lead-owned Git operations and confirmed upstream sync.
 The user's explicit request makes that workflow applicable to TUSB32x.
 
-The updated [AGENTS.md](../../AGENTS.md) also adopts LDC1614/LSM6DS3TR's explicit
+The updated [AGENTS.md](../../AGENTS.md) also adopts LDC161x/LSM6DS3TR's explicit
 ownership and source-evidence rules, INA3221/ADS1115's small-change and reuse
 principles, and TMP1x2/24Cxx's portable CLI, tooling and honest-validation rules.
 These were fitted to TUSB32x's selected API and TI behavior. Sensor operations,

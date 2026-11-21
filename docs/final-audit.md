@@ -87,7 +87,7 @@ remain documented physical/source limits, not silently resolved by a fake.
 ### Current Projects inventory and peers
 
 There are still 47 immediate directories and the same 17 independent I2C
-libraries: TMP1x2, 24Cxx, INA228, INA3221, ADS1115, OPT4001, LDC1614, BME280,
+libraries: TMP1x2, 24Cxx, INA228, INA3221, ADS1115, OPT4001, LDC161x, BME280,
 SHT3x-main, LSM6DS3TR, MB85RC, MCP45HVX1, PCA9555, RV3032-C7, SCD41, SSD1315
 and TCA9548A. All are clean on main, with normal .git directories. Active 24Cxx
 remains included; the formerly empty EEPROM_24Cxx directory is now absent.
@@ -101,7 +101,7 @@ Changed HEADs since the [prompt1 inventory](audit/execution-1-inventory.json):
 | --- | --- |
 | INA3221 | 41b6184b75f3c152611d4236f7ea41a5ce77bc2c |
 | ADS1115 | 235af3e8c722661a89a44766a4ccd903a654f6fe |
-| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
+| LDC161x | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
 | LSM6DS3TR | 362b140990bc4ba2bc7f32cef50f8d9f30b4d3cc |
 | MCP45HVX1 | c6c7feefd79b9fc16ddc7b7786ad187e5185fde6 |
 | SSD1315 | 9586b61363b2b70966f84e218f786bcfe9906e76 |
@@ -115,7 +115,7 @@ than inferred from HEAD alone. No sibling fetch/build/edit was performed.
 | --- | --- |
 | LSM6DS3TR src/LSM6DS3TR.cpp bind/checkStart/cancel/takeResult; test/test_basic.cpp; AGENTS, examples, tools and CI | Keep validate-first admission/exact take; reject result-dropping unbind and direct deadline model. |
 | ADS1115 src/ADS1115.cpp bind/takeResult; owner tests and example/runner/CI | Keep transactional admission/passive OFFLINE; reject sensor recovery replay and compatibility facades. |
-| LDC1614 src/LDC1614.cpp bind/end/startJob/poll/take; fixed fake/backpressure tests | Keep bounded borrowed transport/saturation; reject FIFO results and teardown clearing evidence/counters. |
+| LDC161x src/LDC161x.cpp bind/end/startJob/poll/take; fixed fake/backpressure tests | Keep bounded borrowed transport/saturation; reject FIFO results and teardown clearing evidence/counters. |
 | TMP1x2 src/TMP1x2.cpp bind/end/health; current CLI/runner/tests | Keep bus-silent end and passive health vocabulary; reject unbind-before-validation, retained binding and owner timeout counted as I2C failure. |
 | PCA9555 src/PCA9555.cpp bind/poll; public tests | Keep fixed storage/validity; reject READY-on-bind and chip-specific pointer cleanup semantics. |
 | INA3221 test/test_owner_operations.cpp and owner implementation | Keep legal I/O after OFFLINE; reject profile-replaying reconciliation. |
@@ -184,7 +184,7 @@ the sole consumer's dequeue. This is software evidence, not a measured USB trace
 
 Fresh clean peer references: TMP1x2 `bafc34067530eb340e55c42dae3fad4eb795b6e9`,
 24Cxx `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e`,
-LDC1614 `1db38b63cb93a561b6e0bea51017ab94102ebd24`,
+LDC161x `1db38b63cb93a561b6e0bea51017ab94102ebd24`,
 INA228 `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b`,
 INA3221 `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` and
 OPT4001 `dab818e575fc25a0949d962bc0df600eb2ed5200`.

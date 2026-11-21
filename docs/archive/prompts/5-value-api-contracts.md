@@ -8,7 +8,7 @@ owner/state semantics; prompt 7 provides the build and real validators.
 
 ## Focused re-audit
 
-Re-read LDC1614 and LSM6DS3TR Status/configuration declarations and tests,
+Re-read LDC161x and LSM6DS3TR Status/configuration declarations and tests,
 TMP1x2 explicit-bool Status, and ADS1115/INA3221 profile separation. Inspect
 matching source, examples, relevant runner record names, AGENTS and registration.
 Record HEAD, dirty state, paths and selected differences. Compare at least two

@@ -17,7 +17,7 @@ implementation, examples, CLI, runners, CMake, PlatformIO and checked-in workflo
 
 | Peer | Branch | HEAD | Index/worktree |
 | --- | --- | --- | --- |
-| LDC1614 | main | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Clean |
+| LDC161x | main | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | Clean |
 | LSM6DS3TR | main | `362b140990bc4ba2bc7f32cef50f8d9f30b4d3cc` | Clean |
 | PCA9555 | main | `498178e4d9e4acb6fab7d8b816ad5021efe8806a` | Clean |
 | ADS1115 | main | `235af3e8c722661a89a44766a4ccd903a654f6fe` | Clean |

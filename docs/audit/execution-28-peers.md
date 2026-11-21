@@ -14,9 +14,9 @@ checkout before this report was written. Every listed worktree was clean.
 | TUSB32x | `19fcd2c37837ef823fd852581d4cfe42b6bb8d5c` |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` |
 
-TUSB32x remains on `promptset/tusb32x-implementation-20261023`. LDC1614 has
+TUSB32x remains on `promptset/tusb32x-implementation-20261023`. LDC161x has
 advanced beyond the older `c0ab4c1` revision cited in CLI_CONTRACT; the findings
 below use its current files. This agent did not independently fetch or verify
 upstream equality; the lead owns synchronization.
@@ -112,7 +112,7 @@ retain TUSB's existing 30-second transcript timeout and add a finite runner one.
 The peer `.github/workflows/ci.yml` runs the native CMake/CTest checks with strict
 warnings and sanitizers; no remote status was consulted.
 
-### LDC1614: provenance, verdicts and capture limits
+### LDC161x: provenance, verdicts and capture limits
 
 Read `tools/ldc1614_hil_runner.py` `TranscriptJournal`, `classify_command`,
 `append_expectation_results`, `overall_status`, and optional-gate combination;

@@ -26,7 +26,7 @@ prompt-34-only remote CI exception applies here.
 | --- | --- | --- | --- |
 | INA228 | main | b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b | Clean |
 | PCA9555 | main | 498178e4d9e4acb6fab7d8b816ad5021efe8806a | Clean |
-| LDC1614 | main | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | Clean |
+| LDC161x | main | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | Clean |
 
 These states come from fresh `rev-parse HEAD`, `branch --show-current` and
 `status --short` calls. Historic reports were used for navigation only.
@@ -76,7 +76,7 @@ or settings proof obligation is needed for a pure IRQ ACK.
 
 ## Bounded work and publication
 
-LDC1614 `include/LDC1614/LDC1614.h` operation/batch declarations and
+LDC161x `include/LDC1614/LDC1614.h` operation/batch declarations and
 `src/LDC1614.cpp::_finishJob/_buildAcquisition` keep candidate data private until
 complete acquisition. `test/test_basic.cpp::test_acquire_failure_at_every_phase_preserves_prior_complete_publication`
 fails every callback of the two-channel read, preserves the previous queued
@@ -101,7 +101,7 @@ handlers, plus `tools/run_i2c_hil.py` cache-only/destructive-read steps and targ
 firmware identity checks. Reopened PCA9555
 `examples/01_basic_bringup_cli/main.cpp` bounded owner loop/exact result take,
 native-IDF input-read commentary and `tools/run_i2c_hil.py` explicit interrupt
-clear/pointer-park labels. Reopened LDC1614
+clear/pointer-park labels. Reopened LDC161x
 `examples/common/Ldc1614Cli.cpp::printBatch/handleSessionOperationResult` and
 `tools/ldc1614_hil_runner.py` complete-batch parsing, fresh result correlation
 and firmware-reported identity checks. LDC rejects a nominally successful sample

@@ -22,7 +22,7 @@ claims. TUSB's prompt-34-only remote CI exception governs this execution.
 | Current peer | Branch | HEAD | Index/worktree |
 | --- | --- | --- | --- |
 | BME280 | main | d538f2e203ee26d6ddbc86f86d2b0cf4c73a6e98 | Clean |
-| LDC1614 | main | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | Clean |
+| LDC161x | main | 1db38b63cb93a561b6e0bea51017ab94102ebd24 | Clean |
 | INA228 | main | b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b | Clean |
 
 States come from fresh `rev-parse HEAD`, `branch --show-current` and
@@ -44,7 +44,7 @@ and generation provenance. Reject BME measurement prerequisites, synchronous
 conveniences, health-semantic failures and calibration/conversion timing as
 TUSB port policy. TUSB refresh needs binding only and never repairs trust.
 
-LDC1614 `include/LDC1614/LDC1614.h::SampleBatch/ChannelSample`,
+LDC161x `include/LDC1614/LDC1614.h::SampleBatch/ChannelSample`,
 `src/LDC1614.cpp::_finishJob/_buildAcquisition` and
 `test/test_basic.cpp::test_acquire_failure_at_every_phase_preserves_prior_complete_publication`
 stage raw samples privately and attach a complete batch only on success. That
@@ -80,7 +80,7 @@ observation. IRQ ACK/service belongs to prompt 16, with all 322I 09 writes gated
 
 Reopened BME280 `examples/01_basic_bringup_cli/main.cpp` freshness/settings output
 and `tools/run_i2c_hil.py` cache-only freshness checks and firmware identity guard;
-LDC1614 `examples/common/Ldc1614Cli.cpp::printBatch/handleSessionOperationResult`
+LDC161x `examples/common/Ldc1614Cli.cpp::printBatch/handleSessionOperationResult`
 and `tools/ldc1614_hil_runner.py` raw-before/after freshness/mask checks; INA228
 `examples/01_basic_bringup_cli/main.cpp` diagsnap/diagraw help and exact result take,
 and `tools/run_i2c_hil.py` destructive-read versus cache-only steps. LDC output

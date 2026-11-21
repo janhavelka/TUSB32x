@@ -16,7 +16,7 @@ Read `git rev-parse HEAD`, `git branch --show-current` and
 | TUSB32x | `93f2d31374dc16bcc95800d0e0c516c4372faa4a` | `promptset/tusb32x-implementation-20261023` | Clean |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `main` | Clean |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | `main` | Clean |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` | Clean |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `main` | Clean |
 | INA3221 | `41b6184b75f3c152611d4236f7ea41a5ce77bc2c` | `main` | Clean |
 | OPT4001 | `dab818e575fc25a0949d962bc0df600eb2ed5200` | `main` | Clean |
 
@@ -70,10 +70,10 @@ with generated-example exclusions; their broad `docs/*.md` and `examples/**`
 patterns are inappropriate as an unreviewed initial TUSB32x package.
 `INA3221/library.json` has no explicit export selection;
 `OPT4001/library.json` uses exclusions only. Reject both as the initial package
-policy. `LDC1614/library.json` includes a vendor datasheet and version script;
+policy. `LDC161x/library.json` includes a vendor datasheet and version script;
 reject those inclusions for the TUSB32x normal package.
 
-`LDC1614/CMakeLists.txt:1` unconditionally finds Python, executes the version
+`LDC161x/CMakeLists.txt:1` unconditionally finds Python, executes the version
 checker and then calls `idf_component_register`. Reject its consumer-time
 maintainer dependency and component-only entry. Adopt explicit real source
 registration and PUBLIC C++17 from that file and
@@ -124,13 +124,13 @@ are Jan Havelka, independently confirming the maintainer name.
 for review ownership; no invented team or second reviewer. The actual repository
 remote corroborates the account name, without proving GitHub access permissions.
 
-`LDC1614/.clang-format`, `INA3221/.clang-format` and `OPT4001/.clang-format`
+`LDC161x/.clang-format`, `INA3221/.clang-format` and `OPT4001/.clang-format`
 use two-space indentation, attached braces and 100 columns. Adopt the simple
-style, reject framework-first include categories in core. `LDC1614/.editorconfig`
+style, reject framework-first include categories in core. `LDC161x/.editorconfig`
 uses UTF-8/LF/final newline; add four-space Python indentation under the local
 maintainability rule instead of inheriting its two-space default for Python.
 
-`LDC1614/Doxyfile` enables `EXTRACT_ALL=NO`, static constants, public inputs,
+`LDC161x/Doxyfile` enables `EXTRACT_ALL=NO`, static constants, public inputs,
 undocumented/parameter/document-error warnings and failure on warnings.
 Adopt these omission-sensitive settings with output under `build/`.
 `TMP1x2/Doxyfile` uses `EXTRACT_ALL=YES` and hides undocumented classes; reject
@@ -145,10 +145,10 @@ visible current public types rather than claiming the future omission guard.
 Reopened all five `.github/workflows/ci.yml` files as source. TMP1x2/24Cxx
 pin PlatformIO 6.1.19 and IDF containers 5.3.2/5.5.1/6.0.1 on S2/S3;
 their native jobs use Ubuntu 24.04, strict GCC warnings and ASan/UBSan.
-LDC1614 uses IDF 6.0.2; INA3221/OPT4001 use 6.0.1. LDC1614's
+LDC161x uses IDF 6.0.2; INA3221/OPT4001 use 6.0.1. LDC161x's
 `requirements-dev.txt` pins PlatformIO 6.1.19 and pyserial 3.5. Other named peers
 have no requirements-dev file. OPT4001's workflow selects Python 3.12;
-LDC1614/INA3221 select 3.11. These are source-declared inputs, not observed green
+LDC161x/INA3221 select 3.11. These are source-declared inputs, not observed green
 runs or installed local versions. Do not copy moving action majors or add a
 workflow before its assigned stage.
 
@@ -165,12 +165,12 @@ The [published PlatformIO 6.1.19 package](https://pypi.org/project/platformio/6.
 confirms that peer tool version exists; a newer release does not require changing
 this reviewed pin. Windows must use the existing managed installation.
 
-`TMP1x2/scripts/pio.cmd` and `LDC1614/scripts/pio.cmd` both quote
+`TMP1x2/scripts/pio.cmd` and `LDC161x/scripts/pio.cmd` both quote
 `%USERPROFILE%\.platformio\penv\Scripts\pio.exe`, forward `%*` and preserve
 `%ERRORLEVEL%`; missing executable fails explicitly. Adopt these mechanics and
 the local no-second-install rule. No wrapper invocation occurred in this audit.
 
-TMP1x2/24Cxx declare IDF `>=5.3.0`; LDC1614/INA3221/OPT4001 declare `>=6.0.0`.
+TMP1x2/24Cxx declare IDF `>=5.3.0`; LDC161x/INA3221/OPT4001 declare `>=6.0.0`.
 For the current framework-neutral subset, `>=5.3.0,<7.0.0` is a conservative
 proposed admission range grounded in two current peers and their 5/6-series
 source matrix; it is a project policy, not a tested TUSB32x support claim.
@@ -216,7 +216,7 @@ revisions:
 | --- | --- |
 | TMP1x2 | bafc34067530eb340e55c42dae3fad4eb795b6e9 |
 | 24Cxx | 936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e |
-| LDC1614 | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
+| LDC161x | 1db38b63cb93a561b6e0bea51017ab94102ebd24 |
 | INA3221 | 41b6184b75f3c152611d4236f7ea41a5ce77bc2c |
 | OPT4001 | dab818e575fc25a0949d962bc0df600eb2ed5200 |
 

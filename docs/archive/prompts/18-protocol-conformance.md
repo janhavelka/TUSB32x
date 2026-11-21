@@ -9,7 +9,7 @@ stage or a request to duplicate every existing test.
 
 ## Focused audit and delegation
 
-Re-audit LDC1614 explicit callback-count tests and fixed fake, LSM6DS3TR
+Re-audit LDC161x explicit callback-count tests and fixed fake, LSM6DS3TR
 `test_ambiguous_write_effect_is_observable_and_never_retried`, PCA9555 public/
 mixed-register tests and ADS1115 applied-write failures. Inspect current relevant
 headers, examples, CLI/runner fixtures, test registration, CI and AGENTS. Record

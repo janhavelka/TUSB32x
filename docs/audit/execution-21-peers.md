@@ -22,10 +22,10 @@ permissions for this repository.
 | --- | --- | --- |
 | TMP1x2 | `bafc34067530eb340e55c42dae3fad4eb795b6e9` | `include/TMP1x2/TMP1x2.h`; `examples/common/Tmp1x2Cli.cpp`, `Tmp1x2CliDiagnostics.cpp`, `Tmp1x2CliOutput.cpp`; `test/cli/test_cli.cpp`; `tools/hil_tmp1x2_runner.py`, `tools/test_hil_tmp1x2_runner.py`; `CMakeLists.txt` |
 | 24Cxx | `936aa85e21b40b61c6f9cf0306d64c3beb6eaf6e` | `include/EEPROM24Cxx/EEPROM24Cxx.h`; `examples/common/Eeprom24CxxCli.cpp`; `test/test_cli/test_cli.cpp`; `tools/hil_runner.py`, `tools/test_hil_runner.py`, `tools/test_cli_transcript.py`; `CMakeLists.txt` |
-| LDC1614 | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `include/LDC1614/LDC1614.h`; `examples/common/Ldc1614Cli.cpp`; `test/test_cli.cpp`; `tools/ldc1614_cli_contract.py`, `tools/ldc1614_hil_runner.py` |
+| LDC161x | `1db38b63cb93a561b6e0bea51017ab94102ebd24` | `include/LDC1614/LDC1614.h`; `examples/common/Ldc1614Cli.cpp`; `test/test_cli.cpp`; `tools/ldc1614_cli_contract.py`, `tools/ldc1614_hil_runner.py` |
 | INA228 | `b28c5ea69bcb4d26b351c52c24d3c6fae9fd282b` | `include/INA228/INA228.h`; `examples/01_basic_bringup_cli/main.cpp`; `tools/run_i2c_hil.py`, `tools/test_run_i2c_hil_parser.py`, `tools/test_cli_regressions.py` |
 
-LDC1614 remains newer than the historical CLI_CONTRACT source table. Decisions
+LDC161x remains newer than the historical CLI_CONTRACT source table. Decisions
 here use its current `1db38b6` implementation.
 
 TUSB declarations/behavior were checked in `include/TUSB32x/TUSB32x.h`,
@@ -53,7 +53,7 @@ There is currently no `.github/` directory in TUSB32x; no workflow is implied.
   later observation cannot rewrite an earlier write outcome. Reject its scratch
   backup, firmware repeat scheduler, implicit child-result consumption and
   restoration commands. TUSB cancellation/end never schedule compensating writes.
-- LDC1614 tests prove staged setters have zero transfers and report staged versus
+- LDC161x tests prove staged setters have zero transfers and report staged versus
   desired values separately. Adopt these distinctions and transactional candidate
   edits. Reject `profile commit confirm`, init replay and cross-field-invalid
   staging: its `sensorbounds 0 5000000 100000` deliberately stages an invalid
@@ -114,7 +114,7 @@ these semantics while additionally proving output reservation and framing.
 
 Peer workflow inspection confirms native CLI/runner registration and strict
 warnings/sanitizers in TMP1x2/24Cxx, and PlatformIO native/source-contract checks
-in LDC1614/INA228. Reuse executable registration and applicable warning policy;
+in LDC161x/INA228. Reuse executable registration and applicable warning policy;
 do not import their dependency requirements into tests-OFF C++17 consumers.
 Framework links, remote CI and physical qualification were not run by this audit.
 
