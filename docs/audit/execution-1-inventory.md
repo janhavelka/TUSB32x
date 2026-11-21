@@ -125,7 +125,7 @@ contracts separately. Keep its product policy and implementations out of the cor
 | Directory | Reason |
 | --- | --- |
 | `_archive` | Dated project archives, not current independent libraries. |
-| `ADS1261_ESP32` | Non-I2C library; library.json and README identify its transport or service. |
+| `ADS1261_ESP32` (now `ADS1261`) | Non-I2C library; library.json and README identify its transport or service. |
 | `AsyncSD` | Non-I2C library; library.json and README identify its transport or service. |
 | `AT21CS11` | Non-I2C library; library.json and README identify its transport or service. |
 | `CO2Control` | Firmware application; library.json description identifies the application. |

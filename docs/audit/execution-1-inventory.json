@@ -2670,6 +2670,7 @@
     },
     {
       "directory": "ADS1261_ESP32",
+      "current_repository": "ADS1261",
       "reason": "Non-I2C library; library.json and README identify its transport or service.",
       "evidence_paths": [
         "library.json",
